@@ -684,3 +684,45 @@ body {
   .legal-content { padding: 40px 22px 60px; }
   .legal-hero { padding: 44px 20px 30px; }
 }
+
+/* ══════════════════════════════════════════════════ */
+/* ACCESO VIP · enlace al Club VIP Alintec Food        */
+/* Estilo "outline" a propósito: no compite con el CTA */
+/* verde de Contacto ni con Explorar Cursos.           */
+/* ══════════════════════════════════════════════════ */
+.nav-vip {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--primary-light) !important;
+  border: 1.5px solid rgba(88,183,27,0.45);
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease;
+}
+.nav-vip:hover {
+  background: rgba(88,183,27,0.14) !important;
+  border-color: var(--primary);
+  color: var(--white) !important;
+}
+.nav-vip svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.btn-vip {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: transparent;
+  color: var(--primary-light);
+  border: 2px solid rgba(88,183,27,0.5);
+  padding: 13px 30px; border-radius: 14px;
+  text-decoration: none; font-size: 1rem; font-weight: 600;
+  transition: all 0.3s;
+}
+.btn-vip:hover {
+  background: rgba(88,183,27,0.12);
+  border-color: var(--primary);
+  color: var(--white);
+  transform: translateY(-3px);
+}
+.btn-vip svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+@media (max-width: 900px) {
+  .nav-vip { justify-content: center; }
+}
