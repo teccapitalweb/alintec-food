@@ -3539,7 +3539,7 @@ window.__cargarPreciosClub = async function(){
 window.__cargarPreciosClub();
 
 // ⚠️ CAMBIA esta URL por la de tu Railway cuando esté deployado
-const WEBHOOK_URL = 'https://alintec-production.up.railway.app';
+const WEBHOOK_URL = 'https://alintec-webhook-production.up.railway.app';
 window.WEBHOOK_URL = WEBHOOK_URL;
 
 // Debe coincidir con ADMINS de vip-admin.html y esAdmin() de firestore.rules.
@@ -9657,7 +9657,7 @@ const Sections = (function(){
       }
       mountEl.innerHTML = `<div class="sub-loading"><div class="sub-loading__spin"></div><div>Cargando plan ${selectedPlan}…</div></div>`;
       try {
-        const res = await fetch(`${window.WEBHOOK_URL || 'https://alintec-production.up.railway.app'}/stripe/checkout`, {
+        const res = await fetch(`${window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app'}/stripe/checkout`, {
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
@@ -9674,7 +9674,7 @@ const Sections = (function(){
         if (!clientSecret) throw new Error('No recibimos clientSecret');
         if (!window.__stripe) {
           if (!window.Stripe) throw new Error('Stripe.js no cargó');
-          window.__stripe = window.Stripe('pk_live_PEGA_AQUI_LLAVE_PUBLICA_STRIPE_ALINTEC');
+          window.__stripe = window.Stripe('pk_live_51ThG5SDCxZfVu338m6ncLX0wUzQ4VvaJshknjfwnBTsuTFu65UiNiyx5NC1diPWQXwKqsubMOkXLMb9OGS4vEkZh00eHnjbWV4');
         }
         // El elemento del DOM pudo haber cambiado al re-renderizar; re-obtenerlo
         const liveMount = document.getElementById('sub-checkout-mount');
@@ -9841,7 +9841,7 @@ const Sections = (function(){
   // 🚫 BOTONES DE CANCELAR/REACTIVAR + BILLING PORTAL
   // Conectan con el webhook de Railway · operación real sobre Stripe
   // ═══════════════════════════════════════════════════════════════
-  const WEBHOOK_BASE_URL = 'https://alintec-production.up.railway.app';
+  const WEBHOOK_BASE_URL = 'https://alintec-webhook-production.up.railway.app';
 
   function bindSuscripcionButtons(container) {
     const btnCancelar = container.querySelector('#btn-cancelar-sub');
