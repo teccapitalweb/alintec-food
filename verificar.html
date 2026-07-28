@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación de Certificados · Alintec Food</title>
+<meta name="description" content="Verifica la autenticidad de un certificado emitido por Alintec Food · IPCI Latinoamericano.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2F8F2; --bg2:#E9F0F8; --card:#FFFFFF; --ink:#182B1C; --muted:#5F7263;
+    --line:#DFEBE0; --brand:#2E7D32; --brand2:#43A047; --brand-deep:#1B3A22;
+    --ok:#1F9D6B; --ok-bg:#E7F6EF; --bad:#C2503B; --bad-bg:#FBECE8;
+    --shadow:0 18px 50px rgba(19,41,74,.12); --glow:0 0 0 transparent;
+  }
+  html[data-theme="dark"]{
+    --bg:#08110A; --bg2:#0B1626; --card:#101E14; --ink:#EBF5EC; --muted:#95A896;
+    --line:#20362A; --brand:#43A047; --brand2:#7FB0E0; --brand-deep:#A5D6A7;
+    --ok:#3FCB92; --ok-bg:#0E2A20; --bad:#E08372; --bad-bg:#2A1512;
+    --shadow:0 18px 50px rgba(0,0,0,.5); --glow:0 0 40px rgba(67,160,71,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(1200px 600px at 50% -10%,var(--bg2),var(--bg));color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 18px 48px;transition:background .4s,color .3s}
+  .topbar{width:100%;max-width:680px;display:flex;align-items:center;justify-content:space-between;margin-bottom:34px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand img{height:38px;width:auto}
+  .brand .txt{font-weight:800;font-size:18px;letter-spacing:.2px}
+  .brand .txt small{display:block;font-size:9.5px;letter-spacing:2.5px;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .toggle{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .toggle:hover{border-color:var(--brand2)}
+  .toggle svg{width:19px;height:19px}
+  .card{width:100%;max-width:680px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow),var(--glow);overflow:hidden}
+  .card-head{padding:30px 30px 24px;text-align:center;border-bottom:1px solid var(--line)}
+  .card-head h1{font-family:'Cinzel',serif;font-size:21px;font-weight:700;letter-spacing:1px}
+  .card-head p{color:var(--muted);font-size:13px;margin-top:7px;line-height:1.5}
+  .body{padding:30px}
+  /* estados */
+  .state{display:none;flex-direction:column;align-items:center;text-align:center}
+  .state.show{display:flex}
+  .spinner{width:46px;height:46px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-txt{color:var(--muted);font-size:13.5px;margin-top:18px}
+  .badge{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+  .badge svg{width:38px;height:38px}
+  .badge.ok{background:var(--ok-bg)} .badge.ok svg{stroke:var(--ok)}
+  .badge.bad{background:var(--bad-bg)} .badge.bad svg{stroke:var(--bad)}
+  .state h2{font-size:19px;font-weight:800;letter-spacing:.2px}
+  .state.ok h2{color:var(--ok)} .state.bad h2{color:var(--bad)}
+  .state .sub{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.55;max-width:430px}
+  /* datos */
+  .data{width:100%;margin-top:26px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .data .row{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:14px 18px;border-bottom:1px solid var(--line);text-align:left}
+  .data .row:last-child{border-bottom:0}
+  .data .k{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:700;flex-shrink:0;padding-top:2px}
+  .data .v{font-size:14.5px;font-weight:600;text-align:right;line-height:1.4}
+  .name-big{font-family:'Cinzel',serif;font-size:22px;font-weight:700;margin-top:6px}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:var(--ok-bg);color:var(--ok);font-size:11.5px;font-weight:700;letter-spacing:.5px;padding:6px 14px;border-radius:999px;margin-top:16px}
+  .pill svg{width:14px;height:14px;stroke:var(--ok)}
+  /* buscador manual */
+  .finder{margin-top:26px;width:100%;max-width:680px}
+  .finder form{display:flex;gap:10px}
+  .finder input{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 16px;font-size:14px;color:var(--ink);font-family:inherit;outline:none;transition:.2s}
+  .finder input:focus{border-color:var(--brand2)}
+  .finder button{background:var(--brand);color:#fff;border:0;border-radius:12px;padding:0 22px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.2s}
+  .finder button:hover{background:var(--brand-deep)}
+  html[data-theme="dark"] .finder button:hover{background:var(--brand2)}
+  .foot{margin-top:30px;text-align:center;color:var(--muted);font-size:11.5px;line-height:1.7;max-width:680px}
+  .foot a{color:var(--brand);text-decoration:none;font-weight:600}
+  @media(max-width:560px){
+    .body{padding:24px 20px} .card-head{padding:26px 22px 20px}
+    .data .row{flex-direction:column;gap:4px} .data .v{text-align:left}
+    .name-big{font-size:19px}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <img src="assets/img/alintec-logo.png" alt="Alintec Food" onerror="this.style.display='none'">
+      <div class="txt">Verificación<small>Alintec Food · IPCI</small></div>
+    </div>
+    <button class="toggle" id="themeBtn" aria-label="Cambiar tema"></button>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h1>Verificación de Certificados</h1>
+      <p>Comprueba la autenticidad de un certificado emitido por Alintec Food · IPCI Latinoamericano.</p>
+    </div>
+    <div class="body">
+      <!-- Cargando -->
+      <div class="state show" id="st-loading">
+        <div class="spinner"></div>
+        <div class="loading-txt">Verificando certificado…</div>
+      </div>
+      <!-- Válido -->
+      <div class="state ok" id="st-ok">
+        <div class="badge ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h2>Certificado verificado</h2>
+        <div class="sub">Este certificado es auténtico y fue emitido oficialmente.</div>
+        <div class="name-big" id="d-name"></div>
+        <div class="data">
+          <div class="row"><span class="k">Programa</span><span class="v" id="d-curso"></span></div>
+          <div class="row"><span class="k">Área</span><span class="v" id="d-area"></span></div>
+          <div class="row"><span class="k">Carga académica</span><span class="v" id="d-carga"></span></div>
+          <div class="row"><span class="k">Fecha de emisión</span><span class="v" id="d-fecha"></span></div>
+          <div class="row"><span class="k">Folio</span><span class="v" id="d-folio"></span></div>
+          <div class="row"><span class="k">Emitido por</span><span class="v">Alintec Food · IPCI Latinoamericano</span></div>
+        </div>
+        <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Documento auténtico</div>
+      </div>
+      <!-- Inválido -->
+      <div class="state bad" id="st-bad">
+        <div class="badge bad"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+        <h2>Certificado no encontrado</h2>
+        <div class="sub" id="bad-sub">No encontramos ningún certificado con ese folio. Verifica que el código esté escrito correctamente o escanea de nuevo el código QR del documento.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buscador manual -->
+  <div class="finder">
+    <form id="finder-form">
+      <input type="text" id="folio-input" placeholder="Ingresa el folio (ej. ALINTEC-2026-XXXXXX)" autocomplete="off">
+      <button type="submit">Verificar</button>
+    </form>
+  </div>
+
+  <div class="foot">
+    Alintec Food · IPCI Latinoamericano<br>
+    <a href="https://alitecfood.com">alitecfood.com</a>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+  // ⚠️ TODO EQUIPO: crear proyecto Firebase "club-alintec" (Auth + Firestore + Storage)
+  // y pegar aquí su configuración web. Mientras tanto el login NO funcionará.
+  apiKey: "PEGA_AQUI_APIKEY_ALINTEC",
+  authDomain: "club-alintec.firebaseapp.com",
+  projectId: "club-alintec",
+  storageBucket: "club-alintec.firebasestorage.app",
+  messagingSenderId: "PEGA_AQUI_SENDER_ID",
+  appId: "PEGA_AQUI_APP_ID"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ── Tema día/noche ──
+  const sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>';
+  const moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  const tb=document.getElementById('themeBtn');
+  function setTheme(t){document.documentElement.setAttribute('data-theme',t);tb.innerHTML=t==='dark'?sun:moon;}
+  setTheme(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  tb.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+
+  // ── Helpers ──
+  function show(id){['st-loading','st-ok','st-bad'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+  function fmtFecha(v){ try{ return new Date(v).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}); }catch(e){ return v||'—'; } }
+
+  async function verificar(folio){
+    folio=(folio||'').trim();
+    if(!folio){ show('st-bad'); document.getElementById('bad-sub').textContent='Ingresa un folio para verificar un certificado.'; return; }
+    show('st-loading');
+    try{
+      const snap = await getDoc(doc(db,'certificados',folio));
+      if(snap.exists()){
+        const c=snap.data();
+        document.getElementById('d-name').textContent = c.nombre || '—';
+        document.getElementById('d-curso').textContent = c.curso || '—';
+        document.getElementById('d-area').textContent = c.area || '—';
+        const carga = ((c.sesiones? c.sesiones+' sesiones · ':'') + (c.horas||0) + ' horas');
+        document.getElementById('d-carga').textContent = carga;
+        document.getElementById('d-fecha').textContent = fmtFecha(c.emitido);
+        document.getElementById('d-folio').textContent = c.folio || folio;
+        show('st-ok');
+      } else {
+        document.getElementById('bad-sub').textContent='No encontramos ningún certificado con el folio "'+folio+'". Verifica que esté escrito correctamente o escanea de nuevo el código QR.';
+        show('st-bad');
+      }
+    }catch(e){
+      console.error(e);
+      document.getElementById('bad-sub').textContent='Ocurrió un problema al verificar. Revisa tu conexión e inténtalo de nuevo.';
+      show('st-bad');
+    }
+  }
+
+  // ── Leer folio de la URL ──
+  const params=new URLSearchParams(location.search);
+  const folioURL=params.get('folio');
+  if(folioURL){ document.getElementById('folio-input').value=folioURL; verificar(folioURL); }
+  else { show('st-bad'); document.getElementById('bad-sub').textContent='Escanea el código QR de un certificado o ingresa su folio para verificarlo.'; }
+
+  // ── Buscador manual ──
+  document.getElementById('finder-form').addEventListener('submit',(e)=>{
+    e.preventDefault();
+    const v=document.getElementById('folio-input').value;
+    const u=new URL(location.href); u.searchParams.set('folio',v.trim()); history.replaceState(null,'',u);
+    verificar(v);
+  });
+</script>
+</body>
+</html>
