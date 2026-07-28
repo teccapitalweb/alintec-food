@@ -1,0 +1,32 @@
+{
+  "name": "Club VIP Alintec Food",
+  "short_name": "Alintec VIP",
+  "description": "Panel de miembros del Club VIP de Alintec Food: cursos, webinars, certificados, foro y directorio del sector alimentario.",
+  "start_url": "/vip-panel.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A120C",
+  "theme_color": "#0A120C",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "assets/img/alintec-isotipo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/alintec-apple-touch.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/alintec-favicon.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

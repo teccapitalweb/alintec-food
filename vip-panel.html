@@ -3494,14 +3494,12 @@ import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersi
 import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, onSnapshot, limit, where, addDoc, setDoc, updateDoc, deleteDoc, deleteField, increment, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  // ⚠️ TODO EQUIPO: crear proyecto Firebase "club-alintec" (Auth + Firestore + Storage)
-  // y pegar aquí su configuración web. Mientras tanto el login NO funcionará.
-  apiKey: "PEGA_AQUI_APIKEY_ALINTEC",
+  apiKey: "AIzaSyBi2H0tyb1DEBi-KFpTV4a7CrFt6riuvPA",
   authDomain: "club-alintec.firebaseapp.com",
   projectId: "club-alintec",
   storageBucket: "club-alintec.firebasestorage.app",
-  messagingSenderId: "PEGA_AQUI_SENDER_ID",
-  appId: "PEGA_AQUI_APP_ID"
+  messagingSenderId: "559261559287",
+  appId: "1:559261559287:web:8d1434cfbd3127521de6f2"
 };
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -3534,7 +3532,8 @@ window.__cargarPreciosClub();
 const WEBHOOK_URL = 'https://alintec-production.up.railway.app';
 window.WEBHOOK_URL = WEBHOOK_URL;
 
-const ADMIN_EMAILS = ['teccapitalweb@gmail.com','teccapitalweb@gmail.com','teccapitalweb@gmail.com'];
+// Debe coincidir con ADMINS de vip-admin.html y esAdmin() de firestore.rules.
+const ADMIN_EMAILS = ['teccapitalweb@gmail.com','fisiotec25@gmail.com'];
 
 function calcIniciales(nameOrEmail){
   const s = (nameOrEmail||'').trim();

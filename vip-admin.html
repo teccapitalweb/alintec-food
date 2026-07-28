@@ -1052,16 +1052,17 @@ import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersi
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, query, orderBy, where, limit, onSnapshot, serverTimestamp, Timestamp, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"; // MODIFICADO: + setDoc (guardar config/club)
 
 const firebaseConfig = {
-  // ⚠️ TODO EQUIPO: crear proyecto Firebase "club-alintec" (Auth + Firestore + Storage)
-  // y pegar aquí su configuración web. Mientras tanto el login NO funcionará.
-  apiKey: "PEGA_AQUI_APIKEY_ALINTEC",
+  apiKey: "AIzaSyBi2H0tyb1DEBi-KFpTV4a7CrFt6riuvPA",
   authDomain: "club-alintec.firebaseapp.com",
   projectId: "club-alintec",
   storageBucket: "club-alintec.firebasestorage.app",
-  messagingSenderId: "PEGA_AQUI_SENDER_ID",
-  appId: "PEGA_AQUI_APP_ID"
+  messagingSenderId: "559261559287",
+  appId: "1:559261559287:web:8d1434cfbd3127521de6f2"
 };
-const ADMINS = ["teccapitalweb@gmail.com","teccapitalweb@gmail.com","teccapitalweb@gmail.com"];
+// Debe coincidir con la función esAdmin() de las reglas de Firestore,
+// con ADMIN_EMAILS de vip-panel.html y con la env ADMIN_EMAILS del webhook.
+// SIEMPRE en minúsculas: el gate compara contra email.toLowerCase().
+const ADMINS = ["teccapitalweb@gmail.com","fisiotec25@gmail.com"];
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
