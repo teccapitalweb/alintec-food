@@ -3763,7 +3763,7 @@ window.__showWelcomeSplash = function(opts) {
     { ic:SVG_FEAT.cursos, t:'Cursos premium',   d:'Catálogo completo con clases reales que se desbloquean a tu ritmo.' },
     { ic:SVG_FEAT.clases, t:'Clases en vivo',   d:'Webinars con expertos y acceso a las grabaciones cuando quieras.' },
     { ic:SVG_FEAT.pdfs,   t:'PDFs y material',  d:'Plantillas, formatos y recursos descargables listos para usar.' },
-    { ic:SVG_FEAT.tools,  t:'Herramientas pro', d:'Herramientas para profesionales de alimentos · muy pronto en tu panel.' },
+    { ic:SVG_FEAT.tools,  t:'Herramientas pro', d:'NOM-051, HACCP, BPM, vida de anaquel y microbiología · listas en tu panel.' },
     { ic:SVG_FEAT.cert,   t:'Certificados',     d:'Con folio oficial Alintec Food para respaldar lo que aprendes.' }
   ];
 
@@ -3993,15 +3993,11 @@ window.__setDisplayName = async (nombre) => {
 
     <div class="nav-section">
       <div class="nav-label">Herramientas pro</div>
-      <!-- MODIFICADO: herramientas dentales de Odonteck ocultas · las de Alintec se definirán en la siguiente fase.
-           Para reactivar una, quitar el comentario del <a> correspondiente.
-      <a class="nav-item" data-tool="expediente"><svg class="ic"><use href="#i-clipboard-check"/></svg>Expediente Clínico</a>
-      <a class="nav-item" data-tool="anestesico"><svg class="ic"><use href="#i-shield-check"/></svg>Anestésico</a>
-      <a class="nav-item" data-tool="prescripcion"><svg class="ic"><use href="#i-news"/></svg>Prescripción</a>
-      <a class="nav-item" data-tool="cotizador"><svg class="ic"><use href="#i-credit-card"/></svg>Cotizador</a>
-      <a class="nav-item" data-tool="plan"><svg class="ic"><use href="#i-clipboard-check"/></svg>Plan de tratamiento</a>
-      -->
-      <a class="nav-item" style="opacity:.55;cursor:default;pointer-events:none"><svg class="ic"><use href="#i-clipboard-check"/></svg>Próximamente<span class="nav-item__badge is-new">PRONTO</span></a>
+      <a class="nav-item" data-section="tool-nom051"><svg class="ic"><use href="#i-badge"/></svg>Calculadora NOM-051</a>
+      <a class="nav-item" data-section="tool-haccp"><svg class="ic"><use href="#i-shield-check"/></svg>Planificador HACCP</a>
+      <a class="nav-item" data-section="tool-bpm"><svg class="ic"><use href="#i-clipboard-check"/></svg>Auditoría BPM</a>
+      <a class="nav-item" data-section="tool-anaquel"><svg class="ic"><use href="#i-clock"/></svg>Vida de anaquel</a>
+      <a class="nav-item" data-section="tool-microbio"><svg class="ic"><use href="#i-search"/></svg>Microbiología UFC</a>
     </div>
 
     <div class="nav-section">
@@ -4179,14 +4175,11 @@ window.__setDisplayName = async (nombre) => {
 
       <div class="mobile-drawer__section">
         <div class="mobile-drawer__label">Herramientas pro</div>
-        <!-- MODIFICADO: herramientas dentales ocultas · pendientes de definir para Alintec
-        <a class="mobile-drawer__item" data-tool="expediente"><svg class="ic"><use href="#i-clipboard-check"/></svg>Expediente Clínico</a>
-        <a class="mobile-drawer__item" data-tool="anestesico"><svg class="ic"><use href="#i-shield-check"/></svg>Anestésico</a>
-        <a class="mobile-drawer__item" data-tool="prescripcion"><svg class="ic"><use href="#i-news"/></svg>Prescripción</a>
-        <a class="mobile-drawer__item" data-tool="cotizador"><svg class="ic"><use href="#i-credit-card"/></svg>Cotizador</a>
-        <a class="mobile-drawer__item" data-tool="plan"><svg class="ic"><use href="#i-clipboard-check"/></svg>Plan de tratamiento</a>
-        -->
-        <a class="mobile-drawer__item" style="opacity:.55;pointer-events:none"><svg class="ic"><use href="#i-clipboard-check"/></svg>Herramientas · Próximamente</a>
+        <a class="mobile-drawer__item" data-section="tool-nom051"><svg class="ic"><use href="#i-badge"/></svg>Calculadora NOM-051</a>
+        <a class="mobile-drawer__item" data-section="tool-haccp"><svg class="ic"><use href="#i-shield-check"/></svg>Planificador HACCP</a>
+        <a class="mobile-drawer__item" data-section="tool-bpm"><svg class="ic"><use href="#i-clipboard-check"/></svg>Auditoría BPM</a>
+        <a class="mobile-drawer__item" data-section="tool-anaquel"><svg class="ic"><use href="#i-clock"/></svg>Vida de anaquel</a>
+        <a class="mobile-drawer__item" data-section="tool-microbio"><svg class="ic"><use href="#i-search"/></svg>Microbiología UFC</a>
       </div>
 
       <div class="mobile-drawer__section">
@@ -6193,9 +6186,8 @@ const NOMTool = (function(){
 const SECCIONES_VALIDAS_PANEL = [
   'inicio','cursos','certificados','logros','webinars','pdfs','foro',
   'directorio','canal','perfil','suscripcion',
-  'tool-anestesico','tool-prescripcion','tool-odontograma','tool-cotizador',
-  'tool-plan','tool-expediente','tool-iper','tool-oee','tool-ats',
-  'tool-logistica','tool-noms'
+  // Herramientas Pro · sector alimentario (Alintec Food)
+  'tool-nom051','tool-haccp','tool-bpm','tool-anaquel','tool-microbio'
 ];
 
 function seccionPanelDesdeHash(){
@@ -13364,5 +13356,1024 @@ if (typeof Sections !== 'undefined' && Sections.renderers) (function(){
   if (overlay) overlay.addEventListener('click', function(){ ocultar(false); });
 })();
 </script>
+
+<!-- ===== HERRAMIENTAS PRO ALIMENTOS · inyectadas ===== -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     HERRAMIENTAS PRO · ALINTEC FOOD  (5 herramientas del sector alimentario)
+     1. Calculadora NOM-051  · sellos de advertencia
+     2. Planificador HACCP    · árbol de decisiones Codex + PCC
+     3. Auditoría BPM NOM-251 · checklist con puntaje
+     4. Vida de anaquel       · modelo Q10 / Arrhenius
+     5. Microbiología UFC     · conteo en placa y diluciones
+     Reutiliza el design-system del panel (clases .thx-*, .tool-section, .btn).
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+/* ---- estilos scoped para las herramientas de alimentos (.af-*) ---- */
+.af-seals{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:6px 0}
+.af-seal{width:112px;height:112px;background:#0b0b0b;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.af-seal b{font-size:9px;font-weight:800;letter-spacing:.4px;line-height:1.15;text-transform:uppercase}
+.af-seal small{font-size:8px;font-weight:600;opacity:.85;margin-top:2px;letter-spacing:.3px}
+.af-seal--leg{clip-path:none;border-radius:12px;background:#111;border:2px solid #444;width:auto;min-width:150px;height:auto;padding:12px 16px}
+.af-seal--leg b{font-size:10px}
+html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.af-kpirow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:4px 0 6px}
+.af-kpi{background:var(--surface-2);border:1px solid var(--border-2);border-radius:16px;padding:16px 18px}
+.af-kpi__lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--text-3)}
+.af-kpi__val{font-size:26px;font-weight:800;letter-spacing:-.6px;margin-top:6px;font-feature-settings:"tnum" 1;color:var(--text)}
+.af-kpi__val.is-sm{font-size:19px;line-height:1.2}
+.af-kpi__hint{font-size:11px;color:var(--text-2);margin-top:4px;line-height:1.4}
+.af-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:100px;font-size:11.5px;font-weight:700;letter-spacing:.3px}
+.af-badge--ok{background:color-mix(in srgb,var(--highlight,#43A047) 16%,transparent);color:var(--highlight,#43A047)}
+.af-badge--warn{background:color-mix(in srgb,var(--warning,#E0A106) 16%,transparent);color:var(--warning,#E0A106)}
+.af-badge--bad{background:color-mix(in srgb,var(--danger,#E5604D) 16%,transparent);color:var(--danger,#E5604D)}
+.af-gauge{position:relative;height:12px;border-radius:100px;background:var(--surface-3,var(--surface-2));overflow:hidden;border:1px solid var(--border-2)}
+.af-gauge__fill{position:absolute;inset:0;border-radius:100px;transition:width .5s cubic-bezier(.16,1,.3,1)}
+.af-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+.af-table th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);padding:9px 10px;border-bottom:1px solid var(--border-2)}
+.af-table td{padding:11px 10px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:top}
+.af-table tr:last-child td{border-bottom:none}
+.af-table td b{color:var(--text)}
+.af-pcc{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:7px;font-size:10.5px;font-weight:800;letter-spacing:.5px}
+.af-pcc--yes{background:var(--danger,#E5604D);color:#fff}
+.af-pcc--no{background:var(--surface-3,var(--surface-2));color:var(--text-3);border:1px solid var(--border-2)}
+.af-tree{background:var(--surface-2);border:1px solid var(--border-2);border-radius:16px;padding:20px;margin-top:8px}
+.af-tree__q{font-size:14.5px;font-weight:600;color:var(--text);line-height:1.45;margin-bottom:14px}
+.af-tree__q span{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);border-radius:7px;padding:2px 8px;margin-right:8px}
+.af-yn{display:flex;gap:10px}
+.af-yn button{flex:1;min-height:48px;border-radius:12px;border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:.15s}
+.af-yn button:hover{border-color:var(--primary);color:var(--primary)}
+.af-audit-sec{border:1px solid var(--border-2);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.af-audit-sec__head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;background:var(--surface-2);cursor:pointer;user-select:none}
+.af-audit-sec__head h3{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:9px}
+.af-audit-sec__head .af-secpct{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text-3)}
+.af-audit-sec__body{padding:6px 18px 14px}
+.af-audit-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.af-audit-item:last-child{border-bottom:none}
+.af-audit-item__txt{flex:1;font-size:13px;color:var(--text-2);line-height:1.45}
+.af-triopt{display:flex;gap:5px;flex-shrink:0}
+.af-triopt button{min-width:38px;height:34px;padding:0 9px;border-radius:9px;border:1px solid var(--border-2);background:var(--surface-2);color:var(--text-3);font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;transition:.13s}
+.af-triopt button.on[data-v="si"]{background:var(--highlight,#43A047);border-color:var(--highlight,#43A047);color:#fff}
+.af-triopt button.on[data-v="no"]{background:var(--danger,#E5604D);border-color:var(--danger,#E5604D);color:#fff}
+.af-triopt button.on[data-v="na"]{background:var(--text-3);border-color:var(--text-3);color:#fff}
+.af-serie{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+@media(max-width:560px){.af-seg-stack{flex-direction:column}.af-seg-stack .thx-seg__btn{width:100%}}
+.af-hint-list{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:9px}
+.af-hint-list li{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--text-2);line-height:1.5}
+.af-hint-list li svg{width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0;margin-top:1px}
+</style>
+<script>
+/* Helper de folio compartido por las herramientas de alimentos */
+function afFolio(prefijo){
+  const d = new Date();
+  const y = d.getFullYear();
+  const rnd = Math.floor(1000 + Math.random()*9000);
+  const seq = (d.getMonth()+1).toString().padStart(2,'0') + d.getDate().toString().padStart(2,'0');
+  return `${prefijo}-${y}-${seq}${rnd}`;
+}
+function afToast(tipo,t,s){ if(typeof Toast!=='undefined' && Toast[tipo]) Toast[tipo](t,s); }
+function afEsc(v){ return String(v==null?'':v).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function afNum(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   1 · CALCULADORA NOM-051 · Sellos de advertencia (Fase 2/3 vigente)
+   Criterios oficiales del etiquetado frontal mexicano.
+   ═══════════════════════════════════════════════════════════════════ */
+const NOM051Tool = (function(){
+  const KEY='alintec:nom051:current';
+  let s = base();
+  function base(){ return {folio:afFolio('NOM051'), producto:'', empresa:'', tipo:'solido', energia:null, azucares:null, gsat:null, gtrans:null, sodio:null, edulcorante:false, cafeina:false, calculado:false}; }
+  function load(){ try{ const r=localStorage.getItem(KEY); if(r) s=Object.assign(base(),JSON.parse(r)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+
+  /* Motor de evaluación NOM-051 · devuelve sellos y leyendas */
+  function evaluar(){
+    const solido = s.tipo==='solido';
+    const E = afNum(s.energia);      // kcal por 100 g/mL
+    const az = afNum(s.azucares);    // g
+    const gs = afNum(s.gsat);        // g
+    const gt = afNum(s.gtrans);      // g
+    const na = afNum(s.sodio);       // mg
+    const sellos = [];
+    // % de energía que aporta cada nutriente
+    const pctAz = E>0 ? (az*4/E)*100 : 0;
+    const pctGs = E>0 ? (gs*9/E)*100 : 0;
+    const pctGt = E>0 ? (gt*9/E)*100 : 0;
+    // Calorías
+    if (solido && E>=275) sellos.push({n:'Calorías', d:'≥275 kcal/100g', val:E.toFixed(0)+' kcal'});
+    if (!solido && E>=70) sellos.push({n:'Calorías', d:'≥70 kcal/100mL', val:E.toFixed(0)+' kcal'});
+    // Azúcares libres ≥10% energía
+    if (pctAz>=10) sellos.push({n:'Azúcares', d:'aportan '+pctAz.toFixed(1)+'% de la energía (≥10%)', val:az+' g'});
+    // Grasas saturadas ≥10% energía
+    if (pctGs>=10) sellos.push({n:'Grasas saturadas', d:'aportan '+pctGs.toFixed(1)+'% de la energía (≥10%)', val:gs+' g'});
+    // Grasas trans ≥1% energía
+    if (pctGt>=1) sellos.push({n:'Grasas trans', d:'aportan '+pctGt.toFixed(1)+'% de la energía (≥1%)', val:gt+' g'});
+    // Sodio ≥1 mg/kcal  (o ≥300 mg/100g cuando E<10)
+    const sodioSello = (E>=10 && na>=E) || (E<10 && na>=300);
+    if (sodioSello) sellos.push({n:'Sodio', d: E>=10?'≥1 mg por kcal ('+na+' mg / '+E.toFixed(0)+' kcal)':'≥300 mg/100g', val:na+' mg'});
+    // Leyendas precautorias
+    const leyendas = [];
+    if (s.edulcorante) leyendas.push('CONTIENE EDULCORANTES · NO RECOMENDABLE EN NIÑOS');
+    if (s.cafeina) leyendas.push('CONTIENE CAFEÍNA · EVITAR EN NIÑOS');
+    return {sellos, leyendas, pctAz, pctGs, pctGt};
+  }
+
+  function mount(container){
+    load();
+    container.innerHTML = `
+      <div class="tool-section">
+        <div class="tool-section__head">
+          <div class="tool-section__title">
+            <div class="tool-section__icon"><svg class="ic"><use href="#i-badge"/></svg></div>
+            <div><h1>Calculadora NOM-051</h1><p>Sellos de advertencia del etiquetado frontal · valores por 100 g / 100 mL</p></div>
+          </div>
+          <div class="tool-section__actions">
+            <button class="btn btn--ghost btn--sm" id="n51-reset">Limpiar</button>
+            <button class="btn btn--accent btn--sm" id="n51-pdf">Descargar PDF<svg class="ic"><use href="#i-download"/></svg></button>
+          </div>
+        </div>
+        <div class="thx-card">
+          <div class="thx-grid2">
+            <div class="thx-field"><label class="thx-label">Producto</label><input class="thx-input" id="n51-prod" placeholder="Ej. Galleta de avena" value="${afEsc(s.producto)}"></div>
+            <div class="thx-field"><label class="thx-label">Empresa</label><input class="thx-input" id="n51-emp" placeholder="Ej. Alimentos del Valle" value="${afEsc(s.empresa)}"></div>
+          </div>
+          <div class="thx-field">
+            <label class="thx-label">Tipo de producto</label>
+            <div class="thx-seg" id="n51-tipo">
+              <button class="thx-seg__btn ${s.tipo==='solido'?'on':''}" data-v="solido">Sólido (por 100 g)</button>
+              <button class="thx-seg__btn ${s.tipo==='liquido'?'on':''}" data-v="liquido">Líquido (por 100 mL)</button>
+            </div>
+          </div>
+          <div class="thx-grid2">
+            <div class="thx-field"><label class="thx-label">Energía (kcal)</label><input class="thx-input" type="number" inputmode="decimal" id="n51-energia" placeholder="0" value="${s.energia??''}"></div>
+            <div class="thx-field"><label class="thx-label">Azúcares totales (g)</label><input class="thx-input" type="number" inputmode="decimal" id="n51-az" placeholder="0" value="${s.azucares??''}"></div>
+            <div class="thx-field"><label class="thx-label">Grasas saturadas (g)</label><input class="thx-input" type="number" inputmode="decimal" id="n51-gs" placeholder="0" value="${s.gsat??''}"></div>
+            <div class="thx-field"><label class="thx-label">Grasas trans (g)</label><input class="thx-input" type="number" inputmode="decimal" id="n51-gt" placeholder="0" value="${s.gtrans??''}"></div>
+            <div class="thx-field"><label class="thx-label">Sodio (mg)</label><input class="thx-input" type="number" inputmode="decimal" id="n51-na" placeholder="0" value="${s.sodio??''}"></div>
+          </div>
+          <div class="thx-chips" style="margin-top:4px">
+            <button class="thx-chip" id="n51-edul" style="${s.edulcorante?'border-color:var(--primary);color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,transparent)':''}"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Contiene edulcorantes</button>
+            <button class="thx-chip" id="n51-caf" style="${s.cafeina?'border-color:var(--primary);color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,transparent)':''}"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Contiene cafeína</button>
+          </div>
+          <div class="thx-actions">
+            <button class="btn btn--accent" id="n51-calc" style="flex:1">Evaluar sellos<svg class="ic"><use href="#i-arrow-right"/></svg></button>
+          </div>
+        </div>
+        <div id="n51-out"></div>
+        <div class="thx-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Referencia: NOM-051-SCFI/SSA1-2010 (modificación 2020, Fase 2/3). Calcula el sellado sobre valores por 100 g (sólidos) o 100 mL (líquidos). Verifica siempre con la norma vigente antes de imprimir etiquetas.</div>
+      </div>`;
+
+    const q=id=>container.querySelector(id);
+    function sync(){ s.producto=q('#n51-prod').value; s.empresa=q('#n51-emp').value; s.energia=q('#n51-energia').value; s.azucares=q('#n51-az').value; s.gsat=q('#n51-gs').value; s.gtrans=q('#n51-gt').value; s.sodio=q('#n51-na').value; save(); }
+    ['#n51-prod','#n51-emp','#n51-energia','#n51-az','#n51-gs','#n51-gt','#n51-na'].forEach(id=>q(id).addEventListener('input',sync));
+    q('#n51-tipo').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ s.tipo=b.dataset.v; save(); q('#n51-tipo').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); }));
+    q('#n51-edul').addEventListener('click',()=>{ s.edulcorante=!s.edulcorante; save(); mount(container); });
+    q('#n51-caf').addEventListener('click',()=>{ s.cafeina=!s.cafeina; save(); mount(container); });
+    q('#n51-calc').addEventListener('click',()=>{ sync(); s.calculado=true; save(); renderOut(); });
+    q('#n51-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar la evaluación?'))return; s=base(); save(); mount(container); });
+    q('#n51-pdf').addEventListener('click',generarPDF);
+    if(s.calculado) renderOut();
+
+    function renderOut(){
+      const r=evaluar();
+      const out=q('#n51-out');
+      const total=r.sellos.length;
+      const estado = total===0 ? {cls:'af-badge--ok',txt:'Sin sellos de advertencia'} : {cls:'af-badge--bad',txt:total+' sello'+(total>1?'s':'')+' de advertencia'};
+      out.innerHTML = `
+        <div class="thx-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+            <div><div class="thx-label" style="margin:0 0 4px">Resultado del etiquetado frontal</div><div style="font-size:17px;font-weight:700;color:var(--text)">${afEsc(s.producto||'Producto sin nombre')}</div></div>
+            <span class="af-badge ${estado.cls}">${estado.txt}</span>
+          </div>
+          ${ total===0
+            ? `<div class="thx-empty" style="padding:34px">✓ Este producto no requiere sellos de advertencia con los valores capturados.</div>`
+            : `<div class="af-seals">${r.sellos.map(x=>`<div class="af-seal"><b>Exceso ${x.n}</b><small>${x.val}</small></div>`).join('')}</div>` }
+          ${ r.leyendas.length ? `<div class="af-seals" style="margin-top:16px">${r.leyendas.map(l=>`<div class="af-seal af-seal--leg"><b>${l}</b></div>`).join('')}</div>` : '' }
+          <table class="af-table" style="margin-top:20px">
+            <thead><tr><th>Nutriente</th><th>Valor</th><th>% energía</th><th>Sello</th></tr></thead>
+            <tbody>
+              ${fila('Energía', afNum(s.energia).toFixed(0)+' kcal','—', r.sellos.some(x=>x.n==='Calorías'))}
+              ${fila('Azúcares', afNum(s.azucares)+' g', r.pctAz.toFixed(1)+'%', r.sellos.some(x=>x.n==='Azúcares'))}
+              ${fila('Grasas saturadas', afNum(s.gsat)+' g', r.pctGs.toFixed(1)+'%', r.sellos.some(x=>x.n==='Grasas saturadas'))}
+              ${fila('Grasas trans', afNum(s.gtrans)+' g', r.pctGt.toFixed(2)+'%', r.sellos.some(x=>x.n==='Grasas trans'))}
+              ${fila('Sodio', afNum(s.sodio)+' mg','—', r.sellos.some(x=>x.n==='Sodio'))}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    function fila(n,v,p,sello){ return `<tr><td><b>${n}</b></td><td>${v}</td><td>${p}</td><td>${sello?'<span class="af-pcc af-pcc--yes">SÍ</span>':'<span class="af-pcc af-pcc--no">NO</span>'}</td></tr>`; }
+  }
+
+  function generarPDF(){
+    if(!s.calculado){ afToast('error','Sin evaluación','Evalúa los sellos antes de generar el PDF.'); return; }
+    if(!toolRequiereVIP('la Calculadora NOM-051')) return;
+    if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
+    try{
+      const r=evaluar(); const {jsPDF}=window.jspdf;
+      const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16; let y=M;
+      pdf.setFillColor(67,160,71); pdf.rect(0,0,W,6,'F');
+      pdf.setFillColor(27,58,34); pdf.rect(0,6,W,3,'F'); y=20;
+      pdf.setFontSize(14); pdf.setTextColor(27,58,34); pdf.setFont(undefined,'bold');
+      pdf.text('EVALUACIÓN NOM-051 · Sellos de advertencia', M, y); y+=6;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(110,120,110);
+      pdf.text('Alintec Food · Herramienta Pro VIP', M, y); y+=4;
+      pdf.text('Folio: '+s.folio+' · '+new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}), M, y); y+=10;
+      pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34); pdf.text('PRODUCTO EVALUADO', M, y); y+=6;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9);
+      [['Producto',s.producto||'—'],['Empresa',s.empresa||'—'],['Base',s.tipo==='solido'?'Sólido (100 g)':'Líquido (100 mL)']].forEach(([l,v])=>{ pdf.setTextColor(110,120,110); pdf.text(l+':',M,y); pdf.setTextColor(27,58,34); pdf.text(String(v),M+30,y); y+=5; });
+      y+=5;
+      const n=r.sellos.length;
+      pdf.setFillColor(n?229:231, n?96:243, n?77:236); pdf.roundedRect(M,y,W-2*M,18,2,2,'F');
+      pdf.setTextColor(n?255:40, n?255:120, n?255:60); pdf.setFont(undefined,'bold'); pdf.setFontSize(13);
+      pdf.text(n===0?'SIN SELLOS DE ADVERTENCIA':n+' SELLO(S) DE ADVERTENCIA', M+6, y+11); y+=26;
+      pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34); pdf.text('DETALLE NUTRIMENTAL', M, y); y+=7;
+      const rows=[['Energía',afNum(s.energia).toFixed(0)+' kcal', r.sellos.some(x=>x.n==='Calorías')?'EXCESO':'ok'],
+        ['Azúcares',afNum(s.azucares)+' g ('+r.pctAz.toFixed(1)+'%)', r.sellos.some(x=>x.n==='Azúcares')?'EXCESO':'ok'],
+        ['Grasas saturadas',afNum(s.gsat)+' g ('+r.pctGs.toFixed(1)+'%)', r.sellos.some(x=>x.n==='Grasas saturadas')?'EXCESO':'ok'],
+        ['Grasas trans',afNum(s.gtrans)+' g ('+r.pctGt.toFixed(2)+'%)', r.sellos.some(x=>x.n==='Grasas trans')?'EXCESO':'ok'],
+        ['Sodio',afNum(s.sodio)+' mg', r.sellos.some(x=>x.n==='Sodio')?'EXCESO':'ok']];
+      rows.forEach(([n2,v,e])=>{ pdf.setFont(undefined,'bold'); pdf.setFontSize(9); pdf.setTextColor(27,58,34); pdf.text(n2,M,y);
+        pdf.setFont(undefined,'normal'); pdf.setTextColor(110,120,110); pdf.text(v,M+55,y);
+        pdf.setFont(undefined,'bold'); pdf.setTextColor(e==='EXCESO'?229:67, e==='EXCESO'?96:160, e==='EXCESO'?77:71); pdf.text(e.toUpperCase(),M+140,y); y+=6; });
+      if(r.leyendas.length){ y+=4; pdf.setFont(undefined,'bold'); pdf.setFontSize(9); pdf.setTextColor(27,58,34); pdf.text('LEYENDAS PRECAUTORIAS',M,y); y+=6; pdf.setFont(undefined,'normal'); pdf.setFontSize(8.5); pdf.setTextColor(110,120,110); r.leyendas.forEach(l=>{ pdf.text('• '+l,M,y); y+=5; }); }
+      pdf.setFontSize(7.5); pdf.setTextColor(150,160,150);
+      pdf.text('Generado por la Calculadora NOM-051 de Alintec Food · Estimación orientativa, valida con la norma vigente.', M, 287);
+      pdf.save(s.folio+'.pdf'); afToast('success','PDF generado',s.folio);
+    }catch(e){ console.error('[NOM051] PDF',e); afToast('error','Error al generar PDF',e.message||''); }
+  }
+  return {mount};
+})();
+if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-nom051']=(c)=>NOM051Tool.mount(c); }
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   5 · MICROBIOLOGÍA · UFC (conteo en placa) + diluciones seriadas
+   Método estándar de cuenta en placa (ISO 7218 / NOM-092).
+   ═══════════════════════════════════════════════════════════════════ */
+const MicroTool = (function(){
+  const KEY='alintec:micro:current';
+  let s = base();
+  function base(){ return {folio:afFolio('MICRO'), muestra:'', analisis:'Mesófilos aerobios', modo:'conteo',
+    // conteo por placa: pares [colonias, dilucion(exponente negativo), volumen mL]
+    placas:[{col:'', dil:2, vol:1},{col:'', dil:3, vol:1}],
+    limite:'', unidad:'g',
+    // diluciones seriadas
+    ser_muestra:1, ser_diluyente:9, ser_pasos:6,
+    calculado:false }; }
+  function load(){ try{ const r=localStorage.getItem(KEY); if(r) s=Object.assign(base(),JSON.parse(r)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+
+  /* Cuenta estándar en placa · promedio ponderado (ISO 7218)
+     N = ΣC / [ V · (n1 + 0.1·n2) · d1 ]
+     Considera solo placas en rango contable 25–250 (aeróbios) */
+  function calcularConteo(){
+    const validas = s.placas.map(p=>({col:afNum(p.col), dil:parseInt(p.dil)||0, vol:afNum(p.vol)||1})).filter(p=>p.col>0);
+    if(!validas.length) return {valido:false};
+    // agrupar por dilución para el método ponderado
+    const contables = validas.filter(p=>p.col>=25 && p.col<=250);
+    const usar = contables.length ? contables : validas; // si ninguna en rango, usar todas con aviso
+    // dilución menos diluida presente
+    const dMin = Math.min(...usar.map(p=>p.dil));
+    let sumaC=0, factor=0;
+    usar.forEach(p=>{ sumaC += p.col; factor += p.vol * Math.pow(10,-(p.dil - dMin)); });
+    const N = sumaC / (factor * Math.pow(10,-dMin));
+    return {valido:true, N, usadas:usar, enRango:contables.length, total:validas.length, fueraRango:contables.length===0};
+  }
+  function fmtUFC(n){
+    if(n<=0) return '0';
+    const exp=Math.floor(Math.log10(n));
+    const mant=n/Math.pow(10,exp);
+    return mant.toFixed(1)+' × 10^'+exp;
+  }
+  /* Diluciones seriadas: factor por paso y dilución final */
+  function calcularSerie(){
+    const m=afNum(s.ser_muestra), d=afNum(s.ser_diluyente), pasos=parseInt(s.ser_pasos)||1;
+    const factorPaso = m/(m+d); // ej 1/(1+9)=1/10
+    const rows=[];
+    for(let i=1;i<=pasos;i++){ const dilucion=Math.pow(factorPaso,i); rows.push({paso:i, dilucion, exp:Math.round(Math.log10(dilucion))}); }
+    return {factorPaso, rows};
+  }
+
+  function mount(container){
+    load();
+    const conteo = s.modo==='conteo';
+    container.innerHTML = `
+      <div class="tool-section">
+        <div class="tool-section__head">
+          <div class="tool-section__title">
+            <div class="tool-section__icon"><svg class="ic"><use href="#i-search"/></svg></div>
+            <div><h1>Microbiología · UFC</h1><p>Cuenta estándar en placa y cálculo de diluciones seriadas</p></div>
+          </div>
+          <div class="tool-section__actions">
+            <button class="btn btn--ghost btn--sm" id="mc-reset">Limpiar</button>
+            <button class="btn btn--accent btn--sm" id="mc-pdf">Descargar PDF<svg class="ic"><use href="#i-download"/></svg></button>
+          </div>
+        </div>
+        <div class="thx-card">
+          <div class="thx-field">
+            <label class="thx-label">Modo de cálculo</label>
+            <div class="thx-seg" id="mc-modo">
+              <button class="thx-seg__btn ${conteo?'on':''}" data-v="conteo">Conteo → UFC/g</button>
+              <button class="thx-seg__btn ${!conteo?'on':''}" data-v="serie">Diluciones seriadas</button>
+            </div>
+          </div>
+          <div id="mc-form"></div>
+        </div>
+        <div id="mc-out"></div>
+        <div class="thx-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Método de cuenta en placa (ISO 7218 / NOM-092-SSA1). El rango contable recomendado es 25–250 colonias/placa (mesófilos). El resultado se reporta en notación científica según convención microbiológica.</div>
+      </div>`;
+    const q=id=>container.querySelector(id);
+    q('#mc-modo').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ s.modo=b.dataset.v; s.calculado=false; save(); mount(container); }));
+    q('#mc-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar los datos?'))return; s=base(); save(); mount(container); });
+    q('#mc-pdf').addEventListener('click',generarPDF);
+    if(conteo) formConteo(); else formSerie();
+    if(s.calculado) renderOut();
+
+    function formConteo(){
+      q('#mc-form').innerHTML = `
+        <div class="thx-grid2">
+          <div class="thx-field"><label class="thx-label">Muestra</label><input class="thx-input" id="mc-muestra" placeholder="Ej. Yogurt lote 240" value="${afEsc(s.muestra)}"></div>
+          <div class="thx-field"><label class="thx-label">Análisis</label><input class="thx-input" id="mc-analisis" placeholder="Ej. Mesófilos aerobios" value="${afEsc(s.analisis)}"></div>
+        </div>
+        <label class="thx-label" style="margin-top:6px">Placas contadas</label>
+        <div id="mc-placas"></div>
+        <button class="thx-chip" id="mc-addplaca" style="margin-top:4px"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Agregar placa</button>
+        <div class="thx-grid2" style="margin-top:14px">
+          <div class="thx-field"><label class="thx-label">Límite normativo (opcional)</label><input class="thx-input" type="number" inputmode="decimal" id="mc-limite" placeholder="Ej. 100000" value="${s.limite}"></div>
+          <div class="thx-field"><label class="thx-label">Unidad</label>
+            <div class="thx-seg" id="mc-unidad"><button class="thx-seg__btn ${s.unidad==='g'?'on':''}" data-v="g">UFC/g</button><button class="thx-seg__btn ${s.unidad==='ml'?'on':''}" data-v="ml">UFC/mL</button></div>
+          </div>
+        </div>
+        <div class="thx-actions"><button class="btn btn--accent" id="mc-calc" style="flex:1">Calcular UFC<svg class="ic"><use href="#i-arrow-right"/></svg></button></div>`;
+      renderPlacas();
+      q('#mc-muestra').addEventListener('input',e=>{s.muestra=e.target.value;save();});
+      q('#mc-analisis').addEventListener('input',e=>{s.analisis=e.target.value;save();});
+      q('#mc-limite').addEventListener('input',e=>{s.limite=e.target.value;save();});
+      q('#mc-unidad').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{s.unidad=b.dataset.v;save();q('#mc-unidad').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}));
+      q('#mc-addplaca').addEventListener('click',()=>{ s.placas.push({col:'',dil:s.placas.length+2,vol:1}); save(); formConteo(); });
+      q('#mc-calc').addEventListener('click',()=>{ s.calculado=true; save(); renderOut(); });
+    }
+    function renderPlacas(){
+      const wrap=q('#mc-placas');
+      wrap.innerHTML = s.placas.map((p,i)=>`
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:8px;align-items:end;margin-bottom:9px">
+          <div><label class="thx-label" style="font-size:9px">Colonias</label><input class="thx-input" type="number" inputmode="numeric" data-p="${i}" data-f="col" placeholder="0" value="${p.col}"></div>
+          <div><label class="thx-label" style="font-size:9px">Dilución 10⁻ⁿ</label><input class="thx-input" type="number" inputmode="numeric" data-p="${i}" data-f="dil" placeholder="2" value="${p.dil}"></div>
+          <div><label class="thx-label" style="font-size:9px">Vol. (mL)</label><input class="thx-input" type="number" inputmode="decimal" data-p="${i}" data-f="vol" placeholder="1" value="${p.vol}"></div>
+          <button class="thx-del" data-del="${i}" ${s.placas.length<=1?'style="opacity:.4;pointer-events:none"':''}><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+        </div>`).join('');
+      wrap.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',e=>{ const i=+e.target.dataset.p,f=e.target.dataset.f; s.placas[i][f]=e.target.value; save(); }));
+      wrap.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ s.placas.splice(+b.dataset.del,1); save(); formConteo(); }));
+    }
+    function formSerie(){
+      q('#mc-form').innerHTML = `
+        <div class="af-serie">
+          <div class="thx-field"><label class="thx-label">Muestra (mL o g)</label><input class="thx-input" type="number" inputmode="decimal" id="mc-sm" placeholder="1" value="${s.ser_muestra}"></div>
+          <div class="thx-field"><label class="thx-label">Diluyente (mL)</label><input class="thx-input" type="number" inputmode="decimal" id="mc-sd" placeholder="9" value="${s.ser_diluyente}"></div>
+          <div class="thx-field"><label class="thx-label">N.º de pasos</label><input class="thx-input" type="number" inputmode="numeric" id="mc-sp" placeholder="6" value="${s.ser_pasos}"></div>
+        </div>
+        <div class="thx-actions"><button class="btn btn--accent" id="mc-calc2" style="flex:1">Calcular serie<svg class="ic"><use href="#i-arrow-right"/></svg></button></div>`;
+      q('#mc-sm').addEventListener('input',e=>{s.ser_muestra=e.target.value;save();});
+      q('#mc-sd').addEventListener('input',e=>{s.ser_diluyente=e.target.value;save();});
+      q('#mc-sp').addEventListener('input',e=>{s.ser_pasos=e.target.value;save();});
+      q('#mc-calc2').addEventListener('click',()=>{ s.calculado=true; save(); renderOut(); });
+    }
+    function renderOut(){
+      const out=q('#mc-out');
+      if(s.modo==='conteo'){
+        const r=calcularConteo();
+        if(!r.valido){ out.innerHTML=`<div class="thx-card"><div class="thx-empty" style="padding:30px">Captura al menos una placa con colonias para calcular.</div></div>`; return; }
+        const unidad = s.unidad==='g'?'UFC/g':'UFC/mL';
+        let cumple='';
+        if(afNum(s.limite)>0){ const ok=r.N<=afNum(s.limite); cumple=`<span class="af-badge ${ok?'af-badge--ok':'af-badge--bad'}">${ok?'Cumple':'Excede'} el límite (${fmtUFC(afNum(s.limite))})</span>`; }
+        out.innerHTML=`
+          <div class="thx-card">
+            <div class="thx-label" style="margin-bottom:12px">Resultado · ${afEsc(s.analisis||'Recuento')}</div>
+            <div class="af-kpirow">
+              <div class="af-kpi"><div class="af-kpi__lbl">Recuento</div><div class="af-kpi__val is-sm">${fmtUFC(r.N)}</div><div class="af-kpi__hint">${unidad}</div></div>
+              <div class="af-kpi"><div class="af-kpi__lbl">Valor entero</div><div class="af-kpi__val is-sm">${Math.round(r.N).toLocaleString('es-MX')}</div><div class="af-kpi__hint">${unidad}</div></div>
+              <div class="af-kpi"><div class="af-kpi__lbl">Placas en rango</div><div class="af-kpi__val is-sm">${r.enRango}/${r.total}</div><div class="af-kpi__hint">25–250 colonias</div></div>
+            </div>
+            ${cumple?`<div style="margin-top:8px">${cumple}</div>`:''}
+            ${r.fueraRango?`<div class="thx-note thx-note--warn" style="margin-top:14px"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Ninguna placa cayó en el rango contable 25–250. El resultado es estimado; repite con diluciones adecuadas.</div>`:''}
+          </div>`;
+      } else {
+        const r=calcularSerie();
+        out.innerHTML=`
+          <div class="thx-card">
+            <div class="thx-label" style="margin-bottom:6px">Serie de diluciones · factor 1:${(1/r.factorPaso).toFixed(0)} por paso</div>
+            <table class="af-table">
+              <thead><tr><th>Tubo</th><th>Dilución</th><th>Notación</th><th>Factor</th></tr></thead>
+              <tbody>${r.rows.map(x=>`<tr><td><b>#${x.paso}</b></td><td>10^${x.exp}</td><td>1:${Math.round(1/x.dilucion).toLocaleString('es-MX')}</td><td>×${x.dilucion.toExponential(1)}</td></tr>`).join('')}</tbody>
+            </table>
+            <ul class="af-hint-list"><li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Transfiere ${s.ser_muestra} mL de cada tubo al siguiente con ${s.ser_diluyente} mL de diluyente estéril, homogeneizando entre pasos.</li></ul>
+          </div>`;
+      }
+    }
+  }
+
+  function generarPDF(){
+    if(!s.calculado){ afToast('error','Sin cálculo','Realiza el cálculo antes de generar el PDF.'); return; }
+    if(!toolRequiereVIP('la herramienta de Microbiología')) return;
+    if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
+    try{
+      const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16; let y=M;
+      pdf.setFillColor(67,160,71); pdf.rect(0,0,W,6,'F'); pdf.setFillColor(27,58,34); pdf.rect(0,6,W,3,'F'); y=20;
+      pdf.setFontSize(14); pdf.setTextColor(27,58,34); pdf.setFont(undefined,'bold');
+      pdf.text('REPORTE MICROBIOLÓGICO · Recuento en placa', M, y); y+=6;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(110,120,110);
+      pdf.text('Alintec Food · Herramienta Pro VIP', M, y); y+=4;
+      pdf.text('Folio: '+s.folio+' · '+new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}), M, y); y+=10;
+      if(s.modo==='conteo'){
+        const r=calcularConteo();
+        [['Muestra',s.muestra||'—'],['Análisis',s.analisis||'—']].forEach(([l,v])=>{ pdf.setTextColor(110,120,110); pdf.text(l+':',M,y); pdf.setTextColor(27,58,34); pdf.text(String(v),M+30,y); y+=5; });
+        y+=5;
+        pdf.setFillColor(67,160,71); pdf.roundedRect(M,y,W-2*M,20,2,2,'F'); pdf.setTextColor(255,255,255); pdf.setFont(undefined,'bold'); pdf.setFontSize(18);
+        pdf.text((r.valido?fmtUFC(r.N):'—')+' '+(s.unidad==='g'?'UFC/g':'UFC/mL'), M+6, y+13); y+=28;
+        pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34); pdf.text('PLACAS CONTADAS', M, y); y+=7;
+        pdf.setFont(undefined,'normal'); pdf.setFontSize(9);
+        s.placas.filter(p=>afNum(p.col)>0).forEach(p=>{ pdf.setTextColor(27,58,34); pdf.text(afNum(p.col)+' colonias',M,y); pdf.setTextColor(110,120,110); pdf.text('dil. 10^-'+p.dil+'  ·  vol. '+p.vol+' mL',M+45,y); y+=5.5; });
+        if(afNum(s.limite)>0){ y+=3; const ok=r.N<=afNum(s.limite); pdf.setFont(undefined,'bold'); pdf.setTextColor(ok?67:229,ok?160:96,ok?71:77); pdf.text((ok?'CUMPLE':'EXCEDE')+' el límite de '+fmtUFC(afNum(s.limite))+' '+(s.unidad==='g'?'UFC/g':'UFC/mL'),M,y); y+=6; }
+      } else {
+        const r=calcularSerie();
+        pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34); pdf.text('SERIE DE DILUCIONES · factor 1:'+(1/r.factorPaso).toFixed(0)+' por paso', M, y); y+=8;
+        pdf.setFont(undefined,'normal'); pdf.setFontSize(9);
+        r.rows.forEach(x=>{ pdf.setTextColor(27,58,34); pdf.text('Tubo #'+x.paso,M,y); pdf.setTextColor(110,120,110); pdf.text('10^'+x.exp+'  ·  1:'+Math.round(1/x.dilucion).toLocaleString('es-MX'),M+40,y); y+=5.5; });
+      }
+      pdf.setFontSize(7.5); pdf.setTextColor(150,160,150);
+      pdf.text('Generado por Microbiología UFC de Alintec Food · Cálculo según método estándar de cuenta en placa.', M, 287);
+      pdf.save(s.folio+'.pdf'); afToast('success','PDF generado',s.folio);
+    }catch(e){ console.error('[Micro] PDF',e); afToast('error','Error al generar PDF',e.message||''); }
+  }
+  return {mount};
+})();
+if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-microbio']=(c)=>MicroTool.mount(c); }
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   4 · VIDA DE ANAQUEL · modelo Q10 (cinética de deterioro)
+   Vida(T) = Vida_ref · Q10^((T_ref − T)/10)
+   Modos: (a) proyectar a otra temperatura · (b) prueba acelerada
+   ═══════════════════════════════════════════════════════════════════ */
+const AnaquelTool = (function(){
+  const KEY='alintec:anaquel:current';
+  let s = base();
+  function base(){ return {folio:afFolio('ANAQUEL'), producto:'', empresa:'', modo:'proyectar',
+    vidaRef:null, tRef:null, q10:2, tObjetivo:null,
+    // prueba acelerada
+    vidaAcel:null, tAcel:null, tReal:null,
+    calculado:false }; }
+  function load(){ try{ const r=localStorage.getItem(KEY); if(r) s=Object.assign(base(),JSON.parse(r)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+
+  function proyectar(vidaRef, tRef, q10, tDestino){ return vidaRef * Math.pow(q10, (tRef - tDestino)/10); }
+  function calcular(){
+    const q10=afNum(s.q10)||2;
+    if(s.modo==='proyectar'){
+      const vr=afNum(s.vidaRef), tr=afNum(s.tRef), to=afNum(s.tObjetivo);
+      if(vr<=0) return {valido:false};
+      const vida=proyectar(vr,tr,q10,to);
+      return {valido:true, vida, q10, base:{vida:vr,t:tr}, destino:to};
+    } else {
+      const va=afNum(s.vidaAcel), ta=afNum(s.tAcel), tr=afNum(s.tReal);
+      if(va<=0) return {valido:false};
+      const vida=proyectar(va,ta,q10,tr); // proyecta de temp acelerada a temp real
+      return {valido:true, vida, q10, base:{vida:va,t:ta}, destino:tr};
+    }
+  }
+  function tablaTemps(){
+    const q10=afNum(s.q10)||2;
+    const b = s.modo==='proyectar' ? {vida:afNum(s.vidaRef),t:afNum(s.tRef)} : {vida:afNum(s.vidaAcel),t:afNum(s.tAcel)};
+    if(b.vida<=0) return [];
+    return [-18,4,15,25,35].map(T=>({T, vida:proyectar(b.vida,b.t,q10,T)}));
+  }
+  function fmtVida(d){
+    if(d<1) return (d*24).toFixed(0)+' h';
+    if(d<60) return d.toFixed(1)+' días';
+    if(d<730) return (d/30).toFixed(1)+' meses';
+    return (d/365).toFixed(1)+' años';
+  }
+  function nombreT(T){ return T<=-15?'Congelación':T<=7?'Refrigeración':T<=18?'Fresco':T<=27?'Ambiente':'Cálido'; }
+
+  function mount(container){
+    load();
+    const proy=s.modo==='proyectar';
+    container.innerHTML=`
+      <div class="tool-section">
+        <div class="tool-section__head">
+          <div class="tool-section__title">
+            <div class="tool-section__icon"><svg class="ic"><use href="#i-clock"/></svg></div>
+            <div><h1>Vida de anaquel</h1><p>Estimación de caducidad con modelo Q10 y pruebas aceleradas</p></div>
+          </div>
+          <div class="tool-section__actions">
+            <button class="btn btn--ghost btn--sm" id="an-reset">Limpiar</button>
+            <button class="btn btn--accent btn--sm" id="an-pdf">Descargar PDF<svg class="ic"><use href="#i-download"/></svg></button>
+          </div>
+        </div>
+        <div class="thx-card">
+          <div class="thx-grid2">
+            <div class="thx-field"><label class="thx-label">Producto</label><input class="thx-input" id="an-prod" placeholder="Ej. Salsa embotellada" value="${afEsc(s.producto)}"></div>
+            <div class="thx-field"><label class="thx-label">Empresa</label><input class="thx-input" id="an-emp" placeholder="Ej. Alimentos del Valle" value="${afEsc(s.empresa)}"></div>
+          </div>
+          <div class="thx-field">
+            <label class="thx-label">Modo de estimación</label>
+            <div class="thx-seg" id="an-modo">
+              <button class="thx-seg__btn ${proy?'on':''}" data-v="proyectar">Proyectar a otra T°</button>
+              <button class="thx-seg__btn ${!proy?'on':''}" data-v="acelerada">Prueba acelerada</button>
+            </div>
+          </div>
+          <div id="an-form"></div>
+          <div class="thx-field" style="margin-top:14px">
+            <label class="thx-label">Factor Q10 (sensibilidad a la temperatura)</label>
+            <div class="thx-seg af-seg-stack" id="an-q10">
+              <button class="thx-seg__btn ${s.q10==1.5?'on':''}" data-v="1.5">1.5 · microbiológico</button>
+              <button class="thx-seg__btn ${s.q10==2?'on':''}" data-v="2">2 · general</button>
+              <button class="thx-seg__btn ${s.q10==3?'on':''}" data-v="3">3 · químico/sensorial</button>
+            </div>
+          </div>
+          <div class="thx-actions"><button class="btn btn--accent" id="an-calc" style="flex:1">Estimar vida útil<svg class="ic"><use href="#i-arrow-right"/></svg></button></div>
+        </div>
+        <div id="an-out"></div>
+        <div class="thx-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>El modelo Q10 describe cuánto cambia la velocidad de deterioro por cada 10 °C. Es una estimación de ingeniería: confírmala con estudios de estabilidad reales antes de declarar caducidad en etiqueta.</div>
+      </div>`;
+    const q=id=>container.querySelector(id);
+    q('#an-modo').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{s.modo=b.dataset.v;s.calculado=false;save();mount(container);}));
+    q('#an-q10').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{s.q10=parseFloat(b.dataset.v);save();q('#an-q10').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}));
+    q('#an-prod').addEventListener('input',e=>{s.producto=e.target.value;save();});
+    q('#an-emp').addEventListener('input',e=>{s.empresa=e.target.value;save();});
+    q('#an-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar los datos?'))return; s=base(); save(); mount(container); });
+    q('#an-pdf').addEventListener('click',generarPDF);
+    q('#an-calc').addEventListener('click',()=>{s.calculado=true;save();renderOut();});
+    formFields(); if(s.calculado) renderOut();
+
+    function formFields(){
+      if(proy){
+        q('#an-form').innerHTML=`<div class="thx-grid2">
+          <div class="thx-field"><label class="thx-label">Vida útil conocida (días)</label><input class="thx-input" type="number" inputmode="decimal" id="an-vr" placeholder="Ej. 180" value="${s.vidaRef??''}"></div>
+          <div class="thx-field"><label class="thx-label">Temperatura de referencia (°C)</label><input class="thx-input" type="number" inputmode="decimal" id="an-tr" placeholder="Ej. 25" value="${s.tRef??''}"></div>
+          <div class="thx-field"><label class="thx-label">Temperatura objetivo (°C)</label><input class="thx-input" type="number" inputmode="decimal" id="an-to" placeholder="Ej. 4" value="${s.tObjetivo??''}"></div>
+        </div>`;
+        q('#an-vr').addEventListener('input',e=>{s.vidaRef=e.target.value;save();});
+        q('#an-tr').addEventListener('input',e=>{s.tRef=e.target.value;save();});
+        q('#an-to').addEventListener('input',e=>{s.tObjetivo=e.target.value;save();});
+      } else {
+        q('#an-form').innerHTML=`<div class="thx-grid2">
+          <div class="thx-field"><label class="thx-label">Vida en prueba acelerada (días)</label><input class="thx-input" type="number" inputmode="decimal" id="an-va" placeholder="Ej. 21" value="${s.vidaAcel??''}"></div>
+          <div class="thx-field"><label class="thx-label">Temperatura de la prueba (°C)</label><input class="thx-input" type="number" inputmode="decimal" id="an-ta" placeholder="Ej. 45" value="${s.tAcel??''}"></div>
+          <div class="thx-field"><label class="thx-label">Temperatura real de venta (°C)</label><input class="thx-input" type="number" inputmode="decimal" id="an-trl" placeholder="Ej. 25" value="${s.tReal??''}"></div>
+        </div>`;
+        q('#an-va').addEventListener('input',e=>{s.vidaAcel=e.target.value;save();});
+        q('#an-ta').addEventListener('input',e=>{s.tAcel=e.target.value;save();});
+        q('#an-trl').addEventListener('input',e=>{s.tReal=e.target.value;save();});
+      }
+    }
+    function renderOut(){
+      const r=calcular(); const out=q('#an-out');
+      if(!r.valido){ out.innerHTML=`<div class="thx-card"><div class="thx-empty" style="padding:30px">Captura la vida útil conocida y las temperaturas para estimar.</div></div>`; return; }
+      const cad=new Date(Date.now()+r.vida*86400000);
+      const tabla=tablaTemps();
+      out.innerHTML=`
+        <div class="thx-card">
+          <div class="thx-label" style="margin-bottom:12px">Estimación · ${afEsc(s.producto||'Producto')}</div>
+          <div class="af-kpirow">
+            <div class="af-kpi"><div class="af-kpi__lbl">Vida útil estimada</div><div class="af-kpi__val">${fmtVida(r.vida)}</div><div class="af-kpi__hint">a ${r.destino} °C · ${nombreT(r.destino)}</div></div>
+            <div class="af-kpi"><div class="af-kpi__lbl">Días totales</div><div class="af-kpi__val is-sm">${Math.round(r.vida).toLocaleString('es-MX')}</div><div class="af-kpi__hint">Q10 = ${r.q10}</div></div>
+            <div class="af-kpi"><div class="af-kpi__lbl">Caducidad proyectada</div><div class="af-kpi__val is-sm">${cad.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</div><div class="af-kpi__hint">desde hoy</div></div>
+          </div>
+          <div class="thx-label" style="margin:18px 0 8px">Vida útil a distintas temperaturas</div>
+          <table class="af-table">
+            <thead><tr><th>Temperatura</th><th>Condición</th><th>Vida útil</th></tr></thead>
+            <tbody>${tabla.map(x=>`<tr style="${x.T===r.destino?'background:color-mix(in srgb,var(--primary) 7%,transparent)':''}"><td><b>${x.T} °C</b></td><td>${nombreT(x.T)}</td><td><b>${fmtVida(x.vida)}</b></td></tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+    }
+  }
+  function generarPDF(){
+    const r=calcular();
+    if(!s.calculado||!r.valido){ afToast('error','Sin estimación','Calcula la vida útil antes de generar el PDF.'); return; }
+    if(!toolRequiereVIP('la calculadora de Vida de anaquel')) return;
+    if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
+    try{
+      const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16; let y=M;
+      pdf.setFillColor(67,160,71); pdf.rect(0,0,W,6,'F'); pdf.setFillColor(27,58,34); pdf.rect(0,6,W,3,'F'); y=20;
+      pdf.setFontSize(14); pdf.setTextColor(27,58,34); pdf.setFont(undefined,'bold');
+      pdf.text('ESTIMACIÓN DE VIDA DE ANAQUEL · Modelo Q10', M, y); y+=6;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(110,120,110);
+      pdf.text('Alintec Food · Herramienta Pro VIP', M, y); y+=4;
+      pdf.text('Folio: '+s.folio+' · '+new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}), M, y); y+=10;
+      [['Producto',s.producto||'—'],['Empresa',s.empresa||'—'],['Modo',s.modo==='proyectar'?'Proyección directa':'Prueba acelerada'],['Factor Q10',String(r.q10)]].forEach(([l,v])=>{ pdf.setTextColor(110,120,110); pdf.text(l+':',M,y); pdf.setTextColor(27,58,34); pdf.text(String(v),M+34,y); y+=5; });
+      y+=5;
+      pdf.setFillColor(67,160,71); pdf.roundedRect(M,y,W-2*M,20,2,2,'F'); pdf.setTextColor(255,255,255); pdf.setFont(undefined,'bold'); pdf.setFontSize(16);
+      pdf.text(fmtVida(r.vida)+' a '+r.destino+' °C', M+6, y+12); y+=28;
+      pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34); pdf.text('VIDA ÚTIL A DISTINTAS TEMPERATURAS', M, y); y+=7;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9);
+      tablaTemps().forEach(x=>{ pdf.setTextColor(27,58,34); pdf.setFont(undefined,'bold'); pdf.text(x.T+' °C',M,y); pdf.setFont(undefined,'normal'); pdf.setTextColor(110,120,110); pdf.text(nombreT(x.T),M+22,y); pdf.setTextColor(67,160,71); pdf.text(fmtVida(x.vida),M+70,y); y+=5.5; });
+      pdf.setFontSize(7.5); pdf.setTextColor(150,160,150);
+      pdf.text('Generado por Vida de anaquel de Alintec Food · Estimación por modelo Q10, valida con estudios de estabilidad.', M, 287);
+      pdf.save(s.folio+'.pdf'); afToast('success','PDF generado',s.folio);
+    }catch(e){ console.error('[Anaquel] PDF',e); afToast('error','Error al generar PDF',e.message||''); }
+  }
+  return {mount};
+})();
+if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-anaquel']=(c)=>AnaquelTool.mount(c); }
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   2 · PLANIFICADOR HACCP · árbol de decisiones Codex Alimentarius
+   Determina PCC por peligro y arma el plan (límite, monitoreo, corrección).
+   ═══════════════════════════════════════════════════════════════════ */
+const HACCPTool = (function(){
+  const KEY='alintec:haccp:current';
+  let s = base();
+  function base(){ return {folio:afFolio('HACCP'), producto:'', empresa:'', equipo:'', peligros:[], draft:null}; }
+  function nuevoDraft(){ return {etapa:'', desc:'', tipo:'B', p1:null,p1b:null,p2:null,p3:null,p4:null, limite:'', monitoreo:'', correccion:''}; }
+  function load(){ try{ const r=localStorage.getItem(KEY); if(r) s=Object.assign(base(),JSON.parse(r)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+
+  /* Árbol de decisiones Codex · 4 preguntas */
+  function evaluarArbol(a){
+    if(a.p1==null) return {estado:'incompleto', q:'p1'};
+    if(a.p1==='no'){
+      if(a.p1b==null) return {estado:'incompleto', q:'p1b'};
+      if(a.p1b==='no') return {pcc:false, texto:'No es PCC — el control en esta fase no es necesario para la inocuidad.'};
+      return {pcc:false, modificar:true, texto:'Requiere modificar la fase, proceso o producto — el control es necesario pero no existe medida preventiva.'};
+    }
+    if(a.p2==null) return {estado:'incompleto', q:'p2'};
+    if(a.p2==='si') return {pcc:true, texto:'Es PCC — esta fase elimina o reduce el peligro a un nivel aceptable.'};
+    if(a.p3==null) return {estado:'incompleto', q:'p3'};
+    if(a.p3==='no') return {pcc:false, texto:'No es PCC — no hay riesgo de que la contaminación alcance niveles inaceptables.'};
+    if(a.p4==null) return {estado:'incompleto', q:'p4'};
+    if(a.p4==='si') return {pcc:false, texto:'No es PCC — una fase posterior elimina o reduce el peligro.'};
+    return {pcc:true, texto:'Es PCC — ninguna fase posterior controla el peligro.'};
+  }
+  const TIPOS={B:{n:'Biológico',c:'var(--danger,#E5604D)'},Q:{n:'Químico',c:'var(--warning,#E0A106)'},F:{n:'Físico',c:'var(--primary)'}};
+  const PREGUNTAS={
+    p1:'¿Existen medidas preventivas de control para este peligro en esta fase?',
+    p1b:'¿Es necesario el control en esta fase para garantizar la inocuidad?',
+    p2:'¿Esta fase elimina o reduce el peligro a un nivel aceptable?',
+    p3:'¿Podría la contaminación aumentar hasta niveles inaceptables?',
+    p4:'¿Una fase posterior eliminará o reducirá el peligro a un nivel aceptable?'
+  };
+
+  function mount(container){
+    load();
+    container.innerHTML=`
+      <div class="tool-section">
+        <div class="tool-section__head">
+          <div class="tool-section__title">
+            <div class="tool-section__icon"><svg class="ic"><use href="#i-shield-check"/></svg></div>
+            <div><h1>Planificador HACCP</h1><p>Análisis de peligros y puntos críticos de control · árbol de decisiones Codex</p></div>
+          </div>
+          <div class="tool-section__actions">
+            <button class="btn btn--ghost btn--sm" id="hc-reset">Nuevo plan</button>
+            <button class="btn btn--accent btn--sm" id="hc-pdf">Descargar PDF<svg class="ic"><use href="#i-download"/></svg></button>
+          </div>
+        </div>
+        <div class="thx-card">
+          <div class="thx-grid2">
+            <div class="thx-field"><label class="thx-label">Producto</label><input class="thx-input" id="hc-prod" placeholder="Ej. Jamón cocido" value="${afEsc(s.producto)}"></div>
+            <div class="thx-field"><label class="thx-label">Empresa / planta</label><input class="thx-input" id="hc-emp" placeholder="Ej. Cárnicos del Centro" value="${afEsc(s.empresa)}"></div>
+          </div>
+          <div class="thx-field"><label class="thx-label">Equipo HACCP</label><input class="thx-input" id="hc-eq" placeholder="Ej. Aseguramiento de calidad, producción, mantenimiento" value="${afEsc(s.equipo)}"></div>
+        </div>
+        <div id="hc-draft"></div>
+        <div id="hc-list"></div>
+        <div class="thx-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Basado en el árbol de decisiones del Codex Alimentarius (CXC 1-1969). Registra un peligro por fila del diagrama de flujo; la herramienta determina si es Punto Crítico de Control y te pide su límite y monitoreo.</div>
+      </div>`;
+    const q=id=>container.querySelector(id);
+    q('#hc-prod').addEventListener('input',e=>{s.producto=e.target.value;save();});
+    q('#hc-emp').addEventListener('input',e=>{s.empresa=e.target.value;save();});
+    q('#hc-eq').addEventListener('input',e=>{s.equipo=e.target.value;save();});
+    q('#hc-reset').addEventListener('click',()=>{ if(!confirm('¿Iniciar un plan HACCP nuevo? Se perderá el actual.'))return; s=base(); save(); mount(container); });
+    q('#hc-pdf').addEventListener('click',generarPDF);
+    renderDraft(); renderList();
+
+    function renderDraft(){
+      const wrap=q('#hc-draft');
+      if(!s.draft){ wrap.innerHTML=`<button class="btn btn--accent" id="hc-add" style="width:100%;margin-bottom:16px">＋ Agregar peligro / fase</button>`; q('#hc-add').addEventListener('click',()=>{ s.draft=nuevoDraft(); save(); renderDraft(); }); return; }
+      const d=s.draft; const res=evaluarArbol(d);
+      wrap.innerHTML=`
+        <div class="thx-card" style="border-color:var(--primary)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div class="thx-label" style="margin:0">Nuevo peligro</div><button class="thx-del" id="hc-cancel"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+          <div class="thx-grid2">
+            <div class="thx-field"><label class="thx-label">Fase / etapa del proceso</label><input class="thx-input" id="hc-etapa" placeholder="Ej. Cocción" value="${afEsc(d.etapa)}"></div>
+            <div class="thx-field"><label class="thx-label">Tipo de peligro</label>
+              <div class="thx-seg" id="hc-tipo">${Object.keys(TIPOS).map(k=>`<button class="thx-seg__btn ${d.tipo===k?'on':''}" data-v="${k}">${TIPOS[k].n}</button>`).join('')}</div>
+            </div>
+          </div>
+          <div class="thx-field"><label class="thx-label">Descripción del peligro</label><input class="thx-input" id="hc-desc" placeholder="Ej. Supervivencia de Listeria monocytogenes" value="${afEsc(d.desc)}"></div>
+          <div id="hc-tree"></div>
+        </div>`;
+      q('#hc-cancel').addEventListener('click',()=>{ s.draft=null; save(); renderDraft(); });
+      q('#hc-etapa').addEventListener('input',e=>{d.etapa=e.target.value;save();});
+      q('#hc-desc').addEventListener('input',e=>{d.desc=e.target.value;save();});
+      q('#hc-tipo').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{d.tipo=b.dataset.v;save();q('#hc-tipo').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}));
+      renderTree();
+      function renderTree(){
+        const res=evaluarArbol(d);
+        const tw=q('#hc-tree');
+        // preguntas visibles según flujo
+        const orden=['p1']; 
+        if(d.p1==='no') orden.push('p1b');
+        if(d.p1==='si'){ orden.push('p2'); if(d.p2==='no'){ orden.push('p3'); if(d.p3==='si') orden.push('p4'); } }
+        let html='<div style="margin-top:6px">';
+        orden.forEach((k,idx)=>{
+          const val=d[k];
+          html+=`<div class="af-tree" style="margin-top:${idx?12:8}px">
+            <div class="af-tree__q"><span>${k.toUpperCase()}</span>${PREGUNTAS[k]}</div>
+            <div class="af-yn" data-q="${k}">
+              <button data-a="si" style="${val==='si'?'border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)':''}">Sí</button>
+              <button data-a="no" style="${val==='no'?'border-color:var(--danger,#E5604D);background:color-mix(in srgb,var(--danger,#E5604D) 12%,transparent);color:var(--danger,#E5604D)':''}">No</button>
+            </div>
+          </div>`;
+        });
+        html+='</div>';
+        if(res.estado!=='incompleto'){
+          html+=`<div class="thx-note ${res.pcc?'thx-note--warn':''}" style="margin-top:16px"><svg viewBox="0 0 24 24">${res.pcc?'<path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>':'<path d="M20 6 9 17l-5-5"/>'}</svg><b style="color:${res.pcc?'var(--warning,#E0A106)':'var(--highlight,#43A047)'}">${res.pcc?'PUNTO CRÍTICO DE CONTROL':(res.modificar?'REQUIERE MODIFICACIÓN':'No es PCC')}</b> · ${res.texto}</div>`;
+          if(res.pcc){
+            html+=`<div class="thx-field" style="margin-top:14px"><label class="thx-label">Límite crítico</label><input class="thx-input" id="hc-limite" placeholder="Ej. Temperatura interna ≥ 72 °C por 15 s" value="${afEsc(d.limite)}"></div>
+              <div class="thx-grid2">
+                <div class="thx-field"><label class="thx-label">Monitoreo</label><input class="thx-input" id="hc-mon" placeholder="Ej. Registro de temperatura cada lote" value="${afEsc(d.monitoreo)}"></div>
+                <div class="thx-field"><label class="thx-label">Acción correctiva</label><input class="thx-input" id="hc-corr" placeholder="Ej. Reprocesar / desechar lote" value="${afEsc(d.correccion)}"></div>
+              </div>`;
+          }
+          html+=`<button class="btn btn--accent" id="hc-save" style="width:100%;margin-top:14px">Guardar peligro en el plan</button>`;
+        }
+        tw.innerHTML=html;
+        tw.querySelectorAll('.af-yn').forEach(g=>g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+          const k=g.dataset.q; d[k]=b.dataset.a;
+          // limpiar respuestas aguas abajo al cambiar
+          if(k==='p1'){ d.p1b=null; d.p2=null; d.p3=null; d.p4=null; }
+          if(k==='p2'){ d.p3=null; d.p4=null; }
+          if(k==='p3'){ d.p4=null; }
+          save(); renderTree();
+        })));
+        const li=q('#hc-limite'); if(li) li.addEventListener('input',e=>{d.limite=e.target.value;save();});
+        const mo=q('#hc-mon'); if(mo) mo.addEventListener('input',e=>{d.monitoreo=e.target.value;save();});
+        const co=q('#hc-corr'); if(co) co.addEventListener('input',e=>{d.correccion=e.target.value;save();});
+        const sv=q('#hc-save'); if(sv) sv.addEventListener('click',()=>{
+          if(!d.etapa.trim()||!d.desc.trim()){ afToast('error','Faltan datos','Captura la fase y la descripción del peligro.'); return; }
+          const veredicto=evaluarArbol(d);
+          s.peligros.push(Object.assign({}, d, {pcc:!!veredicto.pcc, veredicto:veredicto.texto, modificar:!!veredicto.modificar}));
+          s.draft=null; save(); renderDraft(); renderList();
+          afToast('success','Peligro agregado', veredicto.pcc?'Identificado como PCC':'Registrado');
+        });
+      }
+    }
+    function renderList(){
+      const wrap=q('#hc-list'); if(!s.peligros.length){ wrap.innerHTML=''; return; }
+      const pccs=s.peligros.filter(p=>p.pcc).length;
+      wrap.innerHTML=`
+        <div class="thx-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px">
+            <div class="thx-label" style="margin:0">Plan HACCP · ${s.peligros.length} peligro(s)</div>
+            <span class="af-badge ${pccs?'af-badge--warn':'af-badge--ok'}">${pccs} PCC identificado(s)</span>
+          </div>
+          <table class="af-table">
+            <thead><tr><th>Fase</th><th>Peligro</th><th>Tipo</th><th>PCC</th><th></th></tr></thead>
+            <tbody>${s.peligros.map((p,i)=>`
+              <tr>
+                <td><b>${afEsc(p.etapa)}</b></td>
+                <td>${afEsc(p.desc)}${p.pcc?`<div style="font-size:11px;color:var(--text-3);margin-top:3px">LC: ${afEsc(p.limite||'—')}</div>`:''}</td>
+                <td><span style="color:${TIPOS[p.tipo].c};font-weight:700;font-size:12px">${TIPOS[p.tipo].n}</span></td>
+                <td>${p.pcc?'<span class="af-pcc af-pcc--yes">PCC</span>':(p.modificar?'<span class="af-pcc af-pcc--no">MOD.</span>':'<span class="af-pcc af-pcc--no">NO</span>')}</td>
+                <td><button class="thx-del" data-del="${i}"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button></td>
+              </tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+      wrap.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ s.peligros.splice(+b.dataset.del,1); save(); renderList(); }));
+    }
+  }
+  function generarPDF(){
+    if(!s.peligros.length){ afToast('error','Plan vacío','Agrega al menos un peligro antes de generar el PDF.'); return; }
+    if(!toolRequiereVIP('el Planificador HACCP')) return;
+    if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
+    try{
+      const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16; let y=M;
+      pdf.setFillColor(67,160,71); pdf.rect(0,0,W,6,'F'); pdf.setFillColor(27,58,34); pdf.rect(0,6,W,3,'F'); y=20;
+      pdf.setFontSize(14); pdf.setTextColor(27,58,34); pdf.setFont(undefined,'bold');
+      pdf.text('PLAN HACCP · Puntos Críticos de Control', M, y); y+=6;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(110,120,110);
+      pdf.text('Alintec Food · Herramienta Pro VIP', M, y); y+=4;
+      pdf.text('Folio: '+s.folio+' · '+new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}), M, y); y+=9;
+      [['Producto',s.producto||'—'],['Planta',s.empresa||'—'],['Equipo',s.equipo||'—']].forEach(([l,v])=>{ pdf.setTextColor(110,120,110); pdf.text(l+':',M,y); pdf.setTextColor(27,58,34); pdf.text(String(v),M+28,y,{maxWidth:W-2*M-28}); y+=5; });
+      y+=4;
+      const pccs=s.peligros.filter(p=>p.pcc).length;
+      pdf.setFillColor(67,160,71); pdf.roundedRect(M,y,W-2*M,16,2,2,'F'); pdf.setTextColor(255,255,255); pdf.setFont(undefined,'bold'); pdf.setFontSize(12);
+      pdf.text(s.peligros.length+' peligros analizados · '+pccs+' PCC', M+6, y+10); y+=24;
+      s.peligros.forEach((p,i)=>{
+        if(y>250){ pdf.addPage(); y=20; }
+        pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34);
+        pdf.text((i+1)+'. '+p.etapa+(p.pcc?'  [PCC]':''), M, y); y+=5;
+        pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(110,120,110);
+        const dl=pdf.splitTextToSize('Peligro ('+TIPOS[p.tipo].n+'): '+p.desc, W-2*M); pdf.text(dl,M,y); y+=dl.length*4.5;
+        const vl=pdf.splitTextToSize(p.veredicto, W-2*M); pdf.text(vl,M,y); y+=vl.length*4.5;
+        if(p.pcc){ pdf.setTextColor(27,58,34);
+          ['Límite crítico: '+(p.limite||'—'),'Monitoreo: '+(p.monitoreo||'—'),'Acción correctiva: '+(p.correccion||'—')].forEach(t=>{ const tl=pdf.splitTextToSize(t,W-2*M); pdf.text(tl,M+2,y); y+=tl.length*4.3; }); }
+        y+=4;
+      });
+      pdf.setFontSize(7.5); pdf.setTextColor(150,160,150);
+      pdf.text('Generado por el Planificador HACCP de Alintec Food · Árbol de decisiones Codex CXC 1-1969.', M, 287);
+      pdf.save(s.folio+'.pdf'); afToast('success','PDF generado',s.folio);
+    }catch(e){ console.error('[HACCP] PDF',e); afToast('error','Error al generar PDF',e.message||''); }
+  }
+  return {mount};
+})();
+if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-haccp']=(c)=>HACCPTool.mount(c); }
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   3 · AUDITORÍA BPM · Buenas Prácticas de Manufactura (NOM-251-SSA1-2009)
+   Checklist por secciones con puntaje automático y no conformidades.
+   ═══════════════════════════════════════════════════════════════════ */
+const BPMTool = (function(){
+  const KEY='alintec:bpm:current';
+  const CATALOGO=[
+    {id:'inst', nombre:'Instalaciones y áreas', items:[
+      'Pisos, paredes y techos son de superficie lavable y están en buen estado',
+      'Las áreas de proceso están separadas de las de almacén y servicios sanitarios',
+      'Existe protección contra la entrada de plagas (mallas, cortinas, sellos)',
+      'La iluminación es suficiente y las luminarias tienen protección antiestallido',
+      'La ventilación evita condensación y acumulación de humedad']},
+    {id:'equipo', nombre:'Equipo y utensilios', items:[
+      'El equipo en contacto con alimento es de material liso, no tóxico y no corrosivo',
+      'Los utensilios se lavan y desinfectan según programa establecido',
+      'El equipo se mantiene en buen estado y con mantenimiento documentado',
+      'Los termómetros y básculas están calibrados y verificados']},
+    {id:'servicios', nombre:'Servicios (agua y drenaje)', items:[
+      'El agua en contacto con alimentos es potable y se verifica su cloración',
+      'Existe drenaje adecuado y las trampas evitan reflujos',
+      'Las estaciones de lavado de manos cuentan con jabón, sanitizante y secado',
+      'Los sanitarios están limpios, funcionales y no comunican al área de proceso']},
+    {id:'personal', nombre:'Salud e higiene del personal', items:[
+      'El personal usa uniforme limpio, cofia y cubrebocas donde aplica',
+      'Se prohíbe el uso de joyería, maquillaje y uñas largas en producción',
+      'Existe control de salud y se excluye al personal enfermo del área',
+      'El personal está capacitado en higiene y lo evidencia con registros']},
+    {id:'materias', nombre:'Control de materias primas', items:[
+      'Las materias primas se inspeccionan y se rechazan las no conformes',
+      'Se aplica PEPS (primeras entradas, primeras salidas) en almacén',
+      'Las materias primas se almacenan separadas del piso y la pared',
+      'Se conserva la trazabilidad de lotes de materia prima']},
+    {id:'operacion', nombre:'Control de operaciones', items:[
+      'Se controlan tiempos y temperaturas en etapas críticas del proceso',
+      'Se evita la contaminación cruzada entre crudo y cocido',
+      'Los productos terminados se identifican con lote y fecha de caducidad',
+      'La cadena de frío se mantiene y se registra en refrigeración y transporte']},
+    {id:'residuos', nombre:'Manejo de residuos y plagas', items:[
+      'Los residuos se retiran con frecuencia y los contenedores están tapados',
+      'Existe un programa de control de plagas con evidencia de aplicación',
+      'Los productos químicos de limpieza se almacenan separados y rotulados']},
+    {id:'docs', nombre:'Documentación', items:[
+      'Existen procedimientos escritos de limpieza y desinfección (POES)',
+      'Se conservan los registros de monitoreo y verificación',
+      'Hay un programa de capacitación vigente para el personal']}
+  ];
+  let s = base();
+  function base(){ return {folio:afFolio('BPM'), empresa:'', auditor:'', fecha:new Date().toISOString().slice(0,10), resp:{}, abiertas:{inst:true}}; }
+  function load(){ try{ const r=localStorage.getItem(KEY); if(r) s=Object.assign(base(),JSON.parse(r)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+
+  function puntajeSeccion(cat){
+    let si=0,total=0;
+    cat.items.forEach((_,i)=>{ const v=s.resp[cat.id+'-'+i]; if(v==='na'||v==null) return; total++; if(v==='si') si++; });
+    return {si, total, pct: total? Math.round(si/total*100):null};
+  }
+  function puntajeGlobal(){
+    let si=0,total=0,respondidos=0, itemsTotal=0;
+    CATALOGO.forEach(cat=>cat.items.forEach((_,i)=>{ itemsTotal++; const v=s.resp[cat.id+'-'+i]; if(v!=null) respondidos++; if(v==='na'||v==null) return; total++; if(v==='si') si++; }));
+    return {pct: total? Math.round(si/total*100):0, si, total, respondidos, itemsTotal};
+  }
+  function clasif(pct){
+    if(pct>=90) return {txt:'Excelente', cls:'af-badge--ok', c:[67,160,71]};
+    if(pct>=75) return {txt:'Satisfactorio', cls:'af-badge--ok', c:[124,179,66]};
+    if(pct>=60) return {txt:'Requiere mejora', cls:'af-badge--warn', c:[224,161,6]};
+    return {txt:'Crítico', cls:'af-badge--bad', c:[229,96,77]};
+  }
+  function noConformidades(){
+    const nc=[];
+    CATALOGO.forEach(cat=>cat.items.forEach((it,i)=>{ if(s.resp[cat.id+'-'+i]==='no') nc.push({sec:cat.nombre, item:it}); }));
+    return nc;
+  }
+
+  function mount(container){
+    load();
+    const g=puntajeGlobal(); const cl=clasif(g.pct);
+    container.innerHTML=`
+      <div class="tool-section">
+        <div class="tool-section__head">
+          <div class="tool-section__title">
+            <div class="tool-section__icon"><svg class="ic"><use href="#i-clipboard-check"/></svg></div>
+            <div><h1>Auditoría BPM</h1><p>Checklist de Buenas Prácticas de Manufactura · NOM-251-SSA1-2009</p></div>
+          </div>
+          <div class="tool-section__actions">
+            <button class="btn btn--ghost btn--sm" id="bp-reset">Limpiar</button>
+            <button class="btn btn--accent btn--sm" id="bp-pdf">Descargar PDF<svg class="ic"><use href="#i-download"/></svg></button>
+          </div>
+        </div>
+        <div class="thx-card">
+          <div class="thx-grid2">
+            <div class="thx-field"><label class="thx-label">Empresa auditada</label><input class="thx-input" id="bp-emp" placeholder="Ej. Alimentos del Valle" value="${afEsc(s.empresa)}"></div>
+            <div class="thx-field"><label class="thx-label">Auditor</label><input class="thx-input" id="bp-aud" placeholder="Ej. IBQ. nombre" value="${afEsc(s.auditor)}"></div>
+          </div>
+        </div>
+        <div class="thx-card" id="bp-score"></div>
+        <div id="bp-secciones"></div>
+        <div class="thx-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Checklist basado en la NOM-251-SSA1-2009 (prácticas de higiene para el proceso de alimentos, bebidas y suplementos). El puntaje excluye los ítems marcados como “No aplica”.</div>
+      </div>`;
+    const q=id=>container.querySelector(id);
+    q('#bp-emp').addEventListener('input',e=>{s.empresa=e.target.value;save();});
+    q('#bp-aud').addEventListener('input',e=>{s.auditor=e.target.value;save();});
+    q('#bp-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar toda la auditoría?'))return; s=base(); save(); mount(container); });
+    q('#bp-pdf').addEventListener('click',generarPDF);
+    renderScore(); renderSecciones();
+
+    function renderScore(){
+      const g=puntajeGlobal(); const cl=clasif(g.pct);
+      q('#bp-score').innerHTML=`
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="flex-shrink:0"><div class="af-kpi__lbl">Cumplimiento global</div><div style="font-size:44px;font-weight:800;letter-spacing:-1.5px;color:rgb(${cl.c.join(',')})">${g.pct}%</div><span class="af-badge ${cl.cls}">${cl.txt}</span></div>
+          <div style="flex:1;min-width:200px">
+            <div class="af-gauge"><div class="af-gauge__fill" style="width:${g.pct}%;background:rgb(${cl.c.join(',')})"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--text-2)">
+              <span><b style="color:var(--text)">${g.si}</b> conformes</span>
+              <span><b style="color:var(--text)">${g.total-g.si}</b> no conformes</span>
+              <span><b style="color:var(--text)">${g.respondidos}/${g.itemsTotal}</b> evaluados</span>
+            </div>
+          </div>
+        </div>`;
+    }
+    function renderSecciones(){
+      const wrap=q('#bp-secciones');
+      wrap.innerHTML=CATALOGO.map(cat=>{
+        const ps=puntajeSeccion(cat); const abierta=!!s.abiertas[cat.id];
+        return `<div class="af-audit-sec">
+          <div class="af-audit-sec__head" data-sec="${cat.id}">
+            <h3><svg class="ic" style="width:16px;height:16px"><use href="#i-clipboard-check"/></svg>${cat.nombre}</h3>
+            <span class="af-secpct">${ps.pct==null?'—':ps.pct+'%'} <svg class="ic" style="width:14px;height:14px;transform:rotate(${abierta?180:0}deg);transition:.2s"><use href="#i-arrow-right"/></svg></span>
+          </div>
+          ${abierta?`<div class="af-audit-sec__body">${cat.items.map((it,i)=>{
+            const v=s.resp[cat.id+'-'+i];
+            return `<div class="af-audit-item">
+              <div class="af-audit-item__txt">${it}</div>
+              <div class="af-triopt" data-key="${cat.id}-${i}">
+                <button data-v="si" class="${v==='si'?'on':''}">Sí</button>
+                <button data-v="no" class="${v==='no'?'on':''}">No</button>
+                <button data-v="na" class="${v==='na'?'on':''}">N/A</button>
+              </div>
+            </div>`;
+          }).join('')}</div>`:''}
+        </div>`;
+      }).join('');
+      wrap.querySelectorAll('.af-audit-sec__head').forEach(h=>h.addEventListener('click',()=>{ const id=h.dataset.sec; s.abiertas[id]=!s.abiertas[id]; save(); renderSecciones(); }));
+      wrap.querySelectorAll('.af-triopt').forEach(g2=>g2.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+        const key=g2.dataset.key; s.resp[key]= s.resp[key]===b.dataset.v ? null : b.dataset.v; save();
+        g2.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.dataset.v===s.resp[key]));
+        renderScore();
+        // actualizar % de la sección sin recolapsar
+        const secId=key.split('-')[0]; const cat=CATALOGO.find(c=>c.id===secId); const ps=puntajeSeccion(cat);
+        const head=wrap.querySelector(`[data-sec="${secId}"] .af-secpct`); if(head) head.childNodes[0].nodeValue=(ps.pct==null?'— ':ps.pct+'% ');
+      })));
+    }
+  }
+  function generarPDF(){
+    const g=puntajeGlobal();
+    if(g.respondidos===0){ afToast('error','Sin evaluar','Responde al menos un punto de la auditoría.'); return; }
+    if(!toolRequiereVIP('la Auditoría BPM')) return;
+    if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
+    try{
+      const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16; let y=M; const cl=clasif(g.pct);
+      pdf.setFillColor(67,160,71); pdf.rect(0,0,W,6,'F'); pdf.setFillColor(27,58,34); pdf.rect(0,6,W,3,'F'); y=20;
+      pdf.setFontSize(14); pdf.setTextColor(27,58,34); pdf.setFont(undefined,'bold');
+      pdf.text('AUDITORÍA BPM · NOM-251-SSA1-2009', M, y); y+=6;
+      pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(110,120,110);
+      pdf.text('Alintec Food · Herramienta Pro VIP', M, y); y+=4;
+      pdf.text('Folio: '+s.folio+' · '+new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}), M, y); y+=9;
+      [['Empresa',s.empresa||'—'],['Auditor',s.auditor||'—']].forEach(([l,v])=>{ pdf.setTextColor(110,120,110); pdf.text(l+':',M,y); pdf.setTextColor(27,58,34); pdf.text(String(v),M+28,y); y+=5; });
+      y+=4;
+      pdf.setFillColor(...cl.c); pdf.roundedRect(M,y,W-2*M,22,2,2,'F'); pdf.setTextColor(255,255,255); pdf.setFont(undefined,'bold'); pdf.setFontSize(24);
+      pdf.text(g.pct+'%', M+6, y+15); pdf.setFontSize(12); pdf.text(cl.txt, M+42, y+10); pdf.setFont(undefined,'normal'); pdf.setFontSize(8.5);
+      pdf.text(g.si+' conformes · '+(g.total-g.si)+' no conformes · '+g.respondidos+'/'+g.itemsTotal+' evaluados', M+42, y+16); y+=30;
+      pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(27,58,34); pdf.text('PUNTAJE POR SECCIÓN', M, y); y+=7;
+      pdf.setFontSize(9);
+      CATALOGO.forEach(cat=>{ const ps=puntajeSeccion(cat); pdf.setFont(undefined,'bold'); pdf.setTextColor(27,58,34); pdf.text(cat.nombre,M,y); pdf.setTextColor(110,120,110); pdf.text(ps.pct==null?'N/A':ps.pct+'%',M+120,y); y+=5.5; });
+      const nc=noConformidades();
+      if(nc.length){ y+=4; if(y>250){pdf.addPage();y=20;} pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(229,96,77); pdf.text('NO CONFORMIDADES ('+nc.length+')', M, y); y+=6; pdf.setFont(undefined,'normal'); pdf.setFontSize(8.5); pdf.setTextColor(27,58,34);
+        nc.forEach(x=>{ if(y>275){pdf.addPage();y=20;} const t=pdf.splitTextToSize('• ['+x.sec+'] '+x.item, W-2*M); pdf.text(t,M,y); y+=t.length*4.3; }); }
+      pdf.setFontSize(7.5); pdf.setTextColor(150,160,150);
+      pdf.text('Generado por la Auditoría BPM de Alintec Food · Referencia NOM-251-SSA1-2009.', M, 287);
+      pdf.save(s.folio+'.pdf'); afToast('success','PDF generado',s.folio);
+    }catch(e){ console.error('[BPM] PDF',e); afToast('error','Error al generar PDF',e.message||''); }
+  }
+  return {mount};
+})();
+if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-bpm']=(c)=>BPMTool.mount(c); }
+</script>
+
 </body>
 </html>
