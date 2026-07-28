@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="night">
+<html lang="es" data-theme="day">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0A120C">
+<script>
+/* Tema · anti-parpadeo. Corre antes de pintar la página.
+   Primera visita (nada guardado) → modo DÍA.
+   Visitas siguientes → respeta el modo que el usuario dejó elegido. */
+(function(){try{var t=localStorage.getItem('alintec-admin:theme');
+if(t!=='day'&&t!=='night')t='day';
+document.documentElement.setAttribute('data-theme',t);
+var m=document.querySelector('meta[name="theme-color"]');
+if(m)m.setAttribute('content',t==='night'?'#0A120C':'#EEF7EE');}catch(e){}})();
+</script>
 <meta name="description" content="Alintec Food Admin · Panel de administración">
 <title>Alintec Food · Admin</title>
 <link rel="icon" type="image/png" href="assets/img/alintec-favicon.png">
@@ -1250,7 +1260,7 @@ window.__signOut = async () => {
    ========================================================= */
 
 const Theme={
-  init(){const s=localStorage.getItem('alintec-admin:theme')||'night';document.documentElement.dataset.theme=s;this.updateIcon();},
+  init(){const s=localStorage.getItem('alintec-admin:theme')||'day';document.documentElement.dataset.theme=s;this.updateIcon();},
   toggle(){const c=document.documentElement.dataset.theme;const n=c==='night'?'day':'night';document.documentElement.dataset.theme=n;localStorage.setItem('alintec-admin:theme',n);this.updateIcon();},
   updateIcon(){const b=document.getElementById('theme-toggle');if(!b)return;const isDay=document.documentElement.dataset.theme==='day';b.innerHTML='<svg class="ic"><use href="#'+(isDay?'i-sun':'i-moon')+'"/></svg>';}
 };

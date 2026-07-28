@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="night">
+<html lang="es" data-theme="day">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0A120C">
+<script>
+/* Tema · anti-parpadeo. Corre antes de pintar la página.
+   Primera visita (nada guardado) → modo DÍA.
+   Visitas siguientes → respeta el modo que el usuario dejó elegido. */
+(function(){try{var t=localStorage.getItem('alintec-auth:theme');
+if(t!=='day'&&t!=='night')t='day';
+document.documentElement.setAttribute('data-theme',t);
+var m=document.querySelector('meta[name="theme-color"]');
+if(m)m.setAttribute('content',t==='night'?'#0A120C':'#EEF7EE');}catch(e){}})();
+</script>
 <meta name="description" content="Alintec Food · Inicia sesión o crea tu cuenta">
 <title>Alintec Food · Acceso</title>
 <link rel="icon" type="image/png" href="assets/img/alintec-favicon.png">
@@ -635,8 +645,8 @@ setTimeout(function(){
           <span class="avi">PH</span>
           <div style="flex:1;">
             <div class="bub">
-              <b>Dra. Paulina Herrera <small>· Ortodoncista</small></b>
-              <p>El curso de ortodoncia interceptiva me dio confianza para tratar casos que antes refería. El certificado con folio lo presenté en mi colegio sin problema</p>
+              <b>IBQ. Paulina Herrera <small>· Jefa de Aseguramiento de Calidad</small></b>
+              <p>El curso de HACCP me dio la confianza para levantar el plan de la planta yo sola. El certificado con folio lo presenté en la auditoría sin problema</p>
               <span class="lk"><i><svg viewBox="0 0 24 24"><path d="M2 10h4v12H2zM22 11c0-1.1-.9-2-2-2h-5.2l.9-4.4v-.3c0-.4-.2-.8-.4-1.1L14.2 2 8.6 7.6c-.4.4-.6.9-.6 1.4v9c0 1.1.9 2 2 2h7c.8 0 1.5-.5 1.8-1.2l2.1-5c.1-.2.1-.5.1-.8v-2z"/></svg></i>11</span>
             </div>
             <div class="meta"><b>Me gusta</b><b>Responder</b><span>2 sem</span></div>
@@ -647,7 +657,7 @@ setTimeout(function(){
           <div style="flex:1;">
             <div class="bub">
               <b>M.C. Daniela Roca <small>· Consultora en calidad alimentaria</small></b>
-              <p>Con los cursos de gestión ordenamos la agenda y subió la ocupación de sillón. Las clases en vivo valen oro para todo mi equipo</p>
+              <p>Con los cursos de gestión ordenamos los registros y pasamos la auditoría sin no conformidades mayores. Las clases en vivo valen oro para todo mi equipo</p>
               <span class="lk"><i><svg viewBox="0 0 24 24"><path d="M2 10h4v12H2zM22 11c0-1.1-.9-2-2-2h-5.2l.9-4.4v-.3c0-.4-.2-.8-.4-1.1L14.2 2 8.6 7.6c-.4.4-.6.9-.6 1.4v9c0 1.1.9 2 2 2h7c.8 0 1.5-.5 1.8-1.2l2.1-5c.1-.2.1-.5.1-.8v-2z"/></svg></i>8</span>
             </div>
             <div class="meta"><b>Me gusta</b><b>Responder</b><span>1 mes</span></div>
@@ -774,7 +784,7 @@ setTimeout(function(){
 /* ===== Tema ===== */
 const Theme = {
   init() {
-    const s = localStorage.getItem('alintec-auth:theme') || 'night';
+    const s = localStorage.getItem('alintec-auth:theme') || 'day';
     document.documentElement.dataset.theme = s;
     this.updateIcon();
   },

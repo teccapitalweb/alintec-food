@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -153,7 +153,7 @@
   const moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
   const tb=document.getElementById('themeBtn');
   function setTheme(t){document.documentElement.setAttribute('data-theme',t);tb.innerHTML=t==='dark'?sun:moon;}
-  setTheme(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  setTheme('light');  // Alintec: día por default (antes seguía la preferencia del SO)
   tb.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
 
   // ── Helpers ──

@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="night">
+<html lang="es" data-theme="day">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0A120C">
+<script>
+/* Tema · anti-parpadeo. Corre antes de pintar la página.
+   Primera visita (nada guardado) → modo DÍA.
+   Visitas siguientes → respeta el modo que el usuario dejó elegido. */
+(function(){try{var t=localStorage.getItem('alintec:pref:theme');
+if(t!=='day'&&t!=='night')t='day';
+document.documentElement.setAttribute('data-theme',t);
+var m=document.querySelector('meta[name="theme-color"]');
+if(m)m.setAttribute('content',t==='night'?'#0A120C':'#EEF7EE');}catch(e){}})();
+</script>
 <meta name="description" content="Alintec Food Panel VIP · Capacitación industrial, herramientas pro y certificación con folio.">
 <title>Alintec Food · Panel VIP</title>
 <link rel="icon" type="image/png" href="assets/img/alintec-favicon.png">
@@ -4040,7 +4050,7 @@ window.__setDisplayName = async (nombre) => {
         <div class="banner__info">
           <span class="banner__eyebrow"><span class="banner__eyebrow__dot"></span><span id="greeting-label">En vivo</span><span class="banner__version">v.2026.05</span></span>
           <h1 class="banner__title" id="hero-title">Hola de nuevo</h1>
-          <p class="banner__sub">Tu acceso a cursos premium, herramientas clínicas pro y la comunidad alimentaria más activa de México.</p>
+          <p class="banner__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
         </div>
         <div class="banner__stats">
           <div class="banner__stat" data-section="cursos" style="cursor:pointer"><div class="banner__stat-lbl">Cursos</div><div class="banner__stat-val">12</div></div>
@@ -4080,7 +4090,7 @@ window.__setDisplayName = async (nombre) => {
     <div class="widget widget--wa">
       <div class="widget__label"><svg class="ic"><use href="#i-whatsapp"/></svg>Comunidad Alintec Food</div>
       <div class="widget__count" style="font-size:19px;line-height:1.25;">Comunidad<span style="font-size:12.5px; opacity:.6; font-weight:500; display:block;">Alintec Food</span></div>
-      <div class="widget__count-sub">Conecta con colegas y comparte casos clínicos</div>
+      <div class="widget__count-sub">Conecta con colegas y comparte casos del sector</div>
       <button class="btn btn--wa btn--block btn--sm" id="btn-wa"><svg class="ic"><use href="#i-whatsapp"/></svg>Abrir grupo</button>
     </div>
 
@@ -4201,8 +4211,8 @@ const PREFIX='alintec:';
 const Storage={pref:{get(k,d){const v=localStorage.getItem(PREFIX+'pref:'+k);return v===null?d:v;},set(k,v){localStorage.setItem(PREFIX+'pref:'+k,String(v));}}};
 
 const Theme={
-  init(){this.apply(Storage.pref.get('theme','night'));document.getElementById('theme-toggle')?.addEventListener('click',()=>this.toggle());},
-  apply(t){if(t!=='day'&&t!=='night')t='night';document.documentElement.setAttribute('data-theme',t);Storage.pref.set('theme',t);const icon=document.getElementById('theme-icon')?.querySelector('use');const lbl=document.getElementById('theme-label');if(icon)icon.setAttribute('href',t==='night'?'#i-moon':'#i-sun');if(lbl)lbl.textContent=t==='night'?'Noche':'Día';const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',t==='night'?'#0A120C':'#EEF7EE');},
+  init(){this.apply(Storage.pref.get('theme','day'));document.getElementById('theme-toggle')?.addEventListener('click',()=>this.toggle());},
+  apply(t){if(t!=='day'&&t!=='night')t='day';document.documentElement.setAttribute('data-theme',t);Storage.pref.set('theme',t);const icon=document.getElementById('theme-icon')?.querySelector('use');const lbl=document.getElementById('theme-label');if(icon)icon.setAttribute('href',t==='night'?'#i-moon':'#i-sun');if(lbl)lbl.textContent=t==='night'?'Noche':'Día';const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',t==='night'?'#0A120C':'#EEF7EE');},
   toggle(){this.apply(document.documentElement.getAttribute('data-theme')==='night'?'day':'night');}
 };
 
@@ -6793,12 +6803,12 @@ const Sections = (function(){
   ];
 
   const logros = [
-    {id:'l1',cat:'Clínica',nombre:'Primer paso',desc:'Completaste tu primer curso clínico',xp:50,unlock:'2026-04-18',criterio:'Termina 1 curso del área Clínica'},
-    {id:'l2',cat:'Clínica',nombre:'Bioseguridad total',desc:'Dominaste control de infecciones y esterilización',xp:150,unlock:null,criterio:'Termina el módulo de bioseguridad'},
-    {id:'l3',cat:'Clínica',nombre:'Sonrisa de oro',desc:'Completaste 5 cursos de ciencia de alimentos clínica',xp:300,unlock:null,criterio:'Termina 5 cursos del área Clínica'},
-    {id:'l4',cat:'Clínica',nombre:'Maestro del odontograma',desc:'Registraste 20 odontogramas',xp:200,unlock:null,criterio:'Crea 20 odontogramas en la herramienta pro'},
-    {id:'l5',cat:'Clínica',nombre:'Diagnóstico perfecto',desc:'Calificación 100 en un curso clínico',xp:100,unlock:null,criterio:'Saca 100 en cualquier curso de Clínica'},
-    {id:'l6',cat:'Clínica',nombre:'Guardián de la sonrisa',desc:'Racha de 30 días aprendiendo',xp:250,unlock:null,criterio:'Estudia 30 días seguidos'},
+    {id:'l1',cat:'Operación',nombre:'Primer paso',desc:'Completaste tu primer curso',xp:50,unlock:'2026-04-18',criterio:'Termina 1 curso del área Clínica'},
+    {id:'l2',cat:'Operación',nombre:'Bioseguridad total',desc:'Dominaste control de infecciones y esterilización',xp:150,unlock:null,criterio:'Termina el módulo de bioseguridad'},
+    {id:'l3',cat:'Operación',nombre:'Sonrisa de oro',desc:'Completaste 5 cursos de ciencia de alimentos',xp:300,unlock:null,criterio:'Termina 5 cursos del área Clínica'},
+    {id:'l4',cat:'Operación',nombre:'Maestro del odontograma',desc:'Registraste 20 odontogramas',xp:200,unlock:null,criterio:'Crea 20 odontogramas en la herramienta pro'},
+    {id:'l5',cat:'Operación',nombre:'Diagnóstico perfecto',desc:'Calificación 100 en un curso',xp:100,unlock:null,criterio:'Saca 100 en cualquier curso de Clínica'},
+    {id:'l6',cat:'Operación',nombre:'Guardián de la sonrisa',desc:'Racha de 30 días aprendiendo',xp:250,unlock:null,criterio:'Estudia 30 días seguidos'},
     {id:'l7',cat:'Especialización',nombre:'Ortodoncia inicial',desc:'Completaste el curso de ortodoncia',xp:120,unlock:null,criterio:'Termina el curso de Ortodoncia'},
     {id:'l8',cat:'Especialización',nombre:'Endodoncia dominada',desc:'Completaste el curso de endodoncia',xp:150,unlock:null,criterio:'Termina el curso de Endodoncia'},
     {id:'l9',cat:'Especialización',nombre:'Implantólogo',desc:'Completaste el curso de implantología',xp:200,unlock:null,criterio:'Termina el curso de Implantología'},
@@ -6808,7 +6818,7 @@ const Sections = (function(){
     {id:'l13',cat:'Excelencia',nombre:'Rehabilitación oral',desc:'Completaste rehabilitación y prótesis',xp:500,unlock:null,criterio:'Termina "Rehabilitación oral avanzada"'},
     {id:'l14',cat:'Excelencia',nombre:'Plan maestro',desc:'Generaste 15 planes de tratamiento',xp:200,unlock:null,criterio:'Crea 15 planes de tratamiento'},
     {id:'l15',cat:'Excelencia',nombre:'Cotizador pro',desc:'Generaste 30 cotizaciones',xp:300,unlock:null,criterio:'Genera 30 cotizaciones con la herramienta'},
-    {id:'l16',cat:'Excelencia',nombre:'Cero complicaciones',desc:'Documentaste 5 casos de éxito',xp:250,unlock:null,criterio:'Documenta 5 casos clínicos'},
+    {id:'l16',cat:'Excelencia',nombre:'Cero no conformidades',desc:'Documentaste 5 casos de éxito',xp:250,unlock:null,criterio:'Documenta 5 casos de éxito'},
     {id:'l17',cat:'Comunidad',nombre:'Bienvenido al club',desc:'Te uniste al Club VIP Alintec Food',xp:30,unlock:'2026-03-15',criterio:'Activa tu membresía VIP'},
     {id:'l18',cat:'Comunidad',nombre:'Voz del foro',desc:'Publicaste 10 mensajes en el foro VIP',xp:100,unlock:null,criterio:'Crea 10 posts en el foro'},
     {id:'l19',cat:'Comunidad',nombre:'Colega solidario',desc:'Recibiste 25 likes en respuestas',xp:150,unlock:null,criterio:'Ayuda y consigue 25 likes'},
@@ -6816,7 +6826,7 @@ const Sections = (function(){
     {id:'l21',cat:'Comunidad',nombre:'Embajador Alintec Food',desc:'Invitaste a 3 colegas',xp:300,unlock:null,criterio:'Refiere a 3 personas que se registren'},
     {id:'l22',cat:'Maestría',nombre:'Estudiante constante',desc:'Racha de 7 días aprendiendo',xp:70,unlock:'2026-05-19',criterio:'Aprende 7 días seguidos'},
     {id:'l23',cat:'Maestría',nombre:'Disciplina de hierro',desc:'Racha de 30 días aprendiendo',xp:300,unlock:null,criterio:'Aprende 30 días seguidos'},
-    {id:'l24',cat:'Maestría',nombre:'Maratonista clínico',desc:'Acumulaste 100 horas de estudio',xp:400,unlock:null,criterio:'Acumula 100 horas totales'},
+    {id:'l24',cat:'Maestría',nombre:'Maratonista',desc:'Acumulaste 100 horas de estudio',xp:400,unlock:null,criterio:'Acumula 100 horas totales'},
     {id:'l25',cat:'Maestría',nombre:'Tres áreas dominadas',desc:'Certificados en 3 áreas distintas',xp:350,unlock:null,criterio:'Obtén certificados en 3 áreas distintas'},
     {id:'l26',cat:'Maestría',nombre:'Maestro Alintec Food',desc:'Completaste 20 cursos. Una leyenda.',xp:1000,unlock:null,criterio:'Termina 20 cursos del catálogo'}
   ];
@@ -7920,7 +7930,7 @@ const Sections = (function(){
     const proxNivel=niveles[nivelActual.id]?.nombre||'Maestro';
     const ganados=logros.filter(l=>l.unlock).length;
     const totalXp=logros.filter(l=>l.unlock).reduce((s,l)=>s+l.xp,0);
-    const cats=['Clínica','Especialización','Excelencia','Comunidad','Maestría'];
+    const cats=['Operación','Especialización','Excelencia','Comunidad','Maestría'];
     container.innerHTML=`
       <div class="fade-up">
         <div class="sec-hero">
@@ -8735,7 +8745,7 @@ const Sections = (function(){
         <div class="dir-bar">
           <div class="dir-search">
             <svg class="ic"><use href="#i-search"/></svg>
-            <input type="text" id="dir-buscar" placeholder="Buscar por nombre, clínica o especialidad…">
+            <input type="text" id="dir-buscar" placeholder="Buscar por nombre, empresa o especialidad…">
           </div>
           ${esVip?`<button class="btn btn--accent" id="dir-mi-tarjeta"><svg class="ic"><use href="#i-edit"/></svg>Mi tarjeta</button>`:''}
         </div>
@@ -8918,8 +8928,8 @@ const Sections = (function(){
         <label class="dir-form__lbl">Nombre completo</label>
         <input class="dir-form__in" id="dirf-nombre" maxlength="50" value="${(data.nombre||window.UserState?.nombre||'').replace(/"/g,'&quot;')}" placeholder="Ej. Felipe Estrada Ramírez">
         <label class="dir-form__lbl">Puesto / cargo</label>
-        <input class="dir-form__in" id="dirf-puesto" maxlength="60" value="${(data.puesto||'').replace(/"/g,'&quot;')}" placeholder="Ej. Ortodoncista">
-        <label class="dir-form__lbl">Clínica / Consultorio</label>
+        <input class="dir-form__in" id="dirf-puesto" maxlength="60" value="${(data.puesto||'').replace(/"/g,'&quot;')}" placeholder="Ej. Jefe de Aseguramiento de Calidad">
+        <label class="dir-form__lbl">Empresa / Planta</label>
         <input class="dir-form__in" id="dirf-empresa" maxlength="60" value="${(data.empresa||'').replace(/"/g,'&quot;')}" placeholder="Ej. Alimentos del Valle SA de CV">
         <label class="dir-form__lbl">Ubicación profesional <span class="dir-form__opt">(opcional)</span></label>
         <input class="dir-form__in" id="dirf-ubicacion" maxlength="60" value="${(data.ubicacion||'').replace(/"/g,'&quot;')}" placeholder="Ej. Puebla, Puebla">
@@ -9071,7 +9081,7 @@ const Sections = (function(){
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Comunidad activa</span>
           <h1 class="sec-hero__title">Foro VIP</h1>
-          <p class="sec-hero__sub">Comparte casos clínicos, haz preguntas y conecta con la comunidad Alintec Food. Publica texto e imágenes, comenta y reacciona.</p>
+          <p class="sec-hero__sub">Comparte casos del sector, haz preguntas y conecta con la comunidad Alintec Food. Publica texto e imágenes, comenta y reacciona.</p>
         </div>
 
         <div class="foro-aviso">
@@ -9408,7 +9418,7 @@ const Sections = (function(){
         <section class="wa-hero">
           <div class="wa-hero__icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.05 4.91A9.816 9.816 0 0 0 12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01zm-7.01 15.24c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.264 8.264 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.183 8.183 0 0 1 2.41 5.83c.02 4.54-3.68 8.23-8.22 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43s.17-.25.25-.41c.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18s-.22-.16-.47-.28z"/></svg></div>
           <h2 class="wa-hero__title">Únete al canal oficial</h2>
-          <p class="wa-hero__sub">Una comunidad de profesionales de alimentos compartiendo casos clínicos y resolviendo dudas todos los días.</p>
+          <p class="wa-hero__sub">Una comunidad de profesionales de alimentos compartiendo casos del sector y resolviendo dudas todos los días.</p>
 
           <div style="position:relative;z-index:1;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
             <button class="btn btn--wa" id="btn-wa-canal-open"><svg class="ic"><use href="#i-whatsapp"/></svg>Abrir grupo</button>
@@ -9424,7 +9434,7 @@ const Sections = (function(){
           </div>
           <div class="wa-rule">
             <div class="wa-rule__check"><svg class="ic"><use href="#i-check"/></svg></div>
-            <div class="wa-rule__text"><strong>Comparte casos reales.</strong> Si compartes un caso clínico o pregunta técnica, da contexto: sector, tamaño, qué pasó.</div>
+            <div class="wa-rule__text"><strong>Comparte casos reales.</strong> Si compartes un caso real o pregunta técnica, da contexto: sector, tamaño, qué pasó.</div>
           </div>
           <div class="wa-rule">
             <div class="wa-rule__check"><svg class="ic"><use href="#i-check"/></svg></div>
