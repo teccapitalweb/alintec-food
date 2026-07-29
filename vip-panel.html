@@ -8906,8 +8906,8 @@ const Sections = (function(){
     const uid = window.UserState?.uid;
     if (!uid){ Toast.error('Inicia sesión',''); return; }
     // Cargar tarjeta existente
-    let data = {};
-    try { const ds = await fs.getDoc(fs.doc(fs.db,'directorio',uid)); if (ds.exists()) data = ds.data(); } catch(e){}
+    let data = {}, tarjetaExiste = false;
+    try { const ds = await fs.getDoc(fs.doc(fs.db,'directorio',uid)); if (ds.exists()) { data = ds.data(); tarjetaExiste = true; } } catch(e){}
     _dirFotoTmp = undefined;
 
     const fotoActual = data.foto || '';
@@ -8957,8 +8957,23 @@ const Sections = (function(){
       </div>
     `;
     const footer = document.createElement('div');
-    footer.innerHTML = `<button class="btn btn--ghost" id="dirf-cancel">Cancelar</button><button class="btn btn--accent" id="dirf-guardar">Guardar tarjeta</button>`;
+    footer.innerHTML = `${tarjetaExiste?`<button class="btn btn--ghost" id="dirf-eliminar" style="color:#F87171;margin-right:auto;"><svg class="ic"><use href="#i-trash"/></svg>Eliminar tarjeta</button>`:''}<button class="btn btn--ghost" id="dirf-cancel">Cancelar</button><button class="btn btn--accent" id="dirf-guardar">Guardar tarjeta</button>`;
     const m = Modal.open({id:'dir-form', title:'Mi tarjeta profesional', subtitle:'Aparecerá en el Directorio VIP', icon:'i-user', size:'md', body, footer});
+
+    // Eliminar tarjeta · deleteDoc directo (las reglas ya permiten borrar el doc propio)
+    const btnEliminar = footer.querySelector('#dirf-eliminar');
+    if (btnEliminar) btnEliminar.addEventListener('click', async ()=>{
+      if (!confirm('¿Eliminar tu tarjeta del directorio? Se borra por completo (datos y foto) y dejarás de aparecer. Puedes crear una nueva cuando quieras.')) return;
+      btnEliminar.disabled = true; btnEliminar.textContent = 'Eliminando…';
+      try {
+        await fs.deleteDoc(fs.doc(fs.db,'directorio',uid));
+        Toast.success('Tarjeta eliminada','Ya no apareces en el directorio');
+        m.close();
+      } catch(e){
+        console.error(e); Toast.error('No se pudo eliminar', e.message||'');
+        btnEliminar.disabled = false; btnEliminar.innerHTML = '<svg class="ic"><use href="#i-trash"/></svg>Eliminar tarjeta';
+      }
+    });
 
     // Foto
     const fileInput = document.getElementById('dirf-foto-file');
