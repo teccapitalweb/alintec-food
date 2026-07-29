@@ -8957,23 +8957,39 @@ const Sections = (function(){
       </div>
     `;
     const footer = document.createElement('div');
-    footer.innerHTML = `${tarjetaExiste?`<button class="btn btn--ghost" id="dirf-eliminar" style="color:#F87171;margin-right:auto;"><svg class="ic"><use href="#i-trash"/></svg>Eliminar tarjeta</button>`:''}<button class="btn btn--ghost" id="dirf-cancel">Cancelar</button><button class="btn btn--accent" id="dirf-guardar">Guardar tarjeta</button>`;
+    footer.innerHTML = `
+      <div id="dirf-acciones" style="display:flex;align-items:center;gap:10px;width:100%;">
+        ${tarjetaExiste?`<button class="btn btn--ghost" id="dirf-eliminar" style="color:#F87171;margin-right:auto;"><svg class="ic"><use href="#i-trash"/></svg>Eliminar tarjeta</button>`:''}
+        <button class="btn btn--ghost" id="dirf-cancel" ${tarjetaExiste?'':'style="margin-left:auto;"'}>Cancelar</button>
+        <button class="btn btn--accent" id="dirf-guardar">Guardar tarjeta</button>
+      </div>
+      <div id="dirf-confirmar" style="display:none;align-items:center;gap:10px;width:100%;">
+        <span style="margin-right:auto;font-size:13px;font-weight:600;color:#F87171;">¿Eliminar tu tarjeta definitivamente? Se borra por completo.</span>
+        <button class="btn btn--ghost" id="dirf-elim-no">No, conservar</button>
+        <button class="btn" id="dirf-elim-si" style="background:#F87171;color:#fff;border:none;"><svg class="ic"><use href="#i-trash"/></svg>Sí, eliminar</button>
+      </div>`;
     const m = Modal.open({id:'dir-form', title:'Mi tarjeta profesional', subtitle:'Aparecerá en el Directorio VIP', icon:'i-user', size:'md', body, footer});
 
-    // Eliminar tarjeta · deleteDoc directo (las reglas ya permiten borrar el doc propio)
+    // Eliminar tarjeta · confirmación integrada en el modal (sin confirm() nativo del navegador)
     const btnEliminar = footer.querySelector('#dirf-eliminar');
-    if (btnEliminar) btnEliminar.addEventListener('click', async ()=>{
-      if (!confirm('¿Eliminar tu tarjeta del directorio? Se borra por completo (datos y foto) y dejarás de aparecer. Puedes crear una nueva cuando quieras.')) return;
-      btnEliminar.disabled = true; btnEliminar.textContent = 'Eliminando…';
-      try {
-        await fs.deleteDoc(fs.doc(fs.db,'directorio',uid));
-        Toast.success('Tarjeta eliminada','Ya no apareces en el directorio');
-        m.close();
-      } catch(e){
-        console.error(e); Toast.error('No se pudo eliminar', e.message||'');
-        btnEliminar.disabled = false; btnEliminar.innerHTML = '<svg class="ic"><use href="#i-trash"/></svg>Eliminar tarjeta';
-      }
-    });
+    if (btnEliminar){
+      const grpAcciones = footer.querySelector('#dirf-acciones');
+      const grpConfirmar = footer.querySelector('#dirf-confirmar');
+      const btnSi = footer.querySelector('#dirf-elim-si');
+      btnEliminar.addEventListener('click', ()=>{ grpAcciones.style.display='none'; grpConfirmar.style.display='flex'; });
+      footer.querySelector('#dirf-elim-no').addEventListener('click', ()=>{ grpConfirmar.style.display='none'; grpAcciones.style.display='flex'; });
+      btnSi.addEventListener('click', async ()=>{
+        btnSi.disabled = true; btnSi.textContent = 'Eliminando…';
+        try {
+          await fs.deleteDoc(fs.doc(fs.db,'directorio',uid));
+          Toast.success('Tarjeta eliminada','Ya no apareces en el directorio');
+          m.close();
+        } catch(e){
+          console.error(e); Toast.error('No se pudo eliminar', e.message||'');
+          btnSi.disabled = false; btnSi.innerHTML = '<svg class="ic"><use href="#i-trash"/></svg>Sí, eliminar';
+        }
+      });
+    }
 
     // Foto
     const fileInput = document.getElementById('dirf-foto-file');
