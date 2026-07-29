@@ -8301,6 +8301,8 @@ const Sections = (function(){
           id: `${c.id}_${idx}`,
           cursoId: c.id,
           cursoOrden: typeof c.orden === 'number' ? c.orden : cursoIdx,
+          // Mismo día de desbloqueo que el curso padre (calculado en _unlockDay al cargar cursos)
+          cursoUnlockDay: (typeof c._unlockDay === 'number') ? c._unlockDay : ((typeof c.orden === 'number' ? c.orden : cursoIdx) * 8),
           cursoTitulo: c.titulo || 'Sin título',
           cursoArea: c.area || 'General',
           cursoPortada: c.portada || getPortadaCurso(c),
@@ -8321,10 +8323,11 @@ const Sections = (function(){
     if (mat.disponibleSiempre === true) return true;
     if (mat.cursoDisponibleSiempre === true) return true;
     const dias = calcularDiasMembresia();
-    // Si tiene día manual, usar ese · si no, usar la cola por orden del curso
+    // Si tiene día manual, usar ese · si no, el MISMO día de desbloqueo que su curso
+    // (antes usaba cursoOrden*8, que corría todo 8 días vs. los cursos · corregido)
     const diaDesbloqueo = (mat.desbloquearEnDias !== null && mat.desbloquearEnDias !== undefined)
       ? mat.desbloquearEnDias
-      : (mat.cursoOrden * 8);
+      : (mat.cursoUnlockDay ?? (mat.cursoOrden * 8));
     return dias >= diaDesbloqueo;
   }
 
@@ -8333,7 +8336,7 @@ const Sections = (function(){
     const dias = calcularDiasMembresia();
     const diaDesbloqueo = (mat.desbloquearEnDias !== null && mat.desbloquearEnDias !== undefined)
       ? mat.desbloquearEnDias
-      : (mat.cursoOrden * 8);
+      : (mat.cursoUnlockDay ?? (mat.cursoOrden * 8));
     return Math.max(0, diaDesbloqueo - dias);
   }
 
