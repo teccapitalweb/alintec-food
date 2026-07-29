@@ -3735,12 +3735,13 @@ const Pages={
   },
 
   certificados(p){
+    // MODIFICADO: mock SEED → Firestore real (colección `certificados`, mismo esquema que el panel VIP)
     p.innerHTML=`
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Emisión</span>
           <h1 class="sec-hero__title">Certificados</h1>
-          <p class="sec-hero__sub">Emite certificados con folio único ALINTEC-AÑO-XXXXX. El sistema genera el PDF, lo guarda y envía al estudiante por email.</p>
+          <p class="sec-hero__sub">Emite certificados con folio único ALINTEC-AÑO-XXXXXX. Quedan guardados en Firestore, el alumno los ve al instante en su panel VIP y cualquiera puede validarlos con el QR o el folio.</p>
           <div class="sec-hero__actions">
             <button class="btn btn--accent" id="new-cert"><svg class="ic"><use href="#i-plus"/></svg>Emitir certificado</button>
           </div>
@@ -3749,59 +3750,108 @@ const Pages={
       </div>
     `;
     document.getElementById('new-cert').addEventListener('click',()=>certModal());
+    Pages._renderListaCerts = renderCerts;
     renderCerts();
+    function fmtFechaCert(v){ try{ return new Date(v).toLocaleDateString('es-MX',{year:'numeric',month:'short',day:'numeric'}); }catch(e){ return v||'—'; } }
     function renderCerts(){
       const list=document.getElementById('cert-list');
-      if(SEED.certificados.length===0){list.innerHTML=`<div class="empty"><div class="empty__icon"><svg class="ic"><use href="#i-certificate"/></svg></div><h3>Sin certificados emitidos</h3><p>Empieza emitiendo el primer certificado.</p></div>`;return;}
-      list.innerHTML=SEED.certificados.map(c=>`
+      if(!list) return;
+      const certs = window.AdminStore?.certificados || [];
+      if(certs.length===0){list.innerHTML=`<div class="empty"><div class="empty__icon"><svg class="ic"><use href="#i-certificate"/></svg></div><h3>Sin certificados emitidos</h3><p>Empieza emitiendo el primer certificado, o espera a que un alumno complete su primer curso (también se emiten automáticamente).</p></div>`;return;}
+      list.innerHTML=certs.map(c=>`
         <div class="adm-row" style="--c1:#43A047;">
           <div class="adm-row__thumb"><svg class="ic"><use href="#i-certificate"/></svg></div>
           <div class="adm-row__body">
-            <div class="adm-row__title">${c.estudiante} · ${c.curso}</div>
+            <div class="adm-row__title">${c.nombre||'—'} · ${c.curso||'—'}</div>
             <div class="adm-row__meta">
-              <span><svg class="ic"><use href="#i-mail"/></svg>${c.email}</span>
-              <span><svg class="ic"><use href="#i-calendar"/></svg>${c.emitido}</span>
-              <span><svg class="ic"><use href="#i-clock"/></svg>${c.horas}h · ${c.calificacion}/100</span>
-              <span style="color:var(--primary);font-weight:700;">${c.folio}</span>
+              <span><svg class="ic"><use href="#i-calendar"/></svg>${fmtFechaCert(c.emitido)}</span>
+              <span><svg class="ic"><use href="#i-clock"/></svg>${c.horas||0}h · ${c.sesiones||0} sesiones</span>
+              <span style="color:var(--primary);font-weight:700;">${c.folio||c.id}</span>
             </div>
           </div>
-          <span class="tag ${c.enviado?'tag--success':'tag--warning'}">${c.enviado?'Enviado':'Pendiente'}</span>
+          <span class="tag ${c.emitidoPor==='admin'?'tag--warning':'tag--success'}">${c.emitidoPor==='admin'?'Manual':'Automático'}</span>
           <div class="adm-row__actions">
-            <button class="icon-action" title="Ver PDF"><svg class="ic"><use href="#i-eye"/></svg></button>
+            <button class="icon-action" data-ver="${c.folio||c.id}" title="Verificar folio"><svg class="ic"><use href="#i-eye"/></svg></button>
             <button class="icon-action icon-action--danger" data-del="${c.id}" title="Eliminar"><svg class="ic"><use href="#i-trash"/></svg></button>
           </div>
         </div>
       `).join('');
-      list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
-        if(confirm('¿Eliminar este certificado? Esta acción es irreversible.')){
-          const i=SEED.certificados.findIndex(x=>x.id===b.dataset.del);if(i>=0){SEED.certificados.splice(i,1);renderCerts();Toast.success('Certificado eliminado');}
-        }
+      list.querySelectorAll('[data-ver]').forEach(b=>b.addEventListener('click',()=>window.open('verificar.html?folio='+encodeURIComponent(b.dataset.ver),'_blank','noopener')));
+      list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',async()=>{
+        if(!confirm('¿Eliminar este certificado? El alumno dejará de verlo y su folio ya no validará en verificar.html.')) return;
+        const fb=window._fb;
+        if(!fb?.db||!fb?.deleteDoc||!fb?.doc){Toast.error('Sin conexión a Firestore');return;}
+        try{ await fb.deleteDoc(fb.doc(fb.db,'certificados',b.dataset.del)); Toast.success('Certificado eliminado'); }
+        catch(e){ console.error(e); Toast.error('No se pudo eliminar',e.message||''); }
       }));
     }
+    // Folio determinista · MISMA lógica que folioCert() del panel VIP → si el alumno
+    // completa el curso después, el setDoc con merge cae en el mismo doc (sin duplicados).
+    function folioCertAdmin(uid,cursoId,dateLike){
+      const yr=(dateLike?new Date(dateLike):new Date()).getFullYear();
+      let h=0; const s=(uid||'demo')+'|'+cursoId;
+      for(let i=0;i<s.length;i++) h=((h<<5)-h+s.charCodeAt(i))|0;
+      const code=Math.abs(h).toString(36).toUpperCase().padStart(6,'0').slice(-6);
+      return `ALINTEC-${yr}-${code}`;
+    }
     function certModal(){
-      const cursosOpts=(window.AdminStore?.cursos||[]).filter(c=>c.activo!==false).map(c=>`<option>${c.titulo}</option>`).join('');
-      const folio='ALINTEC-2026-'+String(Math.floor(10000+Math.random()*89999));
+      const cursos=(window.AdminStore?.cursos||[]).filter(c=>c.activo!==false);
+      const miembros=(window.AdminStore?.miembros||[]);
+      if(!cursos.length){Toast.error('Sin cursos','Primero crea cursos para poder certificar.');return;}
+      if(!miembros.length){Toast.error('Sin miembros','El alumno debe ser miembro para que el certificado le aparezca en su panel.');return;}
+      const cursosOpts=cursos.map(c=>`<option value="${c.id}">${c.titulo}</option>`).join('');
+      const miembrosOpts=miembros.map(m=>`<option value="${m.uid||m.id}">${m.email||m.uid||m.id}</option>`).join('');
       const body=`
         <div class="form-grid">
-          <div class="form-field form-field--full"><label class="label">Estudiante</label><input type="text" class="input" id="ce-nom" placeholder="Nombre completo del estudiante"></div>
-          <div class="form-field"><label class="label">Email</label><input type="email" class="input" id="ce-email" placeholder="email@example.com"></div>
-          <div class="form-field"><label class="label">Folio (auto)</label><input type="text" class="input" id="ce-folio" value="${folio}" readonly style="font-family:'JetBrains Mono',monospace;color:var(--primary);font-weight:700;"></div>
+          <div class="form-field form-field--full"><label class="label">Miembro</label><select class="select" id="ce-uid">${miembrosOpts}</select></div>
+          <div class="form-field form-field--full"><label class="label">Nombre a imprimir en el certificado</label><input type="text" class="input" id="ce-nom" placeholder="Nombre completo del alumno"></div>
           <div class="form-field form-field--full"><label class="label">Curso completado</label><select class="select" id="ce-curso">${cursosOpts}</select></div>
-          <div class="form-field"><label class="label">Horas</label><input type="number" class="input" id="ce-horas" value="8" min="1"></div>
-          <div class="form-field"><label class="label">Calificación</label><input type="number" class="input" id="ce-cal" value="90" min="0" max="100"></div>
-          <div class="form-field form-field--full" style="display:flex;align-items:center;gap:10px;flex-direction:row;"><input type="checkbox" id="ce-enviar" checked><label for="ce-enviar" style="cursor:pointer;font-size:13px;font-weight:500;">Enviar al estudiante por email automáticamente</label></div>
+          <div class="form-field"><label class="label">Horas</label><input type="number" class="input" id="ce-horas" value="${cursos[0]?.horas||8}" min="1"></div>
+          <div class="form-field"><label class="label">Sesiones</label><input type="number" class="input" id="ce-ses" value="${(cursos[0]?.sesiones&&cursos[0].sesiones.length)||0}" min="0"></div>
+          <p style="grid-column:1/-1;font-size:12.5px;color:var(--text-dim);margin:0;">El folio se genera automático (mismo formato que el panel VIP). Al emitirlo, el alumno lo ve al instante en su sección Certificados y el QR ya valida en verificar.html.</p>
         </div>
       `;
       const footer=document.createElement('div');
       footer.innerHTML=`<button class="btn btn--ghost" id="m-cancel">Cancelar</button><button class="btn btn--accent" id="m-save">Emitir certificado<svg class="ic"><use href="#i-certificate"/></svg></button>`;
-      Modal.open({title:'Emitir nuevo certificado',subtitle:folio,icon:'i-certificate',body,footer});
+      Modal.open({title:'Emitir nuevo certificado',subtitle:'Folio automático ALINTEC-AÑO-XXXXXX',icon:'i-certificate',body,footer});
+      const selCurso=document.getElementById('ce-curso');
+      selCurso.addEventListener('change',()=>{
+        const c=cursos.find(x=>x.id===selCurso.value); if(!c) return;
+        document.getElementById('ce-horas').value=c.horas||8;
+        document.getElementById('ce-ses').value=(c.sesiones&&c.sesiones.length)||0;
+      });
       footer.querySelector('#m-cancel').addEventListener('click',()=>Modal.close());
-      footer.querySelector('#m-save').addEventListener('click',()=>{
-        const data={estudiante:document.getElementById('ce-nom').value.trim(),email:document.getElementById('ce-email').value.trim(),folio:document.getElementById('ce-folio').value,curso:document.getElementById('ce-curso').value,horas:+document.getElementById('ce-horas').value,calificacion:+document.getElementById('ce-cal').value,enviado:document.getElementById('ce-enviar').checked,emitido:new Date().toISOString().slice(0,10)};
-        if(!data.estudiante||!data.email){Toast.error('Faltan datos','Nombre y email son obligatorios.');return;}
-        SEED.certificados.unshift({id:'cert'+Date.now(),...data});
-        Toast.success('Certificado emitido',data.folio+(data.enviado?' · Enviado por email':''));
-        Modal.close();renderCerts();
+      const btnSave=footer.querySelector('#m-save');
+      btnSave.addEventListener('click',async()=>{
+        const uid=document.getElementById('ce-uid').value;
+        const nombre=document.getElementById('ce-nom').value.trim();
+        const curso=cursos.find(x=>x.id===selCurso.value);
+        if(!uid){Toast.error('Falta el miembro','Selecciona al alumno.');return;}
+        if(!nombre){Toast.error('Falta el nombre','Escribe el nombre tal como debe salir impreso en el certificado.');return;}
+        if(!curso){Toast.error('Falta el curso');return;}
+        const fb=window._fb;
+        if(!fb?.db||!fb?.setDoc||!fb?.doc||!fb?.serverTimestamp){Toast.error('Sin conexión a Firestore');return;}
+        const fecha=new Date().toISOString();
+        const folio=folioCertAdmin(uid,curso.id,fecha);
+        const orig=btnSave.innerHTML; btnSave.disabled=true; btnSave.textContent='Emitiendo…';
+        try{
+          await fb.setDoc(fb.doc(fb.db,'certificados',folio),{
+            folio, uid, nombre,
+            cursoId: curso.id,
+            curso: curso.titulo||'',
+            area: curso.area||'Ciencia de Alimentos General',
+            horas: +document.getElementById('ce-horas').value||curso.horas||0,
+            sesiones: +document.getElementById('ce-ses').value||0,
+            instructor: curso.instructor||'Equipo Alintec Food',
+            emitido: fecha,
+            year: new Date(fecha).getFullYear(),
+            emitidoPor: 'admin',
+            createdAt: fb.serverTimestamp()
+          },{merge:true});
+          Toast.success('Certificado emitido',folio+' · ya visible para el alumno');
+          Modal.close();
+        }catch(e){ console.error(e); Toast.error('No se pudo emitir',e.message||''); }
+        finally{ btnSave.disabled=false; btnSave.innerHTML=orig; }
       });
     }
   },
@@ -4207,7 +4257,7 @@ const Pages={
   // ═══════════════════════════════════════════════════════════════
 
   // URL del webhook Railway (donde están los endpoints admin)
-  _webhookUrl: 'https://alintec-production.up.railway.app',
+  _webhookUrl: 'https://alintec-webhook-production.up.railway.app',
 
   // Obtener token de Firebase Auth para llamar al webhook
   async _getAuthToken() {
@@ -5572,6 +5622,9 @@ const AdminStore = {
       // Miembros: refrescar KPIs + lista
       if (typeof Pages._renderKpisMiembros === 'function') Pages._renderKpisMiembros();
       if (typeof Pages._renderListaMiembros === 'function') Pages._renderListaMiembros();
+    } else if (section === 'certificados' && Pages[section]) {
+      // Certificados: refrescar lista en tiempo real (onSnapshot de la colección)
+      if (typeof Pages._renderListaCerts === 'function') Pages._renderListaCerts();
     }
   },
 

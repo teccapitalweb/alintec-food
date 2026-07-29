@@ -926,11 +926,12 @@ const firebaseConfig = {
   appId: "1:559261559287:web:8d1434cfbd3127521de6f2"
 };
 
-/* Admins · emails con acceso al panel admin */
+/* Admins · emails con acceso al panel admin
+   Debe coincidir con ADMINS de vip-admin.html, ADMIN_EMAILS de vip-panel.html
+   y esAdmin() de firestore.rules. SIEMPRE en minúsculas. */
 const ADMINS = [
   "teccapitalweb@gmail.com",
-  "teccapitalweb@gmail.com",
-  "teccapitalweb@gmail.com"
+  "fisiotec25@gmail.com"
 ];
 
 const app = initializeApp(firebaseConfig);
