@@ -6613,8 +6613,7 @@ const Sections = (function(){
               .replace(/\/edit(\?.*)?$/, '/preview')
               .replace(/\/edit$/, '/preview');
   }
-
-  window.abrirVisor = function(url, titulo, cursoId, numClase) {
+  window.abrirVisor = async function(url, titulo, cursoId, numClase) {
     if (!url) return;
     const overlay = document.getElementById('visorOverlay');
     const frame = document.getElementById('visorFrame');
@@ -6623,10 +6622,40 @@ const Sections = (function(){
     const markBtn = document.getElementById('visorMarkAsViewed');
     if (!overlay || !frame) return;
 
-    frame.src = convertirUrlDrive(url);
-    titleEl.textContent = titulo || 'Visor';
-    if (dlEl) dlEl.href = url;
+    // ── ¿"url" es en realidad un Video ID de Bunny? (formato UUID) ──
+    const esVideoIdBunny = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test((url || '').trim());
+    let visorUrl = convertirUrlDrive(url);
 
+    if (esVideoIdBunny) {
+      frame.src = 'about:blank';
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (window.__currentUser) {
+          headers.Authorization = 'Bearer ' + await window.__currentUser.getIdToken();
+        }
+        const resp = await fetch(WEBHOOK_URL + '/api/bunny/embed-token', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ videoId: url.trim() })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.embedUrl) {
+          throw new Error(data.error || `Error HTTP ${resp.status}`);
+        }
+        visorUrl = data.embedUrl;
+      } catch (e) {
+        console.error('[Bunny player]', e);
+        window.alert('No se pudo abrir la clase. Intenta nuevamente.');
+        return;
+      }
+    }
+
+    frame.src = visorUrl;
+    titleEl.textContent = titulo || 'Visor';
+    if (dlEl) {
+      dlEl.style.display = esVideoIdBunny ? 'none' : '';
+      if (!esVideoIdBunny) dlEl.href = url;
+    }
     // Botón "Marcar como vista" solo si es clase con cursoId+numClase
     if (markBtn) {
       if (cursoId && numClase) {
