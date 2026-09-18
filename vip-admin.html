@@ -2746,9 +2746,12 @@ const Pages={
           Toast.error(`Clase ${i + 1} sin video`, 'Pega la URL del video (el título es opcional)');
           throw new Error('skip');
         }
-        try { new URL(url); } catch(e) {
-          Toast.error(`Clase ${i + 1}: URL inválida`, 'Verifica que el enlace sea correcto');
-          throw new Error('skip');
+                const esVideoIdBunny = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(url);
+        if (!esVideoIdBunny) {
+          try { new URL(url); } catch(e) {
+            Toast.error(`Clase ${i + 1}: URL inválida`, 'Verifica que el enlace sea correcto, o pega el Video ID de Bunny');
+            throw new Error('skip');
+          }
         }
         const numero = sesionesLimpias.length + 1;
         sesionesLimpias.push({ numero, titulo: tit || `Clase ${numero}`, url });
