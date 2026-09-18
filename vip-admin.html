@@ -2441,7 +2441,7 @@ const Pages={
     this._modalCurso.editandoId = esEdicion ? curso.id : null;
     // Clonar para no mutar el original
     this._modalCurso.sesiones = esEdicion && Array.isArray(curso.sesiones)
-      ? curso.sesiones.map(s => ({ numero: s.numero, titulo: s.titulo || '', url: s.url || '' }))
+      ? curso.sesiones.map(s => ({ numero: s.numero, titulo: s.titulo || '', url: s.url || '', gratis: s.gratis === true }))
       : [];
     this._modalCurso.materiales = esEdicion && Array.isArray(curso.materiales)
       ? curso.materiales.map(m => ({
@@ -2528,6 +2528,16 @@ const Pages={
             </label>
           </div>
         </div>
+        <!-- Checkbox: curso como muestra gratis -->
+        <div style="margin-top:12px;padding:11px 13px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface-2);">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="cf-curso-muestra" ${c.cursoMuestraGratis ? 'checked' : ''} style="flex-shrink:0;width:18px;height:18px;cursor:pointer;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--success);">🎁 Este curso tiene clases gratis de muestra</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.4;">Los usuarios sin membresía podrán ver las clases que marques como gratis abajo. Las demás piden membresía.</div>
+            </div>
+          </label>
+        </div>
       </div>
 
       <!-- Sesiones (clases) -->
@@ -2606,6 +2616,10 @@ const Pages={
         <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
           <input type="text" class="input" placeholder="Título de la clase (opcional)" value="${(s.titulo || '').replace(/"/g,'&quot;')}" data-sesion-idx="${idx}" data-sesion-campo="titulo" style="font-size:13px;padding:8px 11px;">
           <input type="url" class="input" placeholder="URL del video (Google Drive, YouTube, etc.)" value="${(s.url || '').replace(/"/g,'&quot;')}" data-sesion-idx="${idx}" data-sesion-campo="url" style="font-size:13px;padding:8px 11px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:2px;">
+            <input type="checkbox" data-sesion-gratis="${idx}" ${s.gratis ? 'checked' : ''} style="width:15px;height:15px;cursor:pointer;">
+            <span style="font-size:11.5px;color:var(--success);font-weight:600;">🎁 Clase gratis</span>
+          </label>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
           <button type="button" class="curso-card__action" data-sesion-mover="${idx}" data-delta="-1" ${idx === 0 ? 'disabled' : ''} title="Subir" style="width:28px;height:24px;${idx === 0 ? 'opacity:.4;cursor:not-allowed;' : ''}">▲</button>
@@ -2621,6 +2635,12 @@ const Pages={
         const idx = parseInt(input.dataset.sesionIdx, 10);
         const campo = input.dataset.sesionCampo;
         if (Pages._modalCurso.sesiones[idx]) Pages._modalCurso.sesiones[idx][campo] = e.target.value;
+      });
+    });
+    cont.querySelectorAll('[data-sesion-gratis]').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const idx = parseInt(cb.dataset.sesionGratis, 10);
+        if (Pages._modalCurso.sesiones[idx]) Pages._modalCurso.sesiones[idx].gratis = e.target.checked;
       });
     });
     cont.querySelectorAll('[data-sesion-mover]').forEach(btn => {
@@ -2746,7 +2766,7 @@ const Pages={
           Toast.error(`Clase ${i + 1} sin video`, 'Pega la URL del video (el título es opcional)');
           throw new Error('skip');
         }
-                const esVideoIdBunny = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(url);
+        const esVideoIdBunny = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(url);
         if (!esVideoIdBunny) {
           try { new URL(url); } catch(e) {
             Toast.error(`Clase ${i + 1}: URL inválida`, 'Verifica que el enlace sea correcto, o pega el Video ID de Bunny');
@@ -2754,7 +2774,8 @@ const Pages={
           }
         }
         const numero = sesionesLimpias.length + 1;
-        sesionesLimpias.push({ numero, titulo: tit || `Clase ${numero}`, url });
+        const gratisFlag = s.gratis === true;
+        sesionesLimpias.push({ numero, titulo: tit || `Clase ${numero}`, url, gratis: gratisFlag });
       }
 
       // Validar materiales (si tienen título, también necesitan URL · y al revés)
@@ -2783,6 +2804,9 @@ const Pages={
       // Horas: si el usuario no puso nada o puso 0/inválido → usa nº de sesiones (mínimo 1)
       const horas = (Number.isFinite(horasRaw) && horasRaw > 0) ? horasRaw : Math.max(1, sesionesLimpias.length);
 
+      // Leer checkbox de muestra gratis
+      const cursoMuestraGratis = document.getElementById('cf-curso-muestra')?.checked === true;
+
       // Construir objeto base
       const data = {
         titulo,
@@ -2794,6 +2818,7 @@ const Pages={
         sesiones: sesionesLimpias,
         materiales: matsLimpios,
         disponibleSiempre,
+        cursoMuestraGratis,
         activo: true,
         disponible: true
       };

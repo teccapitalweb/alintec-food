@@ -6389,10 +6389,41 @@ const Sections = (function(){
     return (curso && typeof curso._unlockDay === 'number') ? curso._unlockDay : 0;
   }
 
+  // ═══ Muestra gratis controlada desde el admin ═══
+  // El admin puede marcar un curso como "muestra gratis" y cada clase como "gratis".
+  // Si el curso tiene cursoMuestraGratis=true Y la clase tiene gratis=true, se muestra
+  // sin necesidad de membresía. El resto pide membresía con un candadito discreto.
+  function tieneAccesoVipCompleto() {
+    return window.UserState?.modo === 'vip' || esAdminReal();
+  }
+
+  function esClaseGratis(curso, indexClase) {
+    if (!curso || !curso.cursoMuestraGratis) return false;
+    const sesion = curso.sesiones && curso.sesiones[indexClase];
+    if (!sesion) return false;
+    return sesion.gratis === true;
+  }
+
+  function esCursoConMuestra(curso) {
+    return curso && curso.cursoMuestraGratis === true;
+  }
+
+  function mostrarPaywallCurso() {
+    window.__showPaywallModal?.({
+      title: 'Continúa aprendiendo con Alintec Food VIP',
+      sub: 'Activa tu membresía para desbloquear todas las clases, materiales y obtener tu certificado.'
+    });
+  }
+  window.__mostrarPaywallAlintec = mostrarPaywallCurso;
+
   function cursoDesbloqueado(indexCurso, curso){
     if (esAdminReal()) return true;
     if (curso && curso.disponibleSiempre === true) return true;
     if (curso && curso.marcarProximamente === true) return false;
+    // Si el curso tiene clases gratis, dejarlo "desbloqueado" visualmente
+    // para que el usuario entre y vea la lista de clases (el control real
+    // está en claseDesbloqueada, no aquí)
+    if (esCursoConMuestra(curso) && !tieneAccesoVipCompleto()) return true;
     return calcularDiasMembresia() >= cursoUnlockDay(curso);  // ← turno cada 8 días por orden
   }
 
@@ -6464,6 +6495,19 @@ const Sections = (function(){
 
   function claseDesbloqueada(cursoId, indexClase, sesiones) {
     if (esAdminReal()) return true;
+    // Buscar el curso completo para leer las banderas de muestra gratis
+    const cursoObj = cursos.find(c => c.id === cursoId);
+    if (!tieneAccesoVipCompleto()) {
+      // Si la clase está marcada como gratis en el admin, se puede ver
+      if (!esClaseGratis(cursoObj, indexClase)) return false;
+      // Dentro de las clases gratis, la primera siempre abierta,
+      // las siguientes requieren haber visto la anterior (secuencial)
+      if (Number(indexClase) === 0) return true;
+      const progFree = getProgresoCurso(cursoId);
+      const antFree = sesiones[Number(indexClase) - 1];
+      const antNumFree = antFree?.numero || Number(indexClase);
+      return progFree.clasesVistas.includes(antNumFree);
+    }
     if (indexClase === 0) return true; // primera siempre desbloqueada
     const prog = getProgresoCurso(cursoId);
     const anterior = sesiones[indexClase - 1];
@@ -6613,7 +6657,7 @@ const Sections = (function(){
               .replace(/\/edit(\?.*)?$/, '/preview')
               .replace(/\/edit$/, '/preview');
   }
-  window.abrirVisor = async function(url, titulo, cursoId, numClase) {
+    window.abrirVisor = async function(url, titulo, cursoId, numClase) {
     if (!url) return;
     const overlay = document.getElementById('visorOverlay');
     const frame = document.getElementById('visorFrame');
@@ -7067,6 +7111,7 @@ const Sections = (function(){
         <div class="curso-card__cover" style="background-image:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55)),url('${portada}');background-size:cover;background-position:center;">
           <svg class="ic" style="opacity:.85;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));"><use href="#${ICON_AREA[c.area]||'i-book'}"/></svg>
           ${c.disponibleSiempre ? '<span class="curso-card__cover-badge" style="background:var(--success);color:#0A120C;">DISPONIBLE</span>' : ''}
+          ${esCursoConMuestra(c) && !tieneAccesoVipCompleto() ? `<span class="curso-card__cover-badge" style="left:12px;right:auto;background:var(--success);color:#0A120C;border-color:var(--success);">${c.sesiones.filter((_,si) => esClaseGratis(c,si)).length} CLASES GRATIS</span>` : ''}
           ${!desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 Se desbloquea en ${diasFalta} día${diasFalta!==1?'s':''}</span>` : ''}
         </div>
         <div class="curso-card__body">
@@ -7179,7 +7224,19 @@ const Sections = (function(){
                   <svg class="ic" style="color:var(--primary);"><use href="#i-arrow-right"/></svg>
                 </div>`;
               }
-              // Bloqueada
+              // Bloqueada — distinguir si es por membresía o por secuencia
+              const _cursoRef = cursos.find(cx => cx.id === cursoId);
+              const _requiereMembresia = !tieneAccesoVipCompleto() && !esClaseGratis(_cursoRef, i);
+              if (_requiereMembresia) {
+                return `
+                <div class="modulo" onclick="window.__mostrarPaywallAlintec && window.__mostrarPaywallAlintec()" style="cursor:pointer;opacity:.7;">
+                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
+                    <div class="modulo__meta" style="color:var(--primary);">Activa tu membresía para ver esta clase</div>
+                  </div>
+                </div>`;
+              }
               return `
                 <div class="modulo" style="cursor:not-allowed;opacity:.55;">
                   <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
@@ -12840,7 +12897,7 @@ if (typeof Sections !== 'undefined' && Sections.renderers) (function(){
 
     // Selectores de cards susceptibles de bloqueo
     const lockableSelectors = [
-      '.curso-card', '.webinar-card', '.webinar-hero', '.pdf-card', '.cert-card',
+      '.webinar-card', '.webinar-hero', '.pdf-card', '.cert-card',
       '[data-lockable="true"]', '.foro-thread', '.canal-card'
     ];
     document.querySelectorAll(lockableSelectors.join(',')).forEach(card => {
