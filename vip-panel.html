@@ -6416,6 +6416,35 @@ const Sections = (function(){
   }
   window.__mostrarPaywallAlintec = mostrarPaywallCurso;
 
+  // En un curso de muestra, el primer material también es gratis (igual que BioNova)
+  const MATERIALES_GRATIS = 1;
+  function esMaterialGratis(curso, indexMaterial) {
+    return esCursoConMuestra(curso) && Number(indexMaterial) < MATERIALES_GRATIS;
+  }
+
+  window.abrirClaseAlintec = function(cursoId, indexClase) {
+    const curso = cursos.find(c => c.id === cursoId);
+    const sesion = curso?.sesiones?.[Number(indexClase)];
+    if (!curso || !sesion) return;
+    if (!tieneAccesoVipCompleto()) {
+      if (!esClaseGratis(curso, Number(indexClase))) { mostrarPaywallCurso(); return; }
+      if (!claseDesbloqueada(cursoId, Number(indexClase), curso.sesiones)) return;
+    }
+    const numClase = sesion.numero || (Number(indexClase) + 1);
+    window.abrirVisor(sesion.url || '', sesion.titulo || `Clase ${numClase}`, cursoId, numClase);
+  };
+
+  window.abrirMaterialAlintec = function(cursoId, indexMaterial) {
+    const curso = cursos.find(c => c.id === cursoId);
+    const material = curso?.materiales?.[Number(indexMaterial)];
+    if (!curso || !material) return;
+    if (!tieneAccesoVipCompleto() && !esMaterialGratis(curso, indexMaterial)) {
+      mostrarPaywallCurso();
+      return;
+    }
+    window.abrirVisor(material.url || '', material.titulo || 'Material del curso');
+  };
+
   function cursoDesbloqueado(indexCurso, curso){
     if (esAdminReal()) return true;
     if (curso && curso.disponibleSiempre === true) return true;
@@ -6829,6 +6858,7 @@ const Sections = (function(){
           // Flags de desbloqueo
           disponibleSiempre: data.disponibleSiempre === true,
           marcarProximamente: data.marcarProximamente === true,
+          cursoMuestraGratis: data.cursoMuestraGratis === true,
           orden: data.orden || (i + 1),
           // Portada automática
           portada: data.portada || getPortadaCurso({ titulo: data.titulo, portada: data.portada }),
@@ -7107,12 +7137,12 @@ const Sections = (function(){
       const diasFalta = diasParaDesbloquear(cursoIdx, c);
       const portada = c.portada || PORTADA_DEFAULT;
       return `
-      <article class="curso-card ${!desbloqueado?'curso-card--locked':''}" data-cid="${c.id}" tabindex="0" style="--area-color:${COLOR_AREA[c.area]||'#43A047'};">
+      <article class="curso-card ${tieneAccesoVipCompleto() && !desbloqueado?'curso-card--locked':''}" data-cid="${c.id}" tabindex="0" style="--area-color:${COLOR_AREA[c.area]||'#43A047'};">
         <div class="curso-card__cover" style="background-image:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55)),url('${portada}');background-size:cover;background-position:center;">
           <svg class="ic" style="opacity:.85;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));"><use href="#${ICON_AREA[c.area]||'i-book'}"/></svg>
           ${c.disponibleSiempre ? '<span class="curso-card__cover-badge" style="background:var(--success);color:#0A120C;">DISPONIBLE</span>' : ''}
           ${esCursoConMuestra(c) && !tieneAccesoVipCompleto() ? `<span class="curso-card__cover-badge" style="left:12px;right:auto;background:var(--success);color:#0A120C;border-color:var(--success);">${c.sesiones.filter((_,si) => esClaseGratis(c,si)).length} CLASES GRATIS</span>` : ''}
-          ${!desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 Se desbloquea en ${diasFalta} día${diasFalta!==1?'s':''}</span>` : ''}
+          ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 Se desbloquea en ${diasFalta} día${diasFalta!==1?'s':''}</span>` : ''}
         </div>
         <div class="curso-card__body">
           <div class="curso-card__tags">
@@ -7166,8 +7196,9 @@ const Sections = (function(){
       <p style="font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:18px;">${c.descripcion || c.desc || ''}</p>
     `;
 
-    // Si NO está desbloqueado, mostrar candado con días restantes
-    if (!desbloqueado) {
+    // El goteo cada 8 días es solo para miembros. Quien no ha pagado
+    // siempre ve la lista de clases y materiales con su candadito.
+    if (tieneAccesoVipCompleto() && !desbloqueado) {
       bodyContent += `
         <div class="empty-state" style="background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;padding:32px 24px;">
           <div class="empty-state__icon">
@@ -7196,45 +7227,56 @@ const Sections = (function(){
           </div>
           <div class="modulos-list" style="margin-bottom:18px;">
             ${c.sesiones.map((s, i) => {
-              const titEsc = (s.titulo || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-              const urlEsc = (s.url || '').replace(/'/g, "\\'");
               const numSes = s.numero || (i+1);
               const vista = progCurso.clasesVistas.includes(numSes);
               const desblok = claseDesbloqueada(cursoId, i, c.sesiones);
+              const accesoCompleto = tieneAccesoVipCompleto();
+              const esMuestraGratis = !accesoCompleto && esClaseGratis(c, i);
+              const accion = `window.abrirClaseAlintec('${cursoId}', ${i})`;
+              const flecha = (color) => `<svg class="ic" style="color:${color};"><use href="#i-arrow-right"/></svg>`;
 
-              if (vista) {
+              if (vista && desblok) {
                 return `
-                <div class="modulo" onclick="window.abrirVisor('${urlEsc}', '${titEsc}', '${cursoId}', ${numSes})" style="cursor:pointer;background:color-mix(in srgb,var(--success) 8%,var(--surface-2));border-color:color-mix(in srgb,var(--success) 30%,transparent);" data-bypass-paywall="true">
+                <div class="modulo" onclick="${accion}" style="cursor:pointer;background:color-mix(in srgb,var(--success) 8%,var(--surface-2));border-color:color-mix(in srgb,var(--success) 30%,transparent);" data-bypass-paywall="true">
                   <div class="modulo__num" style="background:var(--success);color:#0A120C;">✓</div>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title">${s.titulo}</div>
-                    <div class="modulo__meta" style="color:var(--success);">Vista · click para repasar</div>
+                    <div class="modulo__meta" style="color:var(--success);">${esMuestraGratis ? 'Clase gratuita · ' : ''}Vista · click para repasar</div>
                   </div>
-                  <svg class="ic" style="color:var(--success);"><use href="#i-arrow-right"/></svg>
+                  ${flecha('var(--success)')}
                 </div>`;
               }
               if (desblok) {
                 return `
-                <div class="modulo" onclick="window.abrirVisor('${urlEsc}', '${titEsc}', '${cursoId}', ${numSes})" style="cursor:pointer;" data-bypass-paywall="true">
-                  <div class="modulo__num">${numSes}</div>
+                <div class="modulo" onclick="${accion}" style="cursor:pointer;${esMuestraGratis?'border-color:color-mix(in srgb,var(--success) 45%,transparent);background:color-mix(in srgb,var(--success) 7%,var(--surface-2));':''}" data-bypass-paywall="true">
+                  <div class="modulo__num"${esMuestraGratis?' style="background:var(--success);color:#0A120C;"':''}>${numSes}</div>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title">${s.titulo}</div>
-                    <div class="modulo__meta">▶ Click para ver la clase</div>
+                    <div class="modulo__meta"${esMuestraGratis?' style="color:var(--success);font-weight:700;"':''}>${esMuestraGratis?'CLASE GRATIS · Click para verla':'▶ Click para ver la clase'}</div>
                   </div>
-                  <svg class="ic" style="color:var(--primary);"><use href="#i-arrow-right"/></svg>
+                  ${flecha('var(--primary)')}
                 </div>`;
               }
-              // Bloqueada — distinguir si es por membresía o por secuencia
-              const _cursoRef = cursos.find(cx => cx.id === cursoId);
-              const _requiereMembresia = !tieneAccesoVipCompleto() && !esClaseGratis(_cursoRef, i);
-              if (_requiereMembresia) {
-                return `
-                <div class="modulo" onclick="window.__mostrarPaywallAlintec && window.__mostrarPaywallAlintec()" style="cursor:pointer;opacity:.7;">
+              if (!accesoCompleto) {
+                if (esMuestraGratis) {
+                  return `
+                <div class="modulo" style="cursor:not-allowed;opacity:.6;">
                   <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
-                    <div class="modulo__meta" style="color:var(--primary);">Activa tu membresía para ver esta clase</div>
+                    <div class="modulo__meta" style="color:var(--success);">Clase gratuita · marca como vista la anterior para desbloquear</div>
                   </div>
+                  ${flecha('var(--text-3)')}
+                </div>`;
+                }
+                return `
+                <div class="modulo" onclick="${accion}" style="cursor:pointer;opacity:.72;" data-bypass-paywall="true">
+                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
+                    <div class="modulo__meta">Activa tu membresía para ver esta clase</div>
+                  </div>
+                  ${flecha('var(--text-3)')}
                 </div>`;
               }
               return `
@@ -7269,19 +7311,22 @@ const Sections = (function(){
         };
 
         // Renderiza una tarjeta de material
-        const matCard = (m) => {
+        const matCard = (m, materialIndex) => {
           const t = tipoMat(m.url);
-          const titEsc = (m.titulo || 'Material del curso').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-          const urlEsc = (m.url || '').replace(/'/g, "\\'");
+          const muestraGratis = !tieneAccesoVipCompleto() && esMaterialGratis(c, materialIndex);
+          const accesoMaterial = tieneAccesoVipCompleto() || muestraGratis;
+          const estadoMaterial = tieneAccesoVipCompleto()
+            ? 'Click para ver'
+            : (muestraGratis ? 'MATERIAL GRATIS · Click para ver' : '🔒 Activa tu membresía para abrir');
           return `
-            <div class="mat-card" onclick="window.abrirVisor('${urlEsc}', '${titEsc}')" data-bypass-paywall="true" style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;color:inherit;transition:all .18s cubic-bezier(.2,.8,.25,1);position:relative;overflow:hidden;" onmouseover="this.style.borderColor='${t.color}';this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none';this.style.boxShadow='none'">
+            <div class="mat-card" onclick="window.abrirMaterialAlintec('${id}', ${materialIndex})" data-bypass-paywall="true" style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;color:inherit;transition:all .18s cubic-bezier(.2,.8,.25,1);position:relative;overflow:hidden;${accesoMaterial?'':'opacity:.72;'}" onmouseover="this.style.borderColor='${t.color}';this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none';this.style.boxShadow='none'">
               <div style="width:38px;height:38px;border-radius:9px;background:color-mix(in srgb,${t.color} 16%,transparent);color:${t.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:18px;height:18px;display:block;">${t.ic}</span></div>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:13.5px;font-weight:600;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.titulo || 'Material del curso'}</div>
                 <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
                   <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:${t.color};">${t.lbl}</span>
                   <span style="font-size:11px;color:var(--text-3);">·</span>
-                  <span style="font-size:11px;color:var(--text-3);">Click para ver</span>
+                  <span style="font-size:11px;color:${muestraGratis?'var(--success)':'var(--text-3)'};${muestraGratis?'font-weight:700;':''}">${estadoMaterial}</span>
                 </div>
               </div>
               <svg class="ic" style="color:${t.color};opacity:.7;flex-shrink:0;width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -7301,14 +7346,14 @@ const Sections = (function(){
             <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--primary);font-weight:700;background:color-mix(in srgb,var(--primary) 14%,transparent);padding:3px 9px;border-radius:12px;">${totalMat} archivo${totalMat!==1?'s':''}</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;" id="mat-preview-${id}">
-            ${c.materiales.slice(0, PREVIEW_COUNT).map(matCard).join('')}
+            ${c.materiales.slice(0, PREVIEW_COUNT).map((m, mi) => matCard(m, mi)).join('')}
           </div>
         `;
 
         // Si hay más de 3, agregar botón "Ver los X restantes" expandible inline
         if (totalMat > PREVIEW_COUNT) {
           const restantes = totalMat - PREVIEW_COUNT;
-          const restoHTML = c.materiales.slice(PREVIEW_COUNT).map(matCard).join('');
+          const restoHTML = c.materiales.slice(PREVIEW_COUNT).map((m, mi) => matCard(m, mi + PREVIEW_COUNT)).join('');
           bodyContent += `
             <div id="mat-extra-${id}" style="display:none;flex-direction:column;gap:8px;margin-top:8px;animation:slideDown .35s cubic-bezier(.2,.8,.25,1);">
               ${restoHTML}
