@@ -6422,6 +6422,365 @@ const Sections = (function(){
     return esCursoConMuestra(curso) && Number(indexMaterial) < MATERIALES_GRATIS;
   }
 
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🧠 BLOQUE B · Preguntas cerradas al terminar cada clase
+  // 🎮 BLOQUE C · Juego dinámico al terminar el curso
+  // Obligatorios de realizar, no afectan el certificado ni la nota.
+  // ═══════════════════════════════════════════════════════════════
+
+  function _generarSopaLetras(palabras) {
+    const limpio = w => (w||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-ZÑ]/g,'');
+    const words = palabras.map(limpio).filter(w => w.length >= 2 && w.length <= 14).sort((a,b)=>b.length-a.length);
+    const maxLen = Math.max(8, ...words.map(w=>w.length));
+    const size = Math.max(10, Math.min(16, maxLen + 2));
+    const grid = Array.from({length:size}, () => Array(size).fill(null));
+    const dirs = [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+    const placed = [];
+    words.forEach(word => {
+      let ok = false;
+      for (let attempt = 0; attempt < 250 && !ok; attempt++) {
+        const dir = dirs[Math.floor(Math.random()*dirs.length)];
+        const row0 = Math.floor(Math.random()*size);
+        const col0 = Math.floor(Math.random()*size);
+        const endRow = row0 + dir[0]*(word.length-1);
+        const endCol = col0 + dir[1]*(word.length-1);
+        if (endRow<0||endRow>=size||endCol<0||endCol>=size) continue;
+        let fits = true;
+        for (let i=0;i<word.length;i++){
+          const r=row0+dir[0]*i, c=col0+dir[1]*i;
+          const cur=grid[r][c];
+          if (cur && cur !== word[i]) { fits=false; break; }
+        }
+        if (!fits) continue;
+        for (let i=0;i<word.length;i++){
+          const r=row0+dir[0]*i, c=col0+dir[1]*i;
+          grid[r][c]=word[i];
+        }
+        placed.push({word, row0, col0, dir});
+        ok = true;
+      }
+    });
+    const letras='ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+    for (let r=0;r<size;r++) for (let c=0;c<size;c++) if (!grid[r][c]) grid[r][c]=letras[Math.floor(Math.random()*letras.length)];
+    return { grid, size, placed };
+  }
+
+  function _juegoSopaLetras(curso, onDone) {
+    const palabrasOriginal = (curso.juegoDinamico.datos.palabras || []).slice(0, 10);
+    const { grid, size, placed } = _generarSopaLetras(palabrasOriginal);
+    if (placed.length === 0) { onDone(); return; }
+    const encontradas = new Set();
+    let seleccion = [];
+    const modalId = 'juego-sopa-' + curso.id;
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;">Encuentra las ${placed.length} palabras. Toca la primera y la última letra de cada una.</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+        <div id="sopa-grid" style="display:grid;grid-template-columns:repeat(${size},1fr);gap:2px;width:min(100%,420px);aspect-ratio:1;user-select:none;">
+          ${grid.map((row,r)=>row.map((ch,c)=>`<div data-r="${r}" data-c="${c}" style="display:flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(9px,1.6vw,13px);cursor:pointer;color:var(--text);">${ch}</div>`).join('')).join('')}
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);font-weight:700;margin-bottom:8px;">Palabras</div>
+          <div id="sopa-lista" style="display:flex;flex-direction:column;gap:6px;">
+            ${placed.map(p=>`<div data-word="${p.word}" style="font-size:12.5px;padding:6px 10px;border-radius:8px;background:var(--surface-2);color:var(--text-2);">${p.word}</div>`).join('')}
+          </div>
+          <div id="sopa-progreso" style="margin-top:12px;font-size:11.5px;color:var(--primary);font-weight:700;">0/${placed.length} encontradas</div>
+        </div>
+      </div>
+    `;
+    const footer = document.createElement('button');
+    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
+    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    Modal.open({ id: modalId, title:'🔤 Sopa de letras', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+
+    function limpiaSeleccionVisual(){
+      body.querySelectorAll('#sopa-grid > div').forEach(cell => { if(!cell.dataset.found) cell.style.background='var(--surface-2)'; });
+    }
+    function checarSeleccion() {
+      if (seleccion.length !== 2) return;
+      const [a,b] = seleccion;
+      const dr = Math.sign(b.r-a.r), dc = Math.sign(b.c-a.c);
+      const len = Math.max(Math.abs(b.r-a.r), Math.abs(b.c-a.c)) + 1;
+      if (!( (b.r-a.r)===dr*(len-1) && (b.c-a.c)===dc*(len-1) )) { seleccion=[]; limpiaSeleccionVisual(); return; }
+      let str='';
+      const celdas=[];
+      for(let i=0;i<len;i++){ const r=a.r+dr*i, c=a.c+dc*i; str+=grid[r][c]; celdas.push([r,c]); }
+      const strRev = str.split('').reverse().join('');
+      const match = placed.find(p => !encontradas.has(p.word) && (p.word===str || p.word===strRev));
+      if (match) {
+        encontradas.add(match.word);
+        celdas.forEach(([r,c])=>{
+          const cell = body.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+          if (cell) { cell.style.background='color-mix(in srgb,var(--success) 35%,transparent)'; cell.dataset.found='1'; }
+        });
+        const li = body.querySelector(`[data-word="${match.word}"]`);
+        if (li) { li.style.background='color-mix(in srgb,var(--success) 20%,transparent)'; li.style.color='var(--success)'; li.style.textDecoration='line-through'; }
+        const prog = body.querySelector('#sopa-progreso');
+        if (prog) prog.textContent = `${encontradas.size}/${placed.length} encontradas`;
+        if (encontradas.size === placed.length) { footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer'; }
+      } else {
+        limpiaSeleccionVisual();
+      }
+      seleccion=[];
+    }
+    body.querySelectorAll('#sopa-grid > div').forEach(cell => {
+      cell.addEventListener('click', () => {
+        if (cell.dataset.found) return;
+        const r=parseInt(cell.dataset.r,10), c=parseInt(cell.dataset.c,10);
+        if (seleccion.length===1 && seleccion[0].r===r && seleccion[0].c===c) return;
+        cell.style.background='color-mix(in srgb,var(--primary) 30%,transparent)';
+        seleccion.push({r,c});
+        if (seleccion.length===2) checarSeleccion();
+      });
+    });
+    footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
+  }
+
+  function _juegoMemorama(curso, onDone) {
+    const pares = (curso.juegoDinamico.datos.pares || []).slice(0,10);
+    if (pares.length === 0) { onDone(); return; }
+    let cartas = [];
+    pares.forEach((p,i) => {
+      cartas.push({ texto:p.termino, tipo:'termino', parId:i });
+      cartas.push({ texto:p.definicion, tipo:'definicion', parId:i });
+    });
+    cartas = cartas.map(c=>({...c, uid: Math.random()})).sort(()=>Math.random()-0.5);
+    let volteadas = [];
+    let bloqueado = false;
+    const encontrados = new Set();
+    const modalId = 'juego-memorama-' + curso.id;
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;">Encuentra cada término con su definición.</div>
+      <div id="mem-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;">
+        ${cartas.map((c,i)=>`
+          <div class="mem-card" data-idx="${i}" data-parid="${c.parId}" style="min-height:72px;padding:8px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border-2);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--surface-2);">❓</div>
+        `).join('')}
+      </div>
+      <div id="mem-progreso" style="margin-top:12px;font-size:11.5px;color:var(--primary);font-weight:700;text-align:center;">0/${pares.length} pares</div>
+    `;
+    const footer = document.createElement('button');
+    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
+    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    Modal.open({ id: modalId, title:'🃏 Memorama', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+
+    body.querySelectorAll('.mem-card').forEach(cardEl => {
+      cardEl.addEventListener('click', () => {
+        if (bloqueado) return;
+        const idx = parseInt(cardEl.dataset.idx,10);
+        if (cardEl.dataset.up || cardEl.dataset.matched) return;
+        cardEl.dataset.up='1';
+        cardEl.style.color='var(--text)';
+        cardEl.textContent = cartas[idx].texto;
+        volteadas.push(idx);
+        if (volteadas.length===2) {
+          bloqueado = true;
+          const [i1,i2] = volteadas;
+          const c1=cartas[i1], c2=cartas[i2];
+          const match = c1.parId===c2.parId && c1.tipo!==c2.tipo;
+          setTimeout(() => {
+            const el1 = body.querySelector(`[data-idx="${i1}"]`);
+            const el2 = body.querySelector(`[data-idx="${i2}"]`);
+            if (match) {
+              [el1,el2].forEach(el=>{ el.dataset.matched='1'; el.style.background='color-mix(in srgb,var(--success) 20%,transparent)'; el.style.borderColor='var(--success)'; });
+              encontrados.add(c1.parId);
+              const prog = body.querySelector('#mem-progreso');
+              if (prog) prog.textContent = `${encontrados.size}/${pares.length} pares`;
+              if (encontrados.size === pares.length) { footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer'; }
+            } else if (el1 && el2) {
+              delete el1.dataset.up; el1.style.color='var(--surface-2)'; el1.textContent='❓';
+              delete el2.dataset.up; el2.style.color='var(--surface-2)'; el2.textContent='❓';
+            }
+            volteadas=[]; bloqueado=false;
+          }, 700);
+        }
+      });
+    });
+    footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
+  }
+
+  function _juegoRompecabezas(curso, onDone) {
+    const d = curso.juegoDinamico.datos || {};
+    const n = parseInt(d.dificultad,10) || 3;
+    const img = d.imagenUrl || curso.portada || PORTADA_DEFAULT;
+    const total = n*n;
+    let orden = Array.from({length:total}, (_,i)=>i);
+    let intentos = 0;
+    do { orden = orden.slice().sort(()=>Math.random()-0.5); intentos++; } while (orden.every((v,i)=>v===i) && intentos < 20);
+    const modalId = 'juego-puzzle-' + curso.id;
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;">Ordena la imagen. Toca dos piezas para intercambiarlas.</div>
+      <div id="puzzle-grid" style="display:grid;grid-template-columns:repeat(${n},1fr);gap:2px;width:min(100%,380px);aspect-ratio:1;margin:0 auto;border-radius:10px;overflow:hidden;">
+        ${orden.map((piezaId,pos)=>{
+          const pr = Math.floor(piezaId/n), pc = piezaId%n;
+          const posPct = (v)=> n>1 ? (v*100/(n-1)) : 0;
+          return `<div class="pz-tile" data-pos="${pos}" data-piece="${piezaId}" style="cursor:pointer;background-image:url('${img}');background-size:${n*100}% ${n*100}%;background-position:${posPct(pc)}% ${posPct(pr)}%;outline:2px solid transparent;outline-offset:-2px;"></div>`;
+        }).join('')}
+      </div>
+    `;
+    const footer = document.createElement('button');
+    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
+    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    Modal.open({ id: modalId, title:'🧩 Rompecabezas', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+
+    function checarResuelto() {
+      const tiles=[...body.querySelectorAll('.pz-tile')];
+      return tiles.every(t => parseInt(t.dataset.pos,10) === parseInt(t.dataset.piece,10));
+    }
+    let seleccionado = null;
+    body.querySelectorAll('.pz-tile').forEach(tile => {
+      tile.addEventListener('click', () => {
+        if (tile.dataset.locked) return;
+        if (!seleccionado) { seleccionado = tile; tile.style.outlineColor='var(--primary)'; return; }
+        if (seleccionado === tile) { tile.style.outlineColor='transparent'; seleccionado=null; return; }
+        const bgA = seleccionado.style.backgroundPosition, pieceA = seleccionado.dataset.piece;
+        const bgB = tile.style.backgroundPosition, pieceB = tile.dataset.piece;
+        seleccionado.style.backgroundPosition = bgB; seleccionado.dataset.piece = pieceB;
+        tile.style.backgroundPosition = bgA; tile.dataset.piece = pieceA;
+        seleccionado.style.outlineColor='transparent';
+        seleccionado = null;
+        if (checarResuelto()) {
+          body.querySelectorAll('.pz-tile').forEach(t=>{ t.dataset.locked='1'; t.style.outline='2px solid var(--success)'; });
+          footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer';
+        }
+      });
+    });
+    footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
+  }
+
+  function _juegoAhorcado(curso, onDone) {
+    const lista = curso.juegoDinamico.datos.palabras || [];
+    if (lista.length === 0) { onDone(); return; }
+    const elegido = lista[Math.floor(Math.random()*lista.length)];
+    const palabra = (elegido.palabra || '').toUpperCase();
+    let vidas = 6;
+    const adivinadas = new Set();
+    const usadas = new Set();
+    const modalId = 'juego-ahorcado-' + curso.id;
+    const letras = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
+    const body = document.createElement('div');
+    const footer = document.createElement('button');
+    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
+    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    function render() {
+      const visible = palabra.split('').map(ch => adivinadas.has(ch) ? ch : '_').join(' ');
+      body.innerHTML = `
+        ${elegido.pista ? `<div style="font-size:12px;color:var(--text-2);margin-bottom:10px;">💡 Pista: ${elegido.pista}</div>` : ''}
+        <div style="font-family:'JetBrains Mono',monospace;font-size:clamp(20px,5vw,30px);font-weight:800;letter-spacing:6px;text-align:center;margin-bottom:14px;color:var(--text);">${visible}</div>
+        <div style="text-align:center;font-size:13px;color:var(--text-2);margin-bottom:14px;font-weight:700;">❤️ Intentos restantes: ${vidas}</div>
+        <div id="ah-teclado" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+          ${letras.map(l => {
+            const usada = usadas.has(l);
+            return `<button type="button" data-letra="${l}" ${usada?'disabled':''} style="width:30px;height:34px;border-radius:7px;border:1px solid var(--border);background:${usada?'var(--surface-3)':'var(--surface-2)'};color:${usada?'var(--text-3)':'var(--text)'};font-weight:700;font-size:12px;cursor:${usada?'default':'pointer'};">${l}</button>`;
+          }).join('')}
+        </div>
+        <div id="ah-resultado"></div>
+      `;
+      body.querySelectorAll('[data-letra]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const l = btn.dataset.letra;
+          usadas.add(l);
+          if (palabra.includes(l)) adivinadas.add(l); else vidas--;
+          const ganado = palabra.split('').every(ch => adivinadas.has(ch));
+          const perdido = vidas <= 0;
+          render();
+          if (ganado || perdido) {
+            const res = body.querySelector('#ah-resultado');
+            if (res) res.innerHTML = `<div style="margin-top:16px;text-align:center;font-size:14px;font-weight:800;color:${ganado?'var(--success)':'var(--text-2)'};">${ganado ? '¡Bien hecho! 🎉' : 'La palabra era: '+palabra}</div>`;
+            body.querySelectorAll('[data-letra]').forEach(b => b.disabled = true);
+            footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer';
+          }
+        });
+      });
+    }
+    render();
+    Modal.open({ id: modalId, title:'🪢 Ahorcado', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+    footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
+  }
+
+  window.__abrirJuegoDinamico = function(curso, onDone) {
+    const tipo = curso.juegoDinamico && curso.juegoDinamico.tipo;
+    if (tipo === 'sopa_letras') return _juegoSopaLetras(curso, onDone);
+    if (tipo === 'memorama') return _juegoMemorama(curso, onDone);
+    if (tipo === 'rompecabezas') return _juegoRompecabezas(curso, onDone);
+    if (tipo === 'ahorcado') return _juegoAhorcado(curso, onDone);
+    onDone();
+  };
+
+  window.__abrirQuizClase = function(curso, sesion, onDone) {
+    const preguntas = sesion.preguntas || [];
+    if (preguntas.length === 0) { onDone(); return; }
+    const total = preguntas.length;
+    const respuestas = new Array(total).fill(null);
+    const modalId = 'quiz-' + curso.id + '-' + (sesion.numero||0);
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <div style="margin-bottom:14px;font-size:12.5px;color:var(--text-2);line-height:1.5;">
+        Responde estas preguntas rápidas para reforzar lo que acabas de ver. No afectan tu certificado, pero son obligatorias para continuar.
+      </div>
+      ${preguntas.map((p,i) => {
+        const opciones = p.tipo === 'multiple' ? (p.opciones||[]) : ['Verdadero','Falso'];
+        return `
+        <div style="margin-bottom:18px;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:12px;">
+          <div style="font-size:13.5px;font-weight:700;margin-bottom:10px;">${i+1}. ${escapeHtml(p.pregunta||'')}</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${opciones.map((op,oi) => `
+              <label style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--surface-1,var(--surface));border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:13px;">
+                <input type="radio" name="quiz-preg-${i}" value="${oi}" data-quiz-pregidx="${i}" style="width:16px;height:16px;cursor:pointer;">
+                <span>${escapeHtml(op)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+      <div id="quiz-progreso" style="font-size:11.5px;color:var(--text-3);text-align:center;margin-top:4px;">0/${total} respondidas</div>
+    `;
+    const footer = document.createElement('button');
+    footer.className = 'btn btn--primary';
+    footer.textContent = 'Continuar';
+    footer.disabled = true;
+    footer.style.opacity = '.5';
+    footer.style.cursor = 'not-allowed';
+    Modal.open({ id: modalId, title: '🧠 Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
+    body.querySelectorAll('input[type=radio]').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const qi = parseInt(inp.dataset.quizPregidx, 10);
+        respuestas[qi] = parseInt(inp.value, 10);
+        const respondidas = respuestas.filter(r => r !== null).length;
+        const prog = body.querySelector('#quiz-progreso');
+        if (prog) prog.textContent = `${respondidas}/${total} respondidas`;
+        if (respondidas === total) { footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer'; }
+      });
+    });
+    footer.addEventListener('click', () => {
+      Modal.close(modalId);
+      try {
+        const key = `alintec_quiz_${window.UserState?.uid||'demo'}_${curso.id}_${sesion.numero}`;
+        localStorage.setItem(key, JSON.stringify(respuestas));
+      } catch(e){}
+      onDone();
+    });
+  };
+
+  window.__requerirActividadClase = function(cursoId, numClase, proceed) {
+    const curso = cursos.find(c => c.id === cursoId);
+    if (!curso || !Array.isArray(curso.sesiones)) { proceed(); return; }
+    const idx = curso.sesiones.findIndex(s => (s.numero || 0) === numClase);
+    const sesion = idx >= 0 ? curso.sesiones[idx] : null;
+    const esUltima = idx === curso.sesiones.length - 1;
+    if (esUltima && curso.juegoDinamico && curso.juegoDinamico.tipo) {
+      window.__abrirJuegoDinamico(curso, proceed);
+      return;
+    }
+    if (sesion && Array.isArray(sesion.preguntas) && sesion.preguntas.length > 0) {
+      window.__abrirQuizClase(curso, sesion, proceed);
+      return;
+    }
+    proceed();
+  };
+
   window.abrirClaseAlintec = function(cursoId, indexClase) {
     const curso = cursos.find(c => c.id === cursoId);
     const sesion = curso?.sesiones?.[Number(indexClase)];
@@ -6783,20 +7142,24 @@ const Sections = (function(){
       const cursoId = this.dataset.cursoId;
       const numClase = parseInt(this.dataset.numClase);
       if (!cursoId || !numClase) return;
-      window.marcarClaseVista(cursoId, numClase);
-      // Feedback visual
-      this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> ¡Marcada!';
-      this.style.background = 'color-mix(in srgb, var(--success) 20%, transparent)';
-      this.style.borderColor = 'color-mix(in srgb, var(--success) 50%, transparent)';
-      this.style.color = 'var(--success)';
-      this.disabled = true;
-      // Cerrar después de 1.2s y refrescar el DETALLE del curso (no solo la lista)
-      // para que la siguiente clase se desbloquee al instante.
-      setTimeout(() => {
-        window.cerrarVisor();
-        if (typeof window.__refrescarCursoDetalle === 'function') window.__refrescarCursoDetalle(cursoId);
-        if (typeof renderCursosList === 'function') renderCursosList();
-      }, 1200);
+      const btn = this;
+      const confirmarVista = () => {
+        window.marcarClaseVista(cursoId, numClase);
+        // Feedback visual
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> ¡Marcada!';
+        btn.style.background = 'color-mix(in srgb, var(--success) 20%, transparent)';
+        btn.style.borderColor = 'color-mix(in srgb, var(--success) 50%, transparent)';
+        btn.style.color = 'var(--success)';
+        btn.disabled = true;
+        // Cerrar después de 1.2s y refrescar el DETALLE del curso (no solo la lista)
+        // para que la siguiente clase se desbloquee al instante.
+        setTimeout(() => {
+          window.cerrarVisor();
+          if (typeof window.__refrescarCursoDetalle === 'function') window.__refrescarCursoDetalle(cursoId);
+          if (typeof renderCursosList === 'function') renderCursosList();
+        }, 1200);
+      };
+      window.__requerirActividadClase(cursoId, numClase, confirmarVista);
     });
   });
 
@@ -6855,6 +7218,7 @@ const Sections = (function(){
           // Sesiones (clases) y materiales (PDFs)
           sesiones: Array.isArray(data.sesiones) ? data.sesiones : [],
           materiales: Array.isArray(data.materiales) ? data.materiales : [],
+          juegoDinamico: (data.juegoDinamico && data.juegoDinamico.tipo) ? data.juegoDinamico : null,
           // Flags de desbloqueo
           disponibleSiempre: data.disponibleSiempre === true,
           marcarProximamente: data.marcarProximamente === true,
@@ -7121,6 +7485,12 @@ const Sections = (function(){
       return;
     }
     const items=cursosFiltrados().slice().sort((a,b)=>{
+      // Para quien no tiene membresía, el curso de muestra gratis va primero
+      // siempre — es la vitrina, debe ser lo primero que vea.
+      if (!tieneAccesoVipCompleto()) {
+        const ma=esCursoConMuestra(a), mb=esCursoConMuestra(b);
+        if(ma!==mb) return ma?-1:1;
+      }
       // Desbloqueados primero (progresivos ya abiertos + los "siempre"),
       // luego los próximos a desbloquearse en orden de turno. Así nunca se desordena.
       const da=cursoDesbloqueado(0,a), db=cursoDesbloqueado(0,b);

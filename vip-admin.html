@@ -2441,8 +2441,19 @@ const Pages={
     this._modalCurso.editandoId = esEdicion ? curso.id : null;
     // Clonar para no mutar el original
     this._modalCurso.sesiones = esEdicion && Array.isArray(curso.sesiones)
-      ? curso.sesiones.map(s => ({ numero: s.numero, titulo: s.titulo || '', url: s.url || '', gratis: s.gratis === true }))
+      ? curso.sesiones.map(s => ({
+          numero: s.numero, titulo: s.titulo || '', url: s.url || '', gratis: s.gratis === true,
+          preguntas: Array.isArray(s.preguntas) ? s.preguntas.map(p => ({
+            pregunta: p.pregunta || '',
+            tipo: p.tipo === 'multiple' ? 'multiple' : 'vof',
+            opciones: Array.isArray(p.opciones) ? [...p.opciones] : [],
+            correcta: typeof p.correcta === 'number' ? p.correcta : 0
+          })) : []
+        }))
       : [];
+    this._modalCurso.juegoDinamico = esEdicion && curso.juegoDinamico
+      ? { activo: true, tipo: curso.juegoDinamico.tipo || '', datos: JSON.parse(JSON.stringify(curso.juegoDinamico.datos || {})) }
+      : { activo: false, tipo: '', datos: {} };
     this._modalCurso.materiales = esEdicion && Array.isArray(curso.materiales)
       ? curso.materiales.map(m => ({
           titulo: m.titulo || '',
@@ -2538,6 +2549,17 @@ const Pages={
             </div>
           </label>
         </div>
+        <!-- Juego dinámico al finalizar el curso -->
+        <div style="margin-top:12px;padding:11px 13px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface-2);">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="cf-juego-activo" ${this._modalCurso.juegoDinamico.activo ? 'checked' : ''} style="flex-shrink:0;width:18px;height:18px;cursor:pointer;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#A78BFA;">🎮 Agregar juego dinámico al finalizar el curso</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.4;">Aparece cuando el alumno marca como vista la última clase. Es obligatorio jugarlo, pero no afecta el certificado.</div>
+            </div>
+          </label>
+          <div id="cf-juego-fields" style="margin-top:12px;${this._modalCurso.juegoDinamico.activo ? '' : 'display:none;'}"></div>
+        </div>
       </div>
 
       <!-- Sesiones (clases) -->
@@ -2597,6 +2619,13 @@ const Pages={
     // ─── Bindings ───
     body.querySelector('#cf-add-sesion').addEventListener('click', () => Pages._agregarSesionModal());
     body.querySelector('#cf-add-material').addEventListener('click', () => Pages._agregarMaterialModal());
+    body.querySelector('#cf-juego-activo').addEventListener('change', (e) => {
+      Pages._modalCurso.juegoDinamico.activo = e.target.checked;
+      const fieldsDiv = document.getElementById('cf-juego-fields');
+      if (fieldsDiv) fieldsDiv.style.display = e.target.checked ? '' : 'none';
+      if (e.target.checked) Pages._renderJuegoFields();
+    });
+    if (this._modalCurso.juegoDinamico.activo) Pages._renderJuegoFields();
     footer.querySelector('#cf-cancel').addEventListener('click', () => Modal.close());
     footer.querySelector('#cf-save').addEventListener('click', () => Pages._submitCurso());
   },
@@ -2620,6 +2649,13 @@ const Pages={
             <input type="checkbox" data-sesion-gratis="${idx}" ${s.gratis ? 'checked' : ''} style="width:15px;height:15px;cursor:pointer;">
             <span style="font-size:11.5px;color:var(--success);font-weight:600;">🎁 Clase gratis</span>
           </label>
+          <div style="margin-top:6px;padding-top:8px;border-top:1px dashed var(--border);">
+            <button type="button" class="btn btn--ghost" data-preg-add-sesion="${idx}" style="font-size:11px;padding:5px 10px;">
+              <svg class="ic" style="width:12px;height:12px;"><use href="#i-plus"/></svg>
+              Agregar pregunta
+            </button>
+            <div data-preg-list="${idx}" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;"></div>
+          </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
           <button type="button" class="curso-card__action" data-sesion-mover="${idx}" data-delta="-1" ${idx === 0 ? 'disabled' : ''} title="Subir" style="width:28px;height:24px;${idx === 0 ? 'opacity:.4;cursor:not-allowed;' : ''}">▲</button>
@@ -2656,10 +2692,248 @@ const Pages={
         Pages._eliminarSesionModal(idx);
       });
     });
+    cont.querySelectorAll('[data-preg-add-sesion]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.pregAddSesion, 10);
+        Pages._agregarPreguntaSesion(idx);
+      });
+    });
+    sesiones.forEach((s, idx) => Pages._renderPreguntasSesion(idx));
+  },
+
+  // ─── Preguntas cerradas por clase (Bloque B) ───
+  _agregarPreguntaSesion(idx) {
+    const s = this._modalCurso.sesiones[idx];
+    if (!s) return;
+    s.preguntas = s.preguntas || [];
+    s.preguntas.push({ pregunta: '', tipo: 'vof', opciones: [], correcta: 0 });
+    this._renderPreguntasSesion(idx);
+  },
+  _renderPreguntasSesion(idx) {
+    const cont = document.querySelector(`[data-preg-list="${idx}"]`);
+    if (!cont) return;
+    const preguntas = this._modalCurso.sesiones[idx]?.preguntas || [];
+    if (preguntas.length === 0) {
+      cont.innerHTML = `<div style="font-size:11px;color:var(--text-3);font-style:italic;">Sin preguntas en esta clase.</div>`;
+    } else {
+      cont.innerHTML = preguntas.map((p, qi) => Pages._htmlPregunta(idx, qi, p)).join('');
+    }
+    this._bindPreguntasSesion(idx);
+  },
+  _htmlPregunta(idx, qi, p) {
+    const esc = (t) => (t || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const opciones = Array.isArray(p.opciones) && p.opciones.length >= 2 ? p.opciones : ['', ''];
+    return `
+      <div style="padding:10px;background:var(--surface);border:1px dashed var(--border-2);border-radius:8px;">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <textarea class="input" placeholder="Escribe la pregunta" rows="2" data-preg-campo="pregunta" data-preg-sesion="${idx}" data-preg-idx="${qi}" style="font-size:12.5px;flex:1;">${esc(p.pregunta)}</textarea>
+          <button type="button" class="curso-card__action curso-card__action--danger" data-preg-del="${idx}:${qi}" title="Eliminar pregunta" style="width:26px;height:26px;flex-shrink:0;">✕</button>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+          <label style="font-size:11px;color:var(--text-3);">Tipo:</label>
+          <select class="select" data-preg-campo="tipo" data-preg-sesion="${idx}" data-preg-idx="${qi}" style="font-size:12px;padding:5px 8px;width:auto;">
+            <option value="vof" ${p.tipo !== 'multiple' ? 'selected' : ''}>Verdadero / Falso</option>
+            <option value="multiple" ${p.tipo === 'multiple' ? 'selected' : ''}>Opción múltiple</option>
+          </select>
+        </div>
+        ${p.tipo === 'multiple' ? `
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+          ${opciones.map((op, oi) => `
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="radio" name="preg-correcta-${idx}-${qi}" value="${oi}" ${p.correcta === oi ? 'checked' : ''} data-preg-correcta="${idx}:${qi}">
+              <input type="text" class="input" placeholder="Opción ${oi + 1}" value="${esc(op)}" data-preg-opcion="${idx}:${qi}:${oi}" style="font-size:12px;padding:6px 9px;flex:1;">
+              ${opciones.length > 2 ? `<button type="button" data-preg-op-del="${idx}:${qi}:${oi}" style="width:24px;height:24px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-3);cursor:pointer;">✕</button>` : ''}
+            </div>
+          `).join('')}
+          <button type="button" data-preg-op-add="${idx}:${qi}" class="btn btn--ghost" style="font-size:11px;padding:4px 9px;align-self:flex-start;">+ Agregar opción</button>
+        </div>
+        ` : `
+        <div style="margin-top:8px;display:flex;gap:14px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="preg-correcta-${idx}-${qi}" value="0" ${(p.correcta || 0) === 0 ? 'checked' : ''} data-preg-correcta="${idx}:${qi}"> Verdadero</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="preg-correcta-${idx}-${qi}" value="1" ${p.correcta === 1 ? 'checked' : ''} data-preg-correcta="${idx}:${qi}"> Falso</label>
+        </div>
+        `}
+      </div>
+    `;
+  },
+  _bindPreguntasSesion(idx) {
+    const cont = document.querySelector(`[data-preg-list="${idx}"]`);
+    if (!cont) return;
+    cont.querySelectorAll('[data-preg-campo]').forEach(el => {
+      el.addEventListener('input', (e) => {
+        const si = parseInt(el.dataset.pregSesion, 10), qi = parseInt(el.dataset.pregIdx, 10);
+        const campo = el.dataset.pregCampo;
+        const preg = Pages._modalCurso.sesiones[si]?.preguntas?.[qi];
+        if (!preg) return;
+        if (campo === 'tipo') {
+          preg.tipo = e.target.value;
+          if (preg.tipo === 'multiple' && (!Array.isArray(preg.opciones) || preg.opciones.length < 2)) preg.opciones = ['', ''];
+          preg.correcta = 0;
+          Pages._renderPreguntasSesion(si);
+        } else {
+          preg[campo] = e.target.value;
+        }
+      });
+    });
+    cont.querySelectorAll('[data-preg-correcta]').forEach(el => {
+      el.addEventListener('change', (e) => {
+        const [si, qi] = el.dataset.pregCorrecta.split(':').map(Number);
+        const preg = Pages._modalCurso.sesiones[si]?.preguntas?.[qi];
+        if (preg) preg.correcta = parseInt(e.target.value, 10);
+      });
+    });
+    cont.querySelectorAll('[data-preg-opcion]').forEach(el => {
+      el.addEventListener('input', (e) => {
+        const [si, qi, oi] = el.dataset.pregOpcion.split(':').map(Number);
+        const preg = Pages._modalCurso.sesiones[si]?.preguntas?.[qi];
+        if (preg && Array.isArray(preg.opciones)) preg.opciones[oi] = e.target.value;
+      });
+    });
+    cont.querySelectorAll('[data-preg-op-add]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [si, qi] = btn.dataset.pregOpAdd.split(':').map(Number);
+        const preg = Pages._modalCurso.sesiones[si]?.preguntas?.[qi];
+        if (preg) { preg.opciones = preg.opciones || []; preg.opciones.push(''); Pages._renderPreguntasSesion(si); }
+      });
+    });
+    cont.querySelectorAll('[data-preg-op-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [si, qi, oi] = btn.dataset.pregOpDel.split(':').map(Number);
+        const preg = Pages._modalCurso.sesiones[si]?.preguntas?.[qi];
+        if (preg && preg.opciones && preg.opciones.length > 2) {
+          preg.opciones.splice(oi, 1);
+          if (preg.correcta >= preg.opciones.length) preg.correcta = 0;
+          Pages._renderPreguntasSesion(si);
+        }
+      });
+    });
+    cont.querySelectorAll('[data-preg-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [si, qi] = btn.dataset.pregDel.split(':').map(Number);
+        Pages._modalCurso.sesiones[si]?.preguntas?.splice(qi, 1);
+        Pages._renderPreguntasSesion(si);
+      });
+    });
+  },
+
+  // ─── Juego dinámico al finalizar el curso (Bloque C) ───
+  _renderJuegoFields() {
+    const cont = document.getElementById('cf-juego-fields');
+    if (!cont) return;
+    const jd = this._modalCurso.juegoDinamico;
+    const tipos = [
+      { v: 'sopa_letras', l: '🔤 Sopa de letras' },
+      { v: 'memorama', l: '🃏 Memorama' },
+      { v: 'rompecabezas', l: '🧩 Rompecabezas (imagen)' },
+      { v: 'ahorcado', l: '🪢 Ahorcado' }
+    ];
+    cont.innerHTML = `
+      <div class="form-field">
+        <label class="label" style="font-size:11.5px;">Tipo de juego</label>
+        <select class="select" id="cf-juego-tipo" style="font-size:12.5px;">
+          <option value="">Selecciona…</option>
+          ${tipos.map(t => `<option value="${t.v}" ${jd.tipo === t.v ? 'selected' : ''}>${t.l}</option>`).join('')}
+        </select>
+      </div>
+      <div id="cf-juego-datos" style="margin-top:10px;"></div>
+    `;
+    document.getElementById('cf-juego-tipo').addEventListener('change', (e) => {
+      Pages._modalCurso.juegoDinamico.tipo = e.target.value;
+      Pages._modalCurso.juegoDinamico.datos = {};
+      Pages._renderJuegoDatos();
+    });
+    this._renderJuegoDatos();
+  },
+  _renderJuegoDatos() {
+    const cont = document.getElementById('cf-juego-datos');
+    if (!cont) return;
+    const jd = this._modalCurso.juegoDinamico;
+    const d = jd.datos = jd.datos || {};
+    const esc = (t) => (t || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    if (jd.tipo === 'sopa_letras') {
+      d.palabras = d.palabras && d.palabras.length ? d.palabras : ['', '', ''];
+      cont.innerHTML = `
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">Palabras a encontrar (vocabulario clave del curso completo). Mínimo 3.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${d.palabras.map((w, i) => `
+            <div style="display:flex;gap:6px;">
+              <input type="text" class="input" placeholder="Palabra ${i + 1}" value="${esc(w)}" data-juego-palabra="${i}" style="font-size:12.5px;padding:6px 9px;flex:1;text-transform:uppercase;">
+              ${d.palabras.length > 3 ? `<button type="button" data-juego-palabra-del="${i}" style="width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-3);cursor:pointer;">✕</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" id="cf-juego-palabra-add" class="btn btn--ghost" style="font-size:11px;padding:5px 10px;margin-top:6px;">+ Agregar palabra</button>
+      `;
+      cont.querySelectorAll('[data-juego-palabra]').forEach(inp => {
+        inp.addEventListener('input', (e) => { d.palabras[parseInt(inp.dataset.juegoPalabra, 10)] = e.target.value.toUpperCase(); });
+      });
+      cont.querySelectorAll('[data-juego-palabra-del]').forEach(btn => {
+        btn.addEventListener('click', () => { d.palabras.splice(parseInt(btn.dataset.juegoPalabraDel, 10), 1); Pages._renderJuegoDatos(); });
+      });
+      document.getElementById('cf-juego-palabra-add')?.addEventListener('click', () => { d.palabras.push(''); Pages._renderJuegoDatos(); });
+    } else if (jd.tipo === 'memorama') {
+      d.pares = d.pares && d.pares.length ? d.pares : [{ termino: '', definicion: '' }, { termino: '', definicion: '' }, { termino: '', definicion: '' }];
+      cont.innerHTML = `
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">Pares término / definición para emparejar. Mínimo 3.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${d.pares.map((p, i) => `
+            <div style="display:flex;gap:6px;">
+              <input type="text" class="input" placeholder="Término" value="${esc(p.termino)}" data-juego-par-termino="${i}" style="font-size:12.5px;padding:6px 9px;flex:1;">
+              <input type="text" class="input" placeholder="Definición corta" value="${esc(p.definicion)}" data-juego-par-def="${i}" style="font-size:12.5px;padding:6px 9px;flex:1.4;">
+              ${d.pares.length > 3 ? `<button type="button" data-juego-par-del="${i}" style="width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-3);cursor:pointer;">✕</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" id="cf-juego-par-add" class="btn btn--ghost" style="font-size:11px;padding:5px 10px;margin-top:6px;">+ Agregar par</button>
+      `;
+      cont.querySelectorAll('[data-juego-par-termino]').forEach(inp => inp.addEventListener('input', e => { d.pares[parseInt(inp.dataset.juegoParTermino, 10)].termino = e.target.value; }));
+      cont.querySelectorAll('[data-juego-par-def]').forEach(inp => inp.addEventListener('input', e => { d.pares[parseInt(inp.dataset.juegoParDef, 10)].definicion = e.target.value; }));
+      cont.querySelectorAll('[data-juego-par-del]').forEach(btn => btn.addEventListener('click', () => { d.pares.splice(parseInt(btn.dataset.juegoParDel, 10), 1); Pages._renderJuegoDatos(); }));
+      document.getElementById('cf-juego-par-add')?.addEventListener('click', () => { d.pares.push({ termino: '', definicion: '' }); Pages._renderJuegoDatos(); });
+    } else if (jd.tipo === 'rompecabezas') {
+      cont.innerHTML = `
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">Usa la portada del curso o pega otra imagen para armar el rompecabezas.</div>
+        <div class="form-field">
+          <label class="label" style="font-size:11.5px;">Dificultad</label>
+          <select class="select" id="cf-juego-dificultad" style="font-size:12.5px;">
+            <option value="3" ${d.dificultad === '3' || !d.dificultad ? 'selected' : ''}>Fácil (3×3)</option>
+            <option value="4" ${d.dificultad === '4' ? 'selected' : ''}>Media (4×4)</option>
+            <option value="5" ${d.dificultad === '5' ? 'selected' : ''}>Difícil (5×5)</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-top:8px;">
+          <label class="label" style="font-size:11.5px;">URL de imagen (opcional, si no usas la portada)</label>
+          <input type="url" class="input" id="cf-juego-imagen" placeholder="https://…" value="${esc(d.imagenUrl)}" style="font-size:12.5px;">
+        </div>
+      `;
+      document.getElementById('cf-juego-dificultad').addEventListener('change', e => { d.dificultad = e.target.value; });
+      document.getElementById('cf-juego-imagen').addEventListener('input', e => { d.imagenUrl = e.target.value; });
+    } else if (jd.tipo === 'ahorcado') {
+      d.palabras = d.palabras && d.palabras.length ? d.palabras : [{ palabra: '', pista: '' }];
+      cont.innerHTML = `
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">Palabras con su pista (se elige una al azar en cada intento).</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${d.palabras.map((p, i) => `
+            <div style="display:flex;gap:6px;">
+              <input type="text" class="input" placeholder="Palabra" value="${esc(p.palabra)}" data-juego-ah-palabra="${i}" style="font-size:12.5px;padding:6px 9px;flex:1;text-transform:uppercase;">
+              <input type="text" class="input" placeholder="Pista" value="${esc(p.pista)}" data-juego-ah-pista="${i}" style="font-size:12.5px;padding:6px 9px;flex:1.4;">
+              ${d.palabras.length > 1 ? `<button type="button" data-juego-ah-del="${i}" style="width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-3);cursor:pointer;">✕</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" id="cf-juego-ah-add" class="btn btn--ghost" style="font-size:11px;padding:5px 10px;margin-top:6px;">+ Agregar palabra</button>
+      `;
+      cont.querySelectorAll('[data-juego-ah-palabra]').forEach(inp => inp.addEventListener('input', e => { d.palabras[parseInt(inp.dataset.juegoAhPalabra, 10)].palabra = e.target.value.toUpperCase(); }));
+      cont.querySelectorAll('[data-juego-ah-pista]').forEach(inp => inp.addEventListener('input', e => { d.palabras[parseInt(inp.dataset.juegoAhPista, 10)].pista = e.target.value; }));
+      cont.querySelectorAll('[data-juego-ah-del]').forEach(btn => btn.addEventListener('click', () => { d.palabras.splice(parseInt(btn.dataset.juegoAhDel, 10), 1); Pages._renderJuegoDatos(); }));
+      document.getElementById('cf-juego-ah-add')?.addEventListener('click', () => { d.palabras.push({ palabra: '', pista: '' }); Pages._renderJuegoDatos(); });
+    } else {
+      cont.innerHTML = '';
+    }
   },
 
   _agregarSesionModal() {
-    this._modalCurso.sesiones.push({ numero: this._modalCurso.sesiones.length + 1, titulo: '', url: '' });
+    this._modalCurso.sesiones.push({ numero: this._modalCurso.sesiones.length + 1, titulo: '', url: '', preguntas: [] });
     this._renderSesionesModal();
   },
   _moverSesionModal(idx, delta) {
@@ -2775,7 +3049,18 @@ const Pages={
         }
         const numero = sesionesLimpias.length + 1;
         const gratisFlag = s.gratis === true;
-        sesionesLimpias.push({ numero, titulo: tit || `Clase ${numero}`, url, gratis: gratisFlag });
+        const preguntasLimpias = (s.preguntas || []).map(p => {
+          const pregunta = (p.pregunta || '').trim();
+          if (!pregunta) return null;
+          if (p.tipo === 'multiple') {
+            const opciones = (p.opciones || []).map(o => (o || '').trim()).filter(Boolean);
+            if (opciones.length < 2) return null;
+            const correcta = Math.min(p.correcta || 0, opciones.length - 1);
+            return { pregunta, tipo: 'multiple', opciones, correcta };
+          }
+          return { pregunta, tipo: 'vof', correcta: p.correcta === 1 ? 1 : 0 };
+        }).filter(Boolean);
+        sesionesLimpias.push({ numero, titulo: tit || `Clase ${numero}`, url, gratis: gratisFlag, preguntas: preguntasLimpias });
       }
 
       // Validar materiales (si tienen título, también necesitan URL · y al revés)
@@ -2807,6 +3092,29 @@ const Pages={
       // Leer checkbox de muestra gratis
       const cursoMuestraGratis = document.getElementById('cf-curso-muestra')?.checked === true;
 
+      // Validar y construir el juego dinámico (si está activo)
+      let juegoDinamico = null;
+      const jdState = this._modalCurso.juegoDinamico;
+      if (jdState && jdState.activo && jdState.tipo) {
+        const d = jdState.datos || {};
+        if (jdState.tipo === 'sopa_letras') {
+          const palabras = (d.palabras || []).map(w => (w || '').trim().toUpperCase()).filter(Boolean);
+          if (palabras.length >= 3) juegoDinamico = { tipo: 'sopa_letras', datos: { palabras } };
+        } else if (jdState.tipo === 'memorama') {
+          const pares = (d.pares || []).map(pp => ({ termino: (pp.termino || '').trim(), definicion: (pp.definicion || '').trim() })).filter(pp => pp.termino && pp.definicion);
+          if (pares.length >= 3) juegoDinamico = { tipo: 'memorama', datos: { pares } };
+        } else if (jdState.tipo === 'rompecabezas') {
+          juegoDinamico = { tipo: 'rompecabezas', datos: { dificultad: d.dificultad || '3', imagenUrl: (d.imagenUrl || '').trim() || null } };
+        } else if (jdState.tipo === 'ahorcado') {
+          const palabras = (d.palabras || []).map(pp => ({ palabra: (pp.palabra || '').trim().toUpperCase(), pista: (pp.pista || '').trim() })).filter(pp => pp.palabra);
+          if (palabras.length >= 1) juegoDinamico = { tipo: 'ahorcado', datos: { palabras } };
+        }
+        if (!juegoDinamico) {
+          Toast.error('Juego dinámico incompleto', 'Completa los datos requeridos (mínimo de palabras/pares) o desactívalo');
+          throw new Error('skip');
+        }
+      }
+
       // Construir objeto base
       const data = {
         titulo,
@@ -2819,6 +3127,7 @@ const Pages={
         materiales: matsLimpios,
         disponibleSiempre,
         cursoMuestraGratis,
+        juegoDinamico,
         activo: true,
         disponible: true
       };
