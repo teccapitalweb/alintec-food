@@ -51,15 +51,15 @@ input,select,textarea{font:inherit;color:inherit}
   --shadow-card:0 10px 40px rgba(0,0,0,0.55);
 }
 :root[data-theme="day"]{
-  --bg:#F8FBF9;--bg-deep:#F0F5F1;
-  --surface:#FFFFFF;--surface-2:#F5F8F5;--surface-3:#EDF2EE;
-  --border:rgba(18,52,26,0.06);--border-2:rgba(18,52,26,0.10);--border-strong:rgba(18,52,26,0.18);
+  --bg:#EEF1EE;--bg-deep:#E4E9E4;
+  --surface:#FFFFFF;--surface-2:#F6F8F6;--surface-3:#ECEFEC;
+  --border:rgba(20,40,25,0.09);--border-2:rgba(20,40,25,0.14);--border-strong:rgba(20,40,25,0.22);
   --text:#14301C;--text-2:#48604D;--text-3:#7C9280;
   --primary:#43A047;--primary-soft:#7CC47F;--primary-deep:#2E7D32;
   --primary-glow:rgba(67,160,71,0.32);--highlight:#689F38;
   --success:#0F9D58;--danger:#DC2D3F;--warning:#E89B1F;--whatsapp:#16A34A;
   --info:#2563EB;--accent-yellow:#D97706;--accent-blue:#2563EB;--accent-purple:#9333EA;
-  --shadow-card:0 8px 32px rgba(18,60,30,0.08);
+  --shadow-card:0 6px 24px rgba(25,40,30,0.10);
 }
 
 body{
@@ -128,7 +128,8 @@ body::after{
 .sidebar::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
 
 .brand{display:flex;align-items:center;gap:11px;padding:6px 16px 16px;border-bottom:0.5px solid var(--border);margin-bottom:6px}
-.brand__leaf{width:30px;height:30px;flex-shrink:0}
+.brand__logo{width:36px;height:36px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
+.brand__logo img{width:100%;height:100%;object-fit:contain;display:block}
 .brand__name{font-size:16px;font-weight:700;letter-spacing:-.3px;line-height:1.1}
 .brand__name--accent{color:var(--primary)}
 .brand__plan{display:inline-block;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);font-weight:600;margin-top:3px}
@@ -3877,7 +3878,7 @@ window.__setDisplayName = async (nombre) => {
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <svg class="brand__leaf" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3C7 5 4.5 9 5 14c.4 3.6 3 6.4 7 7 4-.6 6.6-3.4 7-7 .5-5-2-9-7-11Z" fill="var(--primary)"/><path d="M12 7v11" stroke="rgba(255,255,255,.85)" stroke-width="1.4" stroke-linecap="round"/><path d="M12 11c1.4-.4 2.6-1.2 3.4-2.4M12 14.5c-1.5-.4-2.8-1.3-3.6-2.6" stroke="rgba(255,255,255,.85)" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <div class="brand__logo"><img src="assets/img/alintec-logo.png" alt="Alintec Food"></div>
       <div>
         <div class="brand__name">Alintec <span class="brand__name--accent">Food</span></div>
         <div class="brand__plan" id="brand-plan-badge">VIP Anual</div>
@@ -9216,7 +9217,7 @@ const Sections = (function(){
             </div>
           </div>
           <div class="pdfs-grid" id="pdfs-grid-container">
-            ${materialesTodos.map(m => _renderPdfCard(m)).join('')}
+            ${materialesTodos.slice().sort((a,b) => (_materialDisponible(b)?1:0) - (_materialDisponible(a)?1:0)).map(m => _renderPdfCard(m)).join('')}
           </div>
         `}
       </div>
@@ -9299,6 +9300,7 @@ const Sections = (function(){
     return `
       <article class="pdf-card ${!disponible ? 'pdf-card--soon' : ''}" style="--pdf-color:${c};cursor:pointer;"
         data-disponible="${disponible}"
+        data-free="${disponible ? 'true' : 'false'}"
         data-url="${(m.url||'').replace(/"/g,'&quot;')}"
         data-dias-faltan="${diasFaltan}"
         data-titulo="${tituloEsc}"
@@ -9317,7 +9319,9 @@ const Sections = (function(){
           <div class="pdf-card__tags">
             ${disponible
               ? `<span class="tag tag--soon" style="color:#0A120C;border-color:#34D399;background:#34D399;font-weight:700;">Disponible</span><button class="row-btn pdf-card__btn-soon" style="margin-left:auto;background:linear-gradient(135deg, var(--primary), var(--highlight));color:#0A120C;cursor:pointer;" onclick="event.stopPropagation();if(typeof window.abrirVisor==='function'){window.abrirVisor('${(m.url||'').replace(/'/g,'%27')}','${tituloEsc.replace(/'/g,'&apos;')}');}"><svg class="ic"><use href="#i-download"/></svg>Abrir</button>`
-              : `<span class="tag tag--soon">${diasFaltan === 1 ? 'Mañana' : 'En '+diasFaltan+' días'}</span><button class="row-btn pdf-card__btn-soon" style="margin-left:auto;opacity:.55;cursor:not-allowed;" disabled><svg class="ic"><use href="#i-clock"/></svg>Disponible pronto</button>`
+              : (tieneAccesoVipCompleto()
+                  ? `<span class="tag tag--soon">${diasFaltan === 1 ? 'Mañana' : 'En '+diasFaltan+' días'}</span><button class="row-btn pdf-card__btn-soon" style="margin-left:auto;opacity:.55;cursor:not-allowed;" disabled><svg class="ic"><use href="#i-clock"/></svg>Disponible pronto</button>`
+                  : `<span class="tag tag--soon">Con membresía</span><button class="row-btn pdf-card__btn-soon" style="margin-left:auto;opacity:.55;cursor:not-allowed;" disabled><svg class="ic"><use href="#i-lock"/></svg>Solo VIP</button>`)
             }
           </div>
         </div>
