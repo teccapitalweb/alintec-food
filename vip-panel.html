@@ -40,14 +40,15 @@ input,select,textarea{font:inherit;color:inherit}
 ::selection{background:var(--primary);color:#fff}
 
 :root[data-theme="night"]{
-  --bg:#0E1611;--bg-deep:#091108;
-  --surface:#141F17;--surface-2:#1C2B20;--surface-3:#2A4130;
-  --border:rgba(155,215,170,0.07);--border-2:rgba(155,215,170,0.14);--border-strong:rgba(155,215,170,0.22);
-  --text:#EDF3EE;--text-2:#B5C6B8;--text-3:#89A08D;
-  --primary:#4C9E56;--primary-soft:#7CC47F;--primary-deep:#2E7D32;
-  --primary-glow:rgba(67,160,71,0.14);--highlight:#8FBF6A;
+  --bg:#0B0B0C;--bg-deep:#060607;
+  --surface:#141416;--surface-2:#1B1B1E;--surface-3:#242428;
+  --border:rgba(255,255,255,0.07);--border-2:rgba(255,255,255,0.12);--border-strong:rgba(255,255,255,0.20);
+  --text:#FFFFFF;--text-2:#B9BDC1;--text-3:#84898E;
+  --primary:#4CAF50;--primary-soft:#81C784;--primary-deep:#2E7D32;
+  --primary-glow:rgba(76,175,80,0.10);--highlight:#8BC34A;
   --success:#34D399;--danger:#F87171;--warning:#FBBF24;--whatsapp:#22C55E;
-  --shadow-card:0 10px 40px rgba(0,0,0,0.5);
+  --info:#60A5FA;--accent-yellow:#FACC15;--accent-blue:#60A5FA;--accent-purple:#C084FC;
+  --shadow-card:0 10px 40px rgba(0,0,0,0.55);
 }
 :root[data-theme="day"]{
   --bg:#F8FBF9;--bg-deep:#F0F5F1;
@@ -57,6 +58,7 @@ input,select,textarea{font:inherit;color:inherit}
   --primary:#43A047;--primary-soft:#7CC47F;--primary-deep:#2E7D32;
   --primary-glow:rgba(67,160,71,0.32);--highlight:#689F38;
   --success:#0F9D58;--danger:#DC2D3F;--warning:#E89B1F;--whatsapp:#16A34A;
+  --info:#2563EB;--accent-yellow:#D97706;--accent-blue:#2563EB;--accent-purple:#9333EA;
   --shadow-card:0 8px 32px rgba(18,60,30,0.08);
 }
 
@@ -86,11 +88,24 @@ body::after{
 }
 :root[data-theme="day"] body::after{display:none}
 :root[data-theme="day"] body::before{opacity:.08}
-:root[data-theme="night"] body::before{opacity:.35}
+:root[data-theme="night"] body::before{opacity:.10}
+:root[data-theme="night"] body::after{display:none}
 :root[data-theme="day"] .sidebar{background:var(--surface);border-right-color:var(--border)}
-/* Hover tecnológico en tarjetas: crecen ligeramente y su contorno brilla */
-.curso-card,.pdf-card,.noticia-card,.webinar-card,.dash-card,.tool-card,.mat-card{transition:transform .25s cubic-bezier(.2,.8,.25,1),box-shadow .25s,border-color .25s}
-.curso-card:hover,.pdf-card:hover,.noticia-card:hover,.webinar-card:hover,.dash-card:hover,.tool-card:hover{transform:translateY(-3px) scale(1.012);border-color:color-mix(in srgb,var(--primary) 55%,var(--border-2));box-shadow:0 0 0 1px color-mix(in srgb,var(--primary) 30%,transparent),0 14px 40px color-mix(in srgb,var(--primary) 18%,transparent)}
+
+/* ─── Acentos de color en iconos (variedad sutil, no todo verde) ─── */
+.nav-item[data-section^="tool-"] .ic{color:var(--accent-yellow)}
+.nav-item[data-section="foro"] .ic,.nav-item[data-section="directorio"] .ic{color:var(--accent-blue)}
+.nav-item[data-section="canal"] .ic{color:var(--whatsapp)}
+.nav-item[data-section="logros"] .ic{color:var(--accent-yellow)}
+.nav-item[data-section="certificados"] .ic{color:var(--accent-purple)}
+.nav-item[data-section="webinars"] .ic{color:var(--danger)}
+.nav-item.is-active .ic{color:var(--primary)}
+.banner__stat:nth-child(1) .banner__stat-val{color:var(--primary);-webkit-text-fill-color:var(--primary)}
+.banner__stat:nth-child(2) .banner__stat-val{color:var(--accent-blue);-webkit-text-fill-color:var(--accent-blue)}
+.banner__stat:nth-child(3) .banner__stat-val{color:var(--accent-yellow);-webkit-text-fill-color:var(--accent-yellow)}
+.banner__stat:nth-child(4) .banner__stat-val{color:var(--accent-purple);-webkit-text-fill-color:var(--accent-purple)}
+.curso-card,.pdf-card,.noticia-card,.webinar-card,.dash-card,.tool-card,.mat-card{transition:transform .2s ease,box-shadow .2s ease}
+.curso-card:hover,.pdf-card:hover,.noticia-card:hover,.webinar-card:hover,.dash-card:hover,.tool-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
 @keyframes auroraBg{
   0%{transform:translate(0,0) scale(1)}
   50%{transform:translate(2%,-2%) scale(1.05)}
@@ -113,11 +128,10 @@ body::after{
 .sidebar::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
 
 .brand{display:flex;align-items:center;gap:11px;padding:6px 16px 16px;border-bottom:0.5px solid var(--border);margin-bottom:6px}
-.brand__logo{width:38px;height:38px;border-radius:10px;background:#14301C;border:0.5px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.brand__logo svg{width:28px;height:28px}
-.brand__logo img{width:32px;height:32px;object-fit:contain;display:block}
-.brand__name{font-size:14px;font-weight:600;letter-spacing:-.2px;line-height:1.1}
-.brand__plan{display:inline-block;font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:var(--primary);font-weight:700;margin-top:3px;padding:2px 7px;border-radius:100px;background:color-mix(in srgb,var(--primary) 12%,transparent);border:0.5px solid color-mix(in srgb,var(--primary) 30%,transparent)}
+.brand__leaf{width:30px;height:30px;flex-shrink:0}
+.brand__name{font-size:16px;font-weight:700;letter-spacing:-.3px;line-height:1.1}
+.brand__name--accent{color:var(--primary)}
+.brand__plan{display:inline-block;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);font-weight:600;margin-top:3px}
 
 .nav-section{padding:0 10px;margin-top:10px}
 .nav-label{font-size:9px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-3);padding:8px 10px 6px}
@@ -136,7 +150,7 @@ body::after{
 .topbar__left{display:flex;align-items:center;gap:10px}
 .topbar__right{display:flex;align-items:center;gap:8px}
 
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;padding:5px 12px 5px 10px;border-radius:100px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);border:0.5px solid color-mix(in srgb,var(--primary) 30%,transparent);letter-spacing:1.2px;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:1px;text-transform:uppercase}
 .pill .ic{width:11px;height:11px}
 
 .icon-btn{width:34px;height:34px;border-radius:100px;background:var(--surface);border:0.5px solid var(--border-2);display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:color .15s,border-color .15s,background .15s;position:relative}
@@ -156,7 +170,7 @@ body::after{
 
 /* Banner — estilo agri-futurista con grid pattern + aurora + glassmorphism */
 .banner{
-  background:linear-gradient(135deg,#131A28 0%,#0A120C 100%);
+  background:var(--surface);
   color:var(--text);
   border-radius:20px;
   padding:28px 32px;
@@ -174,30 +188,7 @@ body::after{
   background:linear-gradient(135deg,#FFFFFF 0%,#F4FAF4 100%);
   box-shadow:0 8px 32px rgba(18,60,30,.08);
 }
-/* Grid pattern tipo blueprint */
-.banner::before{
-  content:"";
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(to right, color-mix(in srgb,var(--primary) 8%,transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb,var(--primary) 8%,transparent) 1px, transparent 1px);
-  background-size:48px 48px;
-  -webkit-mask-image:radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, transparent 75%);
-  mask-image:radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, transparent 75%);
-  pointer-events:none;
-}
-/* Aurora animada */
-.banner::after{
-  content:"";
-  position:absolute;inset:0;
-  background:
-    radial-gradient(circle at 15% 25%, color-mix(in srgb,var(--primary) 22%,transparent), transparent 45%),
-    radial-gradient(circle at 85% 75%, color-mix(in srgb,var(--highlight) 18%,transparent), transparent 50%),
-    radial-gradient(circle at 50% 50%, color-mix(in srgb,var(--primary-deep) 12%,transparent), transparent 55%);
-  filter:blur(40px);
-  animation:aurora 18s ease-in-out infinite alternate;
-  pointer-events:none;
-}
+
 @keyframes aurora{
   0%{transform:translate(0,0) scale(1)}
   33%{transform:translate(20px,-15px) scale(1.08)}
@@ -206,30 +197,17 @@ body::after{
 }
 .banner__info{position:relative;z-index:1;flex:1;min-width:240px}
 
-/* Hero tag glassmorphism con dot pulsante */
 .banner__eyebrow{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:6px 12px 6px 10px;
-  border-radius:100px;
-  background:color-mix(in srgb,var(--surface) 60%,transparent);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border:0.5px solid color-mix(in srgb,var(--primary) 30%,transparent);
   font-size:10px;
   font-weight:600;
-  letter-spacing:1.5px;
+  letter-spacing:1.2px;
   text-transform:uppercase;
-  color:var(--primary);
+  color:var(--text-3);
 }
-.banner__eyebrow__dot{
-  width:7px;height:7px;
-  border-radius:50%;
-  background:var(--success);
-  box-shadow:0 0 0 0 var(--success);
-  animation:pulseDot 1.8s ease-out infinite;
-}
+.banner__eyebrow__dot{display:none}
 @keyframes pulseDot{
   0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 60%,transparent)}
   70%{box-shadow:0 0 0 8px transparent}
@@ -273,14 +251,7 @@ body::after{
   position:relative;
   overflow:hidden;
 }
-.banner__stat::before{
-  content:"";
-  position:absolute;
-  top:0;left:0;right:0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,var(--primary),transparent);
-  opacity:.5;
-}
+
 .banner__stat-lbl{
   font-family:'JetBrains Mono',monospace;
   font-size:8.5px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;
@@ -288,13 +259,7 @@ body::after{
   display:flex;align-items:center;gap:5px;
   margin-bottom:5px;
 }
-.banner__stat-lbl::before{
-  content:"";
-  width:5px;height:5px;
-  border-radius:50%;
-  background:var(--success);
-  animation:pulseDotSmall 2.2s ease-out infinite;
-}
+
 @keyframes pulseDotSmall{
   0%,100%{opacity:1}
   50%{opacity:.4}
@@ -318,18 +283,9 @@ body::after{
 .section-header__badge{
   font-family:'JetBrains Mono',monospace;
   font-size:9.5px;font-weight:600;letter-spacing:.8px;
-  padding:3px 9px;
-  border-radius:100px;
-  background:color-mix(in srgb,var(--primary) 14%,transparent);
-  color:var(--primary);
-  border:0.5px solid color-mix(in srgb,var(--primary) 28%,transparent);
+  color:var(--text-3);
   text-transform:uppercase;
-  display:inline-flex;align-items:center;gap:5px;
-}
-.section-header__badge::before{
-  content:"";width:5px;height:5px;border-radius:50%;
-  background:var(--primary);
-  animation:pulseDotSmall 1.8s ease-out infinite;
+  display:inline-flex;align-items:center;
 }
 .section-header__link{
   font-size:11.5px;color:var(--text-2);font-weight:500;
@@ -430,10 +386,6 @@ body::after{
   color:var(--primary);
   border:0.5px solid color-mix(in srgb,var(--primary) 35%,transparent);
 }
-.tag--new::before{
-  content:"";width:5px;height:5px;border-radius:50%;background:var(--primary);
-  animation:pulseDotSmall 1.6s ease-out infinite;
-}
 .tag--watched{
   background:color-mix(in srgb,var(--success) 14%,transparent);
   color:var(--success);
@@ -448,10 +400,6 @@ body::after{
   background:color-mix(in srgb,var(--danger) 18%,transparent);
   color:var(--danger);
   border:0.5px solid color-mix(in srgb,var(--danger) 35%,transparent);
-}
-.tag--live::before{
-  content:"";width:5px;height:5px;border-radius:50%;background:var(--danger);
-  animation:pulseDotSmall 1.2s ease-out infinite;
 }
 .tag--soon{
   background:var(--surface-3);
@@ -588,18 +536,10 @@ body::after{
   margin-bottom:28px;
 }
 .sec-hero__eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
+  display:inline-flex;align-items:center;
   font-family:'JetBrains Mono',monospace;
-  font-size:10.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;
-  color:var(--primary);
-  padding:7px 13px;border-radius:100px;
-  background:color-mix(in srgb,var(--primary) 12%,transparent);
-  border:1px solid color-mix(in srgb,var(--primary) 28%,transparent);
-}
-.sec-hero__eyebrow::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);
-  animation:pulseDotSmall 1.8s ease-out infinite;
-  box-shadow:0 0 8px var(--primary-glow);
+  font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--text-3);
 }
 .sec-hero__title{
   font-family:'Plus Jakarta Sans','Inter',sans-serif;
@@ -639,11 +579,6 @@ body::after{
   color:var(--text-3);
   display:inline-flex;align-items:center;gap:6px;
   margin-bottom:10px;
-}
-.kpi-card__label::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);
-  animation:pulseDotSmall 2s ease-out infinite;
-  box-shadow:0 0 8px var(--primary-glow);
 }
 .kpi-card__value{
   font-family:'Plus Jakarta Sans','Inter',sans-serif;
@@ -826,11 +761,6 @@ body::after{
   color:var(--text-3);margin-bottom:7px;
   display:inline-flex;align-items:center;gap:6px;
 }
-.cert-card__eyebrow::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:var(--success);
-  animation:pulseDotSmall 2.2s ease-out infinite;
-  box-shadow:0 0 8px var(--success);
-}
 .cert-card__title{
   font-family:'Plus Jakarta Sans','Inter',sans-serif;
   font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.3;margin-bottom:12px;
@@ -853,11 +783,6 @@ body::after{
   font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;
   color:var(--success);font-weight:700;
   display:inline-flex;align-items:center;gap:5px;
-}
-.cert-card__verify::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:var(--success);
-  animation:pulseDotSmall 2s ease-out infinite;
-  box-shadow:0 0 6px var(--success);
 }
 
 /* LOGROS — hero estilo Sinergia + grid de medallas */
@@ -1456,10 +1381,6 @@ body::after{
   background:color-mix(in srgb,var(--primary) 12%,transparent);
   border:0.5px solid color-mix(in srgb,var(--primary) 28%,transparent);
 }
-.iper__folio::before{
-  content:"";width:5px;height:5px;border-radius:50%;background:var(--primary);
-  animation:pulseDotSmall 1.8s ease-out infinite;
-}
 
 .iper-tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:100px;flex-wrap:wrap}
 .iper-tab{
@@ -1608,10 +1529,6 @@ body::after{
   color:var(--level-color);
   border:0.5px solid var(--level-color);
   display:inline-flex;align-items:center;gap:5px;
-}
-.iper-result-pill::before{
-  content:"";width:5px;height:5px;border-radius:50%;background:var(--level-color);
-  animation:pulseDotSmall 1.6s ease-out infinite;
 }
 
 /* Peligros list */
@@ -2294,10 +2211,6 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
   margin-bottom:14px;
   display:inline-flex;align-items:center;gap:6px;
 }
-.perfil-card__title::before{
-  content:"";width:5px;height:5px;border-radius:50%;background:var(--primary);
-  animation:pulseDotSmall 1.8s ease-out infinite;
-}
 .perfil-field{
   display:flex;justify-content:space-between;align-items:center;
   padding:10px 0;
@@ -2346,10 +2259,6 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
   font-family:'JetBrains Mono',monospace;
   font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
   opacity:.9;display:inline-flex;align-items:center;gap:6px;
-}
-.plan-card__lbl::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:#34D399;
-  box-shadow:0 0 0 0 #34D399;animation:pulseDot 1.8s ease-out infinite;
 }
 .plan-card__name{font-size:30px;font-weight:600;letter-spacing:-.8px;line-height:1.1;margin-top:8px}
 .plan-card__price{position:relative;z-index:1;text-align:right}
@@ -2442,10 +2351,6 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
   font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
   display:inline-flex;align-items:center;gap:5px;
   z-index:1;
-}
-.news-card__date::before{
-  content:"";width:5px;height:5px;border-radius:50%;background:#34D399;
-  animation:pulseDotSmall 1.6s ease-out infinite;
 }
 .news-card__cat{
   position:absolute;top:11px;right:11px;
@@ -2581,11 +2486,6 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
   margin-bottom:18px;
   display:inline-flex;align-items:center;gap:7px;
   position:relative;z-index:1;
-}
-.nivel-path__title::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);
-  animation:pulseDotSmall 1.8s ease-out infinite;
-  box-shadow:0 0 8px var(--primary-glow);
 }
 .nivel-path__track{
   display:flex;
@@ -3108,8 +3008,7 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
 :root[data-theme="day"] .kpi-card:hover,:root[data-theme="day"] .widget:hover{ box-shadow:0 16px 42px rgba(62,111,168,0.22); }
 .kpi-card,.widget,.card,.btn{ transition:transform .2s cubic-bezier(.2,.8,.25,1),box-shadow .25s ease,border-color .2s ease; }
 .kpi-card:hover,.widget:hover{ transform:translateY(-3px); }
-.brand__logo{background:#fff !important;overflow:hidden;}
-.brand__logo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit;}
+
 
 /* ============ SISTEMA DE HERRAMIENTAS (nativo · usa el diseño del panel) ============ */
 .thx-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:20px}
@@ -3925,7 +3824,7 @@ window.__setDisplayName = async (nombre) => {
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/></symbol>
 <symbol id="i-menu" viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
-<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
 <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6v13"/><path d="M12 6v13"/><path d="M21 6v13"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13 -8z"/></symbol>
 <symbol id="i-broadcast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><path d="M16.243 16.243a6 6 0 1 0 -8.486 0"/><path d="M19.071 19.071a10 10 0 1 0 -14.142 0"/></symbol>
@@ -3978,11 +3877,9 @@ window.__setDisplayName = async (nombre) => {
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand__logo">
-        <img src="assets/img/alintec-logo.png" alt="Alintec Food">
-      </div>
+      <svg class="brand__leaf" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3C7 5 4.5 9 5 14c.4 3.6 3 6.4 7 7 4-.6 6.6-3.4 7-7 .5-5-2-9-7-11Z" fill="var(--primary)"/><path d="M12 7v11" stroke="rgba(255,255,255,.85)" stroke-width="1.4" stroke-linecap="round"/><path d="M12 11c1.4-.4 2.6-1.2 3.4-2.4M12 14.5c-1.5-.4-2.8-1.3-3.6-2.6" stroke="rgba(255,255,255,.85)" stroke-width="1.2" stroke-linecap="round"/></svg>
       <div>
-        <div class="brand__name">Alintec Food</div>
+        <div class="brand__name">Alintec <span class="brand__name--accent">Food</span></div>
         <div class="brand__plan" id="brand-plan-badge">VIP Anual</div>
       </div>
     </div>
@@ -4085,7 +3982,7 @@ window.__setDisplayName = async (nombre) => {
   <aside class="aside">
 
     <div class="widget widget--next">
-      <div class="widget__label">⏱ Próxima clase en vivo</div>
+      <div class="widget__label">Próxima clase en vivo</div>
       <div style="padding:18px 0;text-align:center;color:var(--text-3);font-size:12px;">
         <div style="width:18px;height:18px;border:2px solid var(--text-3);border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 0.8s linear infinite;margin-bottom:8px;"></div>
         <div>Cargando…</div>
@@ -4107,7 +4004,7 @@ window.__setDisplayName = async (nombre) => {
     </div>
 
     <div class="widget">
-      <div class="widget__label">📊 Tu actividad</div>
+      <div class="widget__label">Tu actividad</div>
       <div class="activity-row">
         <span class="activity-row__lbl">Cursos</span>
         <div class="activity-row__bar"><div class="activity-row__bar-fill activity-row__bar-fill--orange" id="act-cursos-bar" style="width:0%"></div></div>
@@ -4263,7 +4160,7 @@ async function initCountdown(){
   // Si NO hay próximo webinar, mostrar empty state limpio en el widget
   if (!proximo) {
     widget.innerHTML = `
-      <div class="widget__label">⏱ Próxima clase en vivo</div>
+      <div class="widget__label">Próxima clase en vivo</div>
       <div style="padding:18px 0 4px;text-align:center;">
         <div style="width:42px;height:42px;border-radius:50%;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/></svg>
@@ -4283,7 +4180,7 @@ async function initCountdown(){
   const instructorEsc = (proximo.instructor || 'Alintec Food').replace(/</g,'&lt;');
 
   widget.innerHTML = `
-    <div class="widget__label">⏱ Próxima clase en vivo</div>
+    <div class="widget__label">Próxima clase en vivo</div>
     <div class="widget__title">${tituloEsc}</div>
     <div class="widget__meta"><svg class="ic"><use href="#i-user"/></svg>${instructorEsc}</div>
     <div class="widget__meta"><svg class="ic"><use href="#i-calendar"/></svg>${fechaFmt.charAt(0).toUpperCase() + fechaFmt.slice(1)} · ${horaFmt} hrs</div>
@@ -4910,7 +4807,7 @@ const IPERTool = (function(){
       html += `
         <div style="margin-bottom:18px;" class="riesgo-${nivel}">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:${c.color};margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-            <span style="width:6px;height:6px;border-radius:50%;background:${c.color};animation:pulseDotSmall 1.6s ease-out infinite;"></span>
+            
             ${c.nombre} · ${lista.length} peligro${lista.length>1?'s':''}
           </div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-2);margin-bottom:10px;padding:8px 12px;background:var(--level-bg);border-radius:8px;border:0.5px solid color-mix(in srgb,${c.color} 25%,transparent);">
@@ -6471,13 +6368,13 @@ const Sections = (function(){
         <div class="sp-side">
           <div class="sp-side__title">Palabras a encontrar</div>
           ${placed.map((p,i)=>`<div class="sp-chip" data-word="${p.word}"><span class="sp-chip__dot"></span>${p.word}</div>`).join('')}
-          <div class="sp-help">👉 <b>Arrastra</b> el dedo o el mouse desde la primera hasta la última letra de la palabra, o <b>toca</b> la primera letra y luego la última.</div>
+          <div class="sp-help"><b>Arrastra</b> el dedo o el mouse desde la primera hasta la última letra de la palabra, o <b>toca</b> la primera letra y luego la última.</div>
         </div>
       </div>
     `;
     const footer = document.createElement('button');
     footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
-    Modal.open({ id: modalId, title:'🔤 Sopa de letras', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+    Modal.open({ id: modalId, title:'Sopa de letras', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
     const board = body.querySelector('#sp-board');
     const celda = (r,c) => board.querySelector(`[data-r="${r}"][data-c="${c}"]`);
@@ -6537,7 +6434,7 @@ const Sections = (function(){
           footer.disabled = false;
           const win = document.createElement('div');
           win.className = 'jg-win';
-          win.textContent = '¡Encontraste todas las palabras! 🎉';
+          win.textContent = '¡Encontraste todas las palabras!';
           body.appendChild(win);
         }
       }
@@ -6658,7 +6555,7 @@ const Sections = (function(){
               if (encontrados.size === pares.length) {
                 footer.disabled=false;
                 const win = document.createElement('div');
-                win.className='jg-win'; win.textContent='¡Completaste todos los pares! 🎉';
+                win.className='jg-win'; win.textContent='¡Completaste todos los pares!';
                 body.appendChild(win);
               }
               volteadas=[]; bloqueado=false;
@@ -6744,11 +6641,11 @@ const Sections = (function(){
           </svg>`;
         }).join('')}
       </div>
-      <div class="pz-help">👉 <b>Arrastra</b> una pieza y suéltala sobre otra para intercambiarlas, o <b>toca</b> una pieza y luego toca con cuál quieres cambiarla.</div>
+      <div class="pz-help"><b>Arrastra</b> una pieza y suéltala sobre otra para intercambiarlas, o <b>toca</b> una pieza y luego toca con cuál quieres cambiarla.</div>
     `;
     const footer = document.createElement('button');
     footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
-    Modal.open({ id: modalId, title:'🧩 Rompecabezas', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+    Modal.open({ id: modalId, title:'Rompecabezas', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
     const boardEl = body.querySelector('#pz-board');
     let terminado = false;
@@ -6771,7 +6668,7 @@ const Sections = (function(){
       piezas.forEach(p => p.classList.add('is-locked'));
       footer.disabled = false;
       const win = document.createElement('div');
-      win.className='jg-win'; win.textContent='¡Rompecabezas completado! 🎉';
+      win.className='jg-win'; win.textContent='¡Rompecabezas completado!';
       body.appendChild(win);
     }
     let seleccionada = null;
@@ -6877,10 +6774,10 @@ const Sections = (function(){
       const visible = palabra.split('').map(ch => adivinadas.has(ch) ? ch : '_').join(' ');
       body.innerHTML = `
         <div class="jg-lead">Adivina la palabra letra por letra antes de quedarte sin intentos. Las letras marcadas en verde son de apoyo.</div>
-        ${elegido.pista ? `<div class="jg-hint">💡 <span>${escapeHtml(elegido.pista)}</span></div>` : ''}
+        ${elegido.pista ? `<div class="jg-hint"><span>${escapeHtml(elegido.pista)}</span></div>` : ''}
         <div class="ah-stage">${_svgAhorcado(errores)}</div>
         <div class="ah-word">${visible}</div>
-        <div class="ah-vidas">❤️ Intentos restantes: ${MAX_ERRORES - errores}</div>
+        <div class="ah-vidas">Intentos restantes: ${MAX_ERRORES - errores}</div>
         <div id="ah-teclado" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
           ${letras.map(l => {
             const usada = usadas.has(l);
@@ -6909,7 +6806,7 @@ const Sections = (function(){
       });
     }
     render();
-    Modal.open({ id: modalId, title:'🪢 Ahorcado', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
+    Modal.open({ id: modalId, title:'Ahorcado', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
     footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
@@ -7063,7 +6960,7 @@ const Sections = (function(){
       pintar();
     }
     pintar();
-    Modal.open({ id: modalId, title: '🧠 Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
+    Modal.open({ id: modalId, title: 'Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
     btnCheck.addEventListener('click', calificar);
     btnRetry.addEventListener('click', reiniciar);
     btnGo.addEventListener('click', () => { Modal.close(modalId); onDone(); });
@@ -7133,7 +7030,7 @@ const Sections = (function(){
       const banner = document.createElement('div');
       banner.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:9998;background:linear-gradient(135deg,#43A047,#9CCC65);color:#0A120C;padding:11px 18px;border-radius:13px;font-family:Inter,sans-serif;font-size:12.5px;font-weight:700;letter-spacing:-.1px;box-shadow:0 12px 28px rgba(67,160,71,.35);display:flex;align-items:center;gap:14px;';
       banner.innerHTML = `
-        <span>👁️ Vista previa como usuario VIP · día ${calcularDiasMembresia()} de membresía</span>
+        <span>Vista previa como usuario VIP · día ${calcularDiasMembresia()} de membresía</span>
         <a href="?" style="background:#0A120C;color:#9CCC65;padding:6px 12px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.3px;">Salir del preview</a>
       `;
       document.body.appendChild(banner);
@@ -7240,7 +7137,7 @@ const Sections = (function(){
 
   function esMaterialGratis(curso, indexMaterial) {
     if (!esCursoConMuestra(curso)) return false;
-    const mat = curso.materiales && curso.materiales[Number(indexMaterial)];
+    const mat = curso && curso.materiales && curso.materiales[Number(indexMaterial)];
     return !!(mat && mat.gratis === true);
   }
 
@@ -7388,7 +7285,7 @@ const Sections = (function(){
         <button class="splash-cmp__close" aria-label="Cerrar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
-        <div class="splash-cmp__icon">🎓</div>
+        <div class="splash-cmp__icon"><svg class="ic" style="width:46px;height:46px;color:var(--primary);"><use href="#i-trophy"/></svg></div>
         <div class="splash-cmp__kicker">CURSO COMPLETADO</div>
         <h1 class="splash-cmp__title">¡Felicidades${window.UserState?.nombre ? ', '+window.UserState.nombre : ''}!</h1>
         <p class="splash-cmp__desc">Completaste el curso<br><strong>${escapeHtml(curso.titulo)}</strong><br>Este es tu certificado oficial Alintec Food.</p>
@@ -7964,7 +7861,7 @@ const Sections = (function(){
           <div class="empty-state__icon">
             <svg class="ic ic--xl" style="color:var(--primary);"><use href="#i-shield-check"/></svg>
           </div>
-          <h3 style="color:var(--primary);">🔒 Este curso se desbloquea pronto</h3>
+          <h3 style="color:var(--primary);">Este curso se desbloquea pronto</h3>
           <p>Disponible en <strong style="color:var(--primary);">${diasFalta} día${diasFalta!==1?'s':''}</strong>. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.</p>
           <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Si quieres acceso anticipado, contáctanos.</p>
         </div>
@@ -8021,7 +7918,7 @@ const Sections = (function(){
                 if (esMuestraGratis) {
                   return `
                 <div class="modulo" style="cursor:not-allowed;opacity:.6;">
-                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
+                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
                     <div class="modulo__meta" style="color:var(--success);">Clase gratuita · marca como vista la anterior para desbloquear</div>
@@ -8031,7 +7928,7 @@ const Sections = (function(){
                 }
                 return `
                 <div class="modulo" onclick="${accion}" style="cursor:pointer;opacity:.72;" data-bypass-paywall="true">
-                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
+                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
                     <div class="modulo__meta">Activa tu membresía para ver esta clase</div>
@@ -8041,7 +7938,7 @@ const Sections = (function(){
               }
               return `
                 <div class="modulo" style="cursor:not-allowed;opacity:.55;">
-                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);">🔒</div>
+                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
                     <div class="modulo__meta">Marca como vista la clase anterior para desbloquear</div>
@@ -8077,7 +7974,7 @@ const Sections = (function(){
           const accesoMaterial = tieneAccesoVipCompleto() || muestraGratis;
           const estadoMaterial = tieneAccesoVipCompleto()
             ? 'Click para ver'
-            : (muestraGratis ? 'MATERIAL GRATIS · Click para ver' : '🔒 Activa tu membresía para abrir');
+            : (muestraGratis ? 'MATERIAL GRATIS · Click para ver' : 'Activa tu membresía para abrir');
           return `
             <div class="mat-card" onclick="window.abrirMaterialAlintec('${id}', ${materialIndex})" data-bypass-paywall="true" style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;color:inherit;transition:all .18s cubic-bezier(.2,.8,.25,1);position:relative;overflow:hidden;${accesoMaterial?'':'opacity:.72;'}" onmouseover="this.style.borderColor='${t.color}';this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none';this.style.boxShadow='none'">
               <div style="width:38px;height:38px;border-radius:9px;background:color-mix(in srgb,${t.color} 16%,transparent);color:${t.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:18px;height:18px;display:block;">${t.ic}</span></div>
@@ -9213,10 +9110,17 @@ const Sections = (function(){
   // Determina si un material está disponible para este usuario AHORA
   function _materialDisponible(mat) {
     if (esAdminReal()) return true;
+    // Sin membresía: SOLO ve lo marcado explícitamente como gratis dentro
+    // de un curso de muestra. Nunca por el cálculo de días — ese cálculo
+    // vale 0 para un invitado y "desbloqueaba" por accidente todo lo que
+    // fuera del primer curso (turno de desbloqueo 0), tuviera o no la
+    // casilla de gratis marcada.
+    if (!tieneAccesoVipCompleto()) {
+      return mat.gratis === true && mat.cursoMuestraGratis === true;
+    }
+    // Con membresía activa: aplican "disponible siempre" y el goteo por días
     if (mat.disponibleSiempre === true) return true;
     if (mat.cursoDisponibleSiempre === true) return true;
-    // Material marcado como gratis desde el admin (visible sin membresía)
-    if (mat.gratis === true && mat.cursoMuestraGratis === true) return true;
     const dias = calcularDiasMembresia();
     // Si tiene día manual, usar ese · si no, el MISMO día de desbloqueo que su curso
     // (antes usaba cursoOrden*8, que corría todo 8 días vs. los cursos · corregido)
@@ -10382,6 +10286,32 @@ const Sections = (function(){
     const _nom = escapeHtml(S.nombre || S.displayName || 'Ingeniero');
     const _em  = escapeHtml(S.email || '—');
     const _ini = (S.iniciales || 'IN');
+    // ── Datos REALES (nada de valores de demostración) ──
+    const _esVip = tieneAccesoVipCompleto();
+    const _planTxt = _esVip ? (esAdminReal() ? 'Administrador' : 'VIP Anual') : 'Sin membresía';
+    const _md = window.memberData || {};
+    let _desdeTag = '';
+    try {
+      const f = _md.fechaAlta?.toDate ? _md.fechaAlta.toDate() : (_md.fechaAlta ? new Date(_md.fechaAlta) : null);
+      if (f && !isNaN(f)) {
+        const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        _desdeTag = `<span class="tag tag--down">Miembro desde ${meses[f.getMonth()]} ${f.getFullYear()}</span>`;
+      }
+    } catch(e) {}
+    const _wa = escapeHtml(S.whatsapp || S.telefono || _md.whatsapp || _md.telefono || '—');
+    const _esp = escapeHtml(S.especialidad || _md.especialidad || '—');
+    // Actividad real desde el progreso guardado
+    let _enProg = 0, _comp = 0, _clasesVistas = 0;
+    try {
+      const prog = getProgreso();
+      (Array.isArray(cursos) ? cursos : []).forEach(c => {
+        const vistas = Object.keys(prog[c.id]?.vistas || {}).length;
+        const total = (c.sesiones || []).length;
+        if (vistas > 0) { _clasesVistas += vistas; if (total > 0 && vistas >= total) _comp++; else _enProg++; }
+      });
+    } catch(e) {}
+    const _hoy = new Date();
+    const _ultimoAcceso = `hoy · ${String(_hoy.getHours()).padStart(2,'0')}:${String(_hoy.getMinutes()).padStart(2,'0')} hrs`;
     container.innerHTML = `
       <div class="fade-up">
         <div class="sec-hero">
@@ -10396,9 +10326,8 @@ const Sections = (function(){
             <h2 class="perfil-hero__name">${_nom}</h2>
             <div class="perfil-hero__email">${_em}</div>
             <div class="perfil-hero__badges">
-              <span class="pill"><svg class="ic"><use href="#i-crown"/></svg>VIP Anual</span>
-              <span class="tag tag--new">Nivel 2 · Técnico</span>
-              <span class="tag tag--down">Miembro desde mar 2026</span>
+              <span class="pill"><svg class="ic"><use href="#i-crown"/></svg>${_planTxt}</span>
+              ${_desdeTag}
             </div>
           </div>
           <button class="btn btn--ghost" id="btn-edit-profile" style="align-self:flex-start;"><svg class="ic"><use href="#i-tools"/></svg>Editar perfil</button>
@@ -10410,18 +10339,17 @@ const Sections = (function(){
             <div class="perfil-card__title">Datos personales</div>
             <div class="perfil-field" data-field="nombre"><span class="perfil-field__lbl">Nombre</span><span class="perfil-field__val">${_nom}</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
             <div class="perfil-field" data-field="email" data-readonly="1"><span class="perfil-field__lbl">Email</span><span class="perfil-field__val">${_em}</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
-            <div class="perfil-field" data-field="whatsapp"><span class="perfil-field__lbl">WhatsApp</span><span class="perfil-field__val">+52 238 ··· ··43</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
+            <div class="perfil-field" data-field="whatsapp"><span class="perfil-field__lbl">WhatsApp</span><span class="perfil-field__val">${_wa}</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
             <div class="perfil-field" data-field="empresa"><span class="perfil-field__lbl">Empresa</span><span class="perfil-field__val">—</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
-            <div class="perfil-field" data-field="especialidad"><span class="perfil-field__lbl">Especialidad</span><span class="perfil-field__val">Ciencia de Alimentos general</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
+            <div class="perfil-field" data-field="especialidad"><span class="perfil-field__lbl">Especialidad</span><span class="perfil-field__val">${_esp}</span><button class="perfil-field__edit"><svg class="ic"><use href="#i-tools"/></svg></button></div>
           </div>
 
           <div class="perfil-card">
             <div class="perfil-card__title">Tu actividad</div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Cursos</span><span class="perfil-field__val" style="color:var(--primary);font-family:'JetBrains Mono',monospace;">5 en progreso · 2 completados</span></div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Certificados</span><span class="perfil-field__val" style="color:var(--success);font-family:'JetBrains Mono',monospace;">2 emitidos</span></div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Horas estudiadas</span><span class="perfil-field__val" style="font-family:'JetBrains Mono',monospace;">28 hrs</span></div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Racha actual</span><span class="perfil-field__val" style="color:var(--primary);font-family:'JetBrains Mono',monospace;">🔥 7 días</span></div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Último acceso</span><span class="perfil-field__val">hoy · 18:42 hrs</span></div>
+            <div class="perfil-field"><span class="perfil-field__lbl">Cursos</span><span class="perfil-field__val" style="color:var(--primary);font-family:'JetBrains Mono',monospace;">${_enProg} en progreso · ${_comp} completados</span></div>
+            <div class="perfil-field"><span class="perfil-field__lbl">Certificados</span><span class="perfil-field__val" style="color:var(--success);font-family:'JetBrains Mono',monospace;">${_comp} emitidos</span></div>
+            <div class="perfil-field"><span class="perfil-field__lbl">Clases vistas</span><span class="perfil-field__val" style="font-family:'JetBrains Mono',monospace;">${_clasesVistas}</span></div>
+            <div class="perfil-field"><span class="perfil-field__lbl">Último acceso</span><span class="perfil-field__val">${_ultimoAcceso}</span></div>
           </div>
 
           <div class="perfil-card">
@@ -10434,9 +10362,7 @@ const Sections = (function(){
 
           <div class="perfil-card">
             <div class="perfil-card__title">Seguridad</div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Contraseña</span><span class="perfil-field__val">Cambiada hace 32 días</span><button class="perfil-field__edit" id="btn-change-pass" title="Restablecer contraseña"><svg class="ic"><use href="#i-tools"/></svg></button></div>
-            <div class="perfil-field"><span class="perfil-field__lbl">Sesiones activas</span><span class="perfil-field__val">2 dispositivos</span></div>
-            <div class="perfil-field"><span class="perfil-field__lbl">2FA</span><span class="perfil-field__val" style="color:var(--text-3);">Desactivado</span></div>
+            <div class="perfil-field"><span class="perfil-field__lbl">Contraseña</span><span class="perfil-field__val">••••••••</span><button class="perfil-field__edit" id="btn-change-pass" title="Restablecer contraseña"><svg class="ic"><use href="#i-tools"/></svg></button></div>
             <div class="perfil-field" style="border-bottom:none;padding-top:10px;">
               <button class="btn btn--ghost" id="btn-close-all-sessions" style="font-size:11px;color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,transparent);"><svg class="ic"><use href="#i-logout"/></svg>Cerrar todas las sesiones</button>
             </div>
@@ -10809,8 +10735,8 @@ const Sections = (function(){
         <h2 class="cancelm__title">¿Seguro(a) que deseas cancelar?</h2>
         <p class="cancelm__desc">Tu membresía se cancelará al final del periodo pagado.<br><strong style="color:var(--text);">Seguirás teniendo acceso completo</strong> hasta el <strong style="color:var(--primary);">${proxRenov}</strong>, pero ya no se te realizará ningún cobro.</p>
         <div class="cancelm__warnings">
-          <div class="cancelm__warning"><span>⚠️</span><span>Perderás acceso a los 12 cursos VIP después de esa fecha</span></div>
-          <div class="cancelm__warning"><span>⚠️</span><span>Tus certificados ya emitidos siguen siendo válidos</span></div>
+          <div class="cancelm__warning"><span>Perderás acceso a los 12 cursos VIP después de esa fecha</span></div>
+          <div class="cancelm__warning"><span>Tus certificados ya emitidos siguen siendo válidos</span></div>
           <div class="cancelm__warning"><span>↩</span><span>Podrás reactivar antes de que expire el periodo</span></div>
         </div>
         <div class="cancelm__actions">
