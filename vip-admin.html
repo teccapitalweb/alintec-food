@@ -1052,6 +1052,7 @@ body{
 .brand__logo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit;}
 .btn,.card,.kpi-card{ transition:transform .2s,box-shadow .25s,border-color .2s; }
 </style>
+<script src="assets/alintec-bunny-catalog.js"></script>
 </head>
 <body style="visibility:hidden">
 
@@ -2007,6 +2008,9 @@ const Pages={
               <svg class="ic"><use href="#i-plus"/></svg>
               Nuevo curso
             </button>
+            <button class="btn btn--ghost" id="sync-alintec-bunny-btn">
+              🐰 Sincronizar videos Bunny
+            </button>
           </div>
         </div>
 
@@ -2121,6 +2125,109 @@ const Pages={
     p.querySelector('#new-curso-btn')?.addEventListener('click', () => {
       Pages._abrirModalCurso(null);
     });
+
+    // ─── Botón Sincronizar Bunny ───
+    p.querySelector('#sync-alintec-bunny-btn')?.addEventListener('click', () => {
+      Pages._sincronizarAlintecBunny();
+    });
+  },
+
+  // ─── Comparación aproximada de títulos (curso de Firestore vs. colección de Bunny) ───
+  _puntajeTituloBunny(a, b) {
+    const norm = (t) => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const na = norm(a), nb = norm(b);
+    if (!na || !nb) return 0;
+    if (na === nb) return 1;
+    if (na.includes(nb) || nb.includes(na)) return 0.9;
+    const ta = new Set(na.split(' ').filter(x => x.length > 2));
+    const tb = new Set(nb.split(' ').filter(x => x.length > 2));
+    const union = new Set([...ta, ...tb]);
+    let inter = 0;
+    tb.forEach(x => { if (ta.has(x)) inter++; });
+    return union.size ? inter / union.size : 0;
+  },
+
+  // ─── Sincronización de videos Bunny (auto-vincula por nombre de colección/curso) ───
+  async _sincronizarAlintecBunny() {
+    const catalogo = window.ALINTEC_BUNNY_CATALOG || [];
+    const fb = window._fb;
+    const cursos = window.AdminStore?.cursos || [];
+    if (!catalogo.length) {
+      Toast.error('Falta el catálogo Bunny', 'Verifica assets/alintec-bunny-catalog.js (genéralo con el script)');
+      return;
+    }
+    if (!fb?.db || !fb?.writeBatch || !fb?.doc) {
+      Toast.error('Firestore no está listo', 'Espera unos segundos y reintenta');
+      return;
+    }
+    if (!confirm('Se vincularán los videos de Bunny con los cursos existentes según el nombre de cada colección. Las preguntas, clases gratis y materiales se conservan. ¿Continuar?')) return;
+
+    const btn = document.getElementById('sync-alintec-bunny-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
+    try {
+      const usados = new Set();
+      const sinCoincidencia = [];
+      let vinculados = 0;
+      let videos = 0;
+      const batch = fb.writeBatch(fb.db);
+
+      for (const curso of cursos) {
+        let mejor = null;
+        let mejorIndice = -1;
+        let mejorPuntaje = 0;
+        catalogo.forEach((item, indice) => {
+          if (usados.has(indice)) return;
+          const puntaje = curso.bunnyCollectionId === item.collectionId
+            ? 2
+            : this._puntajeTituloBunny(curso.titulo, item.titulo);
+          if (puntaje > mejorPuntaje) {
+            mejor = item;
+            mejorIndice = indice;
+            mejorPuntaje = puntaje;
+          }
+        });
+        if (!mejor || mejorPuntaje < 0.52) {
+          sinCoincidencia.push(curso.titulo || curso.id);
+          continue;
+        }
+        usados.add(mejorIndice);
+
+        // Conservar gratis/preguntas ya capturadas a mano, solo actualizar el ID del video (url)
+        const anteriores = Array.isArray(curso.sesiones) ? curso.sesiones : [];
+        const sesiones = mejor.sesiones.map((sesion, indice) => {
+          const numero = sesion.numero || (indice + 1);
+          const anterior = anteriores.find(x => Number(x.numero) === Number(numero)) || {};
+          return {
+            numero,
+            titulo: anterior.titulo || sesion.titulo || `Clase ${numero}`,
+            url: sesion.videoId,
+            gratis: anterior.gratis === true,
+            preguntas: Array.isArray(anterior.preguntas) ? anterior.preguntas : []
+          };
+        });
+
+        batch.update(fb.doc(fb.db, 'cursos', curso.id), {
+          sesiones,
+          bunnyCollectionId: mejor.collectionId,
+          bunnySincronizadoEn: fb.serverTimestamp()
+        });
+        vinculados++;
+        videos += sesiones.length;
+      }
+
+      if (vinculados) await batch.commit();
+      console.log('[Bunny sync]', { vinculados, videos, sinCoincidencia });
+      if (sinCoincidencia.length) {
+        Toast.error(`Bunny: ${vinculados} cursos y ${videos} videos`, `Sin coincidencia: ${sinCoincidencia.join(', ')}`);
+      } else {
+        Toast.success('¡Bunny sincronizado!', `${vinculados} cursos · ${videos} videos · gratis/preguntas conservados`);
+      }
+    } catch (error) {
+      console.error('[Bunny sync]', error);
+      Toast.error('No se pudo sincronizar', error.message || 'Intenta nuevamente');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🐰 Sincronizar videos Bunny'; }
+    }
   },
 
   // ─── KPIs ───
