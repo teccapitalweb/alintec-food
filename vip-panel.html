@@ -50,9 +50,9 @@ input,select,textarea{font:inherit;color:inherit}
   --shadow-card:0 10px 40px rgba(0,0,0,0.5);
 }
 :root[data-theme="day"]{
-  --bg:#F2FAF5;--bg-deep:#E4F2E9;
-  --surface:#FFFFFF;--surface-2:#F4FAF4;--surface-3:#E5F2E6;
-  --border:rgba(18,52,26,0.07);--border-2:rgba(18,52,26,0.14);--border-strong:rgba(18,52,26,0.24);
+  --bg:#F8FBF9;--bg-deep:#F0F5F1;
+  --surface:#FFFFFF;--surface-2:#F5F8F5;--surface-3:#EDF2EE;
+  --border:rgba(18,52,26,0.06);--border-2:rgba(18,52,26,0.10);--border-strong:rgba(18,52,26,0.18);
   --text:#14301C;--text-2:#48604D;--text-3:#7C9280;
   --primary:#43A047;--primary-soft:#7CC47F;--primary-deep:#2E7D32;
   --primary-glow:rgba(67,160,71,0.32);--highlight:#689F38;
@@ -84,11 +84,10 @@ body::after{
   mask-image:radial-gradient(ellipse at center,#000 0%,transparent 70%);
   pointer-events:none;
 }
-:root[data-theme="day"] body::after{background-image:linear-gradient(to right,rgba(18,52,26,.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(18,52,26,.04) 1px,transparent 1px)}
+:root[data-theme="day"] body::after{display:none}
+:root[data-theme="day"] body::before{opacity:.08}
 :root[data-theme="night"] body::before{opacity:.35}
-:root[data-theme="day"] .sidebar{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 13%,var(--bg)) 0%,color-mix(in srgb,var(--highlight) 12%,var(--bg)) 100%);border-right-color:var(--border-2)}
-:root[data-theme="day"] .sidebar .nav-item:hover{background:color-mix(in srgb,#fff 55%,transparent)}
-:root[data-theme="day"] .sidebar .nav-item.is-active{background:color-mix(in srgb,#fff 75%,transparent);box-shadow:0 2px 8px rgba(18,60,30,.08)}
+:root[data-theme="day"] .sidebar{background:var(--surface);border-right-color:var(--border)}
 /* Hover tecnológico en tarjetas: crecen ligeramente y su contorno brilla */
 .curso-card,.pdf-card,.noticia-card,.webinar-card,.dash-card,.tool-card,.mat-card{transition:transform .25s cubic-bezier(.2,.8,.25,1),box-shadow .25s,border-color .25s}
 .curso-card:hover,.pdf-card:hover,.noticia-card:hover,.webinar-card:hover,.dash-card:hover,.tool-card:hover{transform:translateY(-3px) scale(1.012);border-color:color-mix(in srgb,var(--primary) 55%,var(--border-2));box-shadow:0 0 0 1px color-mix(in srgb,var(--primary) 30%,transparent),0 14px 40px color-mix(in srgb,var(--primary) 18%,transparent)}
@@ -9202,7 +9201,9 @@ const Sections = (function(){
           titulo: m.titulo || 'Sin título',
           url: m.url || '',
           disponibleSiempre: m.disponibleSiempre === true,
-          desbloquearEnDias: typeof m.desbloquearEnDias === 'number' ? m.desbloquearEnDias : null
+          desbloquearEnDias: typeof m.desbloquearEnDias === 'number' ? m.desbloquearEnDias : null,
+          gratis: m.gratis === true,
+          cursoMuestraGratis: c.cursoMuestraGratis === true
         });
       });
     });
@@ -9214,6 +9215,8 @@ const Sections = (function(){
     if (esAdminReal()) return true;
     if (mat.disponibleSiempre === true) return true;
     if (mat.cursoDisponibleSiempre === true) return true;
+    // Material marcado como gratis desde el admin (visible sin membresía)
+    if (mat.gratis === true && mat.cursoMuestraGratis === true) return true;
     const dias = calcularDiasMembresia();
     // Si tiene día manual, usar ese · si no, el MISMO día de desbloqueo que su curso
     // (antes usaba cursoOrden*8, que corría todo 8 días vs. los cursos · corregido)
