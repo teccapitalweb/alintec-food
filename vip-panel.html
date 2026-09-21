@@ -6417,9 +6417,10 @@ const Sections = (function(){
   window.__mostrarPaywallAlintec = mostrarPaywallCurso;
 
   // En un curso de muestra, el primer material también es gratis (igual que BioNova)
-  const MATERIALES_GRATIS = 1;
   function esMaterialGratis(curso, indexMaterial) {
-    return esCursoConMuestra(curso) && Number(indexMaterial) < MATERIALES_GRATIS;
+    if (!esCursoConMuestra(curso)) return false;
+    const mat = curso.materiales && curso.materiales[Number(indexMaterial)];
+    return !!(mat && mat.gratis === true);
   }
 
 
@@ -6467,6 +6468,7 @@ const Sections = (function(){
   }
 
   function _juegoSopaLetras(curso, onDone) {
+    _ensureJuegosCSS();
     const palabrasOriginal = (curso.juegoDinamico.datos.palabras || []).slice(0, 10);
     const { grid, size, placed } = _generarSopaLetras(palabrasOriginal);
     if (placed.length === 0) { onDone(); return; }
@@ -6490,8 +6492,7 @@ const Sections = (function(){
       </div>
     `;
     const footer = document.createElement('button');
-    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
-    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
     Modal.open({ id: modalId, title:'🔤 Sopa de letras', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
     function limpiaSeleccionVisual(){
@@ -6518,7 +6519,7 @@ const Sections = (function(){
         if (li) { li.style.background='color-mix(in srgb,var(--success) 20%,transparent)'; li.style.color='var(--success)'; li.style.textDecoration='line-through'; }
         const prog = body.querySelector('#sopa-progreso');
         if (prog) prog.textContent = `${encontradas.size}/${placed.length} encontradas`;
-        if (encontradas.size === placed.length) { footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer'; }
+        if (encontradas.size === placed.length) { footer.disabled=false; }
       } else {
         limpiaSeleccionVisual();
       }
@@ -6538,6 +6539,7 @@ const Sections = (function(){
   }
 
   function _juegoMemorama(curso, onDone) {
+    _ensureJuegosCSS();
     const pares = (curso.juegoDinamico.datos.pares || []).slice(0,10);
     if (pares.length === 0) { onDone(); return; }
     let cartas = [];
@@ -6561,8 +6563,7 @@ const Sections = (function(){
       <div id="mem-progreso" style="margin-top:12px;font-size:11.5px;color:var(--primary);font-weight:700;text-align:center;">0/${pares.length} pares</div>
     `;
     const footer = document.createElement('button');
-    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
-    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
     Modal.open({ id: modalId, title:'🃏 Memorama', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
     body.querySelectorAll('.mem-card').forEach(cardEl => {
@@ -6587,7 +6588,7 @@ const Sections = (function(){
               encontrados.add(c1.parId);
               const prog = body.querySelector('#mem-progreso');
               if (prog) prog.textContent = `${encontrados.size}/${pares.length} pares`;
-              if (encontrados.size === pares.length) { footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer'; }
+              if (encontrados.size === pares.length) { footer.disabled=false; }
             } else if (el1 && el2) {
               delete el1.dataset.up; el1.style.color='var(--surface-2)'; el1.textContent='❓';
               delete el2.dataset.up; el2.style.color='var(--surface-2)'; el2.textContent='❓';
@@ -6601,6 +6602,7 @@ const Sections = (function(){
   }
 
   function _juegoRompecabezas(curso, onDone) {
+    _ensureJuegosCSS();
     const d = curso.juegoDinamico.datos || {};
     const n = parseInt(d.dificultad,10) || 3;
     const img = d.imagenUrl || curso.portada || PORTADA_DEFAULT;
@@ -6621,8 +6623,7 @@ const Sections = (function(){
       </div>
     `;
     const footer = document.createElement('button');
-    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
-    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
     Modal.open({ id: modalId, title:'🧩 Rompecabezas', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
     function checarResuelto() {
@@ -6643,37 +6644,87 @@ const Sections = (function(){
         seleccionado = null;
         if (checarResuelto()) {
           body.querySelectorAll('.pz-tile').forEach(t=>{ t.dataset.locked='1'; t.style.outline='2px solid var(--success)'; });
-          footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer';
+          footer.disabled=false;
         }
       });
     });
     footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
+  function _ensureJuegosCSS() {
+    if (document.getElementById('jg-css')) return;
+    const st = document.createElement('style');
+    st.id = 'jg-css';
+    st.textContent = `
+      .jg-lead{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:16px;}
+      .jg-hint{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-2);background:color-mix(in srgb,var(--primary) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border-2));border-radius:12px;padding:11px 14px;margin-bottom:18px;line-height:1.5;}
+      .jg-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
+      .jg-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+      .jg-continuar:not(:disabled):hover{transform:translateY(-1px);}
+      .ah-stage{display:flex;justify-content:center;margin-bottom:6px;}
+      .ah-word{font-family:'JetBrains Mono',monospace;font-size:clamp(19px,5vw,28px);font-weight:800;letter-spacing:7px;text-align:center;margin:14px 0;color:var(--text);}
+      .ah-vidas{text-align:center;font-size:12.5px;color:var(--text-2);margin-bottom:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
+      .ah-key{width:32px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-weight:800;font-size:12.5px;cursor:pointer;transition:all .15s;}
+      .ah-key:hover:not(:disabled){border-color:var(--primary);transform:translateY(-1px);}
+      .ah-key.is-hint{background:color-mix(in srgb,var(--primary) 16%,var(--surface-2));border-color:color-mix(in srgb,var(--primary) 40%,var(--border));color:var(--primary);cursor:default;}
+      .ah-key.is-ok{background:color-mix(in srgb,var(--success) 20%,var(--surface-2));border-color:var(--success);color:var(--success);cursor:default;}
+      .ah-key.is-bad{background:var(--surface-3);border-color:var(--border);color:var(--text-3);cursor:default;opacity:.55;}
+    `;
+    document.head.appendChild(st);
+  }
+
+  function _svgAhorcado(errores) {
+    const partes = [
+      `<line x1="14" y1="150" x2="100" y2="150" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="34" y1="150" x2="34" y2="14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="34" y1="14" x2="92" y2="14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="92" y1="14" x2="92" y2="32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
+      `<circle cx="92" cy="46" r="14" stroke="currentColor" stroke-width="3.5" fill="none"/>`,
+      `<line x1="92" y1="60" x2="92" y2="100" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+      `<line x1="92" y1="70" x2="74" y2="88" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+      `<line x1="92" y1="70" x2="110" y2="88" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+      `<line x1="92" y1="100" x2="76" y2="130" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+      `<line x1="92" y1="100" x2="108" y2="130" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`
+    ];
+    const mostrar = partes.slice(0, 1 + Math.min(errores, 6)).join('');
+    const colorFigura = errores >= 6 ? 'var(--danger,#F87171)' : 'var(--text)';
+    return `<svg viewBox="0 0 120 160" width="120" height="150" style="color:${colorFigura};overflow:visible;"><line x1="0" y1="150" x2="120" y2="150" stroke="var(--border)" stroke-width="2"/>${mostrar}</svg>`;
+  }
+
   function _juegoAhorcado(curso, onDone) {
     const lista = curso.juegoDinamico.datos.palabras || [];
     if (lista.length === 0) { onDone(); return; }
+    _ensureJuegosCSS();
     const elegido = lista[Math.floor(Math.random()*lista.length)];
     const palabra = (elegido.palabra || '').toUpperCase();
-    let vidas = 6;
+    let errores = 0;
+    const MAX_ERRORES = 6;
     const adivinadas = new Set();
     const usadas = new Set();
+    // Letras de apoyo: se revelan 1-2 letras únicas al empezar para no partir de cero.
+    const unicas = Array.from(new Set(palabra.replace(/[^A-ZÑ]/g,'').split('')));
+    const nPistas = Math.max(1, Math.min(2, Math.floor(unicas.length * 0.25)));
+    const barajadas = unicas.slice().sort(() => Math.random() - 0.5);
+    barajadas.slice(0, nPistas).forEach(l => { adivinadas.add(l); usadas.add(l); });
     const modalId = 'juego-ahorcado-' + curso.id;
     const letras = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
     const body = document.createElement('div');
     const footer = document.createElement('button');
-    footer.className='btn btn--primary'; footer.textContent='Continuar'; footer.disabled=true;
-    footer.style.opacity='.5'; footer.style.cursor='not-allowed';
+    footer.className = 'jg-continuar'; footer.textContent = 'Continuar →'; footer.disabled = true;
     function render() {
       const visible = palabra.split('').map(ch => adivinadas.has(ch) ? ch : '_').join(' ');
+      const ganado = palabra.split('').every(ch => adivinadas.has(ch));
+      const perdido = errores >= MAX_ERRORES;
       body.innerHTML = `
-        ${elegido.pista ? `<div style="font-size:12px;color:var(--text-2);margin-bottom:10px;">💡 Pista: ${elegido.pista}</div>` : ''}
-        <div style="font-family:'JetBrains Mono',monospace;font-size:clamp(20px,5vw,30px);font-weight:800;letter-spacing:6px;text-align:center;margin-bottom:14px;color:var(--text);">${visible}</div>
-        <div style="text-align:center;font-size:13px;color:var(--text-2);margin-bottom:14px;font-weight:700;">❤️ Intentos restantes: ${vidas}</div>
+        <div class="jg-lead">Adivina la palabra letra por letra antes de quedarte sin intentos.</div>
+        ${elegido.pista ? `<div class="jg-hint">💡 <span>${escapeHtml(elegido.pista)}</span></div>` : ''}
+        <div class="ah-stage">${_svgAhorcado(errores)}</div>
+        <div class="ah-word">${visible}</div>
+        <div class="ah-vidas">❤️ Intentos restantes: ${MAX_ERRORES - errores}</div>
         <div id="ah-teclado" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
           ${letras.map(l => {
+            const esHint = adivinadas.has(l) && !usadas.has(l + '_clicked');
             const usada = usadas.has(l);
-            return `<button type="button" data-letra="${l}" ${usada?'disabled':''} style="width:30px;height:34px;border-radius:7px;border:1px solid var(--border);background:${usada?'var(--surface-3)':'var(--surface-2)'};color:${usada?'var(--text-3)':'var(--text)'};font-weight:700;font-size:12px;cursor:${usada?'default':'pointer'};">${l}</button>`;
+            let cls = 'ah-key';
+            if (usada) cls += adivinadas.has(l) ? (barajadas.slice(0,nPistas).includes(l) ? ' is-hint' : ' is-ok') : ' is-bad';
+            return `<button type="button" class="${cls}" data-letra="${l}" ${usada?'disabled':''}>${l}</button>`;
           }).join('')}
         </div>
         <div id="ah-resultado"></div>
@@ -6682,15 +6733,15 @@ const Sections = (function(){
         btn.addEventListener('click', () => {
           const l = btn.dataset.letra;
           usadas.add(l);
-          if (palabra.includes(l)) adivinadas.add(l); else vidas--;
-          const ganado = palabra.split('').every(ch => adivinadas.has(ch));
-          const perdido = vidas <= 0;
+          if (palabra.includes(l)) adivinadas.add(l); else errores++;
           render();
-          if (ganado || perdido) {
+          const gano = palabra.split('').every(ch => adivinadas.has(ch));
+          const perd = errores >= MAX_ERRORES;
+          if (gano || perd) {
             const res = body.querySelector('#ah-resultado');
-            if (res) res.innerHTML = `<div style="margin-top:16px;text-align:center;font-size:14px;font-weight:800;color:${ganado?'var(--success)':'var(--text-2)'};">${ganado ? '¡Bien hecho! 🎉' : 'La palabra era: '+palabra}</div>`;
+            if (res) res.innerHTML = `<div style="margin-top:16px;text-align:center;font-size:14px;font-weight:800;color:${gano?'var(--success)':'var(--text-2)'};">${gano ? '¡Bien hecho! 🎉' : 'La palabra era: '+palabra}</div>`;
             body.querySelectorAll('[data-letra]').forEach(b => b.disabled = true);
-            footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer';
+            footer.disabled = false;
           }
         });
       });
@@ -6709,49 +6760,95 @@ const Sections = (function(){
     onDone();
   };
 
+  function _ensureQuizCSS() {
+    if (document.getElementById('qz-css')) return;
+    const st = document.createElement('style');
+    st.id = 'qz-css';
+    st.textContent = `
+      .qz-progress-track{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;margin-bottom:22px;}
+      .qz-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--highlight));border-radius:3px;transition:width .35s cubic-bezier(.2,.8,.25,1);width:0%;}
+      .qz-card{margin-bottom:16px;padding:18px 19px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:16px;transition:border-color .2s;}
+      .qz-card.is-done{border-color:color-mix(in srgb,var(--success) 45%,transparent);}
+      .qz-eyebrow{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--primary);font-weight:800;margin-bottom:10px;}
+      .qz-eyebrow__num{width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--primary) 16%,transparent);display:flex;align-items:center;justify-content:center;font-size:10.5px;}
+      .qz-qtext{font-size:14.5px;font-weight:800;letter-spacing:-.2px;line-height:1.45;margin:0 0 14px;color:var(--text);}
+      .qz-opts{display:flex;flex-direction:column;gap:9px;}
+      .qz-opt{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s cubic-bezier(.2,.8,.25,1);}
+      .qz-opt:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--border));transform:translateY(-1px);}
+      .qz-opt.is-selected{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,var(--surface-2));box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 20%,transparent);}
+      .qz-opt input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+      .qz-opt__badge{width:27px;height:27px;border-radius:9px;background:var(--surface-3);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:800;flex-shrink:0;transition:all .15s;}
+      .qz-opt.is-selected .qz-opt__badge{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;}
+      .qz-opt__txt{font-size:13.5px;font-weight:600;color:var(--text-2);letter-spacing:-.1px;}
+      .qz-opt.is-selected .qz-opt__txt{color:var(--text);}
+      .qz-opt__check{margin-left:auto;width:18px;height:18px;color:var(--success);opacity:0;transform:scale(.6);transition:all .15s;flex-shrink:0;}
+      .qz-opt.is-selected .qz-opt__check{opacity:1;transform:scale(1);}
+      .qz-footer-progreso{display:flex;align-items:center;justify-content:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-3);font-weight:700;letter-spacing:.6px;text-transform:uppercase;}
+      .qz-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
+      .qz-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+      .qz-continuar:not(:disabled):hover{transform:translateY(-1px);}
+    `;
+    document.head.appendChild(st);
+  }
+
   window.__abrirQuizClase = function(curso, sesion, onDone) {
     const preguntas = sesion.preguntas || [];
     if (preguntas.length === 0) { onDone(); return; }
+    _ensureQuizCSS();
     const total = preguntas.length;
     const respuestas = new Array(total).fill(null);
     const modalId = 'quiz-' + curso.id + '-' + (sesion.numero||0);
+    const LETRAS = ['A','B','C','D','E','F'];
     const body = document.createElement('div');
     body.innerHTML = `
-      <div style="margin-bottom:14px;font-size:12.5px;color:var(--text-2);line-height:1.5;">
-        Responde estas preguntas rápidas para reforzar lo que acabas de ver. No afectan tu certificado, pero son obligatorias para continuar.
-      </div>
+      <div class="qz-progress-track"><div class="qz-progress-fill" id="qz-fill"></div></div>
       ${preguntas.map((p,i) => {
-        const opciones = p.tipo === 'multiple' ? (p.opciones||[]) : ['Verdadero','Falso'];
+        const esVof = p.tipo !== 'multiple';
+        const opciones = esVof ? ['Verdadero','Falso'] : (p.opciones||[]);
         return `
-        <div style="margin-bottom:18px;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:12px;">
-          <div style="font-size:13.5px;font-weight:700;margin-bottom:10px;">${i+1}. ${escapeHtml(p.pregunta||'')}</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="qz-card" data-qz-card="${i}">
+          <div class="qz-eyebrow"><span class="qz-eyebrow__num">${i+1}</span> Pregunta ${i+1} de ${total}</div>
+          <div class="qz-qtext">${escapeHtml(p.pregunta||'')}</div>
+          <div class="qz-opts">
             ${opciones.map((op,oi) => `
-              <label style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--surface-1,var(--surface));border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:13px;">
-                <input type="radio" name="quiz-preg-${i}" value="${oi}" data-quiz-pregidx="${i}" style="width:16px;height:16px;cursor:pointer;">
-                <span>${escapeHtml(op)}</span>
+              <label class="qz-opt" data-qz-opt="${i}:${oi}">
+                <input type="radio" name="quiz-preg-${i}" value="${oi}" data-quiz-pregidx="${i}">
+                <span class="qz-opt__badge">${esVof ? (oi===0?'✓':'✕') : LETRAS[oi]}</span>
+                <span class="qz-opt__txt">${escapeHtml(op)}</span>
+                <svg class="qz-opt__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </label>
             `).join('')}
           </div>
         </div>`;
       }).join('')}
-      <div id="quiz-progreso" style="font-size:11.5px;color:var(--text-3);text-align:center;margin-top:4px;">0/${total} respondidas</div>
+      <div class="qz-footer-progreso" id="quiz-progreso">0 / ${total} respondidas</div>
     `;
     const footer = document.createElement('button');
-    footer.className = 'btn btn--primary';
-    footer.textContent = 'Continuar';
+    footer.className = 'qz-continuar';
+    footer.textContent = 'Continuar →';
     footer.disabled = true;
-    footer.style.opacity = '.5';
-    footer.style.cursor = 'not-allowed';
     Modal.open({ id: modalId, title: '🧠 Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
+    body.querySelectorAll('.qz-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const [qi] = opt.dataset.qzOpt.split(':').map(Number);
+        opt.querySelector('input').checked = true;
+        body.querySelectorAll(`[data-qz-opt^="${qi}:"]`).forEach(o => o.classList.remove('is-selected'));
+        opt.classList.add('is-selected');
+        opt.querySelector('input').dispatchEvent(new Event('change'));
+      });
+    });
     body.querySelectorAll('input[type=radio]').forEach(inp => {
       inp.addEventListener('change', () => {
         const qi = parseInt(inp.dataset.quizPregidx, 10);
         respuestas[qi] = parseInt(inp.value, 10);
+        const card = body.querySelector(`[data-qz-card="${qi}"]`);
+        if (card) card.classList.add('is-done');
         const respondidas = respuestas.filter(r => r !== null).length;
         const prog = body.querySelector('#quiz-progreso');
-        if (prog) prog.textContent = `${respondidas}/${total} respondidas`;
-        if (respondidas === total) { footer.disabled=false; footer.style.opacity=''; footer.style.cursor='pointer'; }
+        if (prog) prog.textContent = `${respondidas} / ${total} respondidas`;
+        const fill = body.querySelector('#qz-fill');
+        if (fill) fill.style.width = Math.round((respondidas/total)*100) + '%';
+        if (respondidas === total) footer.disabled = false;
       });
     });
     footer.addEventListener('click', () => {
@@ -7142,22 +7239,13 @@ const Sections = (function(){
       const cursoId = this.dataset.cursoId;
       const numClase = parseInt(this.dataset.numClase);
       if (!cursoId || !numClase) return;
-      const btn = this;
+      // Cerrar el video primero: las preguntas (o el juego final) se
+      // muestran sobre el panel, no encima del reproductor.
+      window.cerrarVisor();
       const confirmarVista = () => {
         window.marcarClaseVista(cursoId, numClase);
-        // Feedback visual
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> ¡Marcada!';
-        btn.style.background = 'color-mix(in srgb, var(--success) 20%, transparent)';
-        btn.style.borderColor = 'color-mix(in srgb, var(--success) 50%, transparent)';
-        btn.style.color = 'var(--success)';
-        btn.disabled = true;
-        // Cerrar después de 1.2s y refrescar el DETALLE del curso (no solo la lista)
-        // para que la siguiente clase se desbloquee al instante.
-        setTimeout(() => {
-          window.cerrarVisor();
-          if (typeof window.__refrescarCursoDetalle === 'function') window.__refrescarCursoDetalle(cursoId);
-          if (typeof renderCursosList === 'function') renderCursosList();
-        }, 1200);
+        if (typeof window.__refrescarCursoDetalle === 'function') window.__refrescarCursoDetalle(cursoId);
+        if (typeof renderCursosList === 'function') renderCursosList();
       };
       window.__requerirActividadClase(cursoId, numClase, confirmarVista);
     });
