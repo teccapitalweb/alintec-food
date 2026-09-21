@@ -62,13 +62,29 @@ body{
   color:var(--text);background:var(--bg);
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   overflow:hidden;
+  position:relative;
 }
+/* Misma capa de profundidad sutil que el panel del usuario, para que ambos se vean como una sola plataforma */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;
+  background:radial-gradient(circle at 25% 30%,var(--primary-glow),transparent 50%),radial-gradient(circle at 75% 70%,color-mix(in srgb,var(--highlight) 18%,transparent),transparent 50%);
+  filter:blur(60px);
+  pointer-events:none;
+  animation:auroraBgAdm 24s ease-in-out infinite alternate;
+}
+@keyframes auroraBgAdm{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(2%,-2%) scale(1.05)}
+  100%{transform:translate(-1%,1%) scale(1)}
+}
+:root[data-theme="day"] body::before{opacity:.08}
+:root[data-theme="night"] body::before{opacity:.10}
 
-.app{display:grid;grid-template-columns:228px 1fr;height:100vh}
+.app{display:grid;grid-template-columns:228px 1fr;height:100vh;position:relative;z-index:1}
 
 /* SIDEBAR */
 .sidebar{
-  background:var(--bg-deep);
+  background:var(--surface);
   border-right:1px solid var(--border);
   padding:18px 14px;
   overflow-y:auto;
