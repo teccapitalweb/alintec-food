@@ -7160,36 +7160,98 @@ const Sections = (function(){
   }
 
 
+  // ═══════════════════════════════════════════════════════════════
+  // 🎛️ Dropdown custom fancy · reemplaza select nativo (sin cuadro azul horrible)
+  // Uso: bindFancyDropdown('cur-area', (value) => { ... })
+  // ═══════════════════════════════════════════════════════════════
+  window.bindFancyDropdown = function(id, onChange) {
+    const trigger = document.getElementById(id + '-trigger');
+    const menu = document.getElementById(id + '-menu');
+    const label = document.getElementById(id + '-label');
+    if (!trigger || !menu) return;
+
+    // Toggle abrir/cerrar
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = menu.classList.contains('is-open');
+      // Cerrar otros dropdowns abiertos
+      document.querySelectorAll('.dd-fancy__menu.is-open').forEach(m => m.classList.remove('is-open'));
+      document.querySelectorAll('.dd-fancy__trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+      if (!isOpen) {
+        menu.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Click en una opción
+    menu.querySelectorAll('.dd-fancy__item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const value = item.dataset.value;
+        const text = item.textContent.trim();
+        menu.querySelectorAll('.dd-fancy__item').forEach(i => i.classList.remove('is-selected'));
+        item.classList.add('is-selected');
+        if (label) label.textContent = text;
+        menu.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (typeof onChange === 'function') onChange(value);
+      });
+    });
+  };
+
+  // Cerrar cualquier dropdown al click fuera
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dd-fancy__menu.is-open').forEach(m => m.classList.remove('is-open'));
+    document.querySelectorAll('.dd-fancy__trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+  });
+
   function calcularDiasMembresia(){
-    const state = window.UserState || {};
-    if (!state.fechaInicioMembresia) return 0;
-    const inicio = state.fechaInicioMembresia.toDate ? state.fechaInicioMembresia.toDate() : new Date(state.fechaInicioMembresia);
-    return Math.max(0, Math.floor((Date.now() - inicio.getTime()) / 86400000));
+    // Si hay override por URL (?dias=N), usar ese valor
+    if (PREVIEW_DIAS !== null && !isNaN(PREVIEW_DIAS)) return PREVIEW_DIAS;
+    const md = window.memberData;
+    if (!md) return 0;
+    const fecha = md.fechaAlta?.toDate
+      ? md.fechaAlta.toDate()
+      : (md.fechaAlta ? new Date(md.fechaAlta) : null);
+    if (!fecha) return 0;
+    const dias = Math.floor((Date.now() - fecha.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, dias);
   }
+
+  // Día en que se desbloquea el curso (precalculado por orden, sin contar los "siempre")
   function cursoUnlockDay(curso){
-    if (!curso || !curso._unlockDay) return 0;
-    return curso._unlockDay;
+    return (curso && typeof curso._unlockDay === 'number') ? curso._unlockDay : 0;
   }
+
+  // ═══ Muestra gratis controlada desde el admin ═══
   function tieneAccesoVipCompleto() {
-    return esAdminReal() || window.UserState?.modo === 'vip';
+    return window.UserState?.modo === 'vip' || esAdminReal();
   }
+
   function esClaseGratis(curso, indexClase) {
-    if (!esCursoConMuestra(curso)) return false;
-    const sesion = curso.sesiones && curso.sesiones[Number(indexClase)];
-    return !!(sesion && sesion.gratis === true);
+    if (!curso || !curso.cursoMuestraGratis) return false;
+    const sesion = curso.sesiones && curso.sesiones[indexClase];
+    if (!sesion) return false;
+    return sesion.gratis === true;
   }
+
   function esCursoConMuestra(curso) {
-    return !!(curso && curso.cursoMuestraGratis === true);
+    return curso && curso.cursoMuestraGratis === true;
   }
+
   function esMaterialGratis(curso, indexMaterial) {
     if (!esCursoConMuestra(curso)) return false;
     const mat = curso.materiales && curso.materiales[Number(indexMaterial)];
     return !!(mat && mat.gratis === true);
   }
+
   function mostrarPaywallCurso() {
-    const modal = document.getElementById('paywall-modal');
-    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-visible'); }
+    window.__showPaywallModal?.({
+      title: 'Continúa aprendiendo con Alintec Food VIP',
+      sub: 'Activa tu membresía para desbloquear todas las clases, materiales y obtener tu certificado.'
+    });
   }
+  window.__mostrarPaywallAlintec = mostrarPaywallCurso;
 
   function getProgresoCurso(cursoId) {
     const p = getProgreso();
