@@ -41,16 +41,16 @@ input,select,textarea{font:inherit;color:inherit}
 
 :root[data-theme="night"]{
   --bg:#0E1611;--bg-deep:#091108;
-  --surface:#16241A;--surface-2:#1F3324;--surface-3:#2F4C36;
+  --surface:#141F17;--surface-2:#1C2B20;--surface-3:#2A4130;
   --border:rgba(155,215,170,0.07);--border-2:rgba(155,215,170,0.14);--border-strong:rgba(155,215,170,0.22);
-  --text:#F0F7F1;--text-2:#BBCDBE;--text-3:#8DA391;
-  --primary:#43A047;--primary-soft:#7CC47F;--primary-deep:#2E7D32;
-  --primary-glow:rgba(67,160,71,0.38);--highlight:#9CCC65;
+  --text:#EDF3EE;--text-2:#B5C6B8;--text-3:#89A08D;
+  --primary:#4C9E56;--primary-soft:#7CC47F;--primary-deep:#2E7D32;
+  --primary-glow:rgba(67,160,71,0.14);--highlight:#8FBF6A;
   --success:#34D399;--danger:#F87171;--warning:#FBBF24;--whatsapp:#22C55E;
   --shadow-card:0 10px 40px rgba(0,0,0,0.5);
 }
 :root[data-theme="day"]{
-  --bg:#EEF7EE;--bg-deep:#DDEEDD;
+  --bg:#F2FAF5;--bg-deep:#E4F2E9;
   --surface:#FFFFFF;--surface-2:#F4FAF4;--surface-3:#E5F2E6;
   --border:rgba(18,52,26,0.07);--border-2:rgba(18,52,26,0.14);--border-strong:rgba(18,52,26,0.24);
   --text:#14301C;--text-2:#48604D;--text-3:#7C9280;
@@ -85,6 +85,13 @@ body::after{
   pointer-events:none;
 }
 :root[data-theme="day"] body::after{background-image:linear-gradient(to right,rgba(18,52,26,.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(18,52,26,.04) 1px,transparent 1px)}
+:root[data-theme="night"] body::before{opacity:.35}
+:root[data-theme="day"] .sidebar{background:linear-gradient(180deg,#D8F3E6 0%,#C3EAD8 55%,#B2E3CD 100%);border-right-color:rgba(18,52,26,0.10)}
+:root[data-theme="day"] .sidebar .nav-item:hover{background:rgba(255,255,255,.55)}
+:root[data-theme="day"] .sidebar .nav-item.is-active{background:rgba(255,255,255,.75);box-shadow:0 2px 8px rgba(18,60,30,.08)}
+/* Hover tecnológico en tarjetas: crecen ligeramente y su contorno brilla */
+.curso-card,.pdf-card,.noticia-card,.webinar-card,.dash-card,.tool-card,.mat-card{transition:transform .25s cubic-bezier(.2,.8,.25,1),box-shadow .25s,border-color .25s}
+.curso-card:hover,.pdf-card:hover,.noticia-card:hover,.webinar-card:hover,.dash-card:hover,.tool-card:hover{transform:translateY(-3px) scale(1.012);border-color:color-mix(in srgb,var(--primary) 55%,var(--border-2));box-shadow:0 0 0 1px color-mix(in srgb,var(--primary) 30%,transparent),0 14px 40px color-mix(in srgb,var(--primary) 18%,transparent)}
 @keyframes auroraBg{
   0%{transform:translate(0,0) scale(1)}
   50%{transform:translate(2%,-2%) scale(1.05)}
@@ -3082,7 +3089,7 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ═══ ALINTEC FOOD · glow oscuro intenso + premium día (aditivo, no rompe layout) ═══ */
-:root[data-theme="night"]{ --primary-glow:rgba(67,160,71,0.62); }
+:root[data-theme="night"]{ --primary-glow:rgba(67,160,71,0.20); }
 :root[data-theme="night"] .btn--primary,:root[data-theme="night"] .btn--accent{
   box-shadow:0 0 30px rgba(67,160,71,0.62),0 10px 30px rgba(67,160,71,0.42),inset 0 1px 0 rgba(255,255,255,.16);
 }
@@ -3991,7 +3998,7 @@ window.__setDisplayName = async (nombre) => {
       <a class="nav-item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados</a>
     </div>
 
-    <div class="nav-section">
+    <div class="nav-section" data-tour="tools">
       <div class="nav-label">Herramientas pro</div>
       <a class="nav-item" data-section="tool-nom051"><svg class="ic"><use href="#i-badge"/></svg>Calculadora NOM-051</a>
       <a class="nav-item" data-section="tool-haccp"><svg class="ic"><use href="#i-shield-check"/></svg>Planificador HACCP</a>
@@ -4022,6 +4029,9 @@ window.__setDisplayName = async (nombre) => {
         <span class="pill" id="topbar-pill"><svg class="ic"><use href="#i-user"/></svg><span id="topbar-pill-text">Ingeniero</span></span>
       </div>
       <div class="topbar__right">
+        <button class="icon-btn" id="btn-tour-help" data-tour-restart type="button" aria-label="Volver a ver el recorrido guiado" title="Recorrido guiado">
+          <span class="tour-help-icon" aria-hidden="true">?</span>
+        </button>
         <button class="icon-btn" id="btn-notif" aria-label="Notificaciones">
           <svg class="ic"><use href="#i-bell"/></svg>
           <span class="dot"></span>
@@ -4173,7 +4183,7 @@ window.__setDisplayName = async (nombre) => {
         <a class="mobile-drawer__item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados</a>
       </div>
 
-      <div class="mobile-drawer__section">
+      <div class="mobile-drawer__section" data-tour="tools">
         <div class="mobile-drawer__label">Herramientas pro</div>
         <a class="mobile-drawer__item" data-section="tool-nom051"><svg class="ic"><use href="#i-badge"/></svg>Calculadora NOM-051</a>
         <a class="mobile-drawer__item" data-section="tool-haccp"><svg class="ic"><use href="#i-shield-check"/></svg>Planificador HACCP</a>
@@ -6327,120 +6337,93 @@ const Sections = (function(){
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 🎛️ Dropdown custom fancy · reemplaza select nativo (sin cuadro azul horrible)
-  // Uso: bindFancyDropdown('cur-area', (value) => { ... })
-  // ═══════════════════════════════════════════════════════════════
-  window.bindFancyDropdown = function(id, onChange) {
-    const trigger = document.getElementById(id + '-trigger');
-    const menu = document.getElementById(id + '-menu');
-    const label = document.getElementById(id + '-label');
-    if (!trigger || !menu) return;
-
-    // Toggle abrir/cerrar
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = menu.classList.contains('is-open');
-      // Cerrar otros dropdowns abiertos
-      document.querySelectorAll('.dd-fancy__menu.is-open').forEach(m => m.classList.remove('is-open'));
-      document.querySelectorAll('.dd-fancy__trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
-      if (!isOpen) {
-        menu.classList.add('is-open');
-        trigger.setAttribute('aria-expanded', 'true');
-      }
-    });
-
-    // Click en una opción
-    menu.querySelectorAll('.dd-fancy__item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const value = item.dataset.value;
-        const text = item.textContent.trim();
-        menu.querySelectorAll('.dd-fancy__item').forEach(i => i.classList.remove('is-selected'));
-        item.classList.add('is-selected');
-        if (label) label.textContent = text;
-        menu.classList.remove('is-open');
-        trigger.setAttribute('aria-expanded', 'false');
-        if (typeof onChange === 'function') onChange(value);
-      });
-    });
-  };
-
-  // Cerrar cualquier dropdown al click fuera
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.dd-fancy__menu.is-open').forEach(m => m.classList.remove('is-open'));
-    document.querySelectorAll('.dd-fancy__trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
-  });
-
-  function calcularDiasMembresia(){
-    // Si hay override por URL (?dias=N), usar ese valor
-    if (PREVIEW_DIAS !== null && !isNaN(PREVIEW_DIAS)) return PREVIEW_DIAS;
-    const md = window.memberData;
-    if (!md) return 0;
-    const fecha = md.fechaAlta?.toDate
-      ? md.fechaAlta.toDate()
-      : (md.fechaAlta ? new Date(md.fechaAlta) : null);
-    if (!fecha) return 0;
-    const dias = Math.floor((Date.now() - fecha.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, dias);
-  }
-
-  // Día en que se desbloquea el curso (precalculado por orden, sin contar los "siempre")
-  function cursoUnlockDay(curso){
-    return (curso && typeof curso._unlockDay === 'number') ? curso._unlockDay : 0;
-  }
-
-  // ═══ Muestra gratis controlada desde el admin ═══
-  // El admin puede marcar un curso como "muestra gratis" y cada clase como "gratis".
-  // Si el curso tiene cursoMuestraGratis=true Y la clase tiene gratis=true, se muestra
-  // sin necesidad de membresía. El resto pide membresía con un candadito discreto.
-  function tieneAccesoVipCompleto() {
-    return window.UserState?.modo === 'vip' || esAdminReal();
-  }
-
-  function esClaseGratis(curso, indexClase) {
-    if (!curso || !curso.cursoMuestraGratis) return false;
-    const sesion = curso.sesiones && curso.sesiones[indexClase];
-    if (!sesion) return false;
-    return sesion.gratis === true;
-  }
-
-  function esCursoConMuestra(curso) {
-    return curso && curso.cursoMuestraGratis === true;
-  }
-
-  function mostrarPaywallCurso() {
-    window.__showPaywallModal?.({
-      title: 'Continúa aprendiendo con Alintec Food VIP',
-      sub: 'Activa tu membresía para desbloquear todas las clases, materiales y obtener tu certificado.'
-    });
-  }
-  window.__mostrarPaywallAlintec = mostrarPaywallCurso;
-
-  // En un curso de muestra, el primer material también es gratis (igual que BioNova)
-  function esMaterialGratis(curso, indexMaterial) {
-    if (!esCursoConMuestra(curso)) return false;
-    const mat = curso.materiales && curso.materiales[Number(indexMaterial)];
-    return !!(mat && mat.gratis === true);
-  }
-
-
-  // ═══════════════════════════════════════════════════════════════
-  // 🧠 BLOQUE B · Preguntas cerradas al terminar cada clase
-  // 🎮 BLOQUE C · Juego dinámico al terminar el curso
-  // Obligatorios de realizar, no afectan el certificado ni la nota.
+  // 🧠 BLOQUE B · Preguntas con calificación visual y reintento
+  // 🎮 BLOQUE C · Juegos dinámicos rediseñados (pro + responsivos)
   // ═══════════════════════════════════════════════════════════════
 
+  function _ensureJuegosCSS() {
+    if (document.getElementById('jg-css')) return;
+    const st = document.createElement('style');
+    st.id = 'jg-css';
+    st.textContent = `
+      .jg-lead{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px;}
+      .jg-hint{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-2);background:color-mix(in srgb,var(--primary) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border-2));border-radius:12px;padding:11px 14px;margin-bottom:16px;line-height:1.5;}
+      .jg-progress{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+      .jg-progress__track{flex:1;height:7px;background:var(--surface-3);border-radius:4px;overflow:hidden;}
+      .jg-progress__fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--highlight));border-radius:4px;transition:width .4s cubic-bezier(.2,.8,.25,1);width:0%;}
+      .jg-progress__txt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-3);font-weight:800;letter-spacing:.5px;white-space:nowrap;}
+      .jg-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
+      .jg-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+      .jg-continuar:not(:disabled):hover{transform:translateY(-1px);}
+      .jg-ghost{background:transparent;color:var(--text-2);border:1.5px solid var(--border-2);border-radius:100px;padding:12px 22px;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;}
+      .jg-ghost:hover{border-color:var(--primary);color:var(--primary);}
+      .jg-win{margin-top:16px;text-align:center;font-size:14.5px;font-weight:800;color:var(--success);animation:jgPop .4s cubic-bezier(.2,.8,.25,1);}
+      @keyframes jgPop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+      @keyframes jgShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+      /* ── Sopa de letras ── */
+      .sp-wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;}
+      .sp-board{position:relative;display:grid;gap:3px;width:min(100%,440px);aspect-ratio:1;user-select:none;touch-action:none;padding:10px;background:color-mix(in srgb,var(--primary) 5%,var(--surface-2));border:1px solid var(--border-2);border-radius:16px;box-shadow:inset 0 2px 10px rgba(0,0,0,.06);}
+      .sp-cell{display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:clamp(10px,1.7vw,14px);cursor:pointer;color:var(--text);transition:background .12s,transform .12s,color .12s;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+      .sp-cell:hover{transform:scale(1.08);}
+      .sp-cell.is-path{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border-color:transparent;transform:scale(1.05);}
+      .sp-cell.is-found{color:#fff;border-color:transparent;}
+      .sp-side{flex:1;min-width:180px;}
+      .sp-side__title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-3);font-weight:800;margin-bottom:10px;}
+      .sp-chip{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;padding:9px 13px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border-2);color:var(--text-2);margin-bottom:7px;transition:all .25s;}
+      .sp-chip__dot{width:10px;height:10px;border-radius:50%;background:var(--surface-3);flex-shrink:0;transition:background .25s;}
+      .sp-chip.is-found{color:var(--text);text-decoration:line-through;text-decoration-thickness:2px;border-color:transparent;}
+      .sp-help{font-size:11.5px;color:var(--text-3);margin-top:10px;line-height:1.5;}
+
+      /* ── Memorama ── */
+      .mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,44%),1fr));gap:12px;}
+      .mm-card{perspective:900px;min-height:118px;cursor:pointer;}
+      .mm-inner{position:relative;width:100%;height:100%;min-height:118px;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.25,1);}
+      .mm-card.is-up .mm-inner{transform:rotateY(180deg);}
+      .mm-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;}
+      .mm-front{background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 88%,#000),var(--primary) 45%,var(--highlight));box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 30%,transparent);border:1px solid rgba(255,255,255,.18);}
+      .mm-front::after{content:"?";font-family:'Plus Jakarta Sans',sans-serif;font-size:34px;font-weight:800;color:rgba(255,255,255,.9);text-shadow:0 2px 10px rgba(0,0,0,.25);}
+      .mm-back{background:var(--surface);border:1.5px solid var(--border-2);transform:rotateY(180deg);flex-direction:column;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.08);}
+      .mm-back__tag{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;font-weight:800;padding:2px 8px;border-radius:100px;}
+      .mm-back__tag--t{color:var(--primary);background:color-mix(in srgb,var(--primary) 13%,transparent);}
+      .mm-back__tag--d{color:var(--highlight);background:color-mix(in srgb,var(--highlight) 15%,transparent);}
+      .mm-back__txt{font-size:12px;font-weight:600;line-height:1.35;color:var(--text);overflow-wrap:anywhere;}
+      .mm-card.is-matched .mm-back{border-color:var(--success);box-shadow:0 0 0 2px color-mix(in srgb,var(--success) 40%,transparent),0 8px 20px color-mix(in srgb,var(--success) 25%,transparent);}
+      .mm-card.is-wrong .mm-back{border-color:var(--danger,#F87171);animation:jgShake .45s;}
+
+      /* ── Rompecabezas ── */
+      .pz-board{position:relative;margin:0 auto;border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,var(--surface-2));border:1px solid var(--border-2);box-shadow:inset 0 2px 12px rgba(0,0,0,.08);touch-action:none;}
+      .pz-piece{position:absolute;cursor:grab;transition:left .35s cubic-bezier(.2,.8,.25,1),top .35s cubic-bezier(.2,.8,.25,1),filter .2s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.28));}
+      .pz-piece.is-sel{filter:drop-shadow(0 0 10px var(--primary)) drop-shadow(0 4px 8px rgba(0,0,0,.3));z-index:5;}
+      .pz-piece.is-drag{transition:none;z-index:20;cursor:grabbing;filter:drop-shadow(0 12px 22px rgba(0,0,0,.4));}
+      .pz-piece.is-locked{cursor:default;}
+      .pz-help{font-size:11.5px;color:var(--text-3);text-align:center;margin-top:12px;line-height:1.5;}
+
+      /* ── Ahorcado ── */
+      .ah-stage{display:flex;justify-content:center;margin-bottom:4px;}
+      .ah-word{font-family:'JetBrains Mono',monospace;font-size:clamp(19px,5vw,28px);font-weight:800;letter-spacing:7px;text-align:center;margin:14px 0;color:var(--text);}
+      .ah-vidas{text-align:center;font-size:12.5px;color:var(--text-2);margin-bottom:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
+      .ah-key{width:32px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-weight:800;font-size:12.5px;cursor:pointer;transition:all .15s;}
+      .ah-key:hover:not(:disabled){border-color:var(--primary);transform:translateY(-1px);}
+      .ah-key.is-hint{background:color-mix(in srgb,var(--primary) 16%,var(--surface-2));border-color:color-mix(in srgb,var(--primary) 40%,var(--border));color:var(--primary);cursor:default;}
+      .ah-key.is-ok{background:color-mix(in srgb,var(--success) 20%,var(--surface-2));border-color:var(--success);color:var(--success);cursor:default;}
+      .ah-key.is-bad{background:var(--surface-3);border-color:var(--border);color:var(--text-3);cursor:default;opacity:.55;}
+    `;
+    document.head.appendChild(st);
+  }
+
+  // ─── SOPA DE LETRAS ───
   function _generarSopaLetras(palabras) {
     const limpio = w => (w||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-ZÑ]/g,'');
     const words = palabras.map(limpio).filter(w => w.length >= 2 && w.length <= 14).sort((a,b)=>b.length-a.length);
     const maxLen = Math.max(8, ...words.map(w=>w.length));
-    const size = Math.max(10, Math.min(16, maxLen + 2));
+    const size = Math.max(10, Math.min(15, maxLen + 2));
     const grid = Array.from({length:size}, () => Array(size).fill(null));
-    const dirs = [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+    const dirs = [[0,1],[1,0],[1,1],[-1,1]];
     const placed = [];
     words.forEach(word => {
       let ok = false;
-      for (let attempt = 0; attempt < 250 && !ok; attempt++) {
+      for (let attempt = 0; attempt < 300 && !ok; attempt++) {
         const dir = dirs[Math.floor(Math.random()*dirs.length)];
         const row0 = Math.floor(Math.random()*size);
         const col0 = Math.floor(Math.random()*size);
@@ -6472,22 +6455,24 @@ const Sections = (function(){
     const palabrasOriginal = (curso.juegoDinamico.datos.palabras || []).slice(0, 10);
     const { grid, size, placed } = _generarSopaLetras(palabrasOriginal);
     if (placed.length === 0) { onDone(); return; }
+    const PALETA = ['#43A047','#26A69A','#7CB342','#00897B','#558B2F','#009688','#689F38','#00796B','#33691E','#004D40'];
     const encontradas = new Set();
-    let seleccion = [];
     const modalId = 'juego-sopa-' + curso.id;
     const body = document.createElement('div');
     body.innerHTML = `
-      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;">Encuentra las ${placed.length} palabras. Toca la primera y la última letra de cada una.</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
-        <div id="sopa-grid" style="display:grid;grid-template-columns:repeat(${size},1fr);gap:2px;width:min(100%,420px);aspect-ratio:1;user-select:none;">
-          ${grid.map((row,r)=>row.map((ch,c)=>`<div data-r="${r}" data-c="${c}" style="display:flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(9px,1.6vw,13px);cursor:pointer;color:var(--text);">${ch}</div>`).join('')).join('')}
+      <div class="jg-lead">Encuentra las <b>${placed.length} palabras</b> escondidas en el tablero.</div>
+      <div class="jg-progress">
+        <div class="jg-progress__track"><div class="jg-progress__fill" id="sp-fill"></div></div>
+        <div class="jg-progress__txt" id="sp-progreso">0 / ${placed.length}</div>
+      </div>
+      <div class="sp-wrap">
+        <div class="sp-board" id="sp-board" style="grid-template-columns:repeat(${size},1fr);">
+          ${grid.map((row,r)=>row.map((ch,c)=>`<div class="sp-cell" data-r="${r}" data-c="${c}">${ch}</div>`).join('')).join('')}
         </div>
-        <div style="flex:1;min-width:160px;">
-          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);font-weight:700;margin-bottom:8px;">Palabras</div>
-          <div id="sopa-lista" style="display:flex;flex-direction:column;gap:6px;">
-            ${placed.map(p=>`<div data-word="${p.word}" style="font-size:12.5px;padding:6px 10px;border-radius:8px;background:var(--surface-2);color:var(--text-2);">${p.word}</div>`).join('')}
-          </div>
-          <div id="sopa-progreso" style="margin-top:12px;font-size:11.5px;color:var(--primary);font-weight:700;">0/${placed.length} encontradas</div>
+        <div class="sp-side">
+          <div class="sp-side__title">Palabras a encontrar</div>
+          ${placed.map((p,i)=>`<div class="sp-chip" data-word="${p.word}"><span class="sp-chip__dot"></span>${p.word}</div>`).join('')}
+          <div class="sp-help">👉 <b>Arrastra</b> el dedo o el mouse desde la primera hasta la última letra de la palabra, o <b>toca</b> la primera letra y luego la última.</div>
         </div>
       </div>
     `;
@@ -6495,49 +6480,121 @@ const Sections = (function(){
     footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
     Modal.open({ id: modalId, title:'🔤 Sopa de letras', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
-    function limpiaSeleccionVisual(){
-      body.querySelectorAll('#sopa-grid > div').forEach(cell => { if(!cell.dataset.found) cell.style.background='var(--surface-2)'; });
+    const board = body.querySelector('#sp-board');
+    const celda = (r,c) => board.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    let inicio = null;       // celda inicial (tap o drag)
+    let arrastrando = false;
+    let pathActual = [];
+
+    function lineaEntre(a, b) {
+      const dr = b.r - a.r, dc = b.c - a.c;
+      const adr = Math.abs(dr), adc = Math.abs(dc);
+      let sr = Math.sign(dr), sc = Math.sign(dc);
+      let len;
+      if (adr === 0 && adc === 0) return [{r:a.r,c:a.c}];
+      // Ajustar a la dirección recta dominante (h, v o diagonal)
+      if (adr === 0) { len = adc + 1; }
+      else if (adc === 0) { len = adr + 1; }
+      else if (adr === adc) { len = adr + 1; }
+      else if (adc > adr) { sr = 0; len = adc + 1; }
+      else { sc = 0; len = adr + 1; }
+      const celdas = [];
+      for (let i=0;i<len;i++){
+        const r = a.r + sr*i, c = a.c + sc*i;
+        if (r<0||r>=size||c<0||c>=size) break;
+        celdas.push({r,c});
+      }
+      return celdas;
     }
-    function checarSeleccion() {
-      if (seleccion.length !== 2) return;
-      const [a,b] = seleccion;
-      const dr = Math.sign(b.r-a.r), dc = Math.sign(b.c-a.c);
-      const len = Math.max(Math.abs(b.r-a.r), Math.abs(b.c-a.c)) + 1;
-      if (!( (b.r-a.r)===dr*(len-1) && (b.c-a.c)===dc*(len-1) )) { seleccion=[]; limpiaSeleccionVisual(); return; }
-      let str='';
-      const celdas=[];
-      for(let i=0;i<len;i++){ const r=a.r+dr*i, c=a.c+dc*i; str+=grid[r][c]; celdas.push([r,c]); }
+    function pintarPath(celdas) {
+      board.querySelectorAll('.sp-cell.is-path').forEach(el => el.classList.remove('is-path'));
+      celdas.forEach(({r,c}) => { const el = celda(r,c); if (el && !el.dataset.found) el.classList.add('is-path'); });
+      pathActual = celdas;
+    }
+    function limpiarPath() {
+      board.querySelectorAll('.sp-cell.is-path').forEach(el => el.classList.remove('is-path'));
+      pathActual = [];
+    }
+    function validarPath(celdas) {
+      if (!celdas || celdas.length < 2) { limpiarPath(); return; }
+      let str = '';
+      celdas.forEach(({r,c}) => { str += grid[r][c]; });
       const strRev = str.split('').reverse().join('');
       const match = placed.find(p => !encontradas.has(p.word) && (p.word===str || p.word===strRev));
       if (match) {
         encontradas.add(match.word);
-        celdas.forEach(([r,c])=>{
-          const cell = body.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-          if (cell) { cell.style.background='color-mix(in srgb,var(--success) 35%,transparent)'; cell.dataset.found='1'; }
+        const color = PALETA[(encontradas.size-1) % PALETA.length];
+        celdas.forEach(({r,c}) => {
+          const el = celda(r,c);
+          if (el) { el.classList.remove('is-path'); el.classList.add('is-found'); el.dataset.found='1'; el.style.background = color; }
         });
-        const li = body.querySelector(`[data-word="${match.word}"]`);
-        if (li) { li.style.background='color-mix(in srgb,var(--success) 20%,transparent)'; li.style.color='var(--success)'; li.style.textDecoration='line-through'; }
-        const prog = body.querySelector('#sopa-progreso');
-        if (prog) prog.textContent = `${encontradas.size}/${placed.length} encontradas`;
-        if (encontradas.size === placed.length) { footer.disabled=false; }
-      } else {
-        limpiaSeleccionVisual();
+        const chip = body.querySelector(`[data-word="${match.word}"]`);
+        if (chip) { chip.classList.add('is-found'); chip.querySelector('.sp-chip__dot').style.background = color; chip.style.background = `color-mix(in srgb, ${color} 14%, var(--surface-2))`; }
+        const prog = body.querySelector('#sp-progreso');
+        if (prog) prog.textContent = `${encontradas.size} / ${placed.length}`;
+        const fill = body.querySelector('#sp-fill');
+        if (fill) fill.style.width = Math.round((encontradas.size/placed.length)*100) + '%';
+        if (encontradas.size === placed.length) {
+          footer.disabled = false;
+          const win = document.createElement('div');
+          win.className = 'jg-win';
+          win.textContent = '¡Encontraste todas las palabras! 🎉';
+          body.appendChild(win);
+        }
       }
-      seleccion=[];
+      limpiarPath();
     }
-    body.querySelectorAll('#sopa-grid > div').forEach(cell => {
-      cell.addEventListener('click', () => {
-        if (cell.dataset.found) return;
-        const r=parseInt(cell.dataset.r,10), c=parseInt(cell.dataset.c,10);
-        if (seleccion.length===1 && seleccion[0].r===r && seleccion[0].c===c) return;
-        cell.style.background='color-mix(in srgb,var(--primary) 30%,transparent)';
-        seleccion.push({r,c});
-        if (seleccion.length===2) checarSeleccion();
-      });
+    function celdaDesdeEvento(ev) {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      return el && el.classList && el.classList.contains('sp-cell') ? { r: parseInt(el.dataset.r,10), c: parseInt(el.dataset.c,10) } : null;
+    }
+    board.addEventListener('pointerdown', (ev) => {
+      const cel = celdaDesdeEvento(ev);
+      if (!cel) return;
+      ev.preventDefault();
+      arrastrando = false;
+      if (inicio && !arrastrando) {
+        // Ya había un inicio por tap: este pointerdown puede ser el "segundo toque"
+      }
+      board.setPointerCapture(ev.pointerId);
+      board.dataset.downR = cel.r; board.dataset.downC = cel.c;
+      pintarPath([cel]);
     });
+    board.addEventListener('pointermove', (ev) => {
+      if (board.dataset.downR === undefined || board.dataset.downR === '') return;
+      const cel = celdaDesdeEvento(ev);
+      if (!cel) return;
+      const a = { r: parseInt(board.dataset.downR,10), c: parseInt(board.dataset.downC,10) };
+      if (cel.r !== a.r || cel.c !== a.c) arrastrando = true;
+      if (arrastrando) pintarPath(lineaEntre(a, cel));
+    });
+    board.addEventListener('pointerup', (ev) => {
+      if (board.dataset.downR === undefined || board.dataset.downR === '') return;
+      const a = { r: parseInt(board.dataset.downR,10), c: parseInt(board.dataset.downC,10) };
+      board.dataset.downR = ''; board.dataset.downC = '';
+      const cel = celdaDesdeEvento(ev) || (pathActual.length ? pathActual[pathActual.length-1] : null);
+      if (arrastrando) {
+        // Selección por arrastre
+        validarPath(cel ? lineaEntre(a, cel) : pathActual);
+        inicio = null;
+        arrastrando = false;
+        return;
+      }
+      // Selección por toques: primer toque marca inicio, segundo valida
+      if (!inicio) {
+        inicio = a;
+        pintarPath([a]);
+      } else {
+        if (inicio.r === a.r && inicio.c === a.c) { inicio = null; limpiarPath(); return; }
+        validarPath(lineaEntre(inicio, a));
+        inicio = null;
+      }
+    });
+    board.addEventListener('pointercancel', () => { board.dataset.downR=''; board.dataset.downC=''; arrastrando=false; inicio=null; limpiarPath(); });
     footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
+  // ─── MEMORAMA ───
   function _juegoMemorama(curso, onDone) {
     _ensureJuegosCSS();
     const pares = (curso.juegoDinamico.datos.pares || []).slice(0,10);
@@ -6547,132 +6604,240 @@ const Sections = (function(){
       cartas.push({ texto:p.termino, tipo:'termino', parId:i });
       cartas.push({ texto:p.definicion, tipo:'definicion', parId:i });
     });
-    cartas = cartas.map(c=>({...c, uid: Math.random()})).sort(()=>Math.random()-0.5);
+    cartas = cartas.sort(()=>Math.random()-0.5);
     let volteadas = [];
     let bloqueado = false;
     const encontrados = new Set();
     const modalId = 'juego-memorama-' + curso.id;
     const body = document.createElement('div');
     body.innerHTML = `
-      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;">Encuentra cada término con su definición.</div>
-      <div id="mem-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;">
+      <div class="jg-lead">Voltea las tarjetas y empareja cada <b>término</b> con su <b>definición</b>.</div>
+      <div class="jg-progress">
+        <div class="jg-progress__track"><div class="jg-progress__fill" id="mm-fill"></div></div>
+        <div class="jg-progress__txt" id="mm-progreso">0 / ${pares.length}</div>
+      </div>
+      <div class="mm-grid">
         ${cartas.map((c,i)=>`
-          <div class="mem-card" data-idx="${i}" data-parid="${c.parId}" style="min-height:72px;padding:8px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border-2);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--surface-2);">❓</div>
+          <div class="mm-card" data-idx="${i}" data-parid="${c.parId}">
+            <div class="mm-inner">
+              <div class="mm-face mm-front"></div>
+              <div class="mm-face mm-back">
+                <span class="mm-back__tag ${c.tipo==='termino'?'mm-back__tag--t':'mm-back__tag--d'}">${c.tipo==='termino'?'Término':'Definición'}</span>
+                <span class="mm-back__txt">${escapeHtml(c.texto)}</span>
+              </div>
+            </div>
+          </div>
         `).join('')}
       </div>
-      <div id="mem-progreso" style="margin-top:12px;font-size:11.5px;color:var(--primary);font-weight:700;text-align:center;">0/${pares.length} pares</div>
     `;
     const footer = document.createElement('button');
     footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
     Modal.open({ id: modalId, title:'🃏 Memorama', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
-    body.querySelectorAll('.mem-card').forEach(cardEl => {
+    body.querySelectorAll('.mm-card').forEach(cardEl => {
       cardEl.addEventListener('click', () => {
         if (bloqueado) return;
+        if (cardEl.classList.contains('is-up') || cardEl.classList.contains('is-matched')) return;
         const idx = parseInt(cardEl.dataset.idx,10);
-        if (cardEl.dataset.up || cardEl.dataset.matched) return;
-        cardEl.dataset.up='1';
-        cardEl.style.color='var(--text)';
-        cardEl.textContent = cartas[idx].texto;
+        cardEl.classList.add('is-up');
         volteadas.push(idx);
         if (volteadas.length===2) {
           bloqueado = true;
           const [i1,i2] = volteadas;
           const c1=cartas[i1], c2=cartas[i2];
+          const el1 = body.querySelector(`[data-idx="${i1}"]`);
+          const el2 = body.querySelector(`[data-idx="${i2}"]`);
           const match = c1.parId===c2.parId && c1.tipo!==c2.tipo;
-          setTimeout(() => {
-            const el1 = body.querySelector(`[data-idx="${i1}"]`);
-            const el2 = body.querySelector(`[data-idx="${i2}"]`);
-            if (match) {
-              [el1,el2].forEach(el=>{ el.dataset.matched='1'; el.style.background='color-mix(in srgb,var(--success) 20%,transparent)'; el.style.borderColor='var(--success)'; });
+          if (match) {
+            setTimeout(() => {
+              [el1,el2].forEach(el=>el.classList.add('is-matched'));
               encontrados.add(c1.parId);
-              const prog = body.querySelector('#mem-progreso');
-              if (prog) prog.textContent = `${encontrados.size}/${pares.length} pares`;
-              if (encontrados.size === pares.length) { footer.disabled=false; }
-            } else if (el1 && el2) {
-              delete el1.dataset.up; el1.style.color='var(--surface-2)'; el1.textContent='❓';
-              delete el2.dataset.up; el2.style.color='var(--surface-2)'; el2.textContent='❓';
-            }
-            volteadas=[]; bloqueado=false;
-          }, 700);
+              const prog = body.querySelector('#mm-progreso');
+              if (prog) prog.textContent = `${encontrados.size} / ${pares.length}`;
+              const fill = body.querySelector('#mm-fill');
+              if (fill) fill.style.width = Math.round((encontrados.size/pares.length)*100) + '%';
+              if (encontrados.size === pares.length) {
+                footer.disabled=false;
+                const win = document.createElement('div');
+                win.className='jg-win'; win.textContent='¡Completaste todos los pares! 🎉';
+                body.appendChild(win);
+              }
+              volteadas=[]; bloqueado=false;
+            }, 500);
+          } else {
+            // Se deja leer con calma (2 segundos) antes de voltearse
+            setTimeout(() => { [el1,el2].forEach(el=>el.classList.add('is-wrong')); }, 350);
+            setTimeout(() => {
+              [el1,el2].forEach(el=>{ el.classList.remove('is-up','is-wrong'); });
+              volteadas=[]; bloqueado=false;
+            }, 2000);
+          }
         }
       });
     });
     footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
+  // ─── ROMPECABEZAS (piezas tipo jigsaw real) ───
   function _juegoRompecabezas(curso, onDone) {
     _ensureJuegosCSS();
     const d = curso.juegoDinamico.datos || {};
     const n = parseInt(d.dificultad,10) || 3;
     const img = d.imagenUrl || curso.portada || PORTADA_DEFAULT;
+    const BOARD = Math.min(400, Math.max(260, (window.innerWidth || 400) - 120));
+    const CS = BOARD / n;              // tamaño de celda
+    const K = CS * 0.24;               // margen para las pestañas
     const total = n*n;
-    let orden = Array.from({length:total}, (_,i)=>i);
+
+    // Mapa de pestañas compartidas entre piezas vecinas (complementarias)
+    const TH = Array.from({length:n+1},()=>Array.from({length:n},()=> (Math.random()<0.5?1:-1)));
+    const TV = Array.from({length:n},()=>Array.from({length:n+1},()=> (Math.random()<0.5?1:-1)));
+
+    function lado(x0,y0,x1,y1,sign,horiz){
+      if (sign===0) return `L ${x1} ${y1} `;
+      const t = CS * 0.19;
+      if (horiz) {
+        const dir = Math.sign(x1-x0), mx=(x0+x1)/2;
+        return `L ${mx-dir*t} ${y0} `+
+               `C ${mx-dir*t} ${y0+sign*t*0.3}, ${mx-dir*t*1.3} ${y0+sign*t*1.7}, ${mx} ${y0+sign*t*1.7} `+
+               `C ${mx+dir*t*1.3} ${y0+sign*t*1.7}, ${mx+dir*t} ${y0+sign*t*0.3}, ${mx+dir*t} ${y0} `+
+               `L ${x1} ${y1} `;
+      } else {
+        const dir = Math.sign(y1-y0), my=(y0+y1)/2;
+        return `L ${x0} ${my-dir*t} `+
+               `C ${x0+sign*t*0.3} ${my-dir*t}, ${x0+sign*t*1.7} ${my-dir*t*1.3}, ${x0+sign*t*1.7} ${my} `+
+               `C ${x0+sign*t*1.7} ${my+dir*t*1.3}, ${x0+sign*t*0.3} ${my+dir*t}, ${x0} ${my+dir*t} `+
+               `L ${x1} ${y1} `;
+      }
+    }
+    function pathPieza(r,c){
+      const x0=K, y0=K, x1=K+CS, y1=K+CS;
+      let dd = `M ${x0} ${y0} `;
+      dd += lado(x0,y0,x1,y0, r===0?0:TH[r][c], true);
+      dd += lado(x1,y0,x1,y1, c===n-1?0:TV[r][c+1], false);
+      dd += lado(x1,y1,x0,y1, r===n-1?0:TH[r+1][c], true);
+      dd += lado(x0,y1,x0,y0, c===0?0:TV[r][c], false);
+      return dd + 'Z';
+    }
+
+    // Barajar los slots
+    let slots = Array.from({length:total}, (_,i)=>i);
     let intentos = 0;
-    do { orden = orden.slice().sort(()=>Math.random()-0.5); intentos++; } while (orden.every((v,i)=>v===i) && intentos < 20);
+    do { slots = slots.slice().sort(()=>Math.random()-0.5); intentos++; } while (slots.every((v,i)=>v===i) && intentos < 20);
+
     const modalId = 'juego-puzzle-' + curso.id;
     const body = document.createElement('div');
+    const uid = Math.random().toString(36).slice(2,8);
     body.innerHTML = `
-      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;">Ordena la imagen. Toca dos piezas para intercambiarlas.</div>
-      <div id="puzzle-grid" style="display:grid;grid-template-columns:repeat(${n},1fr);gap:2px;width:min(100%,380px);aspect-ratio:1;margin:0 auto;border-radius:10px;overflow:hidden;">
-        ${orden.map((piezaId,pos)=>{
+      <div class="jg-lead">Arma la imagen del curso colocando cada pieza en su lugar.</div>
+      <div class="pz-board" id="pz-board" style="width:${BOARD}px;height:${BOARD}px;">
+        ${slots.map((piezaId,slot)=>{
           const pr = Math.floor(piezaId/n), pc = piezaId%n;
-          const posPct = (v)=> n>1 ? (v*100/(n-1)) : 0;
-          return `<div class="pz-tile" data-pos="${pos}" data-piece="${piezaId}" style="cursor:pointer;background-image:url('${img}');background-size:${n*100}% ${n*100}%;background-position:${posPct(pc)}% ${posPct(pr)}%;outline:2px solid transparent;outline-offset:-2px;"></div>`;
+          const sx = (slot%n)*CS - K, sy = Math.floor(slot/n)*CS - K;
+          const svgSize = CS + 2*K;
+          return `
+          <svg class="pz-piece" data-slot="${slot}" data-piece="${piezaId}" width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" style="left:${sx}px;top:${sy}px;">
+            <defs><clipPath id="pzclip-${uid}-${piezaId}"><path d="${pathPieza(pr,pc)}"/></clipPath></defs>
+            <g clip-path="url(#pzclip-${uid}-${piezaId})">
+              <image href="${img}" x="${K - pc*CS}" y="${K - pr*CS}" width="${n*CS}" height="${n*CS}" preserveAspectRatio="xMidYMid slice"/>
+            </g>
+            <path d="${pathPieza(pr,pc)}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6"/>
+          </svg>`;
         }).join('')}
       </div>
+      <div class="pz-help">👉 <b>Arrastra</b> una pieza y suéltala sobre otra para intercambiarlas, o <b>toca</b> una pieza y luego toca con cuál quieres cambiarla.</div>
     `;
     const footer = document.createElement('button');
     footer.className='jg-continuar'; footer.textContent='Continuar →'; footer.disabled=true;
     Modal.open({ id: modalId, title:'🧩 Rompecabezas', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
-    function checarResuelto() {
-      const tiles=[...body.querySelectorAll('.pz-tile')];
-      return tiles.every(t => parseInt(t.dataset.pos,10) === parseInt(t.dataset.piece,10));
+    const boardEl = body.querySelector('#pz-board');
+    let terminado = false;
+    function posDeSlot(slot) { return { x: (slot%n)*CS - K, y: Math.floor(slot/n)*CS - K }; }
+    function moverASlot(piece, slot) {
+      piece.dataset.slot = slot;
+      const p = posDeSlot(slot);
+      piece.style.left = p.x + 'px';
+      piece.style.top = p.y + 'px';
     }
-    let seleccionado = null;
-    body.querySelectorAll('.pz-tile').forEach(tile => {
-      tile.addEventListener('click', () => {
-        if (tile.dataset.locked) return;
-        if (!seleccionado) { seleccionado = tile; tile.style.outlineColor='var(--primary)'; return; }
-        if (seleccionado === tile) { tile.style.outlineColor='transparent'; seleccionado=null; return; }
-        const bgA = seleccionado.style.backgroundPosition, pieceA = seleccionado.dataset.piece;
-        const bgB = tile.style.backgroundPosition, pieceB = tile.dataset.piece;
-        seleccionado.style.backgroundPosition = bgB; seleccionado.dataset.piece = pieceB;
-        tile.style.backgroundPosition = bgA; tile.dataset.piece = pieceA;
-        seleccionado.style.outlineColor='transparent';
-        seleccionado = null;
-        if (checarResuelto()) {
-          body.querySelectorAll('.pz-tile').forEach(t=>{ t.dataset.locked='1'; t.style.outline='2px solid var(--success)'; });
-          footer.disabled=false;
+    function intercambiar(a, b) {
+      const sa = parseInt(a.dataset.slot,10), sb = parseInt(b.dataset.slot,10);
+      moverASlot(a, sb); moverASlot(b, sa);
+      setTimeout(checarResuelto, 380);
+    }
+    function checarResuelto() {
+      const piezas = [...boardEl.querySelectorAll('.pz-piece')];
+      if (!piezas.every(p => parseInt(p.dataset.slot,10) === parseInt(p.dataset.piece,10))) return;
+      terminado = true;
+      piezas.forEach(p => p.classList.add('is-locked'));
+      footer.disabled = false;
+      const win = document.createElement('div');
+      win.className='jg-win'; win.textContent='¡Rompecabezas completado! 🎉';
+      body.appendChild(win);
+    }
+    let seleccionada = null;
+    let dragPieza = null, dragMovio = false, offX = 0, offY = 0;
+    boardEl.addEventListener('pointerdown', (ev) => {
+      if (terminado) return;
+      const piece = ev.target.closest('.pz-piece');
+      if (!piece) return;
+      ev.preventDefault();
+      dragPieza = piece; dragMovio = false;
+      const rect = piece.getBoundingClientRect();
+      offX = ev.clientX - rect.left; offY = ev.clientY - rect.top;
+      boardEl.setPointerCapture(ev.pointerId);
+    });
+    boardEl.addEventListener('pointermove', (ev) => {
+      if (!dragPieza || terminado) return;
+      const boardRect = boardEl.getBoundingClientRect();
+      const nx = ev.clientX - boardRect.left - offX;
+      const ny = ev.clientY - boardRect.top - offY;
+      if (!dragMovio) {
+        const p0 = posDeSlot(parseInt(dragPieza.dataset.slot,10));
+        if (Math.hypot(nx - p0.x, ny - p0.y) < 7) return;
+        dragMovio = true;
+        dragPieza.classList.add('is-drag');
+      }
+      dragPieza.style.left = nx + 'px';
+      dragPieza.style.top = ny + 'px';
+    });
+    boardEl.addEventListener('pointerup', (ev) => {
+      if (!dragPieza || terminado) { dragPieza = null; return; }
+      const piece = dragPieza; dragPieza = null;
+      if (dragMovio) {
+        piece.classList.remove('is-drag');
+        piece.style.visibility = 'hidden';
+        const debajo = document.elementFromPoint(ev.clientX, ev.clientY);
+        piece.style.visibility = '';
+        const destino = debajo ? debajo.closest && debajo.closest('.pz-piece') : null;
+        if (destino && destino !== piece) {
+          intercambiar(piece, destino);
+        } else {
+          moverASlot(piece, parseInt(piece.dataset.slot,10)); // regresa a su lugar
         }
-      });
+        if (seleccionada) { seleccionada.classList.remove('is-sel'); seleccionada = null; }
+        return;
+      }
+      // Toque simple: seleccionar / intercambiar
+      if (!seleccionada) {
+        seleccionada = piece;
+        piece.classList.add('is-sel');
+      } else if (seleccionada === piece) {
+        piece.classList.remove('is-sel');
+        seleccionada = null;
+      } else {
+        seleccionada.classList.remove('is-sel');
+        intercambiar(seleccionada, piece);
+        seleccionada = null;
+      }
+    });
+    boardEl.addEventListener('pointercancel', () => {
+      if (dragPieza) { dragPieza.classList.remove('is-drag'); moverASlot(dragPieza, parseInt(dragPieza.dataset.slot,10)); dragPieza = null; }
     });
     footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
-  function _ensureJuegosCSS() {
-    if (document.getElementById('jg-css')) return;
-    const st = document.createElement('style');
-    st.id = 'jg-css';
-    st.textContent = `
-      .jg-lead{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:16px;}
-      .jg-hint{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-2);background:color-mix(in srgb,var(--primary) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border-2));border-radius:12px;padding:11px 14px;margin-bottom:18px;line-height:1.5;}
-      .jg-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
-      .jg-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
-      .jg-continuar:not(:disabled):hover{transform:translateY(-1px);}
-      .ah-stage{display:flex;justify-content:center;margin-bottom:6px;}
-      .ah-word{font-family:'JetBrains Mono',monospace;font-size:clamp(19px,5vw,28px);font-weight:800;letter-spacing:7px;text-align:center;margin:14px 0;color:var(--text);}
-      .ah-vidas{text-align:center;font-size:12.5px;color:var(--text-2);margin-bottom:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
-      .ah-key{width:32px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-weight:800;font-size:12.5px;cursor:pointer;transition:all .15s;}
-      .ah-key:hover:not(:disabled){border-color:var(--primary);transform:translateY(-1px);}
-      .ah-key.is-hint{background:color-mix(in srgb,var(--primary) 16%,var(--surface-2));border-color:color-mix(in srgb,var(--primary) 40%,var(--border));color:var(--primary);cursor:default;}
-      .ah-key.is-ok{background:color-mix(in srgb,var(--success) 20%,var(--surface-2));border-color:var(--success);color:var(--success);cursor:default;}
-      .ah-key.is-bad{background:var(--surface-3);border-color:var(--border);color:var(--text-3);cursor:default;opacity:.55;}
-    `;
-    document.head.appendChild(st);
-  }
-
+  // ─── AHORCADO ───
   function _svgAhorcado(errores) {
     const partes = [
       `<line x1="14" y1="150" x2="100" y2="150" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="34" y1="150" x2="34" y2="14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="34" y1="14" x2="92" y2="14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="92" y1="14" x2="92" y2="32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
@@ -6702,7 +6867,8 @@ const Sections = (function(){
     const unicas = Array.from(new Set(palabra.replace(/[^A-ZÑ]/g,'').split('')));
     const nPistas = Math.max(1, Math.min(2, Math.floor(unicas.length * 0.25)));
     const barajadas = unicas.slice().sort(() => Math.random() - 0.5);
-    barajadas.slice(0, nPistas).forEach(l => { adivinadas.add(l); usadas.add(l); });
+    const letrasApoyo = barajadas.slice(0, nPistas);
+    letrasApoyo.forEach(l => { adivinadas.add(l); usadas.add(l); });
     const modalId = 'juego-ahorcado-' + curso.id;
     const letras = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
     const body = document.createElement('div');
@@ -6710,20 +6876,17 @@ const Sections = (function(){
     footer.className = 'jg-continuar'; footer.textContent = 'Continuar →'; footer.disabled = true;
     function render() {
       const visible = palabra.split('').map(ch => adivinadas.has(ch) ? ch : '_').join(' ');
-      const ganado = palabra.split('').every(ch => adivinadas.has(ch));
-      const perdido = errores >= MAX_ERRORES;
       body.innerHTML = `
-        <div class="jg-lead">Adivina la palabra letra por letra antes de quedarte sin intentos.</div>
+        <div class="jg-lead">Adivina la palabra letra por letra antes de quedarte sin intentos. Las letras marcadas en verde son de apoyo.</div>
         ${elegido.pista ? `<div class="jg-hint">💡 <span>${escapeHtml(elegido.pista)}</span></div>` : ''}
         <div class="ah-stage">${_svgAhorcado(errores)}</div>
         <div class="ah-word">${visible}</div>
         <div class="ah-vidas">❤️ Intentos restantes: ${MAX_ERRORES - errores}</div>
         <div id="ah-teclado" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
           ${letras.map(l => {
-            const esHint = adivinadas.has(l) && !usadas.has(l + '_clicked');
             const usada = usadas.has(l);
             let cls = 'ah-key';
-            if (usada) cls += adivinadas.has(l) ? (barajadas.slice(0,nPistas).includes(l) ? ' is-hint' : ' is-ok') : ' is-bad';
+            if (usada) cls += letrasApoyo.includes(l) ? ' is-hint' : (adivinadas.has(l) ? ' is-ok' : ' is-bad');
             return `<button type="button" class="${cls}" data-letra="${l}" ${usada?'disabled':''}>${l}</button>`;
           }).join('')}
         </div>
@@ -6739,7 +6902,7 @@ const Sections = (function(){
           const perd = errores >= MAX_ERRORES;
           if (gano || perd) {
             const res = body.querySelector('#ah-resultado');
-            if (res) res.innerHTML = `<div style="margin-top:16px;text-align:center;font-size:14px;font-weight:800;color:${gano?'var(--success)':'var(--text-2)'};">${gano ? '¡Bien hecho! 🎉' : 'La palabra era: '+palabra}</div>`;
+            if (res) res.innerHTML = `<div class="jg-win" style="color:${gano?'var(--success)':'var(--text-2)'};">${gano ? '¡Bien hecho! 🎉' : 'La palabra era: '+palabra}</div>`;
             body.querySelectorAll('[data-letra]').forEach(b => b.disabled = true);
             footer.disabled = false;
           }
@@ -6760,6 +6923,7 @@ const Sections = (function(){
     onDone();
   };
 
+  // ─── QUIZ con calificación y reintento ───
   function _ensureQuizCSS() {
     if (document.getElementById('qz-css')) return;
     const st = document.createElement('style');
@@ -6767,22 +6931,33 @@ const Sections = (function(){
     st.textContent = `
       .qz-progress-track{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;margin-bottom:22px;}
       .qz-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--highlight));border-radius:3px;transition:width .35s cubic-bezier(.2,.8,.25,1);width:0%;}
-      .qz-card{margin-bottom:16px;padding:18px 19px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:16px;transition:border-color .2s;}
-      .qz-card.is-done{border-color:color-mix(in srgb,var(--success) 45%,transparent);}
+      .qz-card{margin-bottom:16px;padding:18px 19px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:16px;transition:border-color .2s;position:relative;}
+      .qz-card.is-done{border-color:color-mix(in srgb,var(--primary) 35%,transparent);}
+      .qz-card.is-right{border-color:var(--success);}
+      .qz-card.is-bad{border-color:var(--danger,#F87171);}
       .qz-eyebrow{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--primary);font-weight:800;margin-bottom:10px;}
       .qz-eyebrow__num{width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--primary) 16%,transparent);display:flex;align-items:center;justify-content:center;font-size:10.5px;}
+      .qz-veredicto{margin-left:auto;font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:100px;letter-spacing:.8px;}
+      .qz-veredicto--ok{color:var(--success);background:color-mix(in srgb,var(--success) 14%,transparent);}
+      .qz-veredicto--mal{color:var(--danger,#F87171);background:color-mix(in srgb,var(--danger,#F87171) 14%,transparent);}
       .qz-qtext{font-size:14.5px;font-weight:800;letter-spacing:-.2px;line-height:1.45;margin:0 0 14px;color:var(--text);}
       .qz-opts{display:flex;flex-direction:column;gap:9px;}
       .qz-opt{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s cubic-bezier(.2,.8,.25,1);}
       .qz-opt:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--border));transform:translateY(-1px);}
       .qz-opt.is-selected{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,var(--surface-2));box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 20%,transparent);}
+      .qz-locked .qz-opt{cursor:default;pointer-events:none;transform:none;}
+      .qz-opt.is-correct{border-color:var(--success);background:color-mix(in srgb,var(--success) 12%,var(--surface-2));box-shadow:none;}
+      .qz-opt.is-correct .qz-opt__badge{background:var(--success);color:#fff;}
+      .qz-opt.is-incorrect{border-color:var(--danger,#F87171);background:color-mix(in srgb,var(--danger,#F87171) 10%,var(--surface-2));box-shadow:none;animation:jgShake .4s;}
+      .qz-opt.is-incorrect .qz-opt__badge{background:var(--danger,#F87171);color:#fff;}
       .qz-opt input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
       .qz-opt__badge{width:27px;height:27px;border-radius:9px;background:var(--surface-3);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:800;flex-shrink:0;transition:all .15s;}
       .qz-opt.is-selected .qz-opt__badge{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;}
       .qz-opt__txt{font-size:13.5px;font-weight:600;color:var(--text-2);letter-spacing:-.1px;}
-      .qz-opt.is-selected .qz-opt__txt{color:var(--text);}
+      .qz-opt.is-selected .qz-opt__txt,.qz-opt.is-correct .qz-opt__txt{color:var(--text);}
       .qz-opt__check{margin-left:auto;width:18px;height:18px;color:var(--success);opacity:0;transform:scale(.6);transition:all .15s;flex-shrink:0;}
-      .qz-opt.is-selected .qz-opt__check{opacity:1;transform:scale(1);}
+      .qz-opt.is-selected .qz-opt__check,.qz-opt.is-correct .qz-opt__check{opacity:1;transform:scale(1);}
+      .qz-opt.is-incorrect .qz-opt__check{opacity:1;transform:scale(1);color:var(--danger,#F87171);}
       .qz-footer-progreso{display:flex;align-items:center;justify-content:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-3);font-weight:700;letter-spacing:.6px;text-transform:uppercase;}
       .qz-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
       .qz-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
@@ -6795,70 +6970,104 @@ const Sections = (function(){
     const preguntas = sesion.preguntas || [];
     if (preguntas.length === 0) { onDone(); return; }
     _ensureQuizCSS();
+    _ensureJuegosCSS();
     const total = preguntas.length;
-    const respuestas = new Array(total).fill(null);
+    let respuestas = new Array(total).fill(null);
     const modalId = 'quiz-' + curso.id + '-' + (sesion.numero||0);
     const LETRAS = ['A','B','C','D','E','F'];
     const body = document.createElement('div');
-    body.innerHTML = `
-      <div class="qz-progress-track"><div class="qz-progress-fill" id="qz-fill"></div></div>
-      ${preguntas.map((p,i) => {
-        const esVof = p.tipo !== 'multiple';
-        const opciones = esVof ? ['Verdadero','Falso'] : (p.opciones||[]);
-        return `
-        <div class="qz-card" data-qz-card="${i}">
-          <div class="qz-eyebrow"><span class="qz-eyebrow__num">${i+1}</span> Pregunta ${i+1} de ${total}</div>
-          <div class="qz-qtext">${escapeHtml(p.pregunta||'')}</div>
-          <div class="qz-opts">
-            ${opciones.map((op,oi) => `
-              <label class="qz-opt" data-qz-opt="${i}:${oi}">
-                <input type="radio" name="quiz-preg-${i}" value="${oi}" data-quiz-pregidx="${i}">
-                <span class="qz-opt__badge">${esVof ? (oi===0?'✓':'✕') : LETRAS[oi]}</span>
-                <span class="qz-opt__txt">${escapeHtml(op)}</span>
-                <svg class="qz-opt__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </label>
-            `).join('')}
-          </div>
-        </div>`;
-      }).join('')}
-      <div class="qz-footer-progreso" id="quiz-progreso">0 / ${total} respondidas</div>
-    `;
-    const footer = document.createElement('button');
-    footer.className = 'qz-continuar';
-    footer.textContent = 'Continuar →';
-    footer.disabled = true;
-    Modal.open({ id: modalId, title: '🧠 Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
-    body.querySelectorAll('.qz-opt').forEach(opt => {
-      opt.addEventListener('click', () => {
-        const [qi] = opt.dataset.qzOpt.split(':').map(Number);
-        opt.querySelector('input').checked = true;
-        body.querySelectorAll(`[data-qz-opt^="${qi}:"]`).forEach(o => o.classList.remove('is-selected'));
-        opt.classList.add('is-selected');
-        opt.querySelector('input').dispatchEvent(new Event('change'));
+    const footer = document.createElement('div');
+    footer.style.cssText = 'display:flex;gap:10px;align-items:center;';
+    const btnRetry = document.createElement('button');
+    btnRetry.className = 'jg-ghost'; btnRetry.textContent = '↻ Intentar de nuevo'; btnRetry.style.display = 'none';
+    const btnCheck = document.createElement('button');
+    btnCheck.className = 'qz-continuar'; btnCheck.textContent = 'Comprobar respuestas'; btnCheck.disabled = true;
+    const btnGo = document.createElement('button');
+    btnGo.className = 'qz-continuar'; btnGo.textContent = 'Continuar →'; btnGo.style.display = 'none';
+    footer.appendChild(btnRetry); footer.appendChild(btnCheck); footer.appendChild(btnGo);
+
+    function pintar() {
+      body.innerHTML = `
+        <div class="qz-progress-track"><div class="qz-progress-fill" id="qz-fill"></div></div>
+        ${preguntas.map((p,i) => {
+          const esVof = p.tipo !== 'multiple';
+          const opciones = esVof ? ['Verdadero','Falso'] : (p.opciones||[]);
+          return `
+          <div class="qz-card" data-qz-card="${i}">
+            <div class="qz-eyebrow"><span class="qz-eyebrow__num">${i+1}</span> Pregunta ${i+1} de ${total}<span class="qz-veredicto" data-qz-veredicto="${i}" style="display:none;"></span></div>
+            <div class="qz-qtext">${escapeHtml(p.pregunta||'')}</div>
+            <div class="qz-opts">
+              ${opciones.map((op,oi) => `
+                <label class="qz-opt" data-qz-opt="${i}:${oi}">
+                  <input type="radio" name="quiz-preg-${i}" value="${oi}" data-quiz-pregidx="${i}">
+                  <span class="qz-opt__badge">${esVof ? (oi===0?'✓':'✕') : LETRAS[oi]}</span>
+                  <span class="qz-opt__txt">${escapeHtml(op)}</span>
+                  <svg class="qz-opt__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </label>
+              `).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="qz-footer-progreso" id="quiz-progreso">0 / ${total} respondidas</div>
+      `;
+      body.querySelectorAll('.qz-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const [qi, oi] = opt.dataset.qzOpt.split(':').map(Number);
+          respuestas[qi] = oi;
+          body.querySelectorAll(`[data-qz-opt^="${qi}:"]`).forEach(o => o.classList.remove('is-selected'));
+          opt.classList.add('is-selected');
+          const card = body.querySelector(`[data-qz-card="${qi}"]`);
+          if (card) card.classList.add('is-done');
+          const respondidas = respuestas.filter(r => r !== null).length;
+          const prog = body.querySelector('#quiz-progreso');
+          if (prog) prog.textContent = `${respondidas} / ${total} respondidas`;
+          const fill = body.querySelector('#qz-fill');
+          if (fill) fill.style.width = Math.round((respondidas/total)*100) + '%';
+          if (respondidas === total) btnCheck.disabled = false;
+        });
       });
-    });
-    body.querySelectorAll('input[type=radio]').forEach(inp => {
-      inp.addEventListener('change', () => {
-        const qi = parseInt(inp.dataset.quizPregidx, 10);
-        respuestas[qi] = parseInt(inp.value, 10);
-        const card = body.querySelector(`[data-qz-card="${qi}"]`);
-        if (card) card.classList.add('is-done');
-        const respondidas = respuestas.filter(r => r !== null).length;
-        const prog = body.querySelector('#quiz-progreso');
-        if (prog) prog.textContent = `${respondidas} / ${total} respondidas`;
-        const fill = body.querySelector('#qz-fill');
-        if (fill) fill.style.width = Math.round((respondidas/total)*100) + '%';
-        if (respondidas === total) footer.disabled = false;
+    }
+    function calificar() {
+      let aciertos = 0;
+      preguntas.forEach((p, i) => {
+        const correcta = typeof p.correcta === 'number' ? p.correcta : 0;
+        const elegida = respuestas[i];
+        const esCorrecta = elegida === correcta;
+        if (esCorrecta) aciertos++;
+        const card = body.querySelector(`[data-qz-card="${i}"]`);
+        const optSel = body.querySelector(`[data-qz-opt="${i}:${elegida}"]`);
+        const optOk = body.querySelector(`[data-qz-opt="${i}:${correcta}"]`);
+        const ver = body.querySelector(`[data-qz-veredicto="${i}"]`);
+        if (card) { card.classList.remove('is-done'); card.classList.add(esCorrecta ? 'is-right' : 'is-bad'); }
+        if (optSel && !esCorrecta) { optSel.classList.remove('is-selected'); optSel.classList.add('is-incorrect'); const ic = optSel.querySelector('.qz-opt__check'); if (ic) ic.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'; }
+        if (optOk) { optOk.classList.remove('is-selected'); optOk.classList.add('is-correct'); }
+        if (ver) { ver.style.display = ''; ver.textContent = esCorrecta ? '✓ CORRECTA' : '✗ INCORRECTA'; ver.className = 'qz-veredicto ' + (esCorrecta ? 'qz-veredicto--ok' : 'qz-veredicto--mal'); }
       });
-    });
-    footer.addEventListener('click', () => {
-      Modal.close(modalId);
+      body.classList.add('qz-locked');
+      const prog = body.querySelector('#quiz-progreso');
+      if (prog) prog.textContent = `Resultado: ${aciertos} / ${total} correctas`;
+      btnCheck.style.display = 'none';
+      btnRetry.style.display = '';
+      btnGo.style.display = '';
       try {
         const key = `alintec_quiz_${window.UserState?.uid||'demo'}_${curso.id}_${sesion.numero}`;
-        localStorage.setItem(key, JSON.stringify(respuestas));
+        localStorage.setItem(key, JSON.stringify({ respuestas, aciertos, total }));
       } catch(e){}
-      onDone();
-    });
+    }
+    function reiniciar() {
+      respuestas = new Array(total).fill(null);
+      body.classList.remove('qz-locked');
+      btnRetry.style.display = 'none';
+      btnGo.style.display = 'none';
+      btnCheck.style.display = '';
+      btnCheck.disabled = true;
+      pintar();
+    }
+    pintar();
+    Modal.open({ id: modalId, title: '🧠 Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
+    btnCheck.addEventListener('click', calificar);
+    btnRetry.addEventListener('click', reiniciar);
+    btnGo.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   };
 
   window.__requerirActividadClase = function(cursoId, numClase, proceed) {
@@ -15004,5 +15213,69 @@ const BPMTool = (function(){
 if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-bpm']=(c)=>BPMTool.mount(c); }
 </script>
 
+<link rel="stylesheet" href="assets/onboarding-tour.css?v=1">
+<script src="assets/onboarding-tour.js?v=1"></script>
+<script>
+window.AlintecOnboarding = new window.MembershipTour({
+  namespace: 'alintecfood',
+  version: 'v1',
+  brand: 'Guía Alintec Food',
+  autoDelay: 1600,
+  identity: function(){
+    var state = window.UserState || {};
+    return state.uid || state.email || '';
+  },
+  ready: function(){
+    var state = window.UserState || {};
+    return state.modo && state.modo !== 'cargando' && !!(state.uid || state.email) && getComputedStyle(document.body).visibility !== 'hidden';
+  },
+  steps: [
+    {
+      desktopSelectors: '.sidebar .brand',
+      mobileSelectors: '.topbar__left',
+      title: 'Bienvenido a Alintec Food',
+      copy: 'Este es tu espacio de aprendizaje en ciencia y tecnología de alimentos. Te mostramos dónde encontrar cada recurso para que puedas empezar con confianza.'
+    },
+    {
+      desktopSelectors: '.sidebar .nav-item[data-section="cursos"]',
+      mobileSelectors: '.mobile-nav .mobile-nav__item[data-section="cursos"]',
+      title: 'Tus cursos de alimentos',
+      copy: 'En Mis cursos encontrarás las clases disponibles, tu progreso y los contenidos de inocuidad, calidad, fermentaciones, ingredientes y áreas afines.'
+    },
+    {
+      desktopSelectors: '.sidebar .nav-item[data-section="pdfs"]',
+      mobileSelectors: '.mobile-drawer .mobile-drawer__item[data-section="pdfs"]',
+      mobileDrawer: true,
+      title: 'PDFs y material de apoyo',
+      copy: 'Aquí se reúnen guías, formatos, protocolos y recursos descargables para acompañar tus cursos y tu trabajo en planta o laboratorio.'
+    },
+    {
+      desktopSelectors: '.sidebar .nav-item[data-section="webinars"]',
+      mobileSelectors: '.mobile-nav .mobile-nav__item[data-section="webinars"]',
+      title: 'Clases en vivo',
+      copy: 'Consulta próximas transmisiones y sesiones con especialistas del sector alimentario. Desde aquí podrás revisar fechas y entrar cuando una clase esté disponible.'
+    },
+    {
+      desktopSelectors: '.sidebar [data-tour="tools"]',
+      mobileSelectors: '.mobile-drawer [data-tour="tools"]',
+      mobileDrawer: true,
+      title: 'Tu panel de herramientas',
+      copy: 'Usa la calculadora NOM-051, el planificador HACCP, la auditoría BPM, el estimador de vida de anaquel y la calculadora de microbiología UFC.'
+    },
+    {
+      desktopSelectors: '.sidebar .nav-item[data-section="perfil"]',
+      mobileSelectors: '.mobile-drawer .mobile-drawer__item[data-section="perfil"]',
+      mobileDrawer: true,
+      title: 'Perfil y configuración de tu cuenta',
+      copy: 'En Mi perfil puedes revisar tus datos, preferencias, seguridad y estado de membresía. La sección Suscripción está justo debajo para gestionar tu plan.'
+    },
+    {
+      selectors: '#btn-tour-help',
+      title: 'Vuelve a consultar esta guía',
+      copy: 'Cuando necesites recordar dónde está algo, pulsa este botón de ayuda para iniciar el recorrido nuevamente.'
+    }
+  ]
+});
+</script>
 </body>
 </html>
