@@ -86,9 +86,9 @@ body::after{
 }
 :root[data-theme="day"] body::after{background-image:linear-gradient(to right,rgba(18,52,26,.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(18,52,26,.04) 1px,transparent 1px)}
 :root[data-theme="night"] body::before{opacity:.35}
-:root[data-theme="day"] .sidebar{background:linear-gradient(180deg,#D8F3E6 0%,#C3EAD8 55%,#B2E3CD 100%);border-right-color:rgba(18,52,26,0.10)}
-:root[data-theme="day"] .sidebar .nav-item:hover{background:rgba(255,255,255,.55)}
-:root[data-theme="day"] .sidebar .nav-item.is-active{background:rgba(255,255,255,.75);box-shadow:0 2px 8px rgba(18,60,30,.08)}
+:root[data-theme="day"] .sidebar{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 13%,var(--bg)) 0%,color-mix(in srgb,var(--highlight) 12%,var(--bg)) 100%);border-right-color:var(--border-2)}
+:root[data-theme="day"] .sidebar .nav-item:hover{background:color-mix(in srgb,#fff 55%,transparent)}
+:root[data-theme="day"] .sidebar .nav-item.is-active{background:color-mix(in srgb,#fff 75%,transparent);box-shadow:0 2px 8px rgba(18,60,30,.08)}
 /* Hover tecnológico en tarjetas: crecen ligeramente y su contorno brilla */
 .curso-card,.pdf-card,.noticia-card,.webinar-card,.dash-card,.tool-card,.mat-card{transition:transform .25s cubic-bezier(.2,.8,.25,1),box-shadow .25s,border-color .25s}
 .curso-card:hover,.pdf-card:hover,.noticia-card:hover,.webinar-card:hover,.dash-card:hover,.tool-card:hover{transform:translateY(-3px) scale(1.012);border-color:color-mix(in srgb,var(--primary) 55%,var(--border-2));box-shadow:0 0 0 1px color-mix(in srgb,var(--primary) 30%,transparent),0 14px 40px color-mix(in srgb,var(--primary) 18%,transparent)}
@@ -7157,6 +7157,33 @@ const Sections = (function(){
 
   function setProgreso(p) {
     try { localStorage.setItem(getProgresoKey(), JSON.stringify(p)); } catch {}
+  }
+
+
+  function calcularDiasMembresia(){
+    const state = window.UserState || {};
+    if (!state.fechaInicioMembresia) return 0;
+    const inicio = state.fechaInicioMembresia.toDate ? state.fechaInicioMembresia.toDate() : new Date(state.fechaInicioMembresia);
+    return Math.max(0, Math.floor((Date.now() - inicio.getTime()) / 86400000));
+  }
+  function cursoUnlockDay(curso){
+    if (!curso || !curso._unlockDay) return 0;
+    return curso._unlockDay;
+  }
+  function tieneAccesoVipCompleto() {
+    return esAdminReal() || window.UserState?.modo === 'vip';
+  }
+  function esClaseGratis(curso, indexClase) {
+    if (!esCursoConMuestra(curso)) return false;
+    const sesion = curso.sesiones && curso.sesiones[Number(indexClase)];
+    return !!(sesion && sesion.gratis === true);
+  }
+  function esCursoConMuestra(curso) {
+    return !!(curso && curso.cursoMuestraGratis === true);
+  }
+  function mostrarPaywallCurso() {
+    const modal = document.getElementById('paywall-modal');
+    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-visible'); }
   }
 
   function getProgresoCurso(cursoId) {
