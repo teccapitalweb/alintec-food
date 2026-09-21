@@ -104,6 +104,10 @@ body::after{
 .banner__stat:nth-child(2) .banner__stat-val{color:var(--accent-blue);-webkit-text-fill-color:var(--accent-blue)}
 .banner__stat:nth-child(3) .banner__stat-val{color:var(--accent-yellow);-webkit-text-fill-color:var(--accent-yellow)}
 .banner__stat:nth-child(4) .banner__stat-val{color:var(--accent-purple);-webkit-text-fill-color:var(--accent-purple)}
+
+.btn{transition:transform .18s ease,box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
+.btn:active{transform:scale(.985)}
+.nav-item{transition:background .18s ease,color .18s ease}
 .curso-card,.pdf-card,.noticia-card,.webinar-card,.dash-card,.tool-card,.mat-card{transition:transform .2s ease,box-shadow .2s ease}
 .curso-card:hover,.pdf-card:hover,.noticia-card:hover,.webinar-card:hover,.dash-card:hover,.tool-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
 @keyframes auroraBg{
@@ -487,8 +491,8 @@ body::after{
 .btn .ic{width:13px;height:13px;stroke-width:2.2}
 .btn--primary{background:var(--text);color:var(--bg);box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .btn--primary:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,0,0,.26)}
-.btn--accent{background:var(--primary);color:#fff;box-shadow:0 4px 14px var(--primary-glow)}
-.btn--accent:hover{transform:translateY(-1px);box-shadow:0 6px 22px var(--primary-glow)}
+.btn--accent{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.btn--accent:hover{transform:translateY(-1px);background:var(--primary-deep);box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .btn--wa{background:var(--whatsapp);color:#fff}
 .btn--wa:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .btn--ghost{background:transparent;color:var(--text-2);border:0.5px solid var(--border-2)}
