@@ -99,7 +99,6 @@ body::before{
 .brand__logo img{width:28px;height:28px;object-fit:contain;display:block}
 .brand__name{font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:15px;font-weight:800;letter-spacing:-.3px;line-height:1.1}
 
-.brand__role::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--primary);animation:pulseDotSmall 1.8s ease-out infinite;box-shadow:0 0 6px var(--primary-glow)}
 
 .nav-section{display:flex;flex-direction:column;gap:2px;margin-top:8px}
 .nav-label{
@@ -1033,13 +1032,9 @@ body::before{
   .modal__footer .btn{flex:1;min-width:100px}
 }
 
-/* ALINTEC FOOD admin · glow oscuro + premium día */
-:root[data-theme="night"]{ --primary-glow:rgba(76,175,80,0.0); }
-:root[data-theme="night"] .btn--primary,:root[data-theme="night"] .btn--accent,:root[data-theme="night"] .btn--save{ box-shadow:0 0 28px rgba(67,160,71,0.58),0 10px 28px rgba(67,160,71,0.40); }
+/* Brillos desactivados */
 :root[data-theme="night"] .card,:root[data-theme="night"] .kpi-card,:root[data-theme="night"] .panel,:root[data-theme="night"] .widget{ border-color:rgba(67,160,71,0.18); }
-:root[data-theme="night"] .nav-item.is-active,:root[data-theme="night"] .nav-item.active{ box-shadow:0 0 20px rgba(67,160,71,0.45); }
-:root[data-theme="day"] .btn--primary,:root[data-theme="day"] .btn--accent,:root[data-theme="day"] .btn--save{ background:linear-gradient(135deg,#43A047,#2E7D32); box-shadow:0 8px 22px rgba(62,111,168,0.32); }
-:root[data-theme="day"] .card,:root[data-theme="day"] .kpi-card,:root[data-theme="day"] .panel{ box-shadow:0 10px 28px rgba(62,111,168,0.10),0 2px 6px rgba(62,111,168,0.07); }
+:root[data-theme="day"] .btn--primary,:root[data-theme="day"] .btn--accent,:root[data-theme="day"] .btn--save{ background:var(--primary); }
 .brand__logo{background:#fff !important;overflow:hidden;}
 .brand__logo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit;}
 
