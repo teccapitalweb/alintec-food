@@ -7181,6 +7181,11 @@ const Sections = (function(){
   function esCursoConMuestra(curso) {
     return !!(curso && curso.cursoMuestraGratis === true);
   }
+  function esMaterialGratis(curso, indexMaterial) {
+    if (!esCursoConMuestra(curso)) return false;
+    const mat = curso.materiales && curso.materiales[Number(indexMaterial)];
+    return !!(mat && mat.gratis === true);
+  }
   function mostrarPaywallCurso() {
     const modal = document.getElementById('paywall-modal');
     if (modal) { modal.style.display = 'flex'; modal.classList.add('is-visible'); }
