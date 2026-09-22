@@ -4244,7 +4244,8 @@ const Modal=(function(){
     return{id:cfg.id,close:()=>close(cfg.id)};
   }
   function close(id){const i=stack.findIndex(s=>s.id===id);if(i<0)return;const e=stack[i];e.element.classList.remove('is-open');setTimeout(()=>{e.element.parentNode?.removeChild(e.element);stack.splice(i,1);if(stack.length===0)unlockBody();e.onClose?.();},250);}
-  return{open,close};
+  function closeAll(){const ids=stack.map(s=>s.id);ids.forEach(id=>close(id));}
+  return{open,close,closeAll};
 })();
 
 function openToolPlaceholder(slug,name,desc,icon,detail){
@@ -6092,6 +6093,17 @@ function seccionPanelDesdeHash(){
 function navigateToSection(section, opts){
   opts = opts || {};
   if(!SECCIONES_VALIDAS_PANEL.includes(section)) section = 'inicio';
+  // ─── Guardia paywall · Herramientas Pro (son de PAGO) ───
+  // Si un usuario no-VIP intenta abrir cualquier tool-*, se redirige a
+  // suscripción cerrando cualquier modal que tenga encima.
+  if (section.startsWith('tool-') && !opts.skipPaywall) {
+    const esVip = (typeof toolEsVIP === 'function') ? toolEsVIP() : (window.UserState?.modo === 'vip');
+    if (!esVip) {
+      try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
+      if (typeof Toast !== 'undefined') Toast.info('Herramienta Pro', 'Activa tu membresía para usar las herramientas.');
+      return navigateToSection('suscripcion', { skipPaywall: true });
+    }
+  }
   document.querySelectorAll('.nav-item, .mobile-nav__item, .mobile-drawer__item').forEach(n=>n.classList.remove('is-active'));
   document.querySelectorAll(`[data-section="${section}"]`).forEach(ni => ni.classList.add('is-active'));
 
@@ -7135,10 +7147,11 @@ const Sections = (function(){
   }
 
   function mostrarPaywallCurso() {
-    // Antes se mostraba el modal "Continúa aprendiendo con Alintec Food VIP".
-    // Ahora: cerrar el modal del curso y llevar directo a Suscripción.
+    // Cerrar TODOS los modales que estén abiertos (detalle del curso, visor,
+    // quiz, etc.) para que el usuario vea directamente Suscripción.
     try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
     try { document.getElementById('paywall-modal')?.classList.remove('is-open'); } catch(e){}
+    try { if (typeof window.cerrarDrawerMovil === 'function') window.cerrarDrawerMovil(); } catch(e){}
     if (typeof navigateToSection === 'function') navigateToSection('suscripcion');
     if (typeof Toast !== 'undefined') Toast.info('Contenido de membresía', 'Activa tu suscripción para desbloquear todas las clases y materiales.');
   }
