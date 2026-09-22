@@ -4032,6 +4032,7 @@ window.__setDisplayName = async (nombre) => {
   <a class="mobile-nav__item is-active" data-section="inicio"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
   <a class="mobile-nav__item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Cursos</a>
   <a class="mobile-nav__item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Vivo</a>
+  <a class="mobile-nav__item" data-section="herramientas" data-tour="tools-nav"><svg class="ic"><use href="#i-tool"/></svg>Pro</a>
   <a class="mobile-nav__item" data-section="suscripcion"><svg class="ic"><use href="#i-credit-card"/></svg>Plan</a>
   <a class="mobile-nav__item" id="mobile-nav-more" role="button"><svg class="ic"><use href="#i-menu"/></svg>Más</a>
 </nav>
@@ -6080,7 +6081,7 @@ const SECCIONES_VALIDAS_PANEL = [
   'inicio','cursos','certificados','logros','webinars','pdfs','foro',
   'directorio','canal','perfil','suscripcion',
   // Herramientas Pro · sector alimentario (Alintec Food)
-  'tool-nom051','tool-haccp','tool-bpm','tool-anaquel','tool-microbio'
+  'herramientas','tool-nom051','tool-haccp','tool-bpm','tool-anaquel','tool-microbio'
 ];
 
 function seccionPanelDesdeHash(){
@@ -6959,15 +6960,20 @@ const Sections = (function(){
     const idx = curso.sesiones.findIndex(s => (s.numero || 0) === numClase);
     const sesion = idx >= 0 ? curso.sesiones[idx] : null;
     const esUltima = idx === curso.sesiones.length - 1;
-    if (esUltima && curso.juegoDinamico && curso.juegoDinamico.tipo) {
-      window.__abrirJuegoDinamico(curso, proceed);
-      return;
-    }
+    // Juego configurado en ESTA clase (nuevo modelo por-clase).
+    // Compatibilidad: cursos viejos que aún tengan el juego a nivel curso
+    // lo siguen mostrando en la última clase.
+    const juegoClase  = (sesion && sesion.juego && sesion.juego.tipo) ? sesion.juego : null;
+    const juegoLegado = (!juegoClase && esUltima && curso.juegoDinamico && curso.juegoDinamico.tipo) ? curso.juegoDinamico : null;
+    const juego = juegoClase || juegoLegado;
+    const lanzarJuego = juego
+      ? function(){ window.__abrirJuegoDinamico(Object.assign({}, curso, { juegoDinamico: juego }), proceed); }
+      : proceed;
     if (sesion && Array.isArray(sesion.preguntas) && sesion.preguntas.length > 0) {
-      window.__abrirQuizClase(curso, sesion, proceed);
+      window.__abrirQuizClase(curso, sesion, lanzarJuego);
       return;
     }
-    proceed();
+    lanzarJuego();
   };
 
   window.abrirClaseAlintec = function(cursoId, indexClase) {
@@ -7129,10 +7135,12 @@ const Sections = (function(){
   }
 
   function mostrarPaywallCurso() {
-    window.__showPaywallModal?.({
-      title: 'Continúa aprendiendo con Alintec Food VIP',
-      sub: 'Activa tu membresía para desbloquear todas las clases, materiales y obtener tu certificado.'
-    });
+    // Antes se mostraba el modal "Continúa aprendiendo con Alintec Food VIP".
+    // Ahora: cerrar el modal del curso y llevar directo a Suscripción.
+    try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
+    try { document.getElementById('paywall-modal')?.classList.remove('is-open'); } catch(e){}
+    if (typeof navigateToSection === 'function') navigateToSection('suscripcion');
+    if (typeof Toast !== 'undefined') Toast.info('Contenido de membresía', 'Activa tu suscripción para desbloquear todas las clases y materiales.');
   }
   window.__mostrarPaywallAlintec = mostrarPaywallCurso;
 
@@ -15224,10 +15232,53 @@ const BPMTool = (function(){
   return {mount};
 })();
 if(typeof Sections!=='undefined' && Sections.renderers){ Sections.renderers['tool-bpm']=(c)=>BPMTool.mount(c); }
+
+/* ── Hub "Herramientas Pro" · sección para la nav móvil ──
+   Las herramientas son de PAGO: quien no es VIP puede entrar y capturar,
+   pero los resultados/reportes los bloquea toolRequiereVIP() en cada una. */
+if(typeof Sections!=='undefined' && Sections.renderers){
+  Sections.renderers['herramientas']=function(dyn){
+    const esVip = (typeof toolEsVIP==='function') ? toolEsVIP() : (window.UserState?.modo==='vip');
+    const tools=[
+      { s:'tool-nom051',  ic:'i-badge',           t:'Calculadora NOM-051', d:'Sellos y leyendas de etiquetado frontal conforme a la norma.' },
+      { s:'tool-haccp',   ic:'i-shield-check',    t:'Planificador HACCP',  d:'Peligros, PCC y límites críticos de tu proceso.' },
+      { s:'tool-bpm',     ic:'i-clipboard-check', t:'Auditoría BPM',       d:'Checklist de buenas prácticas con puntaje y reporte.' },
+      { s:'tool-anaquel', ic:'i-clock',           t:'Vida de anaquel',     d:'Estimación de vida útil de tu producto.' },
+      { s:'tool-microbio',ic:'i-search',          t:'Microbiología UFC',   d:'Cálculo de UFC/g·mL a partir de diluciones.' }
+    ];
+    dyn.innerHTML = `
+      <div class="section-head" style="margin-bottom:16px;">
+        <h2 style="font-size:20px;font-weight:800;letter-spacing:-.4px;margin:0;">Herramientas Pro</h2>
+        <p style="font-size:13px;color:var(--text-3);margin:6px 0 0;">Cinco herramientas del sector alimentario, incluidas en tu membresía.</p>
+      </div>
+      ${esVip ? '' : `
+      <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;margin-bottom:14px;">
+        <svg class="ic" style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"><use href="#i-crown"/></svg>
+        <div style="flex:1;font-size:12.5px;color:var(--text-2);line-height:1.45;">Las Herramientas Pro son de pago. Puedes explorar y capturar datos, pero los resultados y reportes requieren membresía activa.</div>
+        <button class="btn btn--accent" style="flex-shrink:0;" onclick="navigateToSection('suscripcion')">Hazte VIP</button>
+      </div>`}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">
+        ${tools.map(t=>`
+          <button type="button" class="hub-tool-card" data-hub-tool="${t.s}" style="text-align:left;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;cursor:pointer;display:flex;flex-direction:column;gap:9px;transition:border-color .15s,transform .15s;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);display:flex;align-items:center;justify-content:center;"><svg class="ic" style="width:17px;height:17px;"><use href="#${t.ic}"/></svg></span>
+              ${esVip ? '' : `<span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:800;letter-spacing:.8px;color:var(--text-3);border:1px solid var(--border-2);border-radius:100px;padding:3px 8px;">DE PAGO</span>`}
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.2px;">${t.t}</div>
+            <div style="font-size:12px;color:var(--text-3);line-height:1.45;">${t.d}</div>
+          </button>`).join('')}
+      </div>`;
+    dyn.querySelectorAll('[data-hub-tool]').forEach(b=>{
+      b.addEventListener('mouseenter',()=>{ b.style.borderColor='color-mix(in srgb,var(--primary) 45%,var(--border))'; b.style.transform='translateY(-2px)'; });
+      b.addEventListener('mouseleave',()=>{ b.style.borderColor='var(--border)'; b.style.transform=''; });
+      b.addEventListener('click',()=>navigateToSection(b.dataset.hubTool));
+    });
+  };
+}
 </script>
 
-<link rel="stylesheet" href="assets/onboarding-tour.css?v=1">
-<script src="assets/onboarding-tour.js?v=1"></script>
+<link rel="stylesheet" href="assets/onboarding-tour.css?v=2">
+<script src="assets/onboarding-tour.js?v=2"></script>
 <script>
 window.AlintecOnboarding = new window.MembershipTour({
   namespace: 'alintecfood',
@@ -15270,8 +15321,7 @@ window.AlintecOnboarding = new window.MembershipTour({
     },
     {
       desktopSelectors: '.sidebar [data-tour="tools"]',
-      mobileSelectors: '.mobile-drawer [data-tour="tools"]',
-      mobileDrawer: true,
+      mobileSelectors: ['.mobile-nav [data-tour="tools-nav"]', '.mobile-drawer [data-tour="tools"]'],
       title: 'Tu panel de herramientas',
       copy: 'Usa la calculadora NOM-051, el planificador HACCP, la auditoría BPM, el estimador de vida de anaquel y la calculadora de microbiología UFC.'
     },

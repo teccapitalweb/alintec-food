@@ -165,17 +165,42 @@
     if (this.active || !this.steps.length || (!force && this.wasSeen())) return;
     this.build();
     this.active = true;
+    this.suspended = false;
     this.previousFocus = document.activeElement;
     this.root.setAttribute('aria-hidden', 'false');
     document.body.classList.add('membership-tour-open');
     window.addEventListener('resize', this.boundResize, { passive: true });
     window.addEventListener('scroll', this.boundReposition, { passive: true, capture: true });
     document.addEventListener('keydown', this.boundKeydown);
+    // Vigilar splashes/modales que aparezcan DESPUÉS de arrancar el tour
+    // (ej. la tarjeta de bienvenida que carga cuando llega memberData).
+    clearInterval(this.blockWatcher);
+    this.blockWatcher = setInterval(this.checkBlockers.bind(this), 350);
     this.show(0, 1);
   };
 
+  // Si un splash/modal de la app aparece mientras el tour corre, el tour se
+  // oculta (suspende) y se reanuda solo cuando el usuario cierra ese modal.
+  MembershipTour.prototype.checkBlockers = function () {
+    if (!this.active) { clearInterval(this.blockWatcher); return; }
+    var blocked = this.hasBlockingDialog();
+    if (blocked && !this.suspended) {
+      this.suspended = true;
+      this.root.style.display = 'none';
+      this.root.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('membership-tour-open');
+      if (this.anchor) this.anchor.removeAttribute('data-membership-tour-active');
+    } else if (!blocked && this.suspended) {
+      this.suspended = false;
+      this.root.style.display = '';
+      this.root.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('membership-tour-open');
+      this.show(Math.max(0, this.current), 1);
+    }
+  };
+
   MembershipTour.prototype.show = async function (index, direction) {
-    if (!this.active) return;
+    if (!this.active || this.suspended) return;
     var nextIndex = index;
     var step, anchor;
     while (nextIndex >= 0 && nextIndex < this.steps.length) {
@@ -285,6 +310,9 @@
     if (!this.active) return;
     if (remember) this.markSeen();
     this.active = false;
+    this.suspended = false;
+    clearInterval(this.blockWatcher);
+    this.root.style.display = '';
     if (this.anchor) this.anchor.removeAttribute('data-membership-tour-active');
     this.anchor = null;
     this.root.setAttribute('aria-hidden', 'true');
