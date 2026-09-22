@@ -88,7 +88,6 @@ if (logosTrack && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const titleEl = document.getElementById('cursoModalTitle');
   const instructorEl = document.getElementById('cursoModalInstructor');
   const descEl = document.getElementById('cursoModalDesc');
-  const precioEl = document.getElementById('cursoModalPrecio');
   const waEl = document.getElementById('cursoModalWhatsapp');
   let lastFocused = null;
 
@@ -99,10 +98,6 @@ if (logosTrack && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
     titleEl.textContent = title;
     instructorEl.textContent = card.dataset.instructor || '';
     descEl.textContent = card.dataset.desc || '';
-    if (precioEl) {
-      const precio = card.dataset.precio;
-      precioEl.textContent = precio ? `$${precio} MXN` : 'Costo a consultar';
-    }
     const msg = encodeURIComponent(`Hola, quiero más información sobre el curso ${title}`);
     waEl.href = `https://wa.me/${WHATSAPP_NUM}?text=${msg}`;
     lastFocused = document.activeElement;
