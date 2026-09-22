@@ -2677,12 +2677,17 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
 
 @media (max-width:1280px){
   .app{grid-template-columns:208px 1fr}
-  .aside{display:none}
+  /* FIX responsive · El panel derecho (Próxima clase, Comunidad, Descuento,
+     Tu actividad) ya NO desaparece: baja como bloque al final del contenido */
+  .aside{grid-column:2;position:static;height:auto;overflow:visible;border-left:none;border-top:0.5px solid var(--border);padding:20px 24px 36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;align-items:start}
 }
 @media (max-width:880px){
   .app{grid-template-columns:1fr}
   .sidebar{display:none}
-  .main{padding:calc(14px + env(safe-area-inset-top)) 14px 140px}
+  .main{padding:calc(14px + env(safe-area-inset-top)) 14px 28px}
+  /* En teléfono el aside va en una sola columna y carga el espacio de la
+     nav inferior para que el último widget no quede tapado */
+  .aside{grid-column:1;grid-template-columns:1fr;padding:16px 14px calc(120px + env(safe-area-inset-bottom))}
   .topbar__right .avatar{display:none}
   .banner{flex-direction:column;align-items:flex-start;padding:20px 22px}
   .banner__stats{align-self:stretch;justify-content:space-between;flex-wrap:wrap}
@@ -6096,11 +6101,17 @@ function navigateToSection(section, opts){
   // ─── Guardia paywall · Herramientas Pro (son de PAGO) ───
   // Si un usuario no-VIP intenta abrir cualquier tool-*, se redirige a
   // suscripción cerrando cualquier modal que tenga encima.
-  if (section.startsWith('tool-') && !opts.skipPaywall) {
+  // También aplica a la COMUNIDAD (Foro VIP, Directorio VIP, Canal WhatsApp):
+  // su contenido es exclusivo de miembros — sin membresía se redirige a pagar.
+  const SECCIONES_SOLO_VIP = ['foro','directorio','canal'];
+  if ((section.startsWith('tool-') || SECCIONES_SOLO_VIP.includes(section)) && !opts.skipPaywall) {
     const esVip = (typeof toolEsVIP === 'function') ? toolEsVIP() : (window.UserState?.modo === 'vip');
     if (!esVip) {
       try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
-      if (typeof Toast !== 'undefined') Toast.info('Herramienta Pro', 'Activa tu membresía para usar las herramientas.');
+      if (typeof Toast !== 'undefined') {
+        if (section.startsWith('tool-')) Toast.info('Herramienta Pro', 'Activa tu membresía para usar las herramientas.');
+        else Toast.info('Comunidad VIP', 'Activa tu membresía para entrar a la comunidad.');
+      }
       return navigateToSection('suscripcion', { skipPaywall: true });
     }
   }
@@ -7556,29 +7567,32 @@ const Sections = (function(){
     {id:5,nombre:'Maestro',desde:2400,hasta:99999}
   ];
 
+  // ── LOGROS · todos con criterio MEDIBLE con datos reales de la plataforma
+  //    (cursos completados, certificados, horas, áreas, racha, días activos,
+  //     membresía VIP, posts y likes del foro, tarjeta del Directorio) ──
   const logros = [
-    {id:'l1',cat:'Operación',nombre:'Primer paso',desc:'Completaste tu primer curso',xp:50,unlock:'2026-04-18',criterio:'Termina 1 curso del área Clínica'},
-    {id:'l2',cat:'Operación',nombre:'Bioseguridad total',desc:'Dominaste control de infecciones y esterilización',xp:150,unlock:null,criterio:'Termina el módulo de bioseguridad'},
-    {id:'l3',cat:'Operación',nombre:'Sonrisa de oro',desc:'Completaste 5 cursos de ciencia de alimentos',xp:300,unlock:null,criterio:'Termina 5 cursos del área Clínica'},
-    {id:'l4',cat:'Operación',nombre:'Maestro del odontograma',desc:'Registraste 20 odontogramas',xp:200,unlock:null,criterio:'Crea 20 odontogramas en la herramienta pro'},
-    {id:'l5',cat:'Operación',nombre:'Diagnóstico perfecto',desc:'Calificación 100 en un curso',xp:100,unlock:null,criterio:'Saca 100 en cualquier curso de Clínica'},
-    {id:'l6',cat:'Operación',nombre:'Guardián de la sonrisa',desc:'Racha de 30 días aprendiendo',xp:250,unlock:null,criterio:'Estudia 30 días seguidos'},
-    {id:'l7',cat:'Especialización',nombre:'Ortodoncia inicial',desc:'Completaste el curso de ortodoncia',xp:120,unlock:null,criterio:'Termina el curso de Ortodoncia'},
-    {id:'l8',cat:'Especialización',nombre:'Endodoncia dominada',desc:'Completaste el curso de endodoncia',xp:150,unlock:null,criterio:'Termina el curso de Endodoncia'},
-    {id:'l9',cat:'Especialización',nombre:'Implantólogo',desc:'Completaste el curso de implantología',xp:200,unlock:null,criterio:'Termina el curso de Implantología'},
-    {id:'l10',cat:'Especialización',nombre:'Especialista integral',desc:'Completaste todas las especialidades',xp:400,unlock:null,criterio:'Termina los cursos de todas las especialidades'},
-    {id:'l11',cat:'Especialización',nombre:'Experto en Inocuidad',desc:'Completaste el curso de inocuidad alimentaria',xp:180,unlock:null,criterio:'Termina el curso de Inocuidad Alimentaria'},
-    {id:'l12',cat:'Excelencia',nombre:'Tecnología de alimentos',desc:'Completaste ciencia de alimentos estética',xp:120,unlock:'2026-03-22',criterio:'Termina "Ciencia de Alimentos estética"'},
-    {id:'l13',cat:'Excelencia',nombre:'Rehabilitación oral',desc:'Completaste rehabilitación y prótesis',xp:500,unlock:null,criterio:'Termina "Rehabilitación oral avanzada"'},
-    {id:'l14',cat:'Excelencia',nombre:'Plan maestro',desc:'Generaste 15 planes de tratamiento',xp:200,unlock:null,criterio:'Crea 15 planes de tratamiento'},
-    {id:'l15',cat:'Excelencia',nombre:'Cotizador pro',desc:'Generaste 30 cotizaciones',xp:300,unlock:null,criterio:'Genera 30 cotizaciones con la herramienta'},
-    {id:'l16',cat:'Excelencia',nombre:'Cero no conformidades',desc:'Documentaste 5 casos de éxito',xp:250,unlock:null,criterio:'Documenta 5 casos de éxito'},
-    {id:'l17',cat:'Comunidad',nombre:'Bienvenido al club',desc:'Te uniste al Club VIP Alintec Food',xp:30,unlock:'2026-03-15',criterio:'Activa tu membresía VIP'},
+    {id:'l1',cat:'Operación',nombre:'Primer paso',desc:'Completaste tu primer curso',xp:50,unlock:null,criterio:'Termina tu primer curso del catálogo'},
+    {id:'l2',cat:'Operación',nombre:'Inocuidad total',desc:'Completaste 3 cursos del catálogo',xp:150,unlock:null,criterio:'Termina 3 cursos del catálogo'},
+    {id:'l3',cat:'Operación',nombre:'Estrella del sector',desc:'Completaste 5 cursos de ciencia de alimentos',xp:300,unlock:null,criterio:'Termina 5 cursos del catálogo'},
+    {id:'l4',cat:'Operación',nombre:'Constancia operativa',desc:'Acumulaste 15 días activos en la plataforma',xp:200,unlock:null,criterio:'Entra a la plataforma 15 días distintos'},
+    {id:'l5',cat:'Operación',nombre:'Primer certificado',desc:'Obtuviste tu primer certificado oficial',xp:100,unlock:null,criterio:'Consigue tu primer certificado con folio'},
+    {id:'l6',cat:'Operación',nombre:'Guardián de la inocuidad',desc:'Racha de 60 días aprendiendo',xp:250,unlock:null,criterio:'Estudia 60 días seguidos'},
+    {id:'l7',cat:'Especialización',nombre:'Primera especialidad',desc:'Te certificaste en tu primera área',xp:120,unlock:null,criterio:'Obtén un certificado en 1 área'},
+    {id:'l8',cat:'Especialización',nombre:'Doble especialidad',desc:'Certificados en 2 áreas distintas',xp:150,unlock:null,criterio:'Obtén certificados en 2 áreas distintas'},
+    {id:'l9',cat:'Especialización',nombre:'Experto multiárea',desc:'Acumulaste 3 certificados oficiales',xp:200,unlock:null,criterio:'Consigue 3 certificados'},
+    {id:'l10',cat:'Especialización',nombre:'Especialista integral',desc:'Acumulaste 5 certificados oficiales',xp:400,unlock:null,criterio:'Consigue 5 certificados'},
+    {id:'l11',cat:'Especialización',nombre:'Experto en Inocuidad',desc:'Acumulaste 20 horas certificadas',xp:180,unlock:null,criterio:'Acumula 20 horas certificadas'},
+    {id:'l12',cat:'Excelencia',nombre:'Tecnología de alimentos',desc:'Completaste tus primeros 2 cursos técnicos',xp:120,unlock:null,criterio:'Termina 2 cursos del catálogo'},
+    {id:'l13',cat:'Excelencia',nombre:'Excelencia técnica',desc:'Completaste 10 cursos del catálogo',xp:500,unlock:null,criterio:'Termina 10 cursos del catálogo'},
+    {id:'l14',cat:'Excelencia',nombre:'Plan maestro',desc:'Acumulaste 40 horas certificadas',xp:200,unlock:null,criterio:'Acumula 40 horas certificadas'},
+    {id:'l15',cat:'Excelencia',nombre:'Imparable',desc:'Acumulaste 30 días activos en la plataforma',xp:300,unlock:null,criterio:'Entra a la plataforma 30 días distintos'},
+    {id:'l16',cat:'Excelencia',nombre:'Cero no conformidades',desc:'Dos cursos certificados, cero pendientes',xp:250,unlock:null,criterio:'Consigue 2 certificados'},
+    {id:'l17',cat:'Comunidad',nombre:'Bienvenido al club',desc:'Te uniste al Club VIP Alintec Food',xp:30,unlock:null,criterio:'Activa tu membresía VIP'},
     {id:'l18',cat:'Comunidad',nombre:'Voz del foro',desc:'Publicaste 10 mensajes en el foro VIP',xp:100,unlock:null,criterio:'Crea 10 posts en el foro'},
-    {id:'l19',cat:'Comunidad',nombre:'Colega solidario',desc:'Recibiste 25 likes en respuestas',xp:150,unlock:null,criterio:'Ayuda y consigue 25 likes'},
-    {id:'l20',cat:'Comunidad',nombre:'Presente en vivo',desc:'Asististe a 5 clases en vivo',xp:200,unlock:null,criterio:'Conéctate a 5 webinars en vivo'},
-    {id:'l21',cat:'Comunidad',nombre:'Embajador Alintec Food',desc:'Invitaste a 3 colegas',xp:300,unlock:null,criterio:'Refiere a 3 personas que se registren'},
-    {id:'l22',cat:'Maestría',nombre:'Estudiante constante',desc:'Racha de 7 días aprendiendo',xp:70,unlock:'2026-05-19',criterio:'Aprende 7 días seguidos'},
+    {id:'l19',cat:'Comunidad',nombre:'Colega solidario',desc:'Recibiste 25 likes en el foro',xp:150,unlock:null,criterio:'Consigue 25 likes en tus posts'},
+    {id:'l20',cat:'Comunidad',nombre:'Primer aporte',desc:'Publicaste tu primer mensaje en el foro',xp:200,unlock:null,criterio:'Publica tu primer post en el foro VIP'},
+    {id:'l21',cat:'Comunidad',nombre:'Rostro del directorio',desc:'Creaste tu tarjeta en el Directorio VIP',xp:300,unlock:null,criterio:'Crea tu tarjeta profesional en el Directorio'},
+    {id:'l22',cat:'Maestría',nombre:'Estudiante constante',desc:'Racha de 7 días aprendiendo',xp:70,unlock:null,criterio:'Aprende 7 días seguidos'},
     {id:'l23',cat:'Maestría',nombre:'Disciplina de hierro',desc:'Racha de 30 días aprendiendo',xp:300,unlock:null,criterio:'Aprende 30 días seguidos'},
     {id:'l24',cat:'Maestría',nombre:'Maratonista',desc:'Acumulaste 100 horas de estudio',xp:400,unlock:null,criterio:'Acumula 100 horas totales'},
     {id:'l25',cat:'Maestría',nombre:'Tres áreas dominadas',desc:'Certificados en 3 áreas distintas',xp:350,unlock:null,criterio:'Obtén certificados en 3 áreas distintas'},
@@ -8695,13 +8709,41 @@ const Sections = (function(){
     if(!dias.includes(hoy)){ dias.push(hoy); dias=dias.slice(-400); try{localStorage.setItem(dkey,JSON.stringify(dias));}catch(e){} }
     const diasSet=new Set(dias);
     let racha=0, dd=new Date(); for(;;){ const s=dd.toISOString().slice(0,10); if(diasSet.has(s)){racha++;dd.setDate(dd.getDate()-1);}else break; }
-    // ── Evaluación REAL de cada logro (los no medibles aún quedan bloqueados) ──
+    // ── Actividad real en la comunidad (posts, likes recibidos, tarjeta del
+    //    Directorio) · una sola lectura al abrir Mis logros ──
+    let foroPosts=0, foroLikes=0, tarjetaDir=false;
+    try {
+      const fs = window.__fs; const uid = window.UserState?.uid;
+      if (fs && fs.getDocs && uid) {
+        const snap = await fs.getDocs(fs.query(fs.collection(fs.db,'posts'), fs.where('uid','==',uid)));
+        snap.forEach(d=>{ foroPosts++; foroLikes += (d.data().likes||0); });
+        const t = await fs.getDoc(fs.doc(fs.db,'directorio',uid));
+        tarjetaDir = t.exists();
+      }
+    } catch(e){ /* sin conexión o sin sesión: los logros de comunidad quedan bloqueados */ }
+    // ── Evaluación REAL de cada logro · los 26 son medibles ──
     function unlocked(l){ switch(l.id){
       case 'l1': return completados.length>=1;
+      case 'l2': return completados.length>=3;
       case 'l3': return completados.length>=5;
+      case 'l4': return dias.length>=15;
       case 'l5': return certs.length>=1;
-      case 'l6': return racha>=30;
+      case 'l6': return racha>=60;
+      case 'l7': return areas>=1;
+      case 'l8': return areas>=2;
+      case 'l9': return certs.length>=3;
+      case 'l10': return certs.length>=5;
+      case 'l11': return totalHoras>=20;
+      case 'l12': return completados.length>=2;
+      case 'l13': return completados.length>=10;
+      case 'l14': return totalHoras>=40;
+      case 'l15': return dias.length>=30;
+      case 'l16': return certs.length>=2;
       case 'l17': return esVIP;
+      case 'l18': return foroPosts>=10;
+      case 'l19': return foroLikes>=25;
+      case 'l20': return foroPosts>=1;
+      case 'l21': return tarjetaDir;
       case 'l22': return racha>=7;
       case 'l23': return racha>=30;
       case 'l24': return totalHoras>=100;
@@ -11680,6 +11722,12 @@ function injectSupportFAB(){
     menu.querySelectorAll('.wa-fab-opt').forEach(opt=>{
       opt.addEventListener('click',()=>{
         const action=opt.dataset.wa;
+        // El canal de la comunidad es exclusivo de miembros VIP
+        if (action==='canal' && window.UserState?.modo !== 'vip') {
+          menu.remove();
+          navigateToSection('canal'); // la guardia paywall lo redirige a Suscripción
+          return;
+        }
         const map={
           discount:{url:AlintecFood_CONTACT.waLink(AlintecFood_CONTACT.msgDescuento20()),msg:'Abriendo WhatsApp · Descuento 20%'},
           support:{url:AlintecFood_CONTACT.waLink(AlintecFood_CONTACT.msgSoporte()),msg:'Abriendo WhatsApp · Soporte'},
@@ -11755,6 +11803,8 @@ function initNav(){
   // ─── Botones del DOM estático (topbar, sidebar, widgets siempre presentes) ───
   document.getElementById('btn-logout')?.addEventListener('click',openLogoutModal);
   document.getElementById('btn-wa')?.addEventListener('click',()=>{
+    // El grupo de la comunidad es solo para miembros
+    if (window.UserState?.modo !== 'vip') { navigateToSection('canal'); return; } // la guardia lo manda a Suscripción
     window.open(AlintecFood_CONTACT.canal,'_blank');
     Toast.success('Abriendo canal Alintec Food','Comunidad oficial');
   });
