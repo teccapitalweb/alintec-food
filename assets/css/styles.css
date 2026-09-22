@@ -23,7 +23,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   background: var(--white);
   color: var(--text);
   overflow-x: hidden;
@@ -109,32 +109,33 @@ body {
 }
 .hero-inner {
   position: relative; z-index: 2;
-  max-width: 1300px; margin: 0 auto; padding: 40px;
-  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px;
-  align-items: center;
+  max-width: 1360px; margin: 0 auto; padding: 40px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(400px, 500px);
+  gap: 40px; align-items: center;
 }
-.hero-content { text-align: left; max-width: 620px; padding: 0; }
+.hero-content { text-align: left; max-width: 640px; padding: 0; }
 .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(88,183,27,0.1); border: 1px solid rgba(88,183,27,0.25);
-  padding: 8px 20px; border-radius: 50px; font-size: 0.85rem;
-  color: var(--primary); font-weight: 500; margin-bottom: 30px;
+  background: rgba(88,183,27,0.12); border: 1px solid rgba(88,183,27,0.3);
+  padding: 8px 20px; border-radius: 50px; font-size: 0.82rem;
+  color: var(--primary-light); font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; margin-bottom: 26px;
   animation: slideDown 0.8s ease;
 }
 .hero-badge::before { content: '🔬'; }
 @keyframes slideDown { from { opacity:0; transform: translateY(-20px); } }
 .hero h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2.2rem, 3.6vw, 3.4rem);
-  font-weight: 700; color: var(--white);
-  line-height: 1.15; margin-bottom: 22px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2.1rem, 3.4vw, 3.1rem);
+  font-weight: 800; color: var(--white); letter-spacing: -0.5px;
+  line-height: 1.18; margin-bottom: 20px;
   animation: slideUp 0.8s ease 0.2s both;
 }
 @keyframes slideUp { from { opacity:0; transform: translateY(30px); } }
-.hero h1 em { font-style: italic; color: var(--primary); }
+.hero h1 em { font-style: normal; color: var(--primary); }
 .hero p {
-  font-size: 1.08rem; color: rgba(255,255,255,0.6);
-  line-height: 1.7; max-width: 520px; margin: 0 0 36px;
+  font-size: 1.08rem; color: rgba(255,255,255,0.62);
+  line-height: 1.7; max-width: 540px; margin: 0 0 36px;
   animation: slideUp 0.8s ease 0.4s both;
 }
 .hero-btns {
@@ -162,53 +163,70 @@ body {
 }
 .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
 .hero-stats {
-  display: flex; gap: 48px; margin-top: 56px;
+  display: flex; gap: 44px; margin-top: 52px;
   animation: slideUp 0.8s ease 0.8s both;
 }
-.stat { text-align: left; }
-.stat-num { font-size: 2rem; font-weight: 800; color: var(--primary); }
+.stat { text-align: left; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.stat-num { font-size: 1.9rem; font-weight: 800; color: var(--primary); line-height: 1; }
 .stat:nth-child(2) .stat-num { color: var(--accent); }
-.stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 4px; }
+.stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.45); }
 
-/* ══════ HERO · ESCENA DE LABORATORIO ANIMADA (microbiología) ══════ */
+/* ══════ HERO · MICROORGANISMOS DE FONDO (toda la sección) ══════ */
+.hero-microbes-bg {
+  position: absolute; inset: 0; z-index: 1;
+  overflow: hidden; pointer-events: none;
+}
+.microbe {
+  position: absolute; filter: drop-shadow(0 6px 10px rgba(0,0,0,.3));
+  animation: labFloatRotate ease-in-out infinite;
+}
+.mb-1  { width: 70px; top: 8%;  left: 6%;   opacity: .16; animation-duration: 13s; }
+.mb-2  { width: 50px; top: 20%; left: 42%;  opacity: .12; animation-duration: 15s; animation-delay: 1s; }
+.mb-3  { width: 60px; top: 62%; left: 12%;  opacity: .14; animation-duration: 12s; animation-delay: 2s; }
+.mb-4  { width: 44px; top: 78%; left: 34%;  opacity: .1;  animation-duration: 16s; animation-delay: .6s; }
+.mb-5  { width: 66px; top: 12%; left: 66%;  opacity: .13; animation-duration: 14s; animation-delay: 1.6s; }
+.mb-6  { width: 40px; top: 46%; left: 54%;  opacity: .1;  animation-duration: 11s; animation-delay: 2.4s; }
+.mb-7  { width: 54px; top: 84%; left: 62%;  opacity: .12; animation-duration: 17s; animation-delay: .3s; }
+.mb-8  { width: 36px; top: 6%;  left: 88%;  opacity: .11; animation-duration: 13.5s; animation-delay: 1.2s; }
+.mb-9  { width: 58px; top: 36%; left: 8%;   opacity: .1;  animation-duration: 18s; animation-delay: 2.8s; }
+.mb-10 { width: 46px; top: 66%; left: 84%;  opacity: .13; animation-duration: 12.5s; animation-delay: .9s; }
+.mb-11 { width: 34px; top: 90%; left: 10%;  opacity: .09; animation-duration: 15.5s; animation-delay: 1.9s; }
+.mb-12 { width: 62px; top: 30%; left: 92%;  opacity: .1;  animation-duration: 14.5s; animation-delay: 2.2s; }
+
+/* ══════ HERO · CLÚSTER DE UTENSILIOS (junto al título, grande y nítido) ══════ */
 .hero-visual {
-  position: relative; display: flex; align-items: center; justify-content: center;
-  min-height: 420px; perspective: 1000px;
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 460px;
   animation: slideUp 0.9s ease 0.5s both;
 }
 .lab-scene {
-  position: relative; width: 100%; max-width: 460px; height: 420px;
-  transform-style: preserve-3d;
+  position: relative; width: 460px; height: 460px; flex-shrink: 0;
 }
 
-/* Resplandores de fondo (dan profundidad, como luz de laboratorio) */
-.lab-glow {
-  position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
-}
+.lab-glow { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; }
 .lab-glow--a {
-  width: 230px; height: 230px; background: var(--primary); opacity: .32;
-  top: 4%; left: 2%; animation: labPulse 7s ease-in-out infinite;
+  width: 280px; height: 280px; background: var(--primary); opacity: .35;
+  top: 0%; left: -4%; animation: labPulse 7s ease-in-out infinite;
 }
 .lab-glow--b {
-  width: 190px; height: 190px; background: var(--accent); opacity: .22;
-  bottom: 2%; right: -2%; animation: labPulse 9s ease-in-out infinite 1.2s;
+  width: 230px; height: 230px; background: var(--accent); opacity: .24;
+  bottom: -2%; right: -6%; animation: labPulse 9s ease-in-out infinite 1.2s;
 }
 @keyframes labPulse {
-  0%, 100% { transform: scale(1); opacity: .28; }
-  50% { transform: scale(1.18); opacity: .46; }
+  0%, 100% { transform: scale(1); opacity: .3; }
+  50% { transform: scale(1.18); opacity: .5; }
 }
 
-/* Microscopio de fondo (contexto, silueta suave) */
 .lab-microscope {
-  position: absolute; width: 128px; right: 0%; bottom: 2%;
-  opacity: .55; filter: drop-shadow(0 14px 22px rgba(0,0,0,.35));
+  position: absolute; width: 190px; right: -2%; bottom: 0%;
+  opacity: .6; filter: drop-shadow(0 18px 28px rgba(0,0,0,.4));
   animation: labFloat 8s ease-in-out infinite .8s;
 }
 
-/* Caja de Petri con colonias */
 .lab-petri {
-  position: absolute; width: 158px; left: -2%; top: 6%;
-  filter: drop-shadow(0 16px 26px rgba(0,0,0,.4));
+  position: absolute; width: 230px; left: -4%; top: 8%;
+  filter: drop-shadow(0 20px 32px rgba(0,0,0,.45));
   animation: labFloat 6.5s ease-in-out infinite;
 }
 .lab-dot { animation: labColonyPulse 3.4s ease-in-out infinite; transform-origin: center; }
@@ -221,10 +239,9 @@ body {
   50% { transform: scale(1.35); opacity: 1; }
 }
 
-/* Matraz Erlenmeyer con líquido animado y burbujas */
 .lab-flask {
-  position: absolute; width: 188px; left: 36%; top: 14%;
-  filter: drop-shadow(0 20px 34px rgba(0,0,0,.45));
+  position: absolute; width: 270px; left: 32%; top: 14%;
+  filter: drop-shadow(0 26px 40px rgba(0,0,0,.5));
   animation: labFloat 7.2s ease-in-out infinite .4s;
 }
 .lab-liquid { animation: labWave 3.2s ease-in-out infinite; transform-origin: center bottom; }
@@ -241,44 +258,48 @@ body {
   100% { transform: translateY(-92px); opacity: 0; }
 }
 
-/* Bacterias flotando alrededor de la escena */
+/* Bacterias grandes en primer plano, alrededor del clúster */
 .lab-bacteria {
-  position: absolute; filter: drop-shadow(0 8px 14px rgba(0,0,0,.35));
+  position: absolute; filter: drop-shadow(0 10px 16px rgba(0,0,0,.4));
   animation: labFloatRotate ease-in-out infinite;
 }
-.bact-1 { width: 58px; top: 0%;  right: 10%; animation-duration: 9s; }
-.bact-2 { width: 46px; top: 32%; left: -4%; animation-duration: 11s; animation-delay: 1s; }
-.bact-3 { width: 50px; bottom: 26%; right: -4%; animation-duration: 10s; animation-delay: 2s; }
-.bact-4 { width: 40px; bottom: 4%; left: 16%; animation-duration: 8s; animation-delay: .5s; }
-.bact-5 { width: 32px; top: 12%; left: 32%; animation-duration: 12s; animation-delay: 1.6s; opacity: .75; }
-.bact-6 { width: 28px; bottom: 42%; left: 42%; animation-duration: 9.5s; animation-delay: 2.4s; opacity: .6; }
+.bact-1 { width: 84px; top: -4%;  right: 4%;  animation-duration: 9s; }
+.bact-2 { width: 68px; top: 40%;  left: -8%;  animation-duration: 11s; animation-delay: 1s; }
+.bact-3 { width: 72px; bottom: 20%; right: -8%; animation-duration: 10s; animation-delay: 2s; }
+.bact-4 { width: 58px; bottom: -2%; left: 20%;  animation-duration: 8s; animation-delay: .5s; }
+.bact-5 { width: 46px; top: 6%;  left: 30%;  animation-duration: 12s; animation-delay: 1.6s; opacity: .8; }
+.bact-6 { width: 40px; bottom: 50%; left: 46%; animation-duration: 9.5s; animation-delay: 2.4s; opacity: .7; }
+
 @keyframes labFloatRotate {
   0%   { transform: translateY(0) translateX(0) rotate(0deg); }
-  25%  { transform: translateY(-12px) translateX(5px) rotate(5deg); }
-  50%  { transform: translateY(3px) translateX(-4px) rotate(-4deg); }
-  75%  { transform: translateY(-7px) translateX(4px) rotate(3deg); }
+  25%  { transform: translateY(-14px) translateX(6px) rotate(5deg); }
+  50%  { transform: translateY(4px) translateX(-5px) rotate(-4deg); }
+  75%  { transform: translateY(-8px) translateX(5px) rotate(3deg); }
   100% { transform: translateY(0) translateX(0) rotate(0deg); }
 }
 @keyframes labFloat {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
+  50% { transform: translateY(-16px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lab-glow, .lab-microscope, .lab-petri, .lab-flask, .lab-bacteria,
-  .lab-liquid, .lab-bubble, .lab-dot { animation: none !important; }
+  .lab-liquid, .lab-bubble, .lab-dot, .microbe { animation: none !important; }
 }
 
 @media (max-width: 980px) {
   .hero-inner { grid-template-columns: 1fr; text-align: center; padding: 32px 24px; }
   .hero-content { max-width: 100%; text-align: center; margin: 0 auto; }
-  .hero-btns, .hero-stats { justify-content: center; }
+  .hero-btns { justify-content: center; }
+  .hero-stats { justify-content: center; }
   .stat { text-align: center; }
-  .hero-visual { margin-top: 10px; min-height: 320px; }
-  .lab-scene { max-width: 340px; height: 320px; }
-  .lab-flask { width: 150px; }
-  .lab-petri { width: 128px; }
-  .lab-microscope { width: 100px; }
+  .hero-visual { margin-top: 10px; min-height: 380px; }
+  .lab-scene { width: 100%; max-width: 380px; height: 380px; }
+  .lab-flask { width: 220px; }
+  .lab-petri { width: 190px; }
+  .lab-microscope { width: 150px; }
+  .bact-1 { width: 60px; } .bact-2 { width: 50px; } .bact-3 { width: 54px; }
+  .bact-4 { width: 44px; } .bact-5 { width: 36px; } .bact-6 { width: 30px; }
 }
 
 /* ══════ SECTIONS COMMON ══════ */
@@ -291,7 +312,7 @@ body {
   margin-bottom: 12px;
 }
 .section-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: clamp(1.9rem, 4vw, 2.7rem);
   font-weight: 700; color: var(--dark); line-height: 1.2;
 }
@@ -499,6 +520,33 @@ body {
   border-color: var(--primary); transform: scale(1.1);
 }
 
+/* ══════ CONCEPTO DE MARCA ══════ */
+.concept-section { background: var(--white); padding-top: 70px; }
+.concept-grid {
+  display: grid; grid-template-columns: 1fr 0.9fr; gap: 56px;
+  align-items: center;
+}
+.concept-text p {
+  font-size: 1.02rem; color: var(--text-light);
+  line-height: 1.8; margin-bottom: 14px;
+}
+.concept-img-wrap {
+  position: relative; border-radius: 24px; overflow: hidden;
+  box-shadow: 0 20px 50px rgba(17,17,17,0.15);
+  aspect-ratio: 4/5; background: var(--primary-ghost);
+}
+.concept-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.concept-img-wrap::before {
+  content: ''; position: absolute; inset: -4px;
+  border-radius: 28px; z-index: -1;
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  opacity: 0.3;
+}
+@media (max-width: 900px) {
+  .concept-grid { grid-template-columns: 1fr; }
+  .concept-img-wrap { order: -1; max-width: 420px; margin: 0 auto; }
+}
+
 /* ══════ CONOCENOS ══════ */
 .conocenos-section { background: var(--white); }
 .about-grid {
@@ -519,7 +567,7 @@ body {
   opacity: 0.3;
 }
 .about-text h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 2.1rem; font-weight: 700; color: var(--dark);
   margin-bottom: 18px; line-height: 1.2;
 }
@@ -658,7 +706,7 @@ body {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(88,183,27,0.12);
   border-radius: 12px; color: var(--white);
-  font-family: 'Outfit', sans-serif; font-size: 0.92rem;
+  font-family: 'Montserrat', sans-serif; font-size: 0.92rem;
   transition: all 0.3s; outline: none;
 }
 .form-group input:focus,
@@ -673,7 +721,7 @@ body {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: var(--dark); font-weight: 700; font-size: 1rem;
   border: none; border-radius: 14px; cursor: pointer;
-  transition: all 0.3s; font-family: 'Outfit', sans-serif;
+  transition: all 0.3s; font-family: 'Montserrat', sans-serif;
 }
 .form-submit:hover {
   transform: translateY(-2px);
@@ -775,7 +823,7 @@ body {
   padding: 60px 40px 40px; text-align: center;
 }
 .legal-hero h1 {
-  font-family: 'Playfair Display', serif; color: var(--white);
+  font-family: 'Montserrat', sans-serif; color: var(--white);
   font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 10px;
 }
 .legal-hero p { color: rgba(255,255,255,0.55); font-size: 0.95rem; }
@@ -784,7 +832,7 @@ body {
   color: var(--text-light); line-height: 1.75; font-size: 0.98rem;
 }
 .legal-content h2 {
-  font-family: 'Playfair Display', serif; color: var(--dark);
+  font-family: 'Montserrat', sans-serif; color: var(--dark);
   font-size: 1.35rem; margin: 38px 0 14px; padding-top: 6px;
   border-top: 1px solid var(--border);
 }
