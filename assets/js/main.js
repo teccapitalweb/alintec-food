@@ -78,3 +78,53 @@ const logosTrack = document.querySelector('.logos-track');
 if (logosTrack && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   logosTrack.style.animation = 'none';
 }
+
+// ══════ MODAL DE DETALLE DE CURSO ══════
+(function () {
+  const modal = document.getElementById('cursoModal');
+  if (!modal) return;
+  const WHATSAPP_NUM = '5212381863934'; // +52 1 238 186 3934
+  const imgEl = document.getElementById('cursoModalImg');
+  const titleEl = document.getElementById('cursoModalTitle');
+  const instructorEl = document.getElementById('cursoModalInstructor');
+  const descEl = document.getElementById('cursoModalDesc');
+  const waEl = document.getElementById('cursoModalWhatsapp');
+  let lastFocused = null;
+
+  function openModal(card) {
+    const title = card.dataset.title || '';
+    imgEl.src = card.dataset.img || '';
+    imgEl.alt = card.dataset.alt || title;
+    titleEl.textContent = title;
+    instructorEl.textContent = card.dataset.instructor || '';
+    descEl.textContent = card.dataset.desc || '';
+    const msg = encodeURIComponent(`Hola, quiero más información sobre el curso ${title}`);
+    waEl.href = `https://wa.me/${WHATSAPP_NUM}?text=${msg}`;
+    lastFocused = document.activeElement;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('.curso-modal__close').focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocused) lastFocused.focus();
+  }
+
+  document.querySelectorAll('[data-curso]').forEach(function (card) {
+    card.addEventListener('click', function () { openModal(card); });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(card); }
+    });
+  });
+
+  modal.querySelectorAll('[data-curso-close]').forEach(function (el) {
+    el.addEventListener('click', closeModal);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+  });
+})();
