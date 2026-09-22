@@ -3618,9 +3618,11 @@ window.__showWelcomeSplash = function(opts) {
 
   // ── Íconos SVG line-art (sin emojis · regla de diseño Alintec Food) ──
   const _sv = (inner, cls='') => `<svg class="splash-svg ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-  const _TOOTH = '<path d="M7 3C4.6 3 3 5 3 8c0 2 .6 3.2 1 5 .5 2.4.5 7 2.1 7 1.2 0 1.3-2 1.6-4 .2-1.5.5-2.6 1.3-2.6s1.1 1.1 1.3 2.6c.3 2 .4 4 1.6 4 1.6 0 1.6-4.6 2.1-7 .4-1.8 1-3 1-5 0-3-1.6-5-4-5-1.3 0-2 .7-3 .7S8.3 3 7 3z"/>';
-  const ICON_DIENTE_VIP = _sv(_TOOTH + '<path d="M9.5 8.5l1.3 1.3 2.7-2.7" stroke-width="1.4"/>', 'splash-tooth splash-tooth--vip');
-  const ICON_DIENTE_REGALO = _sv(_TOOTH, 'splash-tooth splash-tooth--regalo');
+  // Escudo de certificación (mismo trazo que el ícono i-shield-check del sitio)
+  // — antes había un diente heredado de la plataforma dental, ya no aplica.
+  const _BADGE = '<path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/>';
+  const ICON_DIENTE_VIP = _sv(_BADGE + '<path d="M9 12l2 2l4 -4" stroke-width="1.6"/>', 'splash-tooth splash-tooth--vip');
+  const ICON_DIENTE_REGALO = _sv(_BADGE, 'splash-tooth splash-tooth--regalo');
   const SVG_FEAT = {
     cursos: _sv('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
     clases: _sv('<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>'),
@@ -3858,7 +3860,7 @@ window.__setDisplayName = async (nombre) => {
 <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2l4 -4"/></symbol>
 <symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
 <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 12h1v4h1"/></symbol>
-<symbol id="i-tools" viewBox="0 0 24 24"><path d="M3 21h4l13 -13a1.5 1.5 0 0 0 -4 -4l-13 13v4"/><path d="M14.5 5.5l4 4"/></symbol>
+<symbol id="i-tools" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
 <symbol id="i-crown" viewBox="0 0 24 24"><path d="M12 6l4 6l5 -4l-2 10h-14l-2 -10l5 4z"/></symbol>
 <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></symbol>
 <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M9 12h12l-3 -3"/><path d="M18 15l3 -3"/></symbol>
