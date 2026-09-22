@@ -10,53 +10,25 @@ document.querySelector('.hamburger').addEventListener('click', function () {
   document.getElementById('navLinks').classList.toggle('open');
 });
 
-// ══════ CAROUSEL ══════
-let carouselPos = 0;
-const cardW = 314; // card width + gap
+// ══════ CURSOS · CARRUSEL CONTINUO (marquee, igual que la cinta de logos) ══════
+// Duplicamos las tarjetas una vez para que la animación CSS (translateX -50%)
+// haga un loop perfecto sin salto. Se pausa al pasar el mouse o al tocar (móvil).
 const cTrack = document.getElementById('carouselTrack');
-
-function moveCarousel(dir) {
-  const wrapper = cTrack.parentElement;
-  const maxScroll = cTrack.scrollWidth - wrapper.offsetWidth;
-  carouselPos += dir * cardW * 2;
-  if (carouselPos < 0) carouselPos = 0;
-  if (carouselPos > maxScroll) carouselPos = maxScroll;
-  cTrack.style.transform = 'translateX(-' + carouselPos + 'px)';
+if (cTrack) {
+  const original = Array.from(cTrack.children);
+  original.forEach(card => {
+    const clone = card.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    clone.querySelectorAll('a, button').forEach(el => el.setAttribute('tabindex', '-1'));
+    cTrack.appendChild(clone);
+  });
+  // Pausa al tocar en móvil (donde no hay :hover) y reanuda al soltar.
+  cTrack.addEventListener('touchstart', () => cTrack.classList.add('is-paused'), { passive: true });
+  cTrack.addEventListener('touchend', () => cTrack.classList.remove('is-paused'), { passive: true });
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    cTrack.style.animation = 'none';
+  }
 }
-
-// Drag support (mouse)
-let isDrag = false, startX = 0, dragStart = 0;
-
-cTrack.addEventListener('mousedown', function (e) {
-  isDrag = true; startX = e.pageX; dragStart = carouselPos;
-  cTrack.style.transition = 'none';
-});
-cTrack.addEventListener('mousemove', function (e) {
-  if (!isDrag) return;
-  const maxS = cTrack.scrollWidth - cTrack.parentElement.offsetWidth;
-  carouselPos = Math.max(0, Math.min(dragStart - (e.pageX - startX), maxS));
-  cTrack.style.transform = 'translateX(-' + carouselPos + 'px)';
-});
-document.addEventListener('mouseup', function () {
-  isDrag = false;
-  cTrack.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)';
-});
-
-// Drag support (touch)
-cTrack.addEventListener('touchstart', function (e) {
-  isDrag = true; startX = e.touches[0].pageX; dragStart = carouselPos;
-  cTrack.style.transition = 'none';
-});
-cTrack.addEventListener('touchmove', function (e) {
-  if (!isDrag) return;
-  const maxS = cTrack.scrollWidth - cTrack.parentElement.offsetWidth;
-  carouselPos = Math.max(0, Math.min(dragStart - (e.touches[0].pageX - startX), maxS));
-  cTrack.style.transform = 'translateX(-' + carouselPos + 'px)';
-});
-cTrack.addEventListener('touchend', function () {
-  isDrag = false;
-  cTrack.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)';
-});
 
 // ══════ NAVBAR SCROLL EFFECT ══════
 window.addEventListener('scroll', function () {
