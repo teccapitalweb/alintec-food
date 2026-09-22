@@ -1885,7 +1885,7 @@ body::after{
 .dir-search{flex:1;min-width:200px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border-2);border-radius:12px;padding:0 14px}
 .dir-search .ic{width:16px;height:16px;color:var(--text-3);flex-shrink:0}
 .dir-search input{flex:1;background:none;border:0;outline:none;color:var(--text);font-size:14px;font-family:inherit;padding:12px 0}
-.dir-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:18px;-webkit-overflow-scrolling:touch}
+.dir-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
 .dir-chips::-webkit-scrollbar{height:0}
 .dir-chip{flex-shrink:0;padding:8px 15px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;font-family:inherit}
 .dir-chip:hover{border-color:color-mix(in srgb,var(--primary) 40%,transparent)}
@@ -3988,7 +3988,7 @@ window.__setDisplayName = async (nombre) => {
       <button class="btn btn--wa btn--block btn--sm" id="btn-wa"><svg class="ic"><use href="#i-whatsapp"/></svg>Abrir grupo</button>
     </div>
 
-    <div class="widget widget--disc" id="widget-disc">
+    <div class="widget widget--disc" id="widget-disc" style="display:none;">
       <div class="widget__label">⭐ Tu descuento VIP</div>
       <div class="widget__pct">20%</div>
       <div class="widget__count-sub">En cursos de certificación con folio oficial Alintec Food</div>
@@ -8150,6 +8150,14 @@ const Sections = (function(){
     const fs = window.__fs;
     const uid = window.UserState?.uid;
     const esVipUser = window.UserState?.modo === 'vip' || (typeof esAdminReal === 'function' && esAdminReal()) || window.UserState?.isAdmin;
+
+    // ─── Widget "Tu descuento VIP 20%" · exclusivo de miembros de pago ───
+    // Un usuario en plan gratuito no tiene descuento que solicitar, así que
+    // la tarjeta ni se muestra (evita que la vea y confunda con un beneficio
+    // que no tiene activo).
+    const wDisc = document.getElementById('widget-disc');
+    if (wDisc) wDisc.style.display = esVipUser ? '' : 'none';
+
     const setBar = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = Math.max(0, Math.min(100, pct)) + '%'; };
     const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
