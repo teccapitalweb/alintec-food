@@ -170,82 +170,115 @@ body {
 .stat:nth-child(2) .stat-num { color: var(--accent); }
 .stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 4px; }
 
-/* ══════ HERO · MOCKUP LAPTOP + TABLET ══════ */
+/* ══════ HERO · ESCENA DE LABORATORIO ANIMADA (microbiología) ══════ */
 .hero-visual {
   position: relative; display: flex; align-items: center; justify-content: center;
-  min-height: 380px;
+  min-height: 420px; perspective: 1000px;
   animation: slideUp 0.9s ease 0.5s both;
 }
-.device-laptop {
-  position: relative; width: 100%; max-width: 460px;
-  filter: drop-shadow(0 30px 50px rgba(0,0,0,0.45));
+.lab-scene {
+  position: relative; width: 100%; max-width: 460px; height: 420px;
+  transform-style: preserve-3d;
 }
-.device-laptop__screen {
-  background: #14181C; border: 6px solid #1E2429; border-bottom: none;
-  border-radius: 14px 14px 0 0; overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+
+/* Resplandores de fondo (dan profundidad, como luz de laboratorio) */
+.lab-glow {
+  position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
 }
-.device-laptop__bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 9px 12px; background: #191F24; border-bottom: 1px solid rgba(255,255,255,0.05);
+.lab-glow--a {
+  width: 230px; height: 230px; background: var(--primary); opacity: .32;
+  top: 4%; left: 2%; animation: labPulse 7s ease-in-out infinite;
 }
-.device-laptop__bar span {
-  width: 8px; height: 8px; border-radius: 50%; background: #3A4147;
+.lab-glow--b {
+  width: 190px; height: 190px; background: var(--accent); opacity: .22;
+  bottom: 2%; right: -2%; animation: labPulse 9s ease-in-out infinite 1.2s;
 }
-.device-laptop__bar span:nth-child(1) { background: #E5604D; }
-.device-laptop__bar span:nth-child(2) { background: #E5B84D; }
-.device-laptop__bar span:nth-child(3) { background: var(--primary); }
-.device-laptop__url {
-  margin-left: 10px; flex: 1; background: #10141800;
-  color: rgba(255,255,255,0.35); font-size: 10.5px;
-  letter-spacing: .3px;
+@keyframes labPulse {
+  0%, 100% { transform: scale(1); opacity: .28; }
+  50% { transform: scale(1.18); opacity: .46; }
 }
-.device-laptop__body {
-  padding: 22px; background: linear-gradient(165deg,#191F24,#14181C);
-  min-height: 210px; display: flex; align-items: center; justify-content: center;
+
+/* Microscopio de fondo (contexto, silueta suave) */
+.lab-microscope {
+  position: absolute; width: 128px; right: 0%; bottom: 2%;
+  opacity: .55; filter: drop-shadow(0 14px 22px rgba(0,0,0,.35));
+  animation: labFloat 8s ease-in-out infinite .8s;
 }
-.device-course-card {
-  width: 100%; max-width: 300px; background: #1E252B;
-  border-radius: 16px; overflow: hidden; box-shadow: 0 14px 34px rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.06);
+
+/* Caja de Petri con colonias */
+.lab-petri {
+  position: absolute; width: 158px; left: -2%; top: 6%;
+  filter: drop-shadow(0 16px 26px rgba(0,0,0,.4));
+  animation: labFloat 6.5s ease-in-out infinite;
 }
-.device-course-card img { width: 100%; height: 130px; object-fit: cover; display: block; }
-.device-course-card__tag {
-  position: relative; margin: -22px 12px 0; width: fit-content;
-  background: var(--primary); color: #0B0F14; font-size: 10px; font-weight: 800;
-  letter-spacing: .4px; padding: 4px 10px; border-radius: 6px;
+.lab-dot { animation: labColonyPulse 3.4s ease-in-out infinite; transform-origin: center; }
+.lab-dot:nth-child(2) { animation-delay: .3s; }
+.lab-dot:nth-child(3) { animation-delay: .9s; }
+.lab-dot:nth-child(4) { animation-delay: 1.4s; }
+.lab-dot:nth-child(5) { animation-delay: .6s; }
+@keyframes labColonyPulse {
+  0%, 100% { transform: scale(1); opacity: .9; }
+  50% { transform: scale(1.35); opacity: 1; }
 }
-.device-course-card__info { padding: 14px 14px 16px; }
-.device-course-card__info h4 {
-  font-size: 13px; font-weight: 700; color: #EAF2FA; margin: 0 0 4px; line-height: 1.3;
+
+/* Matraz Erlenmeyer con líquido animado y burbujas */
+.lab-flask {
+  position: absolute; width: 188px; left: 36%; top: 14%;
+  filter: drop-shadow(0 20px 34px rgba(0,0,0,.45));
+  animation: labFloat 7.2s ease-in-out infinite .4s;
 }
-.device-course-card__info span { font-size: 11px; color: rgba(255,255,255,0.4); }
-.device-laptop__base {
-  height: 14px; margin: 0 -18px;
-  background: linear-gradient(180deg,#2A3137,#161A1E);
-  border-radius: 0 0 10px 10px;
-  position: relative;
+.lab-liquid { animation: labWave 3.2s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes labWave {
+  0%, 100% { transform: scaleY(1) translateY(0); }
+  50% { transform: scaleY(1.025) translateY(-2px); }
 }
-.device-laptop__base::after {
-  content: ''; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
-  width: 70px; height: 5px; background: #0F1216; border-radius: 0 0 6px 6px;
+.lab-bubble { animation: labBubble 3s ease-in infinite; }
+.lab-bubble.bub2 { animation-delay: 1s; }
+.lab-bubble.bub3 { animation-delay: 2s; }
+@keyframes labBubble {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: .85; }
+  100% { transform: translateY(-92px); opacity: 0; }
 }
-.device-tablet {
-  position: absolute; right: -6%; bottom: -8%; width: 34%; max-width: 165px;
-  background: #14181C; border: 5px solid #1E2429; border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
-  transform: rotate(6deg);
+
+/* Bacterias flotando alrededor de la escena */
+.lab-bacteria {
+  position: absolute; filter: drop-shadow(0 8px 14px rgba(0,0,0,.35));
+  animation: labFloatRotate ease-in-out infinite;
 }
-.device-tablet__screen { border-radius: 15px; overflow: hidden; aspect-ratio: 3/4; }
-.device-tablet__screen img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bact-1 { width: 58px; top: 0%;  right: 10%; animation-duration: 9s; }
+.bact-2 { width: 46px; top: 32%; left: -4%; animation-duration: 11s; animation-delay: 1s; }
+.bact-3 { width: 50px; bottom: 26%; right: -4%; animation-duration: 10s; animation-delay: 2s; }
+.bact-4 { width: 40px; bottom: 4%; left: 16%; animation-duration: 8s; animation-delay: .5s; }
+.bact-5 { width: 32px; top: 12%; left: 32%; animation-duration: 12s; animation-delay: 1.6s; opacity: .75; }
+.bact-6 { width: 28px; bottom: 42%; left: 42%; animation-duration: 9.5s; animation-delay: 2.4s; opacity: .6; }
+@keyframes labFloatRotate {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
+  25%  { transform: translateY(-12px) translateX(5px) rotate(5deg); }
+  50%  { transform: translateY(3px) translateX(-4px) rotate(-4deg); }
+  75%  { transform: translateY(-7px) translateX(4px) rotate(3deg); }
+  100% { transform: translateY(0) translateX(0) rotate(0deg); }
+}
+@keyframes labFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-glow, .lab-microscope, .lab-petri, .lab-flask, .lab-bacteria,
+  .lab-liquid, .lab-bubble, .lab-dot { animation: none !important; }
+}
+
 @media (max-width: 980px) {
   .hero-inner { grid-template-columns: 1fr; text-align: center; padding: 32px 24px; }
   .hero-content { max-width: 100%; text-align: center; margin: 0 auto; }
   .hero-btns, .hero-stats { justify-content: center; }
   .stat { text-align: center; }
-  .hero-visual { margin-top: 20px; min-height: 300px; }
-  .device-laptop { max-width: 340px; }
-  .device-tablet { right: 2%; width: 30%; }
+  .hero-visual { margin-top: 10px; min-height: 320px; }
+  .lab-scene { max-width: 340px; height: 320px; }
+  .lab-flask { width: 150px; }
+  .lab-petri { width: 128px; }
+  .lab-microscope { width: 100px; }
 }
 
 /* ══════ SECTIONS COMMON ══════ */
