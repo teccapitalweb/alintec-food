@@ -1119,7 +1119,16 @@ document.getElementById('btn-register').addEventListener('click', async () => {
     let verifMsg;
     try {
       auth.languageCode = 'es';
-      await sendEmailVerification(cred.user);
+      // Primero por el backend (Resend, desde alitecfood.com → no cae en spam); respaldo: Firebase
+      let enviadoPorBackend = false;
+      try {
+        const tk = await cred.user.getIdToken();
+        const rv = await fetch('https://alintec-webhook-production.up.railway.app/api/v2/auth/send-verification', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + tk }
+        });
+        enviadoPorBackend = rv.ok;
+      } catch (_) { /* se usa el respaldo */ }
+      if (!enviadoPorBackend) await sendEmailVerification(cred.user);
       const emailSeguro = String(email).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
       verifMsg = `Te enviamos un correo de verificación a ${emailSeguro}. Revisa tu bandeja y spam.`;
     } catch (ve) {
@@ -1138,7 +1147,7 @@ document.getElementById('btn-register').addEventListener('click', async () => {
           'Tu cuenta SÍ se creó en Auth, pero no se pudo guardar en Firestore (permission-denied). El admin debe actualizar las reglas. Continúa al checkout para activar tu VIP.<br>' + verifMsg);
         setTimeout(() => {
           window.location.href = isAdmin ? 'vip-admin.html' : 'vip-panel.html';
-        }, 4500);
+        }, 2500);
         return;
       } else {
         showAlert('error',
@@ -1146,7 +1155,7 @@ document.getElementById('btn-register').addEventListener('click', async () => {
           `Tu cuenta se creó pero hubo un problema al guardar tu perfil (${motivo}). Continúa al checkout.<br>${verifMsg}`);
         setTimeout(() => {
           window.location.href = isAdmin ? 'vip-admin.html' : 'vip-panel.html';
-        }, 4500);
+        }, 2500);
         return;
       }
     }
@@ -1161,7 +1170,7 @@ document.getElementById('btn-register').addEventListener('click', async () => {
             : 'Redirigiendo al checkout…')));
     setTimeout(() => {
       window.location.href = isAdmin ? 'vip-admin.html' : 'vip-panel.html';
-    }, 4500);
+    }, 2500);
   } catch (e) {
     window.__registrando = false;
     setLoading(btn, false, 'Crear cuenta');

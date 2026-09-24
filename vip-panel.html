@@ -3226,63 +3226,98 @@ window.calcIniciales = calcIniciales;
 const isCheckoutSuccess = new URLSearchParams(window.location.search).get('checkout') === 'success';
 
 // ─── Verificación de correo (registro con correo/contraseña) ───
-// Con Google el correo ya viene verificado. Sin verificar, el servidor solo
-// reconoce la membresía ligada al uid y bloquea pagos; este aviso guía al usuario.
-function mostrarBannerVerificacionEmail(user) {
-  if (document.getElementById('email-verify-banner')) return;
-  // La guía de bienvenida se muestra primero: el aviso espera a que termine (máx. 45 s)
-  const guiaActiva = () => {
-    const g = window.AlintecOnboarding;
-    return document.body.classList.contains('membership-tour-open')
-      || !!(g && (g.active || (typeof g.wasSeen === 'function' && !g.wasSeen())));
-  };
-  if (!mostrarBannerVerificacionEmail.__espera) {
-    mostrarBannerVerificacionEmail.__espera = Date.now();
-  }
-  if (guiaActiva() && Date.now() - mostrarBannerVerificacionEmail.__espera < 45000) {
-    setTimeout(() => mostrarBannerVerificacionEmail(user), 1000);
-    return;
-  }
-  const banner = document.createElement('div');
-  banner.id = 'email-verify-banner';
-  banner.setAttribute('role', 'status');
-  banner.style.cssText = 'position:sticky;top:0;z-index:9990;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;padding:7px 12px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1A1200;font-family:Inter,sans-serif;font-size:12px;font-weight:600;line-height:1.35;text-align:center;';
-  banner.title = user.email || '';
-  const texto = document.createElement('span');
-  texto.textContent = 'Verifica tu correo para proteger tu cuenta y poder suscribirte. Revisa también spam.';
-  const botonEstilo = 'border:0;border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:#1A1200;color:#FDE68A;';
-  const reenviar = document.createElement('button');
-  reenviar.type = 'button'; reenviar.style.cssText = botonEstilo; reenviar.textContent = 'Reenviar correo';
+// Sin verificar NO se entra al panel: se muestra esta pantalla y se espera a que
+// el usuario abra el enlace del correo. Con Google el correo ya viene verificado.
+// El correo sale por el backend (Resend, desde alitecfood.com); si falla, se usa
+// el envío estándar de Firebase como respaldo.
+async function enviarVerificacionEmail(user) {
+  try {
+    const token = await user.getIdToken();
+    const r = await fetch(WEBHOOK_URL + '/api/v2/auth/send-verification', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (r.ok) return;
+    if (r.status === 429) { const e = new Error('espera'); e.code = 'auth/too-many-requests'; throw e; }
+  } catch (e) { if (e && e.code === 'auth/too-many-requests') throw e; }
+  auth.languageCode = 'es';
+  await sendEmailVerification(user);
+}
+
+function mostrarPantallaVerificacion(user) {
+  if (document.getElementById('email-gate')) return;
+  window.__emailGateActivo = true;
+  const gate = document.createElement('div');
+  gate.id = 'email-gate';
+  gate.setAttribute('role', 'dialog');
+  gate.setAttribute('aria-modal', 'true');
+  gate.style.cssText = 'position:fixed;inset:0;z-index:100000;visibility:visible;display:flex;align-items:center;justify-content:center;padding:20px;background:#0F1A12;font-family:Inter,sans-serif;overflow:auto;';
+  const card = document.createElement('div');
+  card.style.cssText = 'width:100%;max-width:420px;background:#F7FAF7;color:#14261A;border-radius:20px;padding:30px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45);';
+  const h = document.createElement('h1');
+  h.textContent = 'Verifica tu correo';
+  h.style.cssText = 'margin:0 0 10px;font-size:23px;font-weight:800;letter-spacing:-.4px;';
+  const p1 = document.createElement('p');
+  p1.style.cssText = 'margin:0 0 8px;font-size:15px;line-height:1.55;color:#33443A;';
+  p1.append('Te enviamos un enlace a ');
+  const b = document.createElement('strong'); b.textContent = user.email || 'tu correo'; p1.append(b);
+  p1.append('. Ábrelo para activar tu cuenta y entrar a la plataforma.');
+  const p2 = document.createElement('p');
+  p2.textContent = 'Si no lo ves, revisa Spam o Promociones. Esta pantalla se actualiza sola cuando lo verifiques.';
+  p2.style.cssText = 'margin:0 0 20px;font-size:13px;line-height:1.5;color:#5C6B62;';
+  const btn = 'width:100%;border:0;border-radius:12px;padding:13px 16px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;';
   const listo = document.createElement('button');
-  listo.type = 'button'; listo.style.cssText = botonEstilo; listo.textContent = 'Ya verifiqué';
-  const aviso = document.createElement('span');
-  aviso.style.cssText = 'font-size:12px;font-weight:500;';
-  reenviar.addEventListener('click', async () => {
-    reenviar.disabled = true;
-    try {
-      auth.languageCode = 'es';
-      await sendEmailVerification(user);
-      aviso.textContent = 'Correo enviado. Revisa tu bandeja.';
-    } catch (e) {
-      aviso.textContent = e && e.code === 'auth/too-many-requests'
-        ? 'Demasiados intentos. Espera unos minutos.' : 'No pudimos enviarlo ahora. Intenta más tarde.';
-    }
-    setTimeout(() => { reenviar.disabled = false; }, 60000);
-  });
-  listo.addEventListener('click', async () => {
-    listo.disabled = true;
+  listo.type = 'button'; listo.textContent = 'Ya verifiqué';
+  listo.style.cssText = btn + 'background:#2E7D32;color:#fff;margin-bottom:10px;';
+  const reenviar = document.createElement('button');
+  reenviar.type = 'button'; reenviar.textContent = 'Reenviar correo';
+  reenviar.style.cssText = btn + 'background:#E4EEE6;color:#14261A;margin-bottom:10px;';
+  const salir = document.createElement('button');
+  salir.type = 'button'; salir.textContent = 'Cerrar sesión / usar otra cuenta';
+  salir.style.cssText = btn + 'background:transparent;color:#5C6B62;font-weight:600;font-size:13px;padding:8px;';
+  const aviso = document.createElement('div');
+  aviso.style.cssText = 'min-height:18px;margin-top:8px;font-size:12.5px;color:#33443A;';
+  card.append(h, p1, p2, listo, reenviar, salir, aviso);
+  gate.append(card);
+  document.body.append(gate);
+
+  const revisar = async (manual) => {
     try {
       await user.reload();
-      await user.getIdToken(true); // refresca el token para que el servidor vea email_verified
-      if (user.emailVerified) { window.location.reload(); return; }
-      aviso.textContent = 'Aún no aparece verificado. Abre el enlace del correo y vuelve a intentar.';
+      if (user.emailVerified) {
+        await user.getIdToken(true); // el servidor debe ver email_verified=true
+        window.location.reload();
+        return;
+      }
+      if (manual) aviso.textContent = 'Aún no aparece verificado. Abre el enlace del correo y vuelve a intentar.';
     } catch (e) {
-      aviso.textContent = 'No pudimos comprobarlo. Intenta de nuevo.';
+      if (manual) aviso.textContent = 'No pudimos comprobarlo. Intenta de nuevo.';
     }
-    listo.disabled = false;
+  };
+  listo.addEventListener('click', async () => { listo.disabled = true; await revisar(true); listo.disabled = false; });
+  setInterval(() => revisar(false), 4000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) revisar(false); });
+
+  let espera = 0;
+  const enfriar = () => {
+    if (espera <= 0) { reenviar.disabled = false; reenviar.textContent = 'Reenviar correo'; return; }
+    reenviar.textContent = 'Reenviar correo (' + espera + ' s)';
+    espera -= 1; setTimeout(enfriar, 1000);
+  };
+  reenviar.addEventListener('click', async () => {
+    reenviar.disabled = true; aviso.textContent = 'Enviando…';
+    try {
+      await enviarVerificacionEmail(user);
+      aviso.textContent = 'Correo enviado. Revisa tu bandeja y spam.';
+    } catch (e) {
+      aviso.textContent = e && e.code === 'auth/too-many-requests'
+        ? 'Espera un momento antes de pedir otro correo.' : 'No pudimos enviarlo ahora. Intenta más tarde.';
+    }
+    espera = 60; enfriar();
   });
-  banner.append(texto, reenviar, listo, aviso);
-  document.body.prepend(banner);
+  salir.addEventListener('click', async () => {
+    try { await signOut(auth); } catch (e) {}
+    window.location.href = 'vip-auth.html';
+  });
 }
 
 // Si ya estamos en modo demo (configurado en script anterior), aplicar UserState y salir
@@ -3299,7 +3334,11 @@ if (window.__isDemoMode) {
 
     window.__currentUser = user;
     window.UserState.emailVerified = user.emailVerified === true;
-    if (!user.emailVerified) mostrarBannerVerificacionEmail(user);
+    // Cuenta de correo/contraseña sin verificar: no se entra al sitio hasta confirmar
+    if (!user.emailVerified && (user.providerData || []).some(p => p.providerId === 'password')) {
+      mostrarPantallaVerificacion(user);
+      return;
+    }
     window.UserState.uid = user.uid;
     window.UserState.email = (user.email||'').toLowerCase();
     window.UserState.displayName = user.displayName || user.email?.split('@')[0] || 'Ingeniero';
