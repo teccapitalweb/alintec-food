@@ -7813,18 +7813,24 @@ const Sections = (function(){
   let cursosState={tab:'catalogo',area:'todas',search:''};
   let countdownTimer=null;
 
+  // Estado REAL del curso según el avance del alumno (progreso que confirma el servidor):
+  // completado → certificado emitido · progreso → al menos una clase vista · nuevo → sin avance
+  function estadoCurso(c){
+    const p = getProgresoCurso(c.id);
+    if (p.completado) return 'completado';
+    return (p.clasesVistas && p.clasesVistas.length > 0) ? 'progreso' : 'nuevo';
+  }
   function counts(){
     return {
-      progreso:cursos.filter(c=>c.status==='progreso').length,
-      completado:cursos.filter(c=>c.status==='completado').length,
-      catalogo:cursos.filter(c=>c.status==='catalogo').length
+      progreso:cursos.filter(c=>estadoCurso(c)==='progreso').length,
+      completado:cursos.filter(c=>estadoCurso(c)==='completado').length,
+      catalogo:cursos.length // el catálogo muestra TODOS los cursos
     };
   }
   function cursosFiltrados(){
     return cursos.filter(c=>{
-      if(cursosState.tab==='progreso'&&c.status!=='progreso')return false;
-      if(cursosState.tab==='completado'&&c.status!=='completado')return false;
-      if(cursosState.tab==='catalogo'&&c.status!=='catalogo')return false;
+      if(cursosState.tab==='progreso'&&estadoCurso(c)!=='progreso')return false;
+      if(cursosState.tab==='completado'&&estadoCurso(c)!=='completado')return false;
       if(cursosState.area!=='todas'&&c.area!==cursosState.area)return false;
       if(cursosState.search){
         const q=cursosState.search.toLowerCase();
@@ -7892,8 +7898,17 @@ const Sections = (function(){
     }
   }
 
+  function actualizarTabsCursos(){
+    const etiquetas={progreso:'En progreso',completado:'Completados',catalogo:'Catálogo'};
+    const n=counts();
+    document.querySelectorAll('[data-curtab]').forEach(b=>{
+      const k=b.dataset.curtab;
+      if(etiquetas[k]) b.textContent=etiquetas[k]+' · '+n[k];
+    });
+  }
   function renderCursosList(){
     const list=document.getElementById('cur-list');if(!list)return;
+    actualizarTabsCursos();
     if (_cursosLoadError) {
       list.innerHTML = `<div class="empty-state">
         <div class="empty-state__icon"><svg class="ic ic--xl"><use href="#i-book"/></svg></div>
