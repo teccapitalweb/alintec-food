@@ -3694,7 +3694,16 @@ window.__resetPassword = async () => {
   try {
     const user = window.__currentUser;
     if (!user || !user.email) throw new Error('Sin email');
-    await sendPasswordResetEmail(auth, user.email);
+    // Primero por el backend (Resend, desde alitecfood.com); respaldo: Firebase
+    let enviado = false;
+    try {
+      const r = await fetch(WEBHOOK_URL + '/api/v2/auth/reset-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email })
+      });
+      if (r.status === 429) throw new Error('Demasiados intentos. Espera unos minutos.');
+      enviado = r.ok;
+    } catch (e) { if (/Demasiados/.test(e.message)) throw e; }
+    if (!enviado) await sendPasswordResetEmail(auth, user.email);
     return { ok:true, email:user.email };
   } catch(e) { return { ok:false, error:e.message }; }
 };
