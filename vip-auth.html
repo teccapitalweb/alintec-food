@@ -570,6 +570,96 @@ body.auth-ready .auth-gate{display:none !important}
   .ag-logo{animation:none}
   .ag-spinner{animation-duration:1.6s}
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Renovación visual 2026 · acceso y registro
+   Solo presentación: conserva IDs, campos, Firebase y flujo de Stripe.
+   ═══════════════════════════════════════════════════════════════════ */
+body{display:block;background:#EDF5EC}
+.auth-shell{grid-template-columns:minmax(0,1.12fr) minmax(430px,.88fr);background:#EDF5EC}
+.auth-hero{
+  min-height:100dvh;padding:34px 46px 30px;gap:22px;
+  background:
+    radial-gradient(circle at 78% 34%,rgba(156,204,101,.2),transparent 32%),
+    linear-gradient(150deg,#10391D 0%,#174D27 54%,#0D2F19 100%);
+  border-right:0;color:#fff;
+}
+.auth-hero::before{top:auto;left:auto;right:-12%;bottom:-18%;width:70%;height:70%;background:radial-gradient(circle,rgba(156,204,101,.3),transparent 62%)}
+.auth-hero::after{background-image:linear-gradient(to right,rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.045) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(#000,rgba(0,0,0,.15));-webkit-mask-image:linear-gradient(#000,rgba(0,0,0,.15))}
+.brand--hero .brand__logo{width:48px;height:48px;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.brand--hero .brand__name{font-size:19px;background:none;-webkit-text-fill-color:#fff;color:#fff}
+.brand--hero .brand__sub{color:rgba(255,255,255,.62);font-size:9px}
+.auth-hero__title{font-size:clamp(34px,3.6vw,54px);max-width:15ch;color:#fff;letter-spacing:-1.8px;margin-top:4px}
+.auth-hero__title em{background:linear-gradient(110deg,#D9F7AE,#8EDB75);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.auth-hero__desc{margin-top:14px;max-width:52ch;color:rgba(255,255,255,.72);font-size:14px}
+.hero-marquee,.hero-hook,.hero-benefits,.hero-price,.hero-refs-title,.hero-refs,.hero-trust{display:none!important}
+.auth-editorial{position:relative;margin:26px 0 22px;max-width:650px;padding:22px;border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.16);box-shadow:0 24px 55px rgba(4,25,11,.22);backdrop-filter:blur(14px);overflow:hidden}
+.auth-editorial::before{content:'';position:absolute;width:210px;height:210px;border-radius:50%;right:-82px;top:-110px;background:radial-gradient(circle,rgba(183,235,122,.28),transparent 68%)}
+.auth-editorial__signal{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.12)}
+.auth-editorial__signal span{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.45px;color:#B7EB7A;text-transform:uppercase}
+.auth-editorial__signal strong{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;line-height:1.25;letter-spacing:-.4px;color:#fff;max-width:24ch}
+.auth-editorial__grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-top:16px}
+.auth-editorial__item{min-height:92px;padding:13px;border-radius:16px;background:rgba(5,29,13,.24);border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.auth-editorial__item b{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.15;color:#fff}
+.auth-editorial__item small{font-family:'JetBrains Mono',monospace;font-size:8px;line-height:1.45;letter-spacing:.65px;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.auth-value-pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
+.auth-value-pill{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:100px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.55px;color:rgba(255,255,255,.84)}
+.auth-value-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#B7EB7A;box-shadow:0 0 10px rgba(183,235,122,.7)}
+.auth-hero__stats{gap:14px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
+.auth-stat{min-width:112px}
+.auth-stat__num{font-size:24px;color:#D9F7AE}
+.auth-stat__lbl{font-size:8.5px;color:rgba(255,255,255,.56)}
+
+:root[data-theme="day"] .auth-hero{background:radial-gradient(circle at 78% 34%,rgba(156,204,101,.2),transparent 32%),linear-gradient(150deg,#10391D 0%,#174D27 54%,#0D2F19 100%)}
+:root[data-theme="day"] .auth-hero::after{background-image:linear-gradient(to right,rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.045) 1px,transparent 1px)}
+
+.auth-main{padding:30px 34px;background:radial-gradient(circle at 50% 25%,rgba(156,204,101,.12),transparent 38%),#EDF5EC}
+.wrap{max-width:510px;padding:0}
+.card{border-radius:30px;padding:30px 32px 28px;border:1px solid rgba(18,52,26,.1);box-shadow:0 28px 70px rgba(23,77,39,.14);overflow:visible}
+.card::before{display:none}
+.tabs{padding:5px;border-radius:15px;margin-bottom:26px;background:#EDF5EC;border:1px solid rgba(18,52,26,.07)}
+.tab{padding:11px 14px;border-radius:11px;font-family:'Inter',sans-serif;font-size:12.5px;letter-spacing:0}
+.tab.is-active{background:#fff;color:#174D27;box-shadow:0 7px 18px rgba(22,73,37,.12);transform:none}
+.pane-head{margin-bottom:23px}
+.pane-head h2{font-size:28px;letter-spacing:-.9px}
+.pane-head p{font-size:13px;margin-top:7px}
+.field{margin-bottom:15px}
+.label{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.15px;text-transform:none;color:var(--text-2);margin-bottom:7px}
+.input{height:54px;border-radius:14px;background:#F6FAF5;border:1px solid rgba(18,52,26,.11);padding-left:45px;font-size:14px}
+.input:hover{border-color:rgba(67,160,71,.32)}
+.input:focus{background:#fff;border-color:var(--primary);box-shadow:0 0 0 4px rgba(67,160,71,.11)}
+.input-wrap .lead{left:16px;width:17px;height:17px;color:#5B7B61}
+.toggle-pass{right:10px;width:36px;height:36px;border-radius:10px}
+.forgot{margin-top:-4px;margin-bottom:15px}
+.btn{min-height:54px;border-radius:14px;background:linear-gradient(135deg,#43A047,#2E7D32);box-shadow:0 12px 26px rgba(46,125,50,.25);font-size:14px}
+.btn:hover:not(:disabled){box-shadow:0 16px 32px rgba(46,125,50,.32)}
+.btn-google{min-height:52px;border-radius:14px;background:#fff;border:1px solid rgba(18,52,26,.12);font-size:13px}
+.auth-divider{margin:18px 0;color:#91A495}
+.checkbox-row{border-radius:13px;background:#F6FAF5;border:1px solid rgba(18,52,26,.08);padding:11px 12px;margin:2px 0 16px}
+.helper-text{line-height:1.5}
+.legal{margin-top:18px;color:#829486}
+.theme-toggle{top:20px;right:20px;width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.9);box-shadow:0 9px 24px rgba(18,52,26,.12)}
+
+@media(max-width:1100px){
+  .auth-shell{grid-template-columns:minmax(0,1fr) minmax(410px,.9fr)}
+  .auth-hero{padding:30px 34px}
+  .auth-editorial{margin:20px 0 18px;padding:18px}
+}
+@media(max-width:920px){
+  body{background:linear-gradient(180deg,#E7F2E6,#F6FAF5)}
+  .auth-main{min-height:100dvh;padding:max(72px,calc(env(safe-area-inset-top) + 56px)) 18px 28px;background:radial-gradient(circle at 50% 0,rgba(67,160,71,.18),transparent 32%),transparent}
+  .wrap{max-width:520px}
+  .wrap .brand{margin-bottom:20px}
+  .card{padding:24px 20px;border-radius:24px}
+  .pane-head h2{font-size:24px}
+  .theme-toggle{top:max(16px,env(safe-area-inset-top));right:16px}
+}
+@media(max-width:420px){
+  .auth-main{padding-left:12px;padding-right:12px}
+  .card{padding:20px 16px 22px;border-radius:20px}
+  .tabs{margin-bottom:22px}
+  .tab{padding:10px 8px;font-size:11.5px}
+}
 </style>
 </head>
 <body>
@@ -613,6 +703,22 @@ setTimeout(function(){
     <div>
       <h1 class="auth-hero__title">Domina la ciencia y la calidad que la industria alimentaria <em>te está pidiendo</em>.</h1>
       <p class="auth-hero__desc">Cursos de ciencia y tecnología de alimentos, clases en vivo con especialistas y certificados con folio oficial para crecer profesionalmente.</p>
+      <div class="auth-editorial" aria-label="Beneficios profesionales de Alintec Food">
+        <div class="auth-editorial__signal">
+          <span>Formación profesional continua</span>
+          <strong>Una plataforma diseñada para aplicar lo aprendido.</strong>
+        </div>
+        <div class="auth-editorial__grid">
+          <div class="auth-editorial__item"><b>Ruta clara</b><small>Avance organizado</small></div>
+          <div class="auth-editorial__item"><b>Casos reales</b><small>Enfoque práctico</small></div>
+          <div class="auth-editorial__item"><b>Respaldo</b><small>Folio verificable</small></div>
+        </div>
+      </div>
+      <div class="auth-value-pills" aria-label="Beneficios de la membresía">
+        <span class="auth-value-pill">Cursos especializados</span>
+        <span class="auth-value-pill">Certificados verificables</span>
+        <span class="auth-value-pill">Aprendizaje práctico</span>
+      </div>
       <div class="hero-marquee" aria-hidden="true"><div class="track"><img src="assets/img/cursos-mini/curso-01.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-02.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-03.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-04.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-05.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-06.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-07.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-08.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-09.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-10.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-11.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-12.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-13.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-14.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-15.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-16.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-17.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-18.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-19.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-20.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-21.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-22.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-01.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-02.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-03.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-04.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-05.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-06.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-07.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-08.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-09.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-10.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-11.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-12.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-13.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-14.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-15.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-16.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-17.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-18.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-19.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-20.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-21.webp" alt="" loading="lazy"><img src="assets/img/cursos-mini/curso-22.webp" alt="" loading="lazy"></div></div>
       <!-- MODIFICADO: el "al día" se recalcula en vivo con el precio mensual ·
            sin número fijo en el HTML (se llena al cargar config/club) -->
