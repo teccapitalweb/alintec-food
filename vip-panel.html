@@ -3230,12 +3230,26 @@ const isCheckoutSuccess = new URLSearchParams(window.location.search).get('check
 // reconoce la membresía ligada al uid y bloquea pagos; este aviso guía al usuario.
 function mostrarBannerVerificacionEmail(user) {
   if (document.getElementById('email-verify-banner')) return;
+  // La guía de bienvenida se muestra primero: el aviso espera a que termine (máx. 45 s)
+  const guiaActiva = () => {
+    const g = window.AlintecOnboarding;
+    return document.body.classList.contains('membership-tour-open')
+      || !!(g && (g.active || (typeof g.wasSeen === 'function' && !g.wasSeen())));
+  };
+  if (!mostrarBannerVerificacionEmail.__espera) {
+    mostrarBannerVerificacionEmail.__espera = Date.now();
+  }
+  if (guiaActiva() && Date.now() - mostrarBannerVerificacionEmail.__espera < 45000) {
+    setTimeout(() => mostrarBannerVerificacionEmail(user), 1000);
+    return;
+  }
   const banner = document.createElement('div');
   banner.id = 'email-verify-banner';
   banner.setAttribute('role', 'status');
-  banner.style.cssText = 'position:sticky;top:0;z-index:9990;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;padding:10px 16px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1A1200;font-family:Inter,sans-serif;font-size:13px;font-weight:600;line-height:1.4;text-align:center;';
+  banner.style.cssText = 'position:sticky;top:0;z-index:9990;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;padding:7px 12px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1A1200;font-family:Inter,sans-serif;font-size:12px;font-weight:600;line-height:1.35;text-align:center;';
+  banner.title = user.email || '';
   const texto = document.createElement('span');
-  texto.textContent = 'Verifica tu correo (' + (user.email || '') + ') para proteger tu cuenta, recuperar tu membresía si ya eras miembro y poder suscribirte. Revisa también tu carpeta de spam.';
+  texto.textContent = 'Verifica tu correo para proteger tu cuenta y poder suscribirte. Revisa también spam.';
   const botonEstilo = 'border:0;border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:#1A1200;color:#FDE68A;';
   const reenviar = document.createElement('button');
   reenviar.type = 'button'; reenviar.style.cssText = botonEstilo; reenviar.textContent = 'Reenviar correo';
@@ -3880,9 +3894,9 @@ window.__setDisplayName = async (nombre) => {
 <nav class="mobile-nav">
   <a class="mobile-nav__item is-active" data-section="inicio"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
   <a class="mobile-nav__item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Cursos</a>
+  <a class="mobile-nav__item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs</a>
   <a class="mobile-nav__item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Vivo</a>
   <a class="mobile-nav__item" data-section="herramientas" data-tour="tools-nav"><svg class="ic"><use href="#i-tools"/></svg>Pro</a>
-  <a class="mobile-nav__item" data-section="suscripcion"><svg class="ic"><use href="#i-credit-card"/></svg>Plan</a>
   <a class="mobile-nav__item" id="mobile-nav-more" role="button"><svg class="ic"><use href="#i-menu"/></svg>Más</a>
 </nav>
 
@@ -13941,8 +13955,7 @@ window.AlintecOnboarding = new window.MembershipTour({
     },
     {
       desktopSelectors: '.sidebar .nav-item[data-section="pdfs"]',
-      mobileSelectors: '.mobile-drawer .mobile-drawer__item[data-section="pdfs"]',
-      mobileDrawer: true,
+      mobileSelectors: '.mobile-nav .mobile-nav__item[data-section="pdfs"]',
       title: 'PDFs y material de apoyo',
       copy: 'Aquí se reúnen guías, formatos, protocolos y recursos descargables para acompañar tus cursos y tu trabajo en planta o laboratorio.'
     },
