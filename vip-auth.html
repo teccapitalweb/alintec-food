@@ -750,12 +750,12 @@ setTimeout(function(){
         <label class="label" for="re-pass">Contraseña</label>
         <div class="input-wrap">
           <svg class="lead" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" class="input" id="re-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <input type="password" class="input" id="re-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
           <button type="button" class="toggle-pass" data-target="re-pass" aria-label="Mostrar contraseña">
             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8s11 8 11 8s-4 8-11 8s-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-        <div class="helper-text">Usa al menos <strong>6 caracteres</strong> con letras y números.</div>
+        <div class="helper-text">Usa al menos <strong>8 caracteres</strong> con letras y números.</div>
       </div>
       <label class="checkbox-row">
         <input type="checkbox" id="re-terms">
@@ -902,7 +902,8 @@ import {
   browserLocalPersistence,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore,
@@ -1024,6 +1025,8 @@ async function ensureMiembroDoc(user, displayName, origen) {
 /* Si ya está logueado, redirige inmediatamente · pero PRIMERO asegura el doc */
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    // Durante el registro con correo, el flujo de registro envía la verificación y redirige
+    if (window.__registrando) return;
     // Asegurar que existe el doc (si entró por login y no tenía uno, lo creamos)
     await ensureMiembroDoc(user, user.displayName, 'login-web');
     // Recordar quién entró (para el "Hola de nuevo" si cierra sesión)
@@ -1056,7 +1059,7 @@ function translateError(code) {
     'auth/wrong-password': 'Contraseña incorrecta.',
     'auth/invalid-credential': 'Correo o contraseña incorrectos.',
     'auth/email-already-in-use': 'Ya existe una cuenta con ese correo. Inicia sesión.',
-    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/weak-password': 'La contraseña debe tener al menos 8 caracteres.',
     'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.',
     'auth/network-request-failed': 'Sin conexión. Revisa tu internet.',
     'auth/missing-password': 'Escribe una contraseña.',
@@ -1097,10 +1100,11 @@ document.getElementById('btn-register').addEventListener('click', async () => {
   const terms = document.getElementById('re-terms').checked;
   if (!name) { showAlert('error', 'Falta tu nombre'); return; }
   if (!email || !pass) { showAlert('error', 'Faltan datos', 'Correo y contraseña son obligatorios.'); return; }
-  if (pass.length < 6) { showAlert('error', 'Contraseña muy corta', 'Mínimo 6 caracteres.'); return; }
+  if (pass.length < 8) { showAlert('error', 'Contraseña muy corta', 'Mínimo 8 caracteres.'); return; }
   if (!terms) { showAlert('error', 'Debes aceptar los términos'); return; }
   const btn = document.getElementById('btn-register');
   setLoading(btn, true);
+  window.__registrando = true;
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
@@ -1111,6 +1115,18 @@ document.getElementById('btn-register').addEventListener('click', async () => {
 
     const isAdmin = ADMINS.includes(email);
 
+    // Verificación de correo · si falla el envío NO impide el registro
+    let verifMsg;
+    try {
+      auth.languageCode = 'es';
+      await sendEmailVerification(cred.user);
+      const emailSeguro = String(email).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+      verifMsg = `Te enviamos un correo de verificación a ${emailSeguro}. Revisa tu bandeja y spam.`;
+    } catch (ve) {
+      console.warn('[registro] No se pudo enviar la verificación:', ve.code || ve.message);
+      verifMsg = 'No pudimos enviar el correo de verificación ahora. Puedes reenviarlo desde tu panel.';
+    }
+
     // 🔍 Diagnóstico visible: si NO se creó el doc, mostrar alert claro al usuario
     // (esto ayuda a Britney a detectar problemas de reglas Firestore en producción)
     if (docResult && docResult.ok === false) {
@@ -1119,7 +1135,7 @@ document.getElementById('btn-register').addEventListener('click', async () => {
       if (motivo === 'permission-denied') {
         showAlert('error',
           '⚠️ Cuenta creada pero falta actualizar reglas Firestore',
-          'Tu cuenta SÍ se creó en Auth, pero no se pudo guardar en Firestore (permission-denied). El admin debe actualizar las reglas. Continúa al checkout para activar tu VIP.');
+          'Tu cuenta SÍ se creó en Auth, pero no se pudo guardar en Firestore (permission-denied). El admin debe actualizar las reglas. Continúa al checkout para activar tu VIP.<br>' + verifMsg);
         setTimeout(() => {
           window.location.href = isAdmin ? 'vip-admin.html' : 'vip-panel.html';
         }, 4500);
@@ -1127,7 +1143,7 @@ document.getElementById('btn-register').addEventListener('click', async () => {
       } else {
         showAlert('error',
           '⚠️ Cuenta creada · advertencia',
-          `Tu cuenta se creó pero hubo un problema al guardar tu perfil (${motivo}). Continúa al checkout.`);
+          `Tu cuenta se creó pero hubo un problema al guardar tu perfil (${motivo}). Continúa al checkout.<br>${verifMsg}`);
         setTimeout(() => {
           window.location.href = isAdmin ? 'vip-admin.html' : 'vip-panel.html';
         }, 4500);
@@ -1138,15 +1154,16 @@ document.getElementById('btn-register').addEventListener('click', async () => {
     // Camino feliz · todo funcionó
     showAlert('success',
       '¡Cuenta creada!',
-      isAdmin
+      verifMsg + '<br>' + (isAdmin
         ? 'Redirigiendo al panel admin…'
         : (docResult && docResult.action === 'created'
             ? '✅ Perfil guardado · redirigiendo al checkout…'
-            : 'Redirigiendo al checkout…'));
+            : 'Redirigiendo al checkout…')));
     setTimeout(() => {
       window.location.href = isAdmin ? 'vip-admin.html' : 'vip-panel.html';
-    }, 900);
+    }, 4500);
   } catch (e) {
+    window.__registrando = false;
     setLoading(btn, false, 'Crear cuenta');
     showAlert('error', 'No pudimos crear tu cuenta', translateError(e.code));
   }
