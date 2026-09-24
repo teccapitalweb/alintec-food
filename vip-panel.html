@@ -8552,7 +8552,18 @@ const Sections = (function(){
     const nm = scaler.querySelector('#cp-nm') || scaler.querySelector('.cp-name .nm');
     if (nm){ let fs=46, g=0; nm.style.fontSize='46px'; while(nm.scrollWidth>820 && fs>22 && g<70){ fs--; nm.style.fontSize=fs+'px'; g++; } const u=nm.parentElement.querySelector('.u'); if(u) u.style.width=Math.min(nm.offsetWidth*1.05,820)+'px'; }
     const co = scaler.querySelector('#cp-course');
-    if (co){ let cfs=30, cg=0; co.style.fontSize='30px'; while(co.scrollHeight>96 && cfs>17 && cg<40){ cfs--; co.style.fontSize=cfs+'px'; cg++; } }
+    if (co){
+      let cfs=30, cg=0; co.style.fontSize='30px';
+      while(co.scrollHeight>96 && cfs>17 && cg<40){ cfs--; co.style.fontSize=cfs+'px'; cg++; }
+      // Con nombres de curso largos (2 líneas) la línea de carga académica invadía el pie
+      // (QR y firmas): se reduce un poco más el curso hasta que quede libre.
+      const meta = scaler.querySelector('.cp-meta'), qr = scaler.querySelector('.cp-qrwrap'), cert = scaler.querySelector('.cp-cert');
+      if (meta && qr && cert){
+        const arriba = el => (el.getBoundingClientRect().top - cert.getBoundingClientRect().top) / (s || 1);
+        let g2=0;
+        while((arriba(meta) + meta.offsetHeight) > (arriba(qr) - 8) && cfs>16 && g2<30){ cfs--; co.style.fontSize=cfs+'px'; g2++; }
+      }
+    }
   }
   function fitCertModal(){
     // Reajusta cualquier certificado visible (modal y/o splash)
