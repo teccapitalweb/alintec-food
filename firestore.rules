@@ -134,6 +134,19 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Avisos personales de la campana (certificado listo, respuestas del foro, insignias):
+    // solo el servidor los crea; cada persona lee los suyos.
+    match /avisos/{uid}/items/{itemId} {
+      allow read: if own(uid);
+      allow write: if false;
+    }
+
+    // XP e insignias de retos: los calcula y guarda el servidor.
+    match /retosUsuario/{uid} {
+      allow read: if own(uid);
+      allow write: if false;
+    }
+
     match /notificaciones/{notificationId} {
       allow read: if signedIn();
       allow write: if isAdmin();

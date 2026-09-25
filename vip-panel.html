@@ -6112,14 +6112,16 @@ const Sections = (function(){
     'Especialización':'#4E78A8',
     'Excelencia':'#B88743',
     'Comunidad':'#876AA3',
-    'Maestría':'#397A72'
+    'Maestría':'#397A72',
+    'Retos':'#B8563F'
   };
   const ICON_CAT = {
     'Operación':'i-clipboard-check',
     'Especialización':'i-gauge',
     'Excelencia':'i-trophy',
     'Comunidad':'i-messages',
-    'Maestría':'i-crown'
+    'Maestría':'i-crown',
+    'Retos':'i-bolt'
   };
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -7690,11 +7692,11 @@ const Sections = (function(){
   const certificados = []; // legado · los certificados reales salen de getCertificadosReales()
 
   const niveles = [
-    {id:1,nombre:'Aprendiz',desde:0,hasta:200},
-    {id:2,nombre:'Técnico',desde:200,hasta:600},
-    {id:3,nombre:'Profesional',desde:600,hasta:1200},
-    {id:4,nombre:'Líder',desde:1200,hasta:2400},
-    {id:5,nombre:'Maestro',desde:2400,hasta:99999}
+    {id:1,nombre:'Aprendiz',desde:0,hasta:300},
+    {id:2,nombre:'Técnico',desde:300,hasta:900},
+    {id:3,nombre:'Profesional',desde:900,hasta:2000},
+    {id:4,nombre:'Líder',desde:2000,hasta:4000},
+    {id:5,nombre:'Maestro',desde:4000,hasta:99999}
   ];
 
   // ── LOGROS · todos con criterio MEDIBLE con datos reales de la plataforma
@@ -8859,6 +8861,26 @@ const Sections = (function(){
     }catch(e){console.error(e);Toast.error('Error generando PDF',e.message||'Intenta de nuevo');}
   }
 
+  /* ============================ RETOS · XP e insignias (servidor) ============================ */
+  async function cargarEstadoRetos(){
+    if (window.__isDemoMode === true || !window.__currentUser) return null;
+    const token = await window.__currentUser.getIdToken();
+    const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/retos', { headers: { 'Authorization': 'Bearer ' + token } });
+    return r.ok ? await r.json() : null;
+  }
+  // El panel solo informa el resultado; el servidor decide cuánto XP vale y qué insignias se ganan
+  window.__enviarResultadoReto = async function(retoId, puntaje, total){
+    try {
+      if (window.__isDemoMode === true || !window.__currentUser) return null;
+      const token = await window.__currentUser.getIdToken();
+      const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/retos/resultado', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ retoId, puntaje, total })
+      });
+      return r.ok ? await r.json() : null;
+    } catch(e){ return null; }
+  };
+
   /* ============================ LOGROS ============================ */
   async function renderLogros(container){
     container.innerHTML = '<div class="fade-up" style="padding:64px 24px;text-align:center;color:var(--text-2);font-size:14px;">Cargando tus logros…</div>';
@@ -8888,6 +8910,16 @@ const Sections = (function(){
         tarjetaDir = t.exists();
       }
     } catch(e){ /* sin conexión o sin sesión: los logros de comunidad quedan bloqueados */ }
+    // ── Retos: XP e insignias que calcula el servidor (categoría "Retos") ──
+    let retosXp = 0, retosInsignias = [];
+    try {
+      const estadoRetos = await cargarEstadoRetos();
+      if (estadoRetos) { retosXp = estadoRetos.xp || 0; retosInsignias = estadoRetos.insignias || []; }
+    } catch(e){ /* sin conexión: las insignias de retos quedan bloqueadas por ahora */ }
+    retosInsignias.forEach(i => {
+      if (!logros.some(l => l.id === i.id)) logros.push({ id:i.id, cat:'Retos', nombre:i.nombre, desc:i.desc, xp:i.xp, unlock:null, criterio:i.criterio });
+    });
+    const retosDesbloqueadas = new Set(retosInsignias.filter(i => i.desbloqueada).map(i => i.id));
     // ── Evaluación REAL de cada logro · los 26 son medibles ──
     function unlocked(l){ switch(l.id){
       case 'l1': return completados.length>=1;
@@ -8916,18 +8948,18 @@ const Sections = (function(){
       case 'l24': return totalHoras>=100;
       case 'l25': return areas>=3;
       case 'l26': return completados.length>=20;
-      default: return false;
+      default: return retosDesbloqueadas.has(l.id);
     } }
     logros.forEach(l=>{ l.unlock = unlocked(l) ? 'real' : null; });
-    usuario.xp = logros.filter(l=>l.unlock).reduce((s,l)=>s+l.xp,0);
+    usuario.xp = logros.filter(l=>l.unlock).reduce((s,l)=>s+l.xp,0) + retosXp;
     usuario.racha = racha; usuario.diasActivos = dias.length;
     const nivelActual=getNivel(usuario.xp);
     const pct=Math.round(((usuario.xp-nivelActual.desde)/(nivelActual.hasta-nivelActual.desde))*100);
     const xpRest=nivelActual.hasta-usuario.xp;
     const proxNivel=niveles[nivelActual.id]?.nombre||'Maestro';
     const ganados=logros.filter(l=>l.unlock).length;
-    const totalXp=logros.filter(l=>l.unlock).reduce((s,l)=>s+l.xp,0);
-    const cats=['Operación','Especialización','Excelencia','Comunidad','Maestría'];
+    const totalXp=usuario.xp;
+    const cats=['Operación','Especialización','Excelencia','Comunidad','Maestría','Retos'];
     container.innerHTML=`
       <div class="fade-up">
         <div class="sec-hero">
@@ -10422,13 +10454,23 @@ const Sections = (function(){
       }));
     });
   }
+  // Avisa al servidor de un comentario ya guardado; el servidor lo verifica y notifica al autor del post
+  function avisarRespuestaForo(postId, comentarioId){
+    try {
+      if (!window.__currentUser) return;
+      window.__currentUser.getIdToken().then(tk => fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/foro/aviso-respuesta', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, comentarioId })
+      })).catch(() => {});
+    } catch(e){}
+  }
   async function foroEnviarComentario(postId){
     const inp = document.getElementById('cominput-'+postId);
     const t = (inp.value||'').trim(); if(!t) return;
     inp.value = '';
     try {
       const fs = window.__fs;
-      await fs.addDoc(fs.collection(fs.db,'posts',postId,'comentarios'), {
+      const comRef = await fs.addDoc(fs.collection(fs.db,'posts',postId,'comentarios'), {
         uid: window.UserState.uid,
         nombre: window.UserState?.nombre || 'Miembro',
         iniciales: window.UserState?.iniciales || 'IN',
@@ -10438,6 +10480,7 @@ const Sections = (function(){
       });
       // incrementar contador en el post
       try { await fs.updateDoc(fs.doc(fs.db,'posts',postId), { comentariosCount: fs.increment(1) }); } catch(e){}
+      avisarRespuestaForo(postId, comRef.id);
     } catch(e){ console.error(e); Toast.error('No se pudo responder',''); }
   }
   async function foroBorrarComentario(postId, comId){
@@ -11317,6 +11360,13 @@ const Sections = (function(){
     const saveResult=(id,score,total)=>{try{const key='alintec:retos:resultados';const all=JSON.parse(localStorage.getItem(key)||'{}');const prev=all[id];if(!prev||score>prev.score)all[id]={score,total,updatedAt:Date.now()};localStorage.setItem(key,JSON.stringify(all));}catch(e){}};
     const showResult=(id,title,score,total,restart)=>{
       saveResult(id,score,total);
+      // El servidor decide el XP (una vez por reto y por día) y las insignias nuevas
+      window.__enviarResultadoReto?.(id,score,total).then(r=>{
+        if (!r || typeof Toast === 'undefined') return;
+        if (r.xpGanado > 0) Toast.success('+' + r.xpGanado + ' XP', 'Reto superado · ya suma a tu nivel');
+        else if (score/total >= 0.6) Toast.info('Reto superado', 'Hoy ya cobraste los XP de este reto. Vuelve mañana.');
+        (r.nuevas || []).forEach(n => Toast.success('🏅 Nueva insignia', n.nombre + ' · +' + n.xp + ' XP'));
+      });
       const pct=Math.round((score/total)*100);
       stage.innerHTML=`<div class="reto-result"><div class="reto-result__icon"><svg class="ic"><use href="#${pct>=80?'i-trophy':'i-check-circle'}"/></svg></div><div><div class="reto-stage__eyebrow">Práctica terminada</div><h2>${title}</h2><p>Obtuviste <strong>${score} de ${total}</strong> · ${pct}%. ${pct>=80?'Excelente dominio del tema.':'Puedes repetirlo cuando quieras para reforzar los conceptos.'}</p></div><button class="btn btn--primary" type="button" id="reto-restart">Repetir</button></div>`;
       stage.querySelector('#reto-restart').addEventListener('click',restart);
@@ -11668,6 +11718,44 @@ const NOTIFS_DEMO = [
   {id:'demo-3', tipo:'logro', icono:'i-trophy', color:'#FBBF24', titulo:'5 niveles de progresión', descripcion:'Desde Aprendiz hasta Maestro Industrial', createdAtMs: Date.now()-2*86400000}
 ];
 
+// ── Avisos PERSONALES (certificado listo, respuestas en el foro, nuevas insignias) ──
+// Los escribe el servidor en avisos/{uid}/items; aquí se mezclan con los generales.
+window.__notifsGlobal = [];
+window.__notifsPersonales = [];
+function recombinarNotifs() {
+  const todas = [...(window.__notifsPersonales || []), ...(window.__notifsGlobal || [])]
+    .sort((a, b) => b.createdAtMs - a.createdAtMs);
+  window.__notifsState.items = todas;
+  actualizarBadgeNotif();
+}
+function iniciarAvisosPersonales() {
+  const fs = window.__fs;
+  const uid = window.UserState && window.UserState.uid;
+  if (!fs || !fs.onSnapshot || !uid || window.__isDemoMode === true || window.__avisosUid === uid) return;
+  window.__avisosUid = uid;
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const estilos = {
+    certificado: { icono: 'i-certificate', color: '#34D399' },
+    foro: { icono: 'i-messages', color: '#60A5FA' },
+    logro: { icono: 'i-trophy', color: '#FBBF24' }
+  };
+  try {
+    const q = fs.query(fs.collection(fs.db, 'avisos', uid, 'items'), fs.orderBy('creadoEn', 'desc'), fs.limit(30));
+    fs.onSnapshot(q, snap => {
+      window.__notifsPersonales = snap.docs.map(d => {
+        const x = d.data();
+        const est = estilos[x.tipo] || { icono: 'i-bell', color: '#43A047' };
+        return {
+          id: 'p_' + d.id, tipo: x.tipo || 'general', icono: est.icono, color: est.color,
+          titulo: esc(x.titulo), descripcion: esc(x.texto), enlace: esc(x.enlace || ''),
+          createdAtMs: (x.creadoEn && x.creadoEn.toMillis && x.creadoEn.toMillis()) || Date.now()
+        };
+      });
+      recombinarNotifs();
+    }, err => console.warn('[avisos] no se pudieron leer:', err.message));
+  } catch (e) { console.warn('[avisos] no se pudo iniciar:', e.message); }
+}
+
 // Setup del listener de notificaciones — se llama al cargar el panel
 // Es robusto: si __fs aún no está listo (módulo Firebase aún cargando), reintenta hasta 10s
 function setupNotificacionesListener(intento = 0) {
@@ -11713,10 +11801,11 @@ function setupNotificacionesListener(intento = 0) {
         };
       });
       // Usar SIEMPRE las notif reales de Firestore (aunque esté vacío · ahí el empty state se ve)
-      window.__notifsState.items = items;
+      window.__notifsGlobal = items;
       window.__notifsState.loaded = true;
       window.__notifsState.source = 'firestore';
-      actualizarBadgeNotif();
+      recombinarNotifs();
+      iniciarAvisosPersonales();
       console.log(`[notif] ${items.length} notificaciones reales cargadas de Firestore`);
     }, (err) => {
       console.warn('[notif] Error leyendo Firestore:', err.message, '· usando notif demo de respaldo');
@@ -11847,7 +11936,7 @@ function toggleNotifDropdown(){
     bodyHTML = notifs.map(n => {
       const esNueva = !leidas.has(n.id);
       return `
-        <div class="notif-item" style="display:flex;gap:11px;padding:11px 12px;border-radius:9px;cursor:pointer;transition:background .15s;align-items:flex-start;text-align:left;${esNueva?'background:color-mix(in srgb,'+n.color+' 5%,transparent);':''}">
+        <div class="notif-item" data-enlace="${n.enlace||''}" style="display:flex;gap:11px;padding:11px 12px;border-radius:9px;cursor:pointer;transition:background .15s;align-items:flex-start;text-align:left;${esNueva?'background:color-mix(in srgb,'+n.color+' 5%,transparent);':''}">
           <div style="width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,${n.color} 14%,transparent);color:${n.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg class="ic" style="width:16px;height:16px;"><use href="#${n.icono}"/></svg></div>
           <div style="flex:1;min-width:0;text-align:left;">
             <div style="font-size:12.5px;font-weight:600;color:var(--text);line-height:1.35;display:flex;align-items:center;gap:6px;text-align:left;">${n.titulo} ${esNueva?'<span style="width:6px;height:6px;border-radius:50%;background:'+n.color+';flex-shrink:0;"></span>':''}</div>
@@ -11871,6 +11960,12 @@ function toggleNotifDropdown(){
   dd.querySelectorAll('.notif-item').forEach(el=>{
     el.addEventListener('mouseenter',()=>el.style.background='var(--surface-2)');
     el.addEventListener('mouseleave',()=>el.style.background='transparent');
+    // Un aviso con destino (certificados, foro, logros) lleva a esa sección al tocarlo
+    el.addEventListener('click',(e)=>{
+      if (e.target.closest('.notif-del-btn')) return;
+      const destino = el.dataset.enlace;
+      if (destino && typeof window.navigateToSection === 'function') { dd.remove(); window.navigateToSection(destino); }
+    });
   });
 
   // v4.5 · re-pinta el dropdown desde cero (refleja empty state, contador y footer)
