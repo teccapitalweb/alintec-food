@@ -3788,7 +3788,7 @@ window.__setDisplayName = async (nombre) => {
       <a class="nav-item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Mis cursos<span class="nav-item__badge">12</span></a>
       <a class="nav-item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo<span class="nav-item__dot"></span></a>
       <a class="nav-item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs y material</a>
-      <a class="nav-item" data-section="retos"><svg class="ic"><use href="#i-bolt"/></svg>Retos<span class="nav-item__badge is-new">Próximamente</span></a>
+      <a class="nav-item" data-section="retos"><svg class="ic"><use href="#i-bolt"/></svg>Retos<span class="nav-item__badge is-new">Nuevo</span></a>
       <a class="nav-item" data-section="logros"><svg class="ic"><use href="#i-trophy"/></svg>Mis logros</a>
       <a class="nav-item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados</a>
     </div>
@@ -3975,7 +3975,7 @@ window.__setDisplayName = async (nombre) => {
         <a class="mobile-drawer__item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Mis cursos</a>
         <a class="mobile-drawer__item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo</a>
         <a class="mobile-drawer__item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs y material</a>
-        <a class="mobile-drawer__item" data-section="retos"><svg class="ic"><use href="#i-bolt"/></svg>Retos · Próximamente</a>
+        <a class="mobile-drawer__item" data-section="retos"><svg class="ic"><use href="#i-bolt"/></svg>Retos · Nuevo</a>
         <a class="mobile-drawer__item" data-section="logros"><svg class="ic"><use href="#i-trophy"/></svg>Mis logros</a>
         <a class="mobile-drawer__item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados</a>
       </div>
@@ -6108,14 +6108,14 @@ const Sections = (function(){
     'Mantenimiento':'i-tools'
   };
   const COLOR_CAT = {
-    'Clínica':'#43A047',
-    'Especialización':'#3B82F6',
-    'Excelencia':'#10B981',
-    'Comunidad':'#A855F7',
-    'Maestría':'#9CCC65'
+    'Operación':'#C98236',
+    'Especialización':'#4E78A8',
+    'Excelencia':'#B88743',
+    'Comunidad':'#876AA3',
+    'Maestría':'#397A72'
   };
   const ICON_CAT = {
-    'Clínica':'i-shield-check',
+    'Operación':'i-clipboard-check',
     'Especialización':'i-gauge',
     'Excelencia':'i-trophy',
     'Comunidad':'i-messages',
@@ -8920,7 +8920,7 @@ const Sections = (function(){
         </div>
         <div class="logro-hero">
           <div class="logro-hero__row">
-            <div class="logro-hero__icon"><svg class="ic ic--xl"><use href="#i-helmet"/></svg></div>
+            <div class="logro-hero__icon"><svg class="ic ic--xl"><use href="#i-trophy"/></svg></div>
             <div>
               <div class="logro-hero__lbl">Nivel ${nivelActual.id} de 5</div>
               <div class="logro-hero__name">${nivelActual.nombre}</div>
@@ -11228,27 +11228,31 @@ const Sections = (function(){
     });
   }
 
-  /* ============================ RETOS · VISTA PRELIMINAR ============================
-     Esta pantalla es deliberadamente visual. No asigna XP, no guarda rachas y
-     no modifica el calendario de Ruta VIP hasta que exista su backend seguro. */
+  /* ============================ RETOS · MICROAPRENDIZAJE ============================
+     Las actividades guardan solamente resultados de práctica en este dispositivo.
+     No asignan XP ni modifican membresías, certificados o el calendario de Ruta VIP. */
   function renderRetos(container){
     const retos = [
       {
+        id:'quiz',
         titulo:'Quiz relámpago',
         desc:'Cinco preguntas cortas para repasar conceptos clave de tus cursos.',
         icono:'i-bolt', color:'#F59E0B', tiempo:'2 min · 5 preguntas'
       },
       {
+        id:'detective',
         titulo:'Detective de inocuidad',
         desc:'Observa una situación de planta e identifica los riesgos antes de que sea tarde.',
-        icono:'i-search', color:'#43A047', tiempo:'3 min · caso visual'
+        icono:'i-search', color:'#397A72', tiempo:'3 min · caso visual'
       },
       {
+        id:'orden',
         titulo:'Ordena el proceso',
         desc:'Coloca cada etapa en el orden correcto y refuerza procedimientos esenciales.',
         icono:'i-clipboard-check', color:'#3B82F6', tiempo:'2 min · secuencia'
       },
       {
+        id:'flashcards',
         titulo:'Flashcards',
         desc:'Repasa definiciones, microorganismos, normas y controles con tarjetas rápidas.',
         icono:'i-book-2', color:'#8B7BB8', tiempo:'3 min · repaso'
@@ -11259,9 +11263,9 @@ const Sections = (function(){
       <div class="fade-up retos-shell">
         <section class="retos-hero">
           <div style="position:relative;z-index:1;">
-            <div class="retos-hero__eyebrow">Aprende jugando · Próximamente</div>
+            <div class="retos-hero__eyebrow">Aprende jugando · Ya disponible</div>
             <h1 class="retos-hero__title">Convierte cada repaso en un pequeño logro</h1>
-            <p class="retos-hero__sub">Retos breves y fáciles de entender para reforzar lo aprendido. En una siguiente etapa, tus respuestas podrán sumar puntos, formar rachas y acercarte a un pase de desbloqueo anticipado.</p>
+            <p class="retos-hero__sub">Cuatro actividades breves para practicar inocuidad, procesos y conceptos esenciales a tu ritmo.</p>
           </div>
           <div class="retos-mascots" aria-label="Equipo de laboratorio de los retos">
             <img class="retos-story-team" src="assets/img/retos/equipo-alintec-v3.png" alt="Especialistas y guía microbiológica de Alintec Food">
@@ -11272,32 +11276,62 @@ const Sections = (function(){
 
         <div class="retos-note">
           <svg class="ic"><use href="#i-shield-check"/></svg>
-          <div><strong style="color:var(--text);">Vista preliminar.</strong> Esta pantalla todavía no entrega puntos, no registra rachas y no adelanta cursos. Así protegemos la Ruta VIP mientras se construye y prueba el sistema de recompensas.</div>
+          <div><strong style="color:var(--text);">Modo práctica.</strong> Tus mejores resultados se guardan únicamente en este dispositivo. No entrega XP, no modifica certificados y no adelanta cursos de la Ruta VIP.</div>
         </div>
 
         <div class="retos-grid">
           ${retos.map(r => `
-            <article class="reto-card" style="--reto-color:${r.color};">
+            <button class="reto-card" type="button" data-reto="${r.id}" style="--reto-color:${r.color};">
               <div class="reto-card__top">
                 <div class="reto-card__icon"><svg class="ic"><use href="#${r.icono}"/></svg></div>
-                <span class="reto-card__status">Próximamente</span>
+                <span class="reto-card__status">Comenzar</span>
               </div>
               <h2 class="reto-card__title">${r.titulo}</h2>
               <p class="reto-card__desc">${r.desc}</p>
-              <div class="reto-card__foot"><svg class="ic"><use href="#i-clock"/></svg>${r.tiempo}</div>
-            </article>
+              <div class="reto-card__foot"><span><svg class="ic"><use href="#i-clock"/></svg>${r.tiempo}</span><svg class="ic reto-card__arrow"><use href="#i-arrow-right"/></svg></div>
+            </button>
           `).join('')}
         </div>
 
-        <section class="reto-reward">
-          <div class="reto-reward__icon"><svg class="ic"><use href="#i-trophy"/></svg></div>
-          <div>
-            <div class="reto-reward__title">Pase de desbloqueo anticipado</div>
-            <div class="reto-reward__sub">La recompensa propuesta permitirá elegir un curso antes de su fecha, con límites y validación segura desde el servidor.</div>
-          </div>
-          <span class="reto-reward__pill">Diseño en preparación</span>
-        </section>
+        <section class="reto-stage" id="reto-stage" aria-live="polite"></section>
       </div>`;
+
+    const stage=container.querySelector('#reto-stage');
+    const saveResult=(id,score,total)=>{try{const key='alintec:retos:resultados';const all=JSON.parse(localStorage.getItem(key)||'{}');const prev=all[id];if(!prev||score>prev.score)all[id]={score,total,updatedAt:Date.now()};localStorage.setItem(key,JSON.stringify(all));}catch(e){}};
+    const showResult=(id,title,score,total,restart)=>{
+      saveResult(id,score,total);
+      const pct=Math.round((score/total)*100);
+      stage.innerHTML=`<div class="reto-result"><div class="reto-result__icon"><svg class="ic"><use href="#${pct>=80?'i-trophy':'i-check-circle'}"/></svg></div><div><div class="reto-stage__eyebrow">Práctica terminada</div><h2>${title}</h2><p>Obtuviste <strong>${score} de ${total}</strong> · ${pct}%. ${pct>=80?'Excelente dominio del tema.':'Puedes repetirlo cuando quieras para reforzar los conceptos.'}</p></div><button class="btn btn--primary" type="button" id="reto-restart">Repetir</button></div>`;
+      stage.querySelector('#reto-restart').addEventListener('click',restart);
+      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+    };
+    const quiz=[
+      {q:'¿Cuál es el rango de temperatura conocido como zona de peligro para muchos alimentos?',a:['0 a 4 °C','5 a 60 °C','65 a 90 °C'],ok:1,why:'Entre 5 y 60 °C muchos microorganismos pueden multiplicarse con rapidez.'},
+      {q:'¿Qué acción previene mejor la contaminación cruzada?',a:['Separar crudos de cocidos','Usar el mismo cuchillo','Descongelar en la mesa'],ok:0,why:'Separar alimentos crudos y listos para consumo evita transferir peligros.'},
+      {q:'En HACCP, un límite crítico debe ser…',a:['Opcional','Medible y verificable','Sólo visual'],ok:1,why:'Un límite crítico debe poder medirse o verificarse de forma objetiva.'},
+      {q:'¿Cuál es el primer paso correcto antes de manipular alimentos?',a:['Ponerse guantes','Lavarse las manos','Limpiar el piso'],ok:1,why:'El lavado correcto de manos precede a la manipulación y al uso de guantes.'},
+      {q:'¿Qué significa PEPS en almacén?',a:['Primero en entrar, primero en salir','Producto especial para servicio','Programa estándar de producción segura'],ok:0,why:'PEPS rota inventario usando primero los productos que ingresaron antes.'}
+    ];
+    function startQuiz(){let i=0,score=0,locked=false;const paint=()=>{const x=quiz[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Quiz relámpago · ${i+1}/${quiz.length}</div><h2>${x.q}</h2></div><span class="reto-score">${score} aciertos</span></div><div class="reto-options">${x.a.map((a,n)=>`<button type="button" data-answer="${n}">${a}</button>`).join('')}</div><div class="reto-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{if(locked)return;locked=true;const n=+b.dataset.answer;const ok=n===x.ok;if(ok)score++;stage.querySelectorAll('[data-answer]').forEach((el,k)=>{el.disabled=true;el.classList.toggle('is-correct',k===x.ok);el.classList.toggle('is-wrong',k===n&&!ok);});const f=stage.querySelector('.reto-feedback');f.hidden=false;f.innerHTML=`<strong>${ok?'¡Correcto!':'Revisa esta idea'}</strong><span>${x.why}</span><button class="btn btn--primary" type="button">${i===quiz.length-1?'Ver resultado':'Siguiente'}</button>`;f.querySelector('button').addEventListener('click',()=>{i++;locked=false;i<quiz.length?paint():showResult('quiz','Quiz relámpago',score,quiz.length,startQuiz);});}));};paint();}
+    const hazards=[
+      {id:'tabla',label:'Tabla con pollo crudo junto a vegetales',type:'Biológico',why:'Puede transferir microorganismos del pollo a alimentos listos para consumo.'},
+      {id:'quimico',label:'Envase de químico sin etiqueta',type:'Químico',why:'Un producto sin identificar puede usarse por error o contaminar alimentos.'},
+      {id:'vidrio',label:'Foco sin protección sobre la línea',type:'Físico',why:'Si se rompe, fragmentos de vidrio pueden caer sobre el producto.'}
+    ];
+    function startDetective(){let found=new Set();stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Detective de inocuidad</div><h2>Inspecciona esta zona de preparación</h2><p>Encuentra los tres riesgos y selecciónalos.</p></div><span class="reto-score" id="hazard-count">0/${hazards.length}</span></div><div class="detective-scene" role="group" aria-label="Zona de preparación con tres riesgos">${hazards.map((h,i)=>`<button type="button" class="hazard hazard--${i+1}" data-hazard="${h.id}" aria-label="${h.label}"><span>${i+1}</span></button>`).join('')}<div class="detective-scene__bench"></div><div class="detective-scene__board">POLLO CRUDO</div><div class="detective-scene__bottle">?</div><div class="detective-scene__lamp">✦</div></div><div class="hazard-list">${hazards.map(h=>`<div data-hazard-info="${h.id}"><svg class="ic"><use href="#i-search"/></svg><span>Riesgo por identificar</span></div>`).join('')}</div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-hazard]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.hazard;if(found.has(id))return;found.add(id);b.classList.add('is-found');const h=hazards.find(x=>x.id===id);stage.querySelector(`[data-hazard-info="${id}"]`).innerHTML=`<svg class="ic"><use href="#i-check-circle"/></svg><span><strong>${h.type}:</strong> ${h.why}</span>`;stage.querySelector('#hazard-count').textContent=`${found.size}/${hazards.length}`;if(found.size===hazards.length)setTimeout(()=>showResult('detective','Detective de inocuidad',found.size,hazards.length,startDetective),650);}));}
+    const processSteps=['Recibir materias primas','Inspeccionar y registrar','Almacenar según temperatura','Preparar con higiene','Verificar antes de liberar'];
+    function startOrder(){let order=[...processSteps].sort(()=>Math.random()-.5);const paint=()=>{stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Ordena el proceso</div><h2>Secuencia de manejo seguro</h2><p>Usa las flechas para colocar las etapas en el orden correcto.</p></div></div><div class="order-list">${order.map((s,i)=>`<div class="order-item"><span>${i+1}</span><strong>${s}</strong><div><button type="button" data-move="up" data-i="${i}" aria-label="Subir etapa" ${i===0?'disabled':''}>↑</button><button type="button" data-move="down" data-i="${i}" aria-label="Bajar etapa" ${i===order.length-1?'disabled':''}>↓</button></div></div>`).join('')}</div><button class="btn btn--primary reto-check" type="button">Comprobar orden</button><div class="reto-feedback" id="order-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i,j=b.dataset.move==='up'?i-1:i+1;[order[i],order[j]]=[order[j],order[i]];paint();}));stage.querySelector('.reto-check').addEventListener('click',()=>{const correct=order.reduce((n,s,i)=>n+(s===processSteps[i]?1:0),0);if(correct===processSteps.length)showResult('orden','Ordena el proceso',correct,processSteps.length,startOrder);else{const f=stage.querySelector('#order-feedback');f.hidden=false;f.innerHTML=`<strong>${correct} de ${processSteps.length} etapas están en su lugar.</strong><span>Piensa qué debe verificarse antes de almacenar y qué ocurre justo antes de liberar.</span>`;}});};paint();}
+    const cards=[
+      {front:'Contaminación cruzada',back:'Transferencia de peligros entre alimentos, superficies, equipos o personas.'},
+      {front:'Punto crítico de control',back:'Etapa donde un control es esencial para prevenir, eliminar o reducir un peligro.'},
+      {front:'Listeria monocytogenes',back:'Bacteria capaz de crecer a refrigeración y relevante en alimentos listos para consumo.'},
+      {front:'Trazabilidad',back:'Capacidad de seguir el historial, aplicación o ubicación de un producto.'},
+      {front:'Límite crítico',back:'Valor máximo o mínimo que separa una condición aceptable de una no aceptable.'},
+      {front:'PEPS',back:'Método de rotación: primero en entrar, primero en salir.'}
+    ];
+    function startFlashcards(){let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length}</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard" aria-label="Voltear tarjeta"><span class="flashcard__hint">Toca para voltear</span><strong>${flipped?c.back:c.front}</strong></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():showResult('flashcards','Flashcards',known,cards.length,startFlashcards);}));};paint();}
+    const starters={quiz:startQuiz,detective:startDetective,orden:startOrder,flashcards:startFlashcards};
+    container.querySelectorAll('[data-reto]').forEach(card=>card.addEventListener('click',()=>starters[card.dataset.reto]()));
   }
 
   return {
@@ -13020,7 +13054,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .retos-note{display:flex;align-items:flex-start;gap:12px;padding:15px 17px;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--primary) 7%,var(--surface));color:var(--text-2);font-size:12.5px;line-height:1.55}
 .retos-note .ic{width:20px;height:20px;color:var(--primary);flex-shrink:0;margin-top:1px}
 .retos-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-.reto-card{position:relative;overflow:hidden;min-height:230px;padding:24px;border-radius:24px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.reto-card{position:relative;overflow:hidden;min-height:230px;padding:24px;border-radius:24px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;text-align:left;width:100%;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
 .reto-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--reto-color,var(--primary)) 42%,var(--border));box-shadow:0 20px 42px color-mix(in srgb,var(--reto-color,var(--primary)) 13%,rgba(0,0,0,.1))}
 .reto-card::after{content:'';position:absolute;width:170px;height:170px;border-radius:50%;right:-75px;bottom:-90px;background:color-mix(in srgb,var(--reto-color,var(--primary)) 13%,transparent)}
 .reto-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -13029,7 +13063,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .reto-card__status{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;border-radius:100px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border)}
 .reto-card__title{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.45px;margin-top:22px}
 .reto-card__desc{font-size:12.5px;line-height:1.6;color:var(--text-2);margin-top:7px;max-width:92%}
-.reto-card__foot{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:18px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);font-weight:700}
+.reto-card__foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:18px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);font-weight:700}
+.reto-card__foot span{display:flex;align-items:center;gap:8px}.reto-card__arrow{transition:transform .2s ease}.reto-card:hover .reto-card__arrow{transform:translateX(4px)}
 .reto-card__foot .ic{width:13px;height:13px}
 .reto-reward{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:22px 24px;border-radius:22px;border:1px solid color-mix(in srgb,#C9A961 35%,var(--border));background:linear-gradient(135deg,color-mix(in srgb,#C9A961 10%,var(--surface)),var(--surface));}
 .reto-reward__icon{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#E8D39A,#B38A35);color:#30210A;box-shadow:0 10px 24px rgba(179,138,53,.24)}
@@ -13037,6 +13072,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .reto-reward__title{font-size:16px;font-weight:800;letter-spacing:-.2px}
 .reto-reward__sub{font-size:12.5px;line-height:1.5;color:var(--text-2);margin-top:4px}
 .reto-reward__pill{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:7px 11px;border-radius:100px;background:color-mix(in srgb,#C9A961 16%,transparent);color:#B38A35;border:1px solid color-mix(in srgb,#C9A961 32%,transparent);white-space:nowrap}
+.reto-stage:empty{display:none}.reto-stage{scroll-margin-top:90px}.reto-activity,.reto-result{padding:26px;border:1px solid var(--border);border-radius:24px;background:var(--surface);box-shadow:var(--shadow-card)}
+.reto-stage__head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.reto-stage__head h2,.reto-result h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;line-height:1.25;margin-top:5px}.reto-stage__head p,.reto-result p{color:var(--text-2);font-size:13px;margin-top:7px}.reto-stage__eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:#397A72}.reto-score{padding:7px 11px;border-radius:999px;background:#EEF4F2;color:#285F59;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;white-space:nowrap}
+.reto-options{display:grid;gap:10px}.reto-options button{padding:15px 17px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);text-align:left;font-size:13px;font-weight:650;transition:.18s ease}.reto-options button:hover:not(:disabled){border-color:#7EA7A1;background:#F4F8F7;transform:translateX(3px)}.reto-options button.is-correct{border-color:#62A181;background:#EAF6EF;color:#245F44}.reto-options button.is-wrong{border-color:#D7868E;background:#FFF0F1;color:#8B303A}
+.reto-feedback{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding:14px 16px;border-radius:14px;background:#F4F7F5;border:1px solid var(--border)}.reto-feedback[hidden]{display:none}.reto-feedback strong{color:var(--text)}.reto-feedback span{flex:1;min-width:200px;color:var(--text-2);font-size:12px}.reto-result{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px}.reto-result__icon{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;background:#F8ECCE;color:#A06B21}.reto-result__icon .ic{width:28px;height:28px}
+.detective-scene{height:260px;position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(#D8E8E5 0 58%,#B8C6C2 58%);border:1px solid var(--border)}.detective-scene::before{content:'';position:absolute;left:8%;right:8%;top:22%;height:12px;background:#78948D;box-shadow:0 45px #78948D}.detective-scene__bench{position:absolute;left:8%;right:8%;bottom:20%;height:22px;background:#6D7F7B;border-radius:5px}.detective-scene__board{position:absolute;left:17%;bottom:28%;padding:16px 24px;border-radius:6px;background:#E2B18F;color:#793E36;font-size:10px;font-weight:900}.detective-scene__bottle{position:absolute;left:51%;bottom:28%;width:43px;height:78px;border-radius:8px 8px 14px 14px;background:#A8C07D;display:grid;place-items:center;font-size:26px;font-weight:900}.detective-scene__lamp{position:absolute;right:17%;top:17%;width:64px;height:64px;border-radius:50%;background:#FFF4BE;display:grid;place-items:center;font-size:34px;box-shadow:0 0 30px rgba(255,225,105,.6)}.hazard{position:absolute;z-index:3;width:34px;height:34px;border-radius:50%;background:#B44A55;color:#fff;border:3px solid #fff;box-shadow:0 5px 16px rgba(60,20,20,.25);display:grid;place-items:center;font-size:12px;font-weight:900}.hazard--1{left:12%;bottom:22%}.hazard--2{left:48%;bottom:22%}.hazard--3{right:13%;top:13%}.hazard.is-found{background:#397A72;transform:scale(1.08)}.hazard-list{display:grid;gap:8px;margin-top:13px}.hazard-list>div{display:flex;gap:9px;align-items:flex-start;padding:11px 13px;border-radius:12px;background:var(--surface-2);font-size:12px;color:var(--text-2)}.hazard-list .ic{color:#397A72;margin-top:1px}
+.order-list{display:grid;gap:9px}.order-item{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}.order-item>span{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#E8EFF7;color:#315E91;font:800 11px 'JetBrains Mono',monospace}.order-item strong{font-size:12.5px}.order-item>div{display:flex;gap:5px}.order-item button{width:32px;height:32px;border:1px solid var(--border-2);border-radius:9px;background:var(--surface);font-weight:900}.order-item button:disabled{opacity:.3;cursor:not-allowed}.reto-check{margin-top:16px}
+.flashcard{width:100%;min-height:250px;padding:35px;border:1px solid #D8CEE8;border-radius:22px;background:linear-gradient(145deg,#F7F3FC,#EEE8F7);color:#3E3157;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;box-shadow:0 15px 34px rgba(72,49,101,.09);transition:transform .24s ease}.flashcard:hover{transform:translateY(-3px)}.flashcard__hint{font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;color:#806D9E}.flashcard strong{max-width:560px;font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(20px,3vw,29px);line-height:1.35}.flash-actions{display:flex;justify-content:center;gap:10px;margin-top:15px}.flash-actions[hidden]{display:none}
 
 @media(max-width:880px){
   .cursos-grid{grid-template-columns:1fr;gap:16px}
@@ -13054,6 +13096,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .reto-reward{grid-template-columns:auto 1fr}
   .reto-reward__pill{grid-column:1/-1;justify-self:start}
   .retos-mascots{min-height:165px}
+  .reto-stage__head{flex-direction:column}.reto-result{grid-template-columns:auto 1fr}.reto-result>.btn{grid-column:1/-1}.reto-activity,.reto-result{padding:19px}.detective-scene{height:220px}.flash-actions{flex-direction:column}
 }
 @media(prefers-reduced-motion:reduce){.retos-story-team{transition:none!important}}
 </style>
@@ -13181,8 +13224,8 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 .empty-state__icon,.sub-empty__ic,.ats-empty__icon,.iper-empty__icon,.oee-empty__icon,.nom-empty__icon{width:64px!important;height:64px!important;border-radius:20px!important;background:linear-gradient(145deg,#E8F3EC,#F7FAF7)!important;color:#2F8B63!important;border:1px solid rgba(47,139,99,.12)!important;box-shadow:0 12px 28px rgba(47,139,99,.1)!important}
 
 /* Logros */
-.logro-hero{padding:27px 30px!important;background:linear-gradient(135deg,#0E3540,#164D52)!important;color:#fff!important;border-color:rgba(73,164,169,.25)!important}
-  .logro-hero__icon{display:none!important}
+.logro-hero{padding:27px 30px!important;background:linear-gradient(135deg,#173844,#28565B)!important;color:#fff!important;border-color:rgba(73,164,169,.25)!important}
+  .logro-hero__icon{display:flex!important;background:rgba(255,255,255,.1)!important;color:#F2C879!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:none!important}
   .logro-hero__name{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;-webkit-text-fill-color:#fff!important;color:#fff!important}
   .logro-hero__lbl,.logro-hero__xp-text,.logro-hero__racha-lbl{color:rgba(255,255,255,.78)!important}
   .logro-hero__xp-text strong{color:#fff!important}
@@ -13192,8 +13235,9 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 .logros-cat__header{padding-bottom:16px!important;margin-bottom:18px!important;border-bottom:1px solid var(--border)!important}
 .logros-cat__icon{border-radius:14px!important;background:var(--surface-2)!important}
 .logro{min-height:138px;padding:18px 14px!important;border-radius:18px!important;background:#FAFBF9!important;box-shadow:none!important}
-.logro:not(.is-earned){opacity:.72}.logro.is-earned{background:linear-gradient(145deg,#FFFDF7,#FFF8E8)!important;border-color:rgba(212,148,61,.28)!important}
+.logro.is-locked{opacity:.58}.logro.is-unlocked{opacity:1;background:linear-gradient(145deg,#FFFDF7,#FFF8E8)!important;border-color:rgba(212,148,61,.28)!important}
 .logro__icon{width:42px!important;height:42px!important;border-radius:13px!important;background:#fff!important;border:1px solid var(--border)!important}
+.logro.is-unlocked .logro__icon{background:var(--cat-color)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 7px 18px color-mix(in srgb,var(--cat-color) 24%,transparent)!important}
 
 /* Certificados */
 .certb{min-height:132px;padding:20px 22px!important;border-radius:22px!important;background:linear-gradient(135deg,#FFFFFF,#FCFBF7)!important}
