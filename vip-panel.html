@@ -7713,10 +7713,10 @@ const Sections = (function(){
 
   const niveles = [
     {id:1,nombre:'Aprendiz',desde:0,hasta:300},
-    {id:2,nombre:'Técnico',desde:300,hasta:900},
-    {id:3,nombre:'Profesional',desde:900,hasta:2000},
-    {id:4,nombre:'Líder',desde:2000,hasta:4000},
-    {id:5,nombre:'Maestro',desde:4000,hasta:99999}
+    {id:2,nombre:'Técnico',desde:300,hasta:1200},
+    {id:3,nombre:'Profesional',desde:1200,hasta:2500},
+    {id:4,nombre:'Líder',desde:2500,hasta:4500},
+    {id:5,nombre:'Maestro',desde:4500,hasta:99999}
   ];
 
   // ── LOGROS · todos con criterio MEDIBLE con datos reales de la plataforma
@@ -8070,7 +8070,8 @@ const Sections = (function(){
           <p>${diasFalta === null
             ? 'Termina el curso de muestra y obtén su certificado. En ese momento comenzará tu <strong style="color:var(--primary);">día 0 VIP</strong>.'
             : (() => { const cr = cuentaRegresivaCurso(c, diasFalta); return `${cr.singular ? 'Queda' : 'Quedan'} <strong style="color:var(--primary);">${cr.corto}</strong> para que se desbloquee${cr.fecha ? ' (se abre el <strong>' + cr.fecha + '</strong>)' : ''}. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.`; })()}</p>
-          <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Si quieres acceso anticipado, contáctanos.</p>
+          <p style="font-size:12.5px;color:var(--text-2);margin-top:12px;line-height:1.5;">🎁 ¿Ya tienes un <strong>premio por tu nivel</strong>? Puedes abrir este curso antes desde <a href="#" onclick="Modal.closeAll();window.navigateToSection('logros');return false;" style="color:var(--primary);font-weight:700;">Mis logros</a>.</p>
+          <p style="font-size:12px;color:var(--text-3);margin-top:8px;">Si quieres acceso anticipado, contáctanos.</p>
         </div>
       `;
     } else {
@@ -8901,6 +8902,73 @@ const Sections = (function(){
     } catch(e){ return null; }
   };
 
+  /* ============================ PREMIOS POR NIVEL (servidor) ============================ */
+  // El nivel y los premios los calcula el servidor con datos verificables: aquí solo se muestran.
+  async function cargarPremios(){
+    if (window.__isDemoMode === true || !window.__currentUser) return null;
+    const token = await window.__currentUser.getIdToken();
+    const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/premios', { headers: { 'Authorization': 'Bearer ' + token } });
+    return r.ok ? await r.json() : null;
+  }
+  async function usarPremio(cursoId, titulo){
+    if (!confirm('¿Usar tu premio para abrir «' + titulo + '» ahora? Cada premio abre un solo curso y no se puede cambiar después.')) return;
+    try {
+      const token = await window.__currentUser.getIdToken();
+      const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/premios/usar', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ cursoId })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'No se pudo usar el premio');
+      Modal.closeAll();
+      Toast.success('🎁 ¡Curso desbloqueado!', titulo + ' ya está abierto para ti');
+      _cursosLoaded = false;
+      try { await cargarCursosBackend(); } catch(e){}
+      const cont = document.getElementById('dynamic-section');
+      if (cont && typeof Sections !== 'undefined' && Sections.renderers && Sections.renderers.logros) Sections.renderers.logros(cont);
+    } catch(e){ Toast.error('No se pudo usar el premio', e.message); }
+  }
+  function abrirElegirPremio(premios){
+    const lista = (premios && premios.elegibles) || [];
+    const cuerpo = lista.length
+      ? '<p style="margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--text-2);">Elige el curso que quieres abrir <strong>ahora</strong>. Tienes ' + premios.disponibles + ' premio' + (premios.disponibles === 1 ? '' : 's') + ' disponible' + (premios.disponibles === 1 ? '' : 's') + '.</p>'
+        + lista.map(c => {
+            const dias = Math.max(0, Math.ceil((new Date(c.desbloqueoEn).getTime() - Date.now()) / 86400000));
+            return '<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">'
+              + '<div style="min-width:0;"><div style="font-weight:700;font-size:13.5px;line-height:1.35;">' + escapeHtml(c.titulo) + '</div>'
+              + '<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">🔒 Se abriría solo en ' + dias + ' día' + (dias === 1 ? '' : 's') + '</div></div>'
+              + '<button class="btn btn--accent btn--sm" data-premio-curso="' + escapeHtml(c.id) + '" data-premio-titulo="' + escapeHtml(c.titulo) + '">Abrir ahora</button></div>';
+          }).join('')
+      : '<p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--text-2);">Ahora mismo no hay cursos bloqueados que puedas adelantar. Cuando se acerque la fecha de otro curso, podrás usar aquí tu premio.</p>';
+    Modal.open({ id: 'elegir-premio', title: '🎁 Elige tu curso', subtitle: 'Premio por tu nivel', icon: 'i-trophy', size: 'lg', body: cuerpo,
+      footer: '<button class="btn btn--ghost" onclick="Modal.close(\'elegir-premio\')">Cerrar</button>' });
+    setTimeout(() => {
+      document.querySelectorAll('[data-premio-curso]').forEach(b => b.addEventListener('click', () => usarPremio(b.dataset.premioCurso, b.dataset.premioTitulo)));
+    }, 60);
+  }
+  function premiosHTML(premios, xpLocal){
+    const fila = (nivel, need, texto, estado, extra) => {
+      const chip = estado === 'disponible' ? '<span style="padding:4px 10px;border-radius:999px;background:#16a34a22;color:#16a34a;font-size:11.5px;font-weight:700;">✅ Disponible</span>'
+        : estado === 'usado' ? '<span style="padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-2);font-size:11.5px;font-weight:700;">✔ Usado' + (extra ? ': ' + escapeHtml(extra) : '') + '</span>'
+        : '<span style="padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-3);font-size:11.5px;font-weight:700;">🔒 ' + (extra || 'Bloqueado') + '</span>';
+      return '<div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--border);border-radius:12px;">'
+        + '<div><div style="font-weight:700;font-size:13.5px;">Nivel ' + nivel + '</div><div style="font-size:12px;color:var(--text-3);margin-top:2px;">' + texto + ' · desde ' + need.toLocaleString('es-MX') + ' XP</div></div>' + chip + '</div>';
+    };
+    const xp = premios ? premios.xp : xpLocal;
+    const filas = [['Profesional', 1200, '1 curso antes de tiempo'], ['Maestro', 4500, '1 curso más antes de tiempo']].map((p, i) => {
+      const dato = premios && premios.premios ? premios.premios[i] : null;
+      const estado = dato ? dato.estado : 'bloqueado';
+      const titulo = dato && dato.cursoId ? ((cursos.find(c => c.id === dato.cursoId) || {}).titulo || 'un curso') : '';
+      const falta = estado === 'bloqueado' ? 'Te faltan ' + Math.max(0, p[1] - xp).toLocaleString('es-MX') + ' XP' : '';
+      return fila(p[0], p[1], p[2], estado, estado === 'usado' ? titulo : falta);
+    }).join('');
+    const boton = premios && premios.disponibles > 0
+      ? '<button class="btn btn--accent" id="premio-elegir" style="margin-top:14px;">🎁 Elegir mi curso</button>' : '';
+    return '<section class="premios-card" style="margin:0 0 20px;padding:20px;border-radius:16px;border:1px solid var(--border);background:var(--surface);">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:22px;">🎁</span><h2 style="margin:0;font-size:17px;">Premios por nivel</h2></div>'
+      + '<p style="margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--text-2);">Al llegar a <strong>Profesional</strong> y a <strong>Maestro</strong> ganas un premio: <strong>abrir 1 curso antes de tiempo</strong>, el que tú elijas.</p>'
+      + '<div style="display:grid;gap:8px;">' + filas + '</div>' + boton + '</section>';
+  }
+
   /* ============================ LOGROS ============================ */
   async function renderLogros(container){
     container.innerHTML = '<div class="fade-up" style="padding:64px 24px;text-align:center;color:var(--text-2);font-size:14px;">Cargando tus logros…</div>';
@@ -8972,6 +9040,17 @@ const Sections = (function(){
     } }
     logros.forEach(l=>{ l.unlock = unlocked(l) ? 'real' : null; });
     usuario.xp = logros.filter(l=>l.unlock).reduce((s,l)=>s+l.xp,0) + retosXp;
+    // ── Nivel, XP, racha y premios: los calcula el servidor con datos verificables. Si responde,
+    //    manda sobre el cálculo local (que queda solo como respaldo sin conexión / modo demo) ──
+    let premios = null;
+    try { premios = await cargarPremios(); } catch(e){ /* sin conexión: se usa el cálculo local */ }
+    if (premios) {
+      const idsServidor = new Set(premios.logros);
+      logros.forEach(l => { l.unlock = idsServidor.has(l.id) ? 'real' : null; });
+      usuario.xp = premios.xp;
+      racha = premios.racha;
+      dias = new Array(premios.dias).fill('');
+    }
     usuario.racha = racha; usuario.diasActivos = dias.length;
     const nivelActual=getNivel(usuario.xp);
     const pct=Math.round(((usuario.xp-nivelActual.desde)/(nivelActual.hasta-nivelActual.desde))*100);
@@ -8980,6 +9059,7 @@ const Sections = (function(){
     const ganados=logros.filter(l=>l.unlock).length;
     const totalXp=usuario.xp;
     const cats=['Operación','Especialización','Excelencia','Comunidad','Maestría','Retos'];
+    const tarjetaPremios = premiosHTML(premios, usuario.xp);
     container.innerHTML=`
       <div class="fade-up">
         <div class="sec-hero">
@@ -9027,6 +9107,7 @@ const Sections = (function(){
           </div>
         </section>
 
+        ${tarjetaPremios}
         <div class="kpi-grid">
           <div class="kpi-card"><div class="kpi-card__label">Logros ganados</div><div class="kpi-card__value">${ganados}<span class="kpi-card__value-sub">/${logros.length}</span></div></div>
           <div class="kpi-card"><div class="kpi-card__label">XP de logros</div><div class="kpi-card__value">${totalXp}</div></div>
@@ -9053,6 +9134,8 @@ const Sections = (function(){
         `).join('')}
       </div>
     `;
+    const botonPremio = container.querySelector('#premio-elegir');
+    if (botonPremio) botonPremio.addEventListener('click', () => abrirElegirPremio(premios));
     container.querySelectorAll('.logro').forEach(el=>{
       el.addEventListener('click',()=>openLogroDetalle(el.dataset.lid));
       el.addEventListener('keydown',e=>{if(e.key==='Enter')openLogroDetalle(el.dataset.lid);});
@@ -11832,7 +11915,8 @@ function iniciarAvisosPersonales() {
   const estilos = {
     certificado: { icono: 'i-certificate', color: '#34D399' },
     foro: { icono: 'i-messages', color: '#60A5FA' },
-    logro: { icono: 'i-trophy', color: '#FBBF24' }
+    logro: { icono: 'i-trophy', color: '#FBBF24' },
+    premio: { icono: 'i-crown', color: '#F59E0B' }
   };
   try {
     const q = fs.query(fs.collection(fs.db, 'avisos', uid, 'items'), fs.orderBy('creadoEn', 'desc'), fs.limit(30));
