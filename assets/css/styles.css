@@ -1149,8 +1149,35 @@ body {
 }
 .btn-vip svg { width: 17px; height: 17px; flex-shrink: 0; }
 
+.nav-login {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--white) !important; font-weight: 600 !important;
+}
+.nav-login svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.hero-login { margin-top: 14px; font-size: .88rem; color: rgba(255,255,255,0.65); }
+.hero-login a { color: var(--primary-light); font-weight: 600; text-decoration: underline; }
+.hero-login a:hover { color: var(--white); }
+
+.nav-links a { white-space: nowrap; }
+/* Pantallas medianas (tablet horizontal / laptop chica): con los botones de acceso el menú no cabe en una fila, se usa el menú de hamburguesa */
+@media (min-width: 901px) and (max-width: 1240px) {
+  .nav-links { display: none; }
+  .nav-links.open {
+    display: flex; flex-direction: column;
+    position: absolute; top: 70px; left: 0; right: 0;
+    background: rgba(17,17,17,0.98); padding: 16px;
+    border-bottom: 1px solid rgba(88,183,27,0.12);
+  }
+  .hamburger { display: flex; }
+  .nav-vip, .nav-login { justify-content: center; }
+}
 @media (max-width: 900px) {
-  .nav-vip { justify-content: center; }
+  .nav-vip, .nav-login { justify-content: center; }
+}
+@media (max-width: 560px) {
+  .btn-vip { justify-content: center; }
+  .hero-login { text-align: center; }
 }
 
 /* ═══ DÓNDE APLICAMOS NUESTRA EXPERIENCIA ═══ */

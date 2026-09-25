@@ -6123,6 +6123,14 @@ const Sections = (function(){
     'Maestría':'i-crown',
     'Retos':'i-bolt'
   };
+  const LOGRO_ICON = {
+    l1:'i-play',l2:'i-shield-check',l3:'i-badge',l4:'i-calendar',l5:'i-certificate',l6:'i-bolt',
+    l7:'i-book-2',l8:'i-folder',l9:'i-certificate',l10:'i-badge',l11:'i-clock',l12:'i-tools',
+    l13:'i-trophy',l14:'i-clipboard-check',l15:'i-gauge',l16:'i-check-circle',l17:'i-crown',
+    l18:'i-messages',l19:'i-heart',l20:'i-edit',l21:'i-users',l22:'i-calendar',l23:'i-bolt',
+    l24:'i-clock',l25:'i-badge',l26:'i-crown'
+  };
+  const logroIcon = (id,cat) => LOGRO_ICON[id] || ICON_CAT[cat] || 'i-badge';
 
   /* ═══════════════════════════════════════════════════════════════════
      CURSOS · sistema dinámico desde Firestore (flujo Sinergia)
@@ -7152,16 +7160,17 @@ const Sections = (function(){
     return !!(mat && mat.gratis === true);
   }
 
-  function mostrarPaywallCurso() {
+  function mostrarPaywallCurso(titulo, mensaje) {
     // Cerrar TODOS los modales que estén abiertos (detalle del curso, visor,
     // quiz, etc.) para que el usuario vea directamente Suscripción.
     try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
     try { document.getElementById('paywall-modal')?.classList.remove('is-open'); } catch(e){}
     try { if (typeof window.cerrarDrawerMovil === 'function') window.cerrarDrawerMovil(); } catch(e){}
     if (typeof navigateToSection === 'function') navigateToSection('suscripcion');
-    if (typeof Toast !== 'undefined') Toast.info('Contenido de membresía', 'Activa tu suscripción para desbloquear todas las clases y materiales.');
+    if (typeof Toast !== 'undefined') Toast.info(titulo || 'Contenido de membresía', mensaje || 'Activa tu suscripción para desbloquear todas las clases y materiales.');
   }
   window.__mostrarPaywallAlintec = mostrarPaywallCurso;
+  window.__esMiembroVip = tieneAccesoVipCompleto;
 
   function getProgresoCurso(cursoId) {
     const p = getProgreso();
@@ -8037,25 +8046,26 @@ const Sections = (function(){
     const colorArea = COLOR_AREA[c.area] || '#43A047';
     const iconArea = ICON_AREA[c.area] || 'i-book';
 
-    // Hero con imagen de portada de fondo
-    const heroBg = `background:linear-gradient(135deg,rgba(0,0,0,.35),rgba(0,0,0,.7)),url('${portada}');background-size:cover;background-position:center;border-radius:14px;padding:24px;color:#fff;margin-bottom:18px;`;
-
     // Body con sesiones (clases) y materiales reales
     let bodyContent = `
-      <div style="${heroBg}">
-        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <div class="course-detail-hero" style="--course-hero:url('${portada}');--course-color:${colorArea};">
+        <div class="course-detail-hero__shade"></div>
+        <div class="course-detail-hero__content">
+        <div class="course-detail-hero__kicker"><svg class="ic"><use href="#${iconArea}"/></svg> Formación especializada</div>
+        <div class="course-detail-hero__tags">
           <span class="tag tag--soon" style="color:#fff;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.12);">${c.area}</span>
           <span class="tag tag--soon" style="color:#fff;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.12);">${c.nivel}</span>
           ${c.disponibleSiempre ? `<span class="tag tag--soon" style="color:#0A120C;border-color:var(--success);background:var(--success);font-weight:700;">DISPONIBLE</span>` : ''}
         </div>
-        <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-bottom:8px;">${c.titulo}</h2>
-        <div style="display:flex;gap:14px;font-size:12px;opacity:.9;flex-wrap:wrap;">
+        <h2 class="course-detail-hero__title">${c.titulo}</h2>
+        <div class="course-detail-hero__meta">
           ${c.instructor ? `<span><svg class="ic" style="color:#fff;"><use href="#i-user"/></svg> ${c.instructor}</span>` : ''}
           ${c.horas ? `<span><svg class="ic" style="color:#fff;"><use href="#i-clock"/></svg> ${c.horas}h</span>` : ''}
           ${c.sesiones?.length ? `<span><svg class="ic" style="color:#fff;"><use href="#i-book"/></svg> ${c.sesiones.length} clase${c.sesiones.length!==1?'s':''}</span>` : ''}
         </div>
+        </div>
       </div>
-      <p style="font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:18px;">${c.descripcion || c.desc || ''}</p>
+      <p class="course-detail-description">${c.descripcion || c.desc || ''}</p>
     `;
 
     // El goteo cada 8 días es solo para miembros. Quien no ha pagado
@@ -8898,6 +8908,11 @@ const Sections = (function(){
         method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ retoId, puntaje, total })
       });
+      if (r.status === 403) {
+        const d = await r.json().catch(() => ({}));
+        if (d.codigo === 'membresia-requerida') window.__mostrarPaywallAlintec?.('Retos para miembros', 'Activa tu suscripción para resolver los retos y sumar XP.');
+        return null;
+      }
       return r.ok ? await r.json() : null;
     } catch(e){ return null; }
   };
@@ -8920,7 +8935,7 @@ const Sections = (function(){
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'No se pudo usar el premio');
       Modal.closeAll();
-      Toast.success('🎁 ¡Curso desbloqueado!', titulo + ' ya está abierto para ti');
+      Toast.success('Curso desbloqueado', titulo + ' ya está abierto para ti');
       _cursosLoaded = false;
       try { await cargarCursosBackend(); } catch(e){}
       const cont = document.getElementById('dynamic-section');
@@ -8935,11 +8950,11 @@ const Sections = (function(){
             const dias = Math.max(0, Math.ceil((new Date(c.desbloqueoEn).getTime() - Date.now()) / 86400000));
             return '<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">'
               + '<div style="min-width:0;"><div style="font-weight:700;font-size:13.5px;line-height:1.35;">' + escapeHtml(c.titulo) + '</div>'
-              + '<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">🔒 Se abriría solo en ' + dias + ' día' + (dias === 1 ? '' : 's') + '</div></div>'
+              + '<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;display:flex;align-items:center;gap:5px;"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg>Se abriría solo en ' + dias + ' día' + (dias === 1 ? '' : 's') + '</div></div>'
               + '<button class="btn btn--accent btn--sm" data-premio-curso="' + escapeHtml(c.id) + '" data-premio-titulo="' + escapeHtml(c.titulo) + '">Abrir ahora</button></div>';
           }).join('')
       : '<p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--text-2);">Ahora mismo no hay cursos bloqueados que puedas adelantar. Cuando se acerque la fecha de otro curso, podrás usar aquí tu premio.</p>';
-    Modal.open({ id: 'elegir-premio', title: '🎁 Elige tu curso', subtitle: 'Premio por tu nivel', icon: 'i-trophy', size: 'lg', body: cuerpo,
+    Modal.open({ id: 'elegir-premio', title: 'Elige tu curso', subtitle: 'Premio por tu nivel', icon: 'i-trophy', size: 'lg', body: cuerpo,
       footer: '<button class="btn btn--ghost" onclick="Modal.close(\'elegir-premio\')">Cerrar</button>' });
     setTimeout(() => {
       document.querySelectorAll('[data-premio-curso]').forEach(b => b.addEventListener('click', () => usarPremio(b.dataset.premioCurso, b.dataset.premioTitulo)));
@@ -8947,9 +8962,9 @@ const Sections = (function(){
   }
   function premiosHTML(premios, xpLocal){
     const fila = (nivel, need, texto, estado, extra) => {
-      const chip = estado === 'disponible' ? '<span style="padding:4px 10px;border-radius:999px;background:#16a34a22;color:#16a34a;font-size:11.5px;font-weight:700;">✅ Disponible</span>'
-        : estado === 'usado' ? '<span style="padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-2);font-size:11.5px;font-weight:700;">✔ Usado' + (extra ? ': ' + escapeHtml(extra) : '') + '</span>'
-        : '<span style="padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-3);font-size:11.5px;font-weight:700;">🔒 ' + (extra || 'Bloqueado') + '</span>';
+      const chip = estado === 'disponible' ? '<span class="achievement-chip achievement-chip--available"><svg class="ic"><use href="#i-check-circle"/></svg>Disponible</span>'
+        : estado === 'usado' ? '<span class="achievement-chip"><svg class="ic"><use href="#i-check"/></svg>Usado' + (extra ? ': ' + escapeHtml(extra) : '') + '</span>'
+        : '<span class="achievement-chip achievement-chip--locked"><svg class="ic"><use href="#i-lock"/></svg>' + (extra || 'Bloqueado') + '</span>';
       return '<div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--border);border-radius:12px;">'
         + '<div><div style="font-weight:700;font-size:13.5px;">Nivel ' + nivel + '</div><div style="font-size:12px;color:var(--text-3);margin-top:2px;">' + texto + ' · desde ' + need.toLocaleString('es-MX') + ' XP</div></div>' + chip + '</div>';
     };
@@ -8962,9 +8977,9 @@ const Sections = (function(){
       return fila(p[0], p[1], p[2], estado, estado === 'usado' ? titulo : falta);
     }).join('');
     const boton = premios && premios.disponibles > 0
-      ? '<button class="btn btn--accent" id="premio-elegir" style="margin-top:14px;">🎁 Elegir mi curso</button>' : '';
+      ? '<button class="btn btn--accent" id="premio-elegir" style="margin-top:14px;"><svg class="ic"><use href="#i-trophy"/></svg>Elegir mi curso</button>' : '';
     return '<section class="premios-card" style="margin:0 0 20px;padding:20px;border-radius:16px;border:1px solid var(--border);background:var(--surface);">'
-      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:22px;">🎁</span><h2 style="margin:0;font-size:17px;">Premios por nivel</h2></div>'
+      + '<div class="premios-card__head"><span class="premios-card__icon"><svg class="ic"><use href="#i-trophy"/></svg></span><h2>Premios por nivel</h2></div>'
       + '<p style="margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--text-2);">Al llegar a <strong>Profesional</strong> y a <strong>Maestro</strong> ganas un premio: <strong>abrir 1 curso antes de tiempo</strong>, el que tú elijas.</p>'
       + '<div style="display:grid;gap:8px;">' + filas + '</div>' + boton + '</section>';
   }
@@ -9060,6 +9075,14 @@ const Sections = (function(){
     const totalXp=usuario.xp;
     const cats=['Operación','Especialización','Excelencia','Comunidad','Maestría','Retos'];
     const tarjetaPremios = premiosHTML(premios, usuario.xp);
+    // Sin suscripción vigente la sección se puede VER, pero el detalle de cada insignia y de las tarjetas lleva a Suscripción
+    const miembroLogros = window.__esMiembroVip ? window.__esMiembroVip() : false;
+    const avisoVistaPrevia = miembroLogros ? '' : `
+        <div class="retos-note" style="margin:0 0 18px;align-items:center;flex-wrap:wrap;">
+          <svg class="ic"><use href="#i-lock"/></svg>
+          <div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Vista previa.</strong> Puedes ver tu nivel y las insignias. Para ver el detalle de cada una, sumar XP y ganar premios necesitas una suscripción activa.</div>
+          <button class="btn btn--accent btn--sm" type="button" data-ir-suscripcion>Ver suscripción</button>
+        </div>`;
     container.innerHTML=`
       <div class="fade-up">
         <div class="sec-hero">
@@ -9067,6 +9090,7 @@ const Sections = (function(){
           <h1 class="sec-hero__title">Mis logros</h1>
           <p class="sec-hero__sub">Cada curso, herramienta y participación te suma XP. Sube de nivel y desbloquea medallas. Llega a <em style="color:var(--primary);">Maestro</em>.</p>
         </div>
+        ${avisoVistaPrevia}
         <div class="logro-hero">
           <div class="logro-hero__row">
             <div class="logro-hero__icon"><svg class="ic ic--xl"><use href="#i-trophy"/></svg></div>
@@ -9089,11 +9113,11 @@ const Sections = (function(){
           <div class="nivel-path__track">
             ${niveles.map((n,idx)=>{
               const iconosNivel=[
-                '<svg class="ic" viewBox="0 0 24 24"><path d="M12 4.5c-3.3 0-5.5 1.9-5.5 4.8 0 2.4 .9 4 1.6 6.5 .4 1.6 .6 3.4 1.6 3.4 .9 0 1-1.5 1.4-3 .2-.9 .4-1.7 .9-1.7s.7 .8 .9 1.7c.4 1.5 .5 3 1.4 3 1 0 1.2-1.8 1.6-3.4 .7-2.5 1.6-4.1 1.6-6.5 0-2.9-2.2-4.8-5.5-4.8z"/></svg>',
-                '<svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.3"/><path d="M12 11.2 19 18.6"/></svg>',
-                '<svg class="ic" viewBox="0 0 24 24"><path d="M10 6.6c-2.6 0-4.3 1.5-4.3 3.7 0 1.9 .7 3.1 1.3 5 .3 1.2 .5 2.7 1.3 2.7 .7 0 .8-1.2 1.1-2.4 .15-.7 .3-1.3 .7-1.3s.55 .6 .7 1.3c.3 1.2 .4 2.4 1.1 2.4 .8 0 1-1.5 1.3-2.7 .2-.7 .45-1.4 .6-2.2"/><path d="M17.6 3.8l.75 1.95 1.95 .75-1.95 .75-.75 1.95-.75-1.95-1.95-.75 1.95-.75z"/></svg>',
-                '<svg class="ic" viewBox="0 0 24 24"><path d="M4 8.6l3.6 3.2L12 5.6l4.4 6.2L20 8.6l-1.4 9.4H5.4z"/><path d="M5.6 18h12.8"/></svg>',
-                '<svg class="ic" viewBox="0 0 24 24"><path d="M12 10.2c-2.4 0-4 1.4-4 3.5 0 1.8 .7 3 1.2 4.6 .3 1.1 .5 2.4 1.2 2.4 .65 0 .7-1.1 1-2.2 .15-.7 .3-1.2 .6-1.2s.45 .5 .6 1.2c.3 1.1 .35 2.2 1 2.2 .7 0 .9-1.3 1.2-2.4 .5-1.6 1.2-2.8 1.2-4.6 0-2.1-1.6-3.5-4-3.5z"/><path d="M6.6 6.4l2 1.7L12 3.6l3.4 4.5 2-1.7-1 4.9H7.6z"/></svg>'
+                '<svg class="ic"><use href="#i-book-2"/></svg>',
+                '<svg class="ic"><use href="#i-tools"/></svg>',
+                '<svg class="ic"><use href="#i-badge"/></svg>',
+                '<svg class="ic"><use href="#i-shield-check"/></svg>',
+                '<svg class="ic"><use href="#i-crown"/></svg>'
               ];
               const isCurrent=n.id===nivelActual.id;
               const isDone=n.id<nivelActual.id;
@@ -9124,7 +9148,7 @@ const Sections = (function(){
             <div class="logros-grid">
               ${logros.filter(l=>l.cat===cat).map(l=>`
                 <div class="logro ${l.unlock?'is-unlocked':'is-locked'}" data-lid="${l.id}" tabindex="0" style="--cat-color:${COLOR_CAT[cat]};">
-                  <div class="logro__icon">${l.unlock?`<svg class="ic"><use href="#${ICON_CAT[cat]}"/></svg>`:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'}</div>
+                  <div class="logro__icon">${l.unlock?`<svg class="ic"><use href="#${logroIcon(l.id,cat)}"/></svg>`:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'}</div>
                   <div class="logro__name">${l.nombre}</div>
                   <div class="logro__xp">+${l.xp} XP</div>
                 </div>
@@ -9134,6 +9158,17 @@ const Sections = (function(){
         `).join('')}
       </div>
     `;
+    if (!miembroLogros) {
+      const irSuscripcion = () => window.__mostrarPaywallAlintec?.('Solo para miembros', 'Activa tu suscripción para ver el detalle de tus insignias y premios.');
+      container.querySelectorAll('.logro, .premios-card, .nivel-path').forEach(el=>{
+        el.style.cursor = 'pointer';
+        if (!el.classList.contains('logro')) { el.setAttribute('tabindex','0'); el.setAttribute('role','button'); }
+        el.addEventListener('click', irSuscripcion);
+        el.addEventListener('keydown', e=>{ if (e.key==='Enter') irSuscripcion(); });
+      });
+      container.querySelectorAll('[data-ir-suscripcion]').forEach(b => b.addEventListener('click', e=>{ e.stopPropagation(); irSuscripcion(); }));
+      return;
+    }
     const botonPremio = container.querySelector('#premio-elegir');
     if (botonPremio) botonPremio.addEventListener('click', () => abrirElegirPremio(premios));
     container.querySelectorAll('.logro').forEach(el=>{
@@ -9146,7 +9181,7 @@ const Sections = (function(){
     const body=`
       <div style="text-align:center;padding:8px 12px 14px;">
         <div style="width:78px;height:78px;margin:0 auto 16px;border-radius:20px;background:linear-gradient(135deg,${COLOR_CAT[l.cat]},${COLOR_CAT[l.cat]}aa);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px ${COLOR_CAT[l.cat]}44;">
-          ${l.unlock?`<svg class="ic ic--xl"><use href="#${ICON_CAT[l.cat]}"/></svg>`:'<svg class="ic ic--xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'}
+          ${l.unlock?`<svg class="ic ic--xl"><use href="#${logroIcon(l.id,l.cat)}"/></svg>`:'<svg class="ic ic--xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'}
         </div>
         <h2 style="font-size:22px;font-weight:600;letter-spacing:-.4px;">${l.nombre}</h2>
         <p style="color:var(--text-2);max-width:340px;margin:6px auto 0;line-height:1.5;font-size:13px;">${l.desc}</p>
@@ -9162,7 +9197,7 @@ const Sections = (function(){
         ${l.unlock?`<div style="margin-top:14px;padding:10px 14px;background:color-mix(in srgb,var(--success) 12%,transparent);color:var(--success);border-radius:10px;font-size:12px;font-weight:500;">🎉 Desbloqueado el ${formatDate(l.unlock)}</div>`:''}
       </div>
     `;
-    Modal.open({id:'logro-'+id,title:l.unlock?'Medalla obtenida':'Medalla pendiente',subtitle:l.cat,icon:ICON_CAT[l.cat],size:'sm',body,footer:`<button class="btn btn--ghost" onclick="Modal.close('logro-${id}')">Cerrar</button>`});
+    Modal.open({id:'logro-'+id,title:l.unlock?'Medalla obtenida':'Medalla pendiente',subtitle:l.cat,icon:logroIcon(l.id,l.cat),size:'sm',body,footer:`<button class="btn btn--ghost" onclick="Modal.close('logro-${id}')">Cerrar</button>`});
   }
 
   /* ============================ WEBINARS / CLASES EN VIVO ============================ */
@@ -9653,6 +9688,17 @@ const Sections = (function(){
     }, 50);
   }
 
+  function _portadaMaterialArea(area) {
+    const a = String(area || '').toLowerCase();
+    if (/inocuidad|haccp|buenas prácticas|distintivo|microbiolog|seguridad/.test(a)) return 'assets/img/materiales/portada-inocuidad-v1.webp';
+    if (/calidad|normativa|etiquetado|ciencia de alimentos|laboratorio/.test(a)) return 'assets/img/materiales/portada-calidad-v1.webp';
+    if (/producción|tecnología|conservación|agroindustria|recubrimiento|planta|residuo/.test(a)) return 'assets/img/materiales/portada-produccion-v1.webp';
+    if (/logística|operaciones|gestión|finanzas|administrativo/.test(a)) return 'assets/img/materiales/portada-operaciones-v1.webp';
+    if (/mantenimiento|energía|agua|electroquímica|medio ambiente/.test(a)) return 'assets/img/materiales/portada-ingenieria-v1.webp';
+    if (/nutrición|formulación|suplement|nutracéutico|funcional|azúcar/.test(a)) return 'assets/img/materiales/portada-nutricion-v1.webp';
+    return 'assets/img/materiales/portada-calidad-v1.webp';
+  }
+
   function _renderPdfCard(m) {
     const colorMap = {
       'Seguridad':'#EF4444','Calidad':'#10B981','Logística':'#3B82F6',
@@ -9669,11 +9715,8 @@ const Sections = (function(){
     const diasFaltan = _diasParaMaterial(m);
     const tituloEsc = (m.titulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const cursoEsc = (m.cursoTitulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    // Portada del curso al que pertenece el material (misma imagen que la card del curso)
-    const portada = (m.cursoPortada || '').replace(/"/g,'&quot;').replace(/'/g,'%27');
-    const topStyle = portada
-      ? `background-image:linear-gradient(150deg,color-mix(in srgb,${c} 42%,transparent),rgba(10,18,12,.58)),url('${portada}');background-size:cover;background-position:center;`
-      : '';
+    const portada = _portadaMaterialArea(m.cursoArea);
+    const topStyle = `background-image:linear-gradient(180deg,rgba(7,18,12,.04),rgba(7,18,12,.82)),url('${portada}');background-size:cover;background-position:center;`;
 
     return `
       <article class="pdf-card ${!disponible ? 'pdf-card--soon' : ''}" style="--pdf-color:${c};cursor:pointer;"
@@ -9686,8 +9729,13 @@ const Sections = (function(){
         data-curso="${cursoEsc}"
         data-area="${m.cursoArea}">
         <div class="pdf-card__top" style="${topStyle}">
+          <span class="pdf-card__spine" aria-hidden="true"></span>
           <div class="pdf-card__icon"><svg class="ic"><use href="#${ic}"/></svg></div>
           <span class="pdf-card__size">${tipoLabel}</span>
+          <div class="pdf-card__cover-copy">
+            <span>${m.cursoArea || 'Biblioteca técnica'}</span>
+            <strong>${tituloEsc}</strong>
+          </div>
         </div>
         <div class="pdf-card__body">
           <div class="pdf-card__title">${tituloEsc}</div>
@@ -9856,22 +9904,27 @@ const Sections = (function(){
         _noticiasCargadas = true;
         return;
       }
-      grid.innerHTML = arts.map(n=>{
+      grid.innerHTML = arts.map((n,i)=>{
         const fecha = noticiaTiempoRel(n.createdAt || n.fechaPublicacion);
+        const variante = i === 0 ? 'news-card--lead' : (i % 3 === 2 ? 'news-card--column' : 'news-card--standard');
+        const marca = String(n.categoriaNombre || n.categoria || 'A').trim().slice(0,1).toUpperCase();
         const cover = n.imagen
           ? `<div class="news-card__cover" style="background-image:url('${urlSeguraNoticia(n.imagen)}');background-size:cover;background-position:center;">
+               <span class="news-card__edition">ALINTEC · ACTUALIDAD</span>
                <span class="news-card__date">${fecha}</span>
                <span class="news-card__cat">${escapeHtml(n.categoriaNombre||n.categoria||'')}</span>
              </div>`
           : `<div class="news-card__cover">
-               <svg class="ic"><use href="#i-news"/></svg>
+               <span class="news-card__monogram" aria-hidden="true">${escapeHtml(marca)}</span>
+               <span class="news-card__edition">ALINTEC · ACTUALIDAD</span>
                <span class="news-card__date">${fecha}</span>
                <span class="news-card__cat">${escapeHtml(n.categoriaNombre||n.categoria||'')}</span>
              </div>`;
         return `
-        <article class="news-card" data-noticia="${escapeHtml(n.id)}" role="button" tabindex="0" style="cursor:pointer;--cat-color:${n.color||'#43A047'};">
+        <article class="news-card ${variante}" data-noticia="${escapeHtml(n.id)}" role="button" tabindex="0" style="cursor:pointer;--cat-color:${n.color||'#43A047'};">
           ${cover}
           <div class="news-card__body">
+            <div class="news-card__rubric"><span>Informe editorial</span><span>${String(i+1).padStart(2,'0')}</span></div>
             <h3 class="news-card__title">${escapeHtml(n.titulo||'')}</h3>
             ${n.extracto?`<p class="news-card__excerpt">${escapeHtml(n.extracto).slice(0,140)}${(n.extracto||'').length>140?'…':''}</p>`:''}
             <div class="news-card__footer">
@@ -11077,7 +11130,7 @@ const Sections = (function(){
               Gestiona tu tarjeta, descarga tus facturas y revisa tu historial de cobros desde el portal seguro de Stripe.
             </div>
             <button class="btn btn--ghost" style="width:100%;" id="btn-billing-portal" data-bypass-paywall="true">
-              <svg class="ic"><use href="#i-card"/></svg><span class="lbl">Gestionar en Stripe</span>
+              <svg class="ic"><use href="#i-credit-card"/></svg><span class="lbl">Gestionar en Stripe</span>
             </button>
           </div>
 
@@ -11090,7 +11143,7 @@ const Sections = (function(){
             </div>
             ${S.cancelacionProgramada
               ? `<button class="btn btn--accent" style="width:100%;margin-top:8px;" id="btn-reactivar-sub" data-bypass-paywall="true">
-                  <svg class="ic"><use href="#i-zap"/></svg><span class="lbl">Reactivar suscripción</span>
+                  <svg class="ic"><use href="#i-bolt"/></svg><span class="lbl">Reactivar suscripción</span>
                 </button>`
               : `<button class="btn btn--ghost" style="width:100%;margin-top:8px;color:#EF4444;border-color:rgba(239,68,68,.3);" id="btn-cancelar-sub" data-bypass-paywall="true">
                   <svg class="ic"><use href="#i-x"/></svg><span class="lbl">Cancelar suscripción</span>
@@ -11434,6 +11487,8 @@ const Sections = (function(){
      Las actividades guardan solamente resultados de práctica en este dispositivo.
      No asignan XP ni modifican membresías, certificados o el calendario de Ruta VIP. */
   function renderRetos(container){
+    // Sin suscripción vigente los retos se pueden VER, pero no resolver: cualquier intento lleva a Suscripción
+    const miembro = window.__esMiembroVip ? window.__esMiembroVip() : false;
     const retos = [
       {
         id:'quiz',
@@ -11470,23 +11525,26 @@ const Sections = (function(){
             <p class="retos-hero__sub">Cuatro actividades breves para practicar inocuidad, procesos y conceptos esenciales a tu ritmo.</p>
           </div>
           <div class="retos-mascots" aria-label="Equipo de laboratorio de los retos">
-            <img class="retos-story-team" src="assets/img/retos/equipo-alintec-v3.png" alt="Especialistas y guía microbiológica de Alintec Food">
+            <img class="retos-story-team" src="assets/img/retos/equipo-alintec-v3.webp" alt="Especialistas y guía microbiológica de Alintec Food">
             <div class="retos-team-caption">Tu equipo de laboratorio</div>
             <span class="retos-mascots__count"><strong>4</strong> formatos</span>
           </div>
         </section>
 
-        <div class="retos-note">
+        <div class="retos-note" style="flex-wrap:wrap;">
           <svg class="ic"><use href="#i-shield-check"/></svg>
-          <div><strong style="color:var(--text);">Modo práctica.</strong> Tus mejores resultados se guardan únicamente en este dispositivo. No entrega XP, no modifica certificados y no adelanta cursos de la Ruta VIP.</div>
+          ${miembro
+            ? '<div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Cada reto suma.</strong> Al superarlo ganas XP para tu nivel (una vez por reto al día) y puedes desbloquear insignias. Tus mejores resultados también se guardan en este dispositivo. No modifica tus certificados.</div>'
+            : '<div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Solo para miembros.</strong> Puedes ver cómo son los retos, pero para resolverlos y sumar XP necesitas una suscripción activa.</div><button class="btn btn--accent btn--sm" type="button" id="retos-suscribirme">Ver suscripción</button>'}
         </div>
 
         <div class="retos-grid">
-          ${retos.map(r => `
-            <button class="reto-card" type="button" data-reto="${r.id}" style="--reto-color:${r.color};">
+          ${retos.map((r,idx) => `
+            <button class="reto-card${miembro ? '' : ' is-locked'}" type="button" data-reto="${r.id}" style="--reto-color:${r.color};">
               <div class="reto-card__top">
                 <div class="reto-card__icon"><svg class="ic"><use href="#${r.icono}"/></svg></div>
-                <span class="reto-card__status">Comenzar</span>
+                <span class="reto-card__number">${String(idx+1).padStart(2,'0')}</span>
+                <span class="reto-card__status">${miembro ? 'Comenzar' : 'Solo miembros'}</span>
               </div>
               <h2 class="reto-card__title">${r.titulo}</h2>
               <p class="reto-card__desc">${r.desc}</p>
@@ -11532,7 +11590,7 @@ const Sections = (function(){
     function startQuiz(){const quiz=shuffle(quizPool).slice(0,5);let i=0,score=0,locked=false;const paint=()=>{const x=quiz[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Quiz relámpago · ${i+1}/${quiz.length}</div><h2>${x.q}</h2></div><span class="reto-score">${score} aciertos</span></div><div class="reto-options">${x.a.map((a,n)=>`<button type="button" data-answer="${n}"><span>${String.fromCharCode(65+n)}</span>${a}</button>`).join('')}</div><div class="reto-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{if(locked)return;locked=true;const n=+b.dataset.answer;const ok=n===x.ok;if(ok)score++;stage.querySelectorAll('[data-answer]').forEach((el,k)=>{el.disabled=true;el.classList.toggle('is-correct',k===x.ok);el.classList.toggle('is-wrong',k===n&&!ok);});const f=stage.querySelector('.reto-feedback');f.hidden=false;f.innerHTML=`<strong>${ok?'¡Correcto!':'Revisa esta idea'}</strong><span>${x.why}</span><button class="btn btn--primary" type="button">${i===quiz.length-1?'Ver resultado':'Siguiente'}</button>`;f.querySelector('button').addEventListener('click',()=>{i++;locked=false;i<quiz.length?paint():showResult('quiz','Quiz relámpago',score,quiz.length,startQuiz);});}));};paint();}
     const detectiveScenes=[
       {
-        id:'preparacion', title:'Zona de preparación', image:'assets/img/retos/detective-inocuidad-realista-v1.png',
+        id:'preparacion', title:'Zona de preparación', image:'assets/img/retos/detective-inocuidad-realista-v1.webp',
         hazards:[
           {id:'tabla',x:.02,y:.55,w:.48,h:.42,type:'Contaminación cruzada',why:'El pollo crudo está en contacto inmediato con vegetales listos para consumo.'},
           {id:'quimico',x:.46,y:.38,w:.12,h:.40,type:'Peligro químico',why:'El envase de limpieza no tiene etiqueta y está sobre la mesa de preparación.'},
@@ -11540,7 +11598,7 @@ const Sections = (function(){
         ]
       },
       {
-        id:'camara-fria', title:'Cámara fría', image:'assets/img/retos/detective-camara-fria-v1.png',
+        id:'camara-fria', title:'Cámara fría', image:'assets/img/retos/detective-camara-fria-v1.webp',
         hazards:[
           {id:'goteo',x:0,y:.02,w:.33,h:.61,type:'Contaminación cruzada',why:'El pollo crudo gotea desde una repisa superior sobre alimentos listos para consumo.'},
           {id:'condensacion',x:.33,y:.61,w:.36,h:.38,type:'Falla de saneamiento',why:'El agua acumulada favorece contaminación ambiental y evidencia una condición no controlada.'},
@@ -11548,7 +11606,7 @@ const Sections = (function(){
         ]
       },
       {
-        id:'higiene-personal', title:'Línea de alimentos listos para consumo', image:'assets/img/retos/detective-higiene-personal-v1.png',
+        id:'higiene-personal', title:'Línea de alimentos listos para consumo', image:'assets/img/retos/detective-higiene-personal-v1.webp',
         hazards:[
           {id:'cabello',x:.07,y:0,w:.37,h:.48,type:'Cabello sin protección',why:'La manipuladora trabaja con cabello suelto y sin cofia sobre producto listo para consumo.'},
           {id:'joyeria',x:.45,y:.45,w:.20,h:.41,type:'Joyería y contacto directo',why:'El reloj, el anillo y la mano descubierta pueden contaminar el alimento.'},
@@ -11592,7 +11650,12 @@ const Sections = (function(){
     ];
     function startFlashcards(){let cards=shuffle(cardPool);try{const last=localStorage.getItem('alintec:retos:lastFlash');if(cards[0]?.front===last)cards.push(cards.shift());localStorage.setItem('alintec:retos:lastFlash',cards[0]?.front||'');}catch(e){}cards=cards.slice(0,6);let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length}</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard ${flipped?'is-flipped':''}" aria-label="Voltear tarjeta"><span class="flashcard__hint">${flipped?'Definición':'Concepto · toca para revelar'}</span><strong>${flipped?c.back:c.front}</strong><span class="flashcard__turn"><svg class="ic"><use href="#i-arrow-right"/></svg></span></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():showResult('flashcards','Flashcards',known,cards.length,startFlashcards);}));};paint();}
     const starters={quiz:startQuiz,detective:startDetective,orden:startOrder,flashcards:startFlashcards};
-    container.querySelectorAll('[data-reto]').forEach(card=>card.addEventListener('click',()=>starters[card.dataset.reto]()));
+    const irSuscripcion = () => window.__mostrarPaywallAlintec?.('Retos para miembros', 'Activa tu suscripción para resolver los retos y sumar XP.');
+    container.querySelectorAll('[data-reto]').forEach(card=>card.addEventListener('click',()=>{
+      if (!miembro) { irSuscripcion(); return; }
+      starters[card.dataset.reto]();
+    }));
+    container.querySelector('#retos-suscribirme')?.addEventListener('click', irSuscripcion);
   }
 
   return {
@@ -13363,6 +13426,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .retos-team-caption{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.76)}
 .retos-mascots__count{position:absolute;right:2px;top:2px;z-index:4;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:100px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(10px);font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.82)}
 .retos-mascots__count strong{font-size:14px;color:#F2C879}
+.reto-card.is-locked{filter:saturate(.75)}.reto-card.is-locked .reto-card__status{opacity:.85}
 .retos-note{display:flex;align-items:flex-start;gap:12px;padding:15px 17px;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--primary) 7%,var(--surface));color:var(--text-2);font-size:12.5px;line-height:1.55}
 .retos-note .ic{width:20px;height:20px;color:var(--primary);flex-shrink:0;margin-top:1px}
 .retos-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
@@ -13482,6 +13546,8 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 .modal__box,.modal-content{border-radius:25px!important;border:1px solid var(--border-2)!important;box-shadow:0 28px 80px rgba(4,18,8,.3)!important}
 *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--primary) 24%,var(--border)) transparent}
 @media(max-width:1180px){.app{grid-template-columns:218px minmax(0,1fr)}.aside{display:none}.main{padding-right:24px}}
+/* Teléfono: una sola columna (sin esto el contenido quedaba apretado en 218px y el resto de la pantalla vacío) */
+@media(max-width:880px){.app{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:760px){
   .main{padding:14px 14px calc(92px + env(safe-area-inset-bottom));gap:17px}
   .topbar{top:8px;border-radius:15px;padding:7px 8px 7px 12px}
@@ -13662,6 +13728,103 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 :root[data-theme="night"] .reto-score{background:var(--surface-3);color:#B8D4C0}
 :root[data-theme="night"] .reto-options button>span{background:var(--surface-3);color:#B8C8BE}
 :root[data-theme="night"] .reto-feedback{background:var(--surface-2);border-color:var(--border)}
+
+/* ═══ Colecciones editoriales 2026 · solo presentación ═══ */
+.cursos-grid{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px}
+.curso-card{border-radius:28px!important;background:var(--surface)!important;border:1px solid color-mix(in srgb,var(--area-color) 22%,var(--border))!important;box-shadow:0 18px 38px rgba(25,47,34,.09),0 3px 0 color-mix(in srgb,var(--area-color) 18%,transparent)!important;transform-style:preserve-3d}
+.curso-card::before{content:'';position:absolute;inset:11px;border:1px solid rgba(255,255,255,.18);border-radius:20px 20px 10px 10px;z-index:3;pointer-events:none;opacity:.58}
+.curso-card::after{content:'↗';top:18px;left:18px;width:42px;height:42px;border-radius:14px;background:rgba(10,24,16,.62);box-shadow:0 9px 24px rgba(0,0,0,.24);font-family:'Plus Jakarta Sans',sans-serif}
+.curso-card:hover{transform:translateY(-8px) perspective(1000px) rotateX(1.2deg)!important;box-shadow:0 30px 68px color-mix(in srgb,var(--area-color) 15%,rgba(16,35,23,.18))!important}
+.curso-card__cover{height:238px!important;margin:10px 10px 0;border-radius:20px;box-shadow:inset 0 -90px 75px rgba(6,18,11,.38);transform:translateZ(8px)}
+.curso-card__cover::before{background:linear-gradient(120deg,rgba(255,255,255,.18),transparent 31%)!important;mask-image:none!important;-webkit-mask-image:none!important}
+.curso-card__cover::after{height:72%!important;background:linear-gradient(180deg,transparent 16%,rgba(5,16,10,.75))!important}
+.curso-card__cover>.ic{width:46px!important;height:46px!important;border-radius:15px!important;background:rgba(12,28,19,.52)!important;box-shadow:0 10px 25px rgba(0,0,0,.2)}
+.curso-card__body{padding:21px 24px 24px!important;gap:12px!important}
+.curso-card__tags .tag{border-radius:999px;padding:5px 10px;font-size:9px;letter-spacing:.7px}
+.curso-card__title{font-size:20px!important;line-height:1.2!important;letter-spacing:-.62px!important}
+.curso-card__desc{font-size:13px!important;line-height:1.65!important;color:var(--text-2);-webkit-line-clamp:2}
+.curso-card__meta{padding:15px 0 0!important;border-top:1px solid var(--border)!important;font-size:9.5px!important;letter-spacing:.2px}
+
+.course-detail-hero{position:relative;isolation:isolate;overflow:hidden;min-height:315px;margin-bottom:22px;border-radius:26px;background-image:var(--course-hero);background-size:cover;background-position:center;color:#fff;box-shadow:0 23px 52px rgba(7,27,17,.25)}
+.course-detail-hero__shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,21,13,.94) 0%,rgba(8,24,15,.73) 50%,rgba(8,20,13,.16) 100%),linear-gradient(0deg,rgba(5,16,10,.48),transparent 50%)}
+.course-detail-hero::after{content:'';position:absolute;right:-50px;bottom:-95px;width:245px;height:245px;border:1px solid rgba(255,255,255,.15);border-radius:50%;box-shadow:0 0 0 38px rgba(255,255,255,.035);pointer-events:none}
+.course-detail-hero__content{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;min-height:315px;padding:34px;max-width:680px}
+.course-detail-hero__kicker{display:flex;align-items:center;gap:8px;margin-bottom:auto;font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.6px;text-transform:uppercase;color:#D7E9DB}.course-detail-hero__kicker .ic{width:16px;height:16px}
+.course-detail-hero__tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.course-detail-hero__title{max-width:610px;margin:0 0 13px;font:800 clamp(25px,4vw,38px)/1.08 'Plus Jakarta Sans',sans-serif;letter-spacing:-1.05px;color:#fff}
+.course-detail-hero__meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.82)}.course-detail-hero__meta span{display:flex;align-items:center;gap:6px}.course-detail-hero__meta .ic{width:14px;height:14px}
+.course-detail-description{margin:0 3px 23px;padding:0 2px 20px;border-bottom:1px solid var(--border);font-size:13.5px;line-height:1.75;color:var(--text-2)}
+.modulo{border-radius:15px!important;border-color:var(--border)!important;background:var(--surface-2)!important;box-shadow:0 7px 18px rgba(20,42,29,.04)}
+
+/* Materiales como libros físicos con portadas temáticas */
+.pdfs-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))!important;gap:32px 27px!important;padding:8px 5px 18px;perspective:1400px}
+.pdf-card{padding:14px 14px 0!important;border-radius:23px!important;overflow:visible!important;background:linear-gradient(180deg,color-mix(in srgb,var(--surface-2) 92%,var(--pdf-color) 8%),var(--surface))!important;border:1px solid var(--border)!important;box-shadow:0 18px 40px rgba(12,30,19,.1)!important;transform-style:preserve-3d}
+.pdf-card:hover{transform:translateY(-10px) rotateX(1deg)!important;box-shadow:0 32px 70px color-mix(in srgb,var(--pdf-color) 16%,rgba(8,26,15,.2))!important}
+.pdf-card__top{min-height:330px!important;border-radius:8px 19px 19px 8px!important;padding:22px!important;align-items:flex-start!important;justify-content:flex-start!important;transform:perspective(1100px) rotateY(-5deg) translateZ(8px)!important;transform-origin:left center;box-shadow:inset 14px 0 18px rgba(4,15,9,.3),inset -2px 0 rgba(255,255,255,.24),12px 16px 28px rgba(5,19,11,.28)!important}
+.pdf-card:hover .pdf-card__top{transform:perspective(1100px) rotateY(-1deg) translateY(-3px) translateZ(10px)!important;box-shadow:inset 12px 0 16px rgba(4,15,9,.24),inset -2px 0 rgba(255,255,255,.25),18px 23px 35px rgba(5,19,11,.32)!important}
+.pdf-card__top::before{background:linear-gradient(120deg,rgba(255,255,255,.24),transparent 28%,rgba(255,255,255,.045) 48%,transparent 67%)!important;background-size:auto!important;mask-image:none!important;-webkit-mask-image:none!important}
+.pdf-card__top::after{content:'ALINTEC FOOD · EDICIÓN TÉCNICA'!important;left:24px!important;bottom:18px!important;font-size:8px!important;letter-spacing:1.5px!important}
+.pdf-card__spine{position:absolute;z-index:3;inset:0 auto 0 0;width:13px;border-radius:8px 0 0 8px;background:linear-gradient(90deg,rgba(0,0,0,.46),rgba(255,255,255,.16),rgba(0,0,0,.18));box-shadow:2px 0 7px rgba(0,0,0,.24)}
+.pdf-card__icon{position:absolute!important;right:18px;top:18px;width:45px!important;height:45px!important;border-radius:13px!important;background:rgba(9,25,16,.68)!important;border:1px solid rgba(255,255,255,.24);box-shadow:0 9px 22px rgba(0,0,0,.2)!important;backdrop-filter:blur(8px)}
+.pdf-card__size{position:absolute!important;left:24px;top:23px;background:rgba(8,22,14,.67)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important;backdrop-filter:blur(8px)}
+.pdf-card__cover-copy{position:absolute;z-index:3;left:25px;right:22px;bottom:54px;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.55)}
+.pdf-card__cover-copy span{display:block;margin-bottom:8px;font:800 8.5px 'JetBrains Mono',monospace;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.78)}
+.pdf-card__cover-copy strong{display:block;font:800 clamp(18px,2vw,24px)/1.15 'Plus Jakarta Sans',sans-serif;letter-spacing:-.55px}
+.pdf-card__body{padding:19px 9px 21px!important;gap:10px!important}
+.pdf-card__title{font-size:15px!important;font-weight:800!important}.pdf-card__meta{padding-top:2px}
+.pdf-card__tags{padding-top:13px!important;border-top:1px solid var(--border)}
+
+/* Noticias · composición de revista y periódico contemporáneo */
+.news-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:25px!important;align-items:stretch}
+.news-card{border-radius:25px!important;background:var(--surface)!important;border:1px solid color-mix(in srgb,var(--cat-color) 20%,var(--border))!important;box-shadow:0 18px 39px rgba(20,42,29,.085),0 3px 0 color-mix(in srgb,var(--cat-color) 15%,transparent)!important;transform-style:preserve-3d}
+.news-card:hover{transform:translateY(-8px) perspective(1100px) rotateX(1deg)!important;box-shadow:0 31px 68px color-mix(in srgb,var(--cat-color) 14%,rgba(17,38,25,.18))!important}
+.news-card__cover{height:220px!important;margin:10px 10px 0;border-radius:18px!important;background:linear-gradient(145deg,color-mix(in srgb,var(--cat-color) 82%,#173126),color-mix(in srgb,var(--cat-color) 45%,#101D17))!important;box-shadow:inset 0 -70px 62px rgba(6,18,11,.35)}
+.news-card__cover[style]{background-blend-mode:multiply,normal!important}
+.news-card__cover::before{background-image:linear-gradient(115deg,rgba(255,255,255,.18),transparent 28%),repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0,rgba(255,255,255,.045) 1px,transparent 1px,transparent 30px)!important;background-size:auto!important;mask-image:none!important;-webkit-mask-image:none!important}
+.news-card__edition{position:absolute;z-index:2;left:16px;top:16px;font:800 8px 'JetBrains Mono',monospace;letter-spacing:1.3px;color:rgba(255,255,255,.86)}
+.news-card__date{top:auto!important;left:16px!important;bottom:15px!important;border-radius:7px!important;background:rgba(6,20,12,.58)!important}
+.news-card__cat{top:auto!important;right:16px!important;bottom:15px!important;border-radius:7px!important;background:rgba(255,255,255,.92)!important}
+.news-card__monogram{position:absolute;right:18px;top:22px;font:900 108px/.8 Georgia,serif;color:rgba(255,255,255,.15);text-shadow:0 1px 0 rgba(255,255,255,.12)}
+.news-card__body{padding:20px 22px 22px!important;gap:11px!important}
+.news-card__rubric{display:flex;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);font:800 8px 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--cat-color)}
+.news-card__rubric span:last-child{color:var(--text-3)}
+.news-card__title{font-family:Georgia,'Times New Roman',serif!important;font-size:21px!important;font-weight:700!important;line-height:1.16!important;letter-spacing:-.42px!important;-webkit-line-clamp:3}
+.news-card__excerpt{font-size:12.5px!important;line-height:1.65!important;-webkit-line-clamp:3}
+.news-card__footer{padding-top:13px!important}
+.news-card--lead{grid-column:span 2;display:grid!important;grid-template-columns:minmax(0,1.3fr) minmax(250px,.7fr)}
+.news-card--lead .news-card__cover{height:auto!important;min-height:350px;margin:10px 0 10px 10px;border-radius:18px!important}
+.news-card--lead .news-card__body{padding:29px 28px!important;justify-content:center}.news-card--lead .news-card__title{font-size:clamp(27px,3vw,38px)!important;-webkit-line-clamp:4}.news-card--lead .news-card__excerpt{-webkit-line-clamp:5}
+.news-card--column .news-card__cover{height:170px!important}.news-card--column .news-card__title{font-size:19px!important}
+
+/* Retos · fichas de laboratorio con lenguaje editorial */
+.retos-grid{gap:22px!important}
+.reto-card{min-height:270px!important;padding:26px!important;border-radius:27px!important;background:radial-gradient(circle at 88% 13%,color-mix(in srgb,var(--reto-color) 22%,transparent),transparent 32%),linear-gradient(145deg,#163328,#10261E)!important;border:1px solid color-mix(in srgb,var(--reto-color) 42%,rgba(255,255,255,.11))!important;box-shadow:0 18px 42px rgba(8,31,21,.2)!important;color:#fff}
+.reto-card:hover{transform:translateY(-8px) rotateX(1deg)!important;box-shadow:0 31px 66px color-mix(in srgb,var(--reto-color) 18%,rgba(8,31,21,.3))!important}
+.reto-card::before{left:26px!important;right:26px!important;top:auto!important;bottom:0!important;height:3px!important;border-radius:3px 3px 0 0}
+.reto-card::after{right:-48px!important;bottom:-70px!important;width:210px!important;height:210px!important;border:1px solid color-mix(in srgb,var(--reto-color) 25%,transparent);box-shadow:0 0 0 28px color-mix(in srgb,var(--reto-color) 5%,transparent);background:transparent!important}
+.reto-card__top{align-items:center!important;justify-content:flex-start!important}.reto-card__icon{width:58px!important;height:58px!important;border-radius:18px!important;background:rgba(255,255,255,.095)!important;color:color-mix(in srgb,var(--reto-color) 70%,#fff)!important;border-color:rgba(255,255,255,.13)!important;box-shadow:inset 0 1px rgba(255,255,255,.16),0 12px 26px rgba(0,0,0,.18)!important}
+.reto-card__number{margin-left:3px;font:800 10px 'JetBrains Mono',monospace;letter-spacing:1px;color:rgba(255,255,255,.38)}
+.reto-card__status{margin-left:auto!important;color:#E5F1E8!important;background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.13)!important}
+.reto-card__title{font-size:22px!important;margin-top:28px!important;color:#fff}.reto-card__desc{font-size:13px!important;color:rgba(255,255,255,.66)!important;max-width:88%}.reto-card__foot{color:rgba(255,255,255,.5)!important;border-top:1px solid rgba(255,255,255,.1);margin-top:auto;padding-top:17px!important}.reto-card__arrow{color:color-mix(in srgb,var(--reto-color) 65%,#fff)}
+
+/* Logros · medallas técnicas, sin emojis */
+.nivel-path,.premios-card{border:1px solid var(--border)!important;border-radius:24px!important;background:linear-gradient(145deg,var(--surface),var(--surface-2))!important;box-shadow:0 15px 36px rgba(18,43,28,.065)}
+.nivel-step__icon{border-radius:14px!important;transform:rotate(45deg);background:var(--surface)!important;border:1px solid var(--border-2)!important}.nivel-step__icon .ic{transform:rotate(-45deg);width:19px;height:19px}.nivel-step.is-done .nivel-step__icon,.nivel-step.is-current .nivel-step__icon{background:linear-gradient(145deg,#315F49,#5A9470)!important;color:#fff!important;box-shadow:0 9px 22px rgba(49,95,73,.22)}
+.logros-cat{border-radius:27px!important;background:var(--surface)!important}
+.logros-grid{gap:13px}.logro{position:relative;overflow:hidden;min-height:156px!important;justify-content:center;border-radius:20px!important;background:linear-gradient(145deg,var(--surface-2),var(--surface))!important;border-color:var(--border)!important}
+.logro::after{content:'';position:absolute;right:-36px;bottom:-48px;width:100px;height:100px;border:1px solid color-mix(in srgb,var(--cat-color) 16%,transparent);border-radius:50%;box-shadow:0 0 0 18px color-mix(in srgb,var(--cat-color) 3%,transparent);pointer-events:none}
+.logro__icon{width:50px!important;height:50px!important;border-radius:15px!important;transform:rotate(45deg);background:color-mix(in srgb,var(--cat-color) 9%,var(--surface))!important;color:var(--cat-color)!important;border:1px solid color-mix(in srgb,var(--cat-color) 22%,var(--border))!important;box-shadow:0 9px 20px color-mix(in srgb,var(--cat-color) 9%,transparent)!important}.logro__icon .ic{width:21px;height:21px;transform:rotate(-45deg)}
+.logro.is-unlocked .logro__icon{background:linear-gradient(145deg,color-mix(in srgb,var(--cat-color) 82%,#fff),var(--cat-color))!important}.logro__name{font-size:12.5px!important;line-height:1.35}.logro__xp{padding:4px 8px;border-radius:999px;background:color-mix(in srgb,var(--cat-color) 8%,transparent)}
+.premios-card__head{display:flex;align-items:center;gap:11px;margin-bottom:7px}.premios-card__head h2{margin:0;font-size:17px}.premios-card__icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#F3E7C9;color:#8A6524}.premios-card__icon .ic{width:19px;height:19px}
+.achievement-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-2);font-size:11.5px;font-weight:700}.achievement-chip .ic{width:13px;height:13px}.achievement-chip--available{background:color-mix(in srgb,var(--success) 13%,var(--surface));color:var(--success)}.achievement-chip--locked{color:var(--text-3)}
+
+:root[data-theme="night"] .curso-card,:root[data-theme="night"] .pdf-card,:root[data-theme="night"] .news-card,:root[data-theme="night"] .logros-cat,:root[data-theme="night"] .logro,:root[data-theme="night"] .nivel-path,:root[data-theme="night"] .premios-card{background:linear-gradient(155deg,var(--surface),color-mix(in srgb,var(--primary) 2.5%,var(--surface)))!important;border-color:var(--border-2)!important;box-shadow:0 22px 48px rgba(0,0,0,.3)!important}
+:root[data-theme="night"] .curso-card__body,:root[data-theme="night"] .pdf-card__body,:root[data-theme="night"] .news-card__body{color:var(--text)}
+:root[data-theme="night"] .modulo{background:var(--surface-2)!important;border-color:var(--border-2)!important}
+:root[data-theme="night"] .news-card__rubric,:root[data-theme="night"] .course-detail-description{border-color:var(--border-2)}
+
+@media(max-width:1050px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.news-card--lead{grid-column:1/-1}}
+@media(max-width:700px){.news-grid{grid-template-columns:1fr}.news-card--lead{display:flex!important;grid-column:auto}.news-card--lead .news-card__cover{height:245px!important;min-height:0;margin:10px 10px 0}.news-card--lead .news-card__body{padding:21px 22px!important}.news-card--lead .news-card__title{font-size:25px!important}.course-detail-hero,.course-detail-hero__content{min-height:285px}.course-detail-hero__content{padding:25px}.pdf-card__top{min-height:345px!important}}
 </style>
 <!-- ─── Service Worker · permite instalar Alintec Food como app y abrir más rápido ─── -->
 <script>
