@@ -1138,7 +1138,13 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 :root[data-theme="night"] .mobile-nav{background:rgba(14,22,18,.94)!important;border-color:var(--border)!important}
 
 /* Plantillas editoriales: cambian guía visual, no el envío ni el payload */
-.news-template-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px;padding:13px;border:1px solid var(--border);border-radius:18px;background:var(--surface-2)}
+.tpl-mini{position:relative;flex-shrink:0;width:52px;height:66px;border-radius:3px;background:#fff;border:1px solid rgba(0,0,0,.14);overflow:hidden;box-shadow:3px 5px 10px rgba(0,0,0,.14);display:block}
+.tpl-mini i{position:absolute;left:4px;right:4px;top:4px;height:11px;background:var(--tc)}
+.tpl-mini b{position:absolute;left:4px;right:4px;top:18px;height:22px;background:linear-gradient(135deg,#8a9a8f,#c9c2ae)}
+.tpl-mini u{position:absolute;left:4px;height:3px;background:#b9b9b9;text-decoration:none}
+.tpl-mini u:nth-of-type(1){top:45px;width:38px;background:var(--tc)}.tpl-mini u:nth-of-type(2){top:52px;width:28px}
+.tpl-mini--verde{--tc:#154034}.tpl-mini--naranja{--tc:#C2500C}.tpl-mini--naranja b{right:20px}.tpl-mini--bicolor{--tc:#E8434B}.tpl-mini--bicolor b{background:linear-gradient(135deg,#222,#555)}.tpl-mini--bicolor i{background:linear-gradient(90deg,#E8434B 50%,#1b1b1b 50%)}
+.news-template-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px;padding:13px;border:1px solid var(--border);border-radius:18px;background:var(--surface-2)}
 .news-template{display:flex;align-items:center;gap:10px;min-width:0;padding:9px;border:1px solid transparent;border-radius:13px;background:transparent;color:var(--text);text-align:left;cursor:pointer;transition:.2s ease}
 .news-template:hover{background:var(--surface);border-color:var(--border-2);transform:translateY(-2px)}.news-template.is-selected{background:var(--surface);border-color:color-mix(in srgb,var(--primary) 38%,var(--border));box-shadow:0 9px 22px rgba(23,54,36,.09)}
 .news-template__visual{width:43px;height:54px;flex-shrink:0;border-radius:6px 10px 10px 6px;display:grid;place-items:center;color:#fff;box-shadow:inset 5px 0 rgba(0,0,0,.16),5px 7px 12px rgba(0,0,0,.15);transform:perspective(500px) rotateY(-4deg)}.news-template__visual .ic{width:18px;height:18px}.news-template__visual--report{background:linear-gradient(145deg,#2E6D51,#55906C)}.news-template__visual--alert{background:linear-gradient(145deg,#7A463D,#B36A54)}.news-template__visual--innovation{background:linear-gradient(145deg,#375C59,#5D8983)}.news-template__visual--norm{background:linear-gradient(145deg,#6B5C3D,#A4874E)}
@@ -5548,20 +5554,18 @@ const Pages={
         <div class="dash-grid">
           <div class="dash-card">
             <div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-news"/></svg>Publicar una noticia</div></div>
-            <div class="news-template-picker" aria-label="Plantillas editoriales">
-              <button type="button" class="news-template is-selected" data-news-template="general" data-title-placeholder="Ej: La industria alimentaria acelera su transformación" data-summary-placeholder="Dato principal y contexto\nQué cambia para el sector\nRecomendación práctica para el lector">
-                <span class="news-template__visual news-template__visual--report"><svg class="ic"><use href="#i-news"/></svg></span><span><strong>Reporte</strong><small>Panorama sectorial</small></span>
+            <div class="news-template-picker" aria-label="Plantillas de portada">
+              <button type="button" class="news-template is-selected" data-news-template="verde" aria-pressed="true">
+                <span class="tpl-mini tpl-mini--verde" aria-hidden="true"><i></i><b></b><u></u><u></u></span><span><strong>Portada verde</strong><small>Clásica, con foto grande</small></span>
               </button>
-              <button type="button" class="news-template" data-news-template="inocuidad" data-title-placeholder="Ej: Nueva alerta preventiva para plantas de alimentos" data-summary-placeholder="Riesgo identificado\nProductos o procesos involucrados\nAcción preventiva recomendada">
-                <span class="news-template__visual news-template__visual--alert"><svg class="ic"><use href="#i-shield-check"/></svg></span><span><strong>Alerta técnica</strong><small>Inocuidad</small></span>
+              <button type="button" class="news-template" data-news-template="naranja" aria-pressed="false">
+                <span class="tpl-mini tpl-mini--naranja" aria-hidden="true"><i></i><b></b><u></u><u></u></span><span><strong>Portada naranja</strong><small>Foto y notas laterales</small></span>
               </button>
-              <button type="button" class="news-template" data-news-template="tecnologia" data-title-placeholder="Ej: Una tecnología que cambia el procesamiento de alimentos" data-summary-placeholder="Qué tecnología se presentó\nCómo funciona\nAplicación potencial en planta">
-                <span class="news-template__visual news-template__visual--innovation"><svg class="ic"><use href="#i-bolt"/></svg></span><span><strong>Innovación</strong><small>Tecnología</small></span>
-              </button>
-              <button type="button" class="news-template" data-news-template="normativa" data-title-placeholder="Ej: Actualización normativa que debes conocer" data-summary-placeholder="Qué disposición cambió\nA quién aplica\nFecha o paso siguiente">
-                <span class="news-template__visual news-template__visual--norm"><svg class="ic"><use href="#i-clipboard-check"/></svg></span><span><strong>Boletín</strong><small>Normativa</small></span>
+              <button type="button" class="news-template" data-news-template="bicolor" aria-pressed="false">
+                <span class="tpl-mini tpl-mini--bicolor" aria-hidden="true"><i></i><b></b><u></u><u></u></span><span><strong>Bicolor</strong><small>Titular en panel oscuro</small></span>
               </button>
             </div>
+            <p style="font-size:12px;color:var(--text-3);margin:-6px 2px 14px;line-height:1.5;">Elige el diseño de la portada del periódico. La plataforma acomoda tu título, foto y texto; solo escribes el contenido. La portada toma el diseño de la última noticia publicada.</p>
             <div class="form-grid">
               <div class="form-field form-field--full"><label class="label">Título</label><input type="text" class="input" id="nt-titulo" maxlength="140" placeholder="Ej: Nueva guía de etiquetado frontal"></div>
               <div class="form-field form-field--full"><label class="label">Lo esencial (una idea por línea)</label><textarea class="input" id="nt-resumen" rows="5" maxlength="1500" placeholder="Escribe de 2 a 5 ideas clave, una por línea. Así se muestran como puntos dentro de la plataforma."></textarea></div>
@@ -5599,14 +5603,8 @@ const Pages={
       </div>`;
 
     p.querySelectorAll('[data-news-template]').forEach(btn => btn.addEventListener('click', () => {
-      p.querySelectorAll('[data-news-template]').forEach(x => x.classList.remove('is-selected'));
-      btn.classList.add('is-selected');
-      const categoria = p.querySelector('#nt-cat');
-      const titulo = p.querySelector('#nt-titulo');
-      const resumen = p.querySelector('#nt-resumen');
-      if (categoria) categoria.value = btn.dataset.newsTemplate;
-      if (titulo) titulo.placeholder = btn.dataset.titlePlaceholder || titulo.placeholder;
-      if (resumen) resumen.placeholder = btn.dataset.summaryPlaceholder || resumen.placeholder;
+      p.querySelectorAll('[data-news-template]').forEach(x => { x.classList.remove('is-selected'); x.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('is-selected'); btn.setAttribute('aria-pressed', 'true');
     }));
 
     const cargarNoticias = async () => {
@@ -5681,7 +5679,8 @@ const Pages={
       try {
         await post('/api/admin/noticias', {
           titulo: v('nt-titulo'), resumen: p.querySelector('#nt-resumen').value, categoria: v('nt-cat'), fuente: v('nt-fuente'),
-          imagen: v('nt-imagen'), enlace: v('nt-enlace'), notificar: p.querySelector('#nt-notif').checked
+          imagen: v('nt-imagen'), enlace: v('nt-enlace'), notificar: p.querySelector('#nt-notif').checked,
+          plantilla: (p.querySelector('[data-news-template].is-selected') || {dataset: {}}).dataset.newsTemplate || 'verde'
         });
         Toast.success('Noticia publicada', 'Ya la ven los miembros en su inicio');
         ['nt-titulo', 'nt-resumen', 'nt-fuente', 'nt-imagen', 'nt-enlace'].forEach(id => { p.querySelector('#' + id).value = ''; });
