@@ -6156,15 +6156,15 @@ const Sections = (function(){
     const st = document.createElement('style');
     st.id = 'jg-css';
     st.textContent = `
-      .jg-lead{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px;}
-      .jg-hint{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-2);background:color-mix(in srgb,var(--primary) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border-2));border-radius:12px;padding:11px 14px;margin-bottom:16px;line-height:1.5;}
+      .jg-lead{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:16px;padding:14px 16px;border:1px solid var(--border);border-radius:15px;background:linear-gradient(135deg,color-mix(in srgb,#257A78 7%,var(--surface)),var(--surface));}
+      .jg-hint{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-2);background:color-mix(in srgb,#257A78 8%,var(--surface-2));border:1px solid color-mix(in srgb,#257A78 22%,var(--border-2));border-radius:14px;padding:12px 15px;margin-bottom:16px;line-height:1.5;}
       .jg-progress{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
       .jg-progress__track{flex:1;height:7px;background:var(--surface-3);border-radius:4px;overflow:hidden;}
-      .jg-progress__fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--highlight));border-radius:4px;transition:width .4s cubic-bezier(.2,.8,.25,1);width:0%;}
+      .jg-progress__fill{height:100%;background:linear-gradient(90deg,#257A78,#5A7DA8,#D39A45);border-radius:4px;transition:width .4s cubic-bezier(.2,.8,.25,1);width:0%;box-shadow:0 0 14px rgba(37,122,120,.24);}
       .jg-progress__txt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-3);font-weight:800;letter-spacing:.5px;white-space:nowrap;}
-      .jg-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
+      .jg-continuar{background:linear-gradient(135deg,#285E69,#257A78);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 10px 24px rgba(24,82,88,.2);transition:opacity .2s,transform .15s,box-shadow .2s;}
       .jg-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
-      .jg-continuar:not(:disabled):hover{transform:translateY(-1px);}
+      .jg-continuar:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(24,82,88,.26);}
       .jg-ghost{background:transparent;color:var(--text-2);border:1.5px solid var(--border-2);border-radius:100px;padding:12px 22px;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;}
       .jg-ghost:hover{border-color:var(--primary);color:var(--primary);}
       .jg-win{margin-top:16px;text-align:center;font-size:14.5px;font-weight:800;color:var(--success);animation:jgPop .4s cubic-bezier(.2,.8,.25,1);}
@@ -6173,10 +6173,10 @@ const Sections = (function(){
 
       /* ── Sopa de letras ── */
       .sp-wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;}
-      .sp-board{position:relative;display:grid;gap:3px;width:min(100%,440px);aspect-ratio:1;user-select:none;touch-action:none;padding:10px;background:color-mix(in srgb,var(--primary) 5%,var(--surface-2));border:1px solid var(--border-2);border-radius:16px;box-shadow:inset 0 2px 10px rgba(0,0,0,.06);}
-      .sp-cell{display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:clamp(10px,1.7vw,14px);cursor:pointer;color:var(--text);transition:background .12s,transform .12s,color .12s;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+      .sp-board{position:relative;display:grid;gap:4px;width:min(100%,440px);aspect-ratio:1;user-select:none;touch-action:none;padding:13px;background:linear-gradient(145deg,#EAF1F1,#F7F9F8);border:1px solid rgba(37,122,120,.16);border-radius:22px;box-shadow:0 18px 40px rgba(31,69,72,.12),inset 0 1px 0 #fff;}
+      .sp-cell{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.9);border:1px solid rgba(28,69,73,.08);border-radius:8px;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:clamp(10px,1.7vw,14px);cursor:pointer;color:#29474A;transition:background .12s,transform .12s,color .12s,box-shadow .12s;box-shadow:0 2px 5px rgba(22,56,59,.06);}
       .sp-cell:hover{transform:scale(1.08);}
-      .sp-cell.is-path{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border-color:transparent;transform:scale(1.05);}
+      .sp-cell.is-path{background:linear-gradient(135deg,#257A78,#5278A6);color:#fff;border-color:transparent;transform:scale(1.07);box-shadow:0 7px 15px rgba(37,122,120,.23);}
       .sp-cell.is-found{color:#fff;border-color:transparent;}
       .sp-side{flex:1;min-width:180px;}
       .sp-side__title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-3);font-weight:800;margin-bottom:10px;}
@@ -6186,38 +6186,47 @@ const Sections = (function(){
       .sp-help{font-size:11.5px;color:var(--text-3);margin-top:10px;line-height:1.5;}
 
       /* ── Memorama ── */
-      .mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,44%),1fr));gap:12px;}
-      .mm-card{perspective:900px;min-height:118px;cursor:pointer;}
+      .mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,44%),1fr));gap:14px;padding:4px;}
+      .mm-card{perspective:1100px;min-height:126px;cursor:pointer;filter:drop-shadow(0 9px 13px rgba(32,49,65,.08));}
       .mm-inner{position:relative;width:100%;height:100%;min-height:118px;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.25,1);}
       .mm-card.is-up .mm-inner{transform:rotateY(180deg);}
       .mm-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;}
-      .mm-front{background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 88%,#000),var(--primary) 45%,var(--highlight));box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 30%,transparent);border:1px solid rgba(255,255,255,.18);}
+      .mm-front{background:radial-gradient(circle at 25% 20%,rgba(255,255,255,.18),transparent 28%),linear-gradient(145deg,#223D58,#2B7776 66%,#B9853E);box-shadow:0 13px 27px rgba(32,66,79,.22),inset 0 1px 0 rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.16);}
       .mm-front::after{content:"?";font-family:'Plus Jakarta Sans',sans-serif;font-size:34px;font-weight:800;color:rgba(255,255,255,.9);text-shadow:0 2px 10px rgba(0,0,0,.25);}
-      .mm-back{background:var(--surface);border:1.5px solid var(--border-2);transform:rotateY(180deg);flex-direction:column;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.08);}
+      .mm-back{background:linear-gradient(145deg,#FFFFFF,#F4F7F7);border:1px solid rgba(37,122,120,.16);transform:rotateY(180deg);flex-direction:column;gap:7px;box-shadow:0 12px 28px rgba(32,66,79,.13);}
       .mm-back__tag{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;font-weight:800;padding:2px 8px;border-radius:100px;}
-      .mm-back__tag--t{color:var(--primary);background:color-mix(in srgb,var(--primary) 13%,transparent);}
-      .mm-back__tag--d{color:var(--highlight);background:color-mix(in srgb,var(--highlight) 15%,transparent);}
+      .mm-back__tag--t{color:#256B69;background:#E3F0EF;}
+      .mm-back__tag--d{color:#8A6128;background:#F8EDD8;}
       .mm-back__txt{font-size:12px;font-weight:600;line-height:1.35;color:var(--text);overflow-wrap:anywhere;}
       .mm-card.is-matched .mm-back{border-color:var(--success);box-shadow:0 0 0 2px color-mix(in srgb,var(--success) 40%,transparent),0 8px 20px color-mix(in srgb,var(--success) 25%,transparent);}
       .mm-card.is-wrong .mm-back{border-color:var(--danger,#F87171);animation:jgShake .45s;}
 
       /* ── Rompecabezas ── */
-      .pz-board{position:relative;margin:0 auto;border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,var(--surface-2));border:1px solid var(--border-2);box-shadow:inset 0 2px 12px rgba(0,0,0,.08);touch-action:none;}
-      .pz-piece{position:absolute;cursor:grab;transition:left .35s cubic-bezier(.2,.8,.25,1),top .35s cubic-bezier(.2,.8,.25,1),filter .2s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.28));}
-      .pz-piece.is-sel{filter:drop-shadow(0 0 10px var(--primary)) drop-shadow(0 4px 8px rgba(0,0,0,.3));z-index:5;}
-      .pz-piece.is-drag{transition:none;z-index:20;cursor:grabbing;filter:drop-shadow(0 12px 22px rgba(0,0,0,.4));}
-      .pz-piece.is-locked{cursor:default;}
+      .pz-shell{padding:18px;border-radius:24px;background:linear-gradient(145deg,#E8EFF0,#F9FAF9);border:1px solid rgba(37,122,120,.15);box-shadow:0 24px 55px rgba(27,60,68,.14),inset 0 1px 0 #fff;perspective:1200px;}
+      .pz-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+      .pz-reference{width:74px;height:52px;object-fit:cover;border-radius:11px;border:3px solid #fff;box-shadow:0 6px 16px rgba(22,52,58,.18);}
+      .pz-moves{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#426267;padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.72);border:1px solid rgba(37,122,120,.12);}
+      .pz-board{position:relative;margin:0 auto;border-radius:18px;background-color:#DCE7E8;background-image:linear-gradient(rgba(39,91,96,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(39,91,96,.08) 1px,transparent 1px);border:1px solid rgba(37,122,120,.2);box-shadow:inset 0 4px 18px rgba(24,58,63,.16),0 13px 30px rgba(24,58,63,.12);touch-action:none;transform:rotateX(1.5deg);transform-style:preserve-3d;overflow:visible;}
+      .pz-piece{position:absolute;cursor:grab;transition:left .36s cubic-bezier(.2,.8,.25,1),top .36s cubic-bezier(.2,.8,.25,1),filter .2s,transform .2s;filter:drop-shadow(0 5px 5px rgba(16,43,48,.34));transform:translateZ(8px);transform-origin:center;}
+      .pz-piece:hover{filter:drop-shadow(0 9px 9px rgba(16,43,48,.38));transform:translateZ(18px) scale(1.025);z-index:4;}
+      .pz-piece.is-sel{filter:drop-shadow(0 0 9px #F1B75E) drop-shadow(0 10px 12px rgba(16,43,48,.4));transform:translateZ(24px) scale(1.035);z-index:8;}
+      .pz-piece.is-drag{transition:none;z-index:20;cursor:grabbing;filter:drop-shadow(0 22px 20px rgba(12,32,38,.46));transform:translateZ(42px) scale(1.07) rotate(1.5deg);}
+      .pz-piece.is-correct{filter:drop-shadow(0 4px 5px rgba(20,65,61,.2));}
+      .pz-piece.is-locked{cursor:default;filter:drop-shadow(0 2px 2px rgba(16,43,48,.12));transform:translateZ(2px);}
       .pz-help{font-size:11.5px;color:var(--text-3);text-align:center;margin-top:12px;line-height:1.5;}
 
       /* ── Ahorcado ── */
-      .ah-stage{display:flex;justify-content:center;margin-bottom:4px;}
-      .ah-word{font-family:'JetBrains Mono',monospace;font-size:clamp(19px,5vw,28px);font-weight:800;letter-spacing:7px;text-align:center;margin:14px 0;color:var(--text);}
-      .ah-vidas{text-align:center;font-size:12.5px;color:var(--text-2);margin-bottom:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
-      .ah-key{width:32px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-weight:800;font-size:12.5px;cursor:pointer;transition:all .15s;}
-      .ah-key:hover:not(:disabled){border-color:var(--primary);transform:translateY(-1px);}
-      .ah-key.is-hint{background:color-mix(in srgb,var(--primary) 16%,var(--surface-2));border-color:color-mix(in srgb,var(--primary) 40%,var(--border));color:var(--primary);cursor:default;}
+      .ah-stage{display:flex;justify-content:center;margin:0 auto 12px;width:min(100%,310px);padding:18px;border-radius:22px;background:linear-gradient(145deg,#E9EFF1,#F9FAFA);border:1px solid rgba(37,122,120,.14);box-shadow:0 16px 36px rgba(31,69,72,.1);}
+      .ah-stage svg{filter:drop-shadow(0 6px 8px rgba(28,57,62,.12));}
+      .ah-word{font-family:'JetBrains Mono',monospace;font-size:clamp(19px,5vw,28px);font-weight:800;letter-spacing:7px;text-align:center;margin:18px 0;color:#28484E;}
+      .ah-vidas{text-align:center;font-size:12.5px;color:var(--text-2);margin-bottom:18px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
+      .ah-key{width:34px;height:38px;border-radius:10px;border:1px solid rgba(37,74,80,.12);background:linear-gradient(145deg,#fff,#F1F5F4);color:#29484E;font-weight:800;font-size:12.5px;cursor:pointer;box-shadow:0 4px 9px rgba(24,57,62,.07);transition:all .15s;}
+      .ah-key:hover:not(:disabled){border-color:#4F8F88;transform:translateY(-2px);box-shadow:0 8px 14px rgba(24,73,75,.12);}
+      .ah-key.is-hint{background:#E5F1EF;border-color:#76A9A0;color:#256B69;cursor:default;}
       .ah-key.is-ok{background:color-mix(in srgb,var(--success) 20%,var(--surface-2));border-color:var(--success);color:var(--success);cursor:default;}
       .ah-key.is-bad{background:var(--surface-3);border-color:var(--border);color:var(--text-3);cursor:default;opacity:.55;}
+      :root[data-theme="night"] .sp-board,:root[data-theme="night"] .pz-shell,:root[data-theme="night"] .ah-stage{background:linear-gradient(145deg,#172326,#202E31);border-color:rgba(117,180,170,.16);box-shadow:0 18px 40px rgba(0,0,0,.25);}
+      :root[data-theme="night"] .sp-cell,:root[data-theme="night"] .mm-back,:root[data-theme="night"] .ah-key{background:#1C292C;color:#EAF4F2;border-color:rgba(220,240,238,.1);}
     `;
     document.head.appendChild(st);
   }
@@ -6265,7 +6274,7 @@ const Sections = (function(){
     const palabrasOriginal = (curso.juegoDinamico.datos.palabras || []).slice(0, 10);
     const { grid, size, placed } = _generarSopaLetras(palabrasOriginal);
     if (placed.length === 0) { onDone(); return; }
-    const PALETA = ['#43A047','#26A69A','#7CB342','#00897B','#558B2F','#009688','#689F38','#00796B','#33691E','#004D40'];
+    const PALETA = ['#2F7D78','#4F76A3','#C38A3D','#81699A','#B65C62','#39758A','#A66E47','#536A8F','#8A718F','#2A6669'];
     const encontradas = new Set();
     const modalId = 'juego-sopa-' + curso.id;
     const body = document.createElement('div');
@@ -6540,7 +6549,9 @@ const Sections = (function(){
     const uid = Math.random().toString(36).slice(2,8);
     body.innerHTML = `
       <div class="jg-lead">Arma la imagen del curso colocando cada pieza en su lugar.</div>
-      <div class="pz-board" id="pz-board" style="width:${BOARD}px;height:${BOARD}px;">
+      <div class="pz-shell">
+        <div class="pz-toolbar"><div><div class="sp-side__title" style="margin-bottom:3px;">Imagen de referencia</div><div style="font-size:11.5px;color:var(--text-2);">Intercambia piezas hasta reconstruirla</div></div><img class="pz-reference" src="${img}" alt="Referencia del rompecabezas"><span class="pz-moves" id="pz-moves">0 movimientos</span></div>
+        <div class="pz-board" id="pz-board" style="width:${BOARD}px;height:${BOARD}px;background-size:${CS}px ${CS}px;">
         ${slots.map((piezaId,slot)=>{
           const pr = Math.floor(piezaId/n), pc = piezaId%n;
           const sx = (slot%n)*CS - K, sy = Math.floor(slot/n)*CS - K;
@@ -6551,9 +6562,11 @@ const Sections = (function(){
             <g clip-path="url(#pzclip-${uid}-${piezaId})">
               <image href="${img}" x="${K - pc*CS}" y="${K - pr*CS}" width="${n*CS}" height="${n*CS}" preserveAspectRatio="xMidYMid slice"/>
             </g>
-            <path d="${pathPieza(pr,pc)}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6"/>
+            <path d="${pathPieza(pr,pc)}" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="1.8"/>
+            <path d="${pathPieza(pr,pc)}" fill="none" stroke="rgba(16,47,53,.25)" stroke-width=".65" transform="translate(0 1.2)"/>
           </svg>`;
         }).join('')}
+        </div>
       </div>
       <div class="pz-help"><b>Arrastra</b> una pieza y suéltala sobre otra para intercambiarlas, o <b>toca</b> una pieza y luego toca con cuál quieres cambiarla.</div>
     `;
@@ -6562,17 +6575,20 @@ const Sections = (function(){
     Modal.open({ id: modalId, title:'Rompecabezas', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
 
     const boardEl = body.querySelector('#pz-board');
-    let terminado = false;
+    let terminado = false, movimientos = 0;
     function posDeSlot(slot) { return { x: (slot%n)*CS - K, y: Math.floor(slot/n)*CS - K }; }
     function moverASlot(piece, slot) {
       piece.dataset.slot = slot;
       const p = posDeSlot(slot);
       piece.style.left = p.x + 'px';
       piece.style.top = p.y + 'px';
+      piece.classList.toggle('is-correct',slot===parseInt(piece.dataset.piece,10));
     }
     function intercambiar(a, b) {
       const sa = parseInt(a.dataset.slot,10), sb = parseInt(b.dataset.slot,10);
       moverASlot(a, sb); moverASlot(b, sa);
+      movimientos++;
+      const movEl=body.querySelector('#pz-moves'); if(movEl) movEl.textContent=movimientos+' movimiento'+(movimientos===1?'':'s');
       setTimeout(checarResuelto, 380);
     }
     function checarResuelto() {
@@ -6582,7 +6598,7 @@ const Sections = (function(){
       piezas.forEach(p => p.classList.add('is-locked'));
       footer.disabled = false;
       const win = document.createElement('div');
-      win.className='jg-win'; win.textContent='¡Rompecabezas completado!';
+      win.className='jg-win'; win.textContent=`¡Rompecabezas completado en ${movimientos} movimientos!`;
       body.appendChild(win);
     }
     let seleccionada = null;
@@ -6644,6 +6660,7 @@ const Sections = (function(){
     boardEl.addEventListener('pointercancel', () => {
       if (dragPieza) { dragPieza.classList.remove('is-drag'); moverASlot(dragPieza, parseInt(dragPieza.dataset.slot,10)); dragPieza = null; }
     });
+    boardEl.querySelectorAll('.pz-piece').forEach(p=>p.classList.toggle('is-correct',parseInt(p.dataset.slot,10)===parseInt(p.dataset.piece,10)));
     footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
@@ -11305,14 +11322,22 @@ const Sections = (function(){
       stage.querySelector('#reto-restart').addEventListener('click',restart);
       stage.scrollIntoView({behavior:'smooth',block:'nearest'});
     };
-    const quiz=[
+    const shuffle=list=>[...list].sort(()=>Math.random()-.5);
+    const quizPool=[
       {q:'¿Cuál es el rango de temperatura conocido como zona de peligro para muchos alimentos?',a:['0 a 4 °C','5 a 60 °C','65 a 90 °C'],ok:1,why:'Entre 5 y 60 °C muchos microorganismos pueden multiplicarse con rapidez.'},
       {q:'¿Qué acción previene mejor la contaminación cruzada?',a:['Separar crudos de cocidos','Usar el mismo cuchillo','Descongelar en la mesa'],ok:0,why:'Separar alimentos crudos y listos para consumo evita transferir peligros.'},
       {q:'En HACCP, un límite crítico debe ser…',a:['Opcional','Medible y verificable','Sólo visual'],ok:1,why:'Un límite crítico debe poder medirse o verificarse de forma objetiva.'},
       {q:'¿Cuál es el primer paso correcto antes de manipular alimentos?',a:['Ponerse guantes','Lavarse las manos','Limpiar el piso'],ok:1,why:'El lavado correcto de manos precede a la manipulación y al uso de guantes.'},
-      {q:'¿Qué significa PEPS en almacén?',a:['Primero en entrar, primero en salir','Producto especial para servicio','Programa estándar de producción segura'],ok:0,why:'PEPS rota inventario usando primero los productos que ingresaron antes.'}
+      {q:'¿Qué significa PEPS en almacén?',a:['Primero en entrar, primero en salir','Producto especial para servicio','Programa estándar de producción segura'],ok:0,why:'PEPS rota inventario usando primero los productos que ingresaron antes.'},
+      {q:'¿Cuál es una medida eficaz para controlar alérgenos?',a:['Cambiar sólo el uniforme','Segregar ingredientes y validar la limpieza','Aumentar la temperatura del almacén'],ok:1,why:'La segregación y una limpieza validada reducen el riesgo de contacto cruzado.'},
+      {q:'¿Qué debe hacerse al recibir un alimento refrigerado fuera de especificación?',a:['Aceptarlo y enfriarlo después','Registrar y aplicar el criterio de rechazo','Mezclarlo con producto frío'],ok:1,why:'La desviación debe documentarse y atenderse conforme al procedimiento de recepción.'},
+      {q:'¿Qué verifica una calibración?',a:['Que el instrumento mide dentro de una tolerancia','Que el equipo luce limpio','Que el operador tiene experiencia'],ok:0,why:'La calibración compara el instrumento contra una referencia para conocer su exactitud.'},
+      {q:'¿Cuál es el propósito principal de la trazabilidad?',a:['Reducir el tamaño del lote','Seguir el historial y ubicación del producto','Evitar cualquier registro'],ok:1,why:'La trazabilidad permite identificar origen, transformación y destino de un lote.'},
+      {q:'¿Qué indica una actividad de agua más baja?',a:['Siempre mayor crecimiento microbiano','Menor agua disponible para microorganismos','Mayor contenido de proteína'],ok:1,why:'La actividad de agua expresa el agua disponible para reacciones y crecimiento microbiano.'},
+      {q:'¿Cuándo debe verificarse un PCC?',a:['Sólo al final del año','Con la frecuencia definida en el plan HACCP','Únicamente cuando hay una queja'],ok:1,why:'El monitoreo debe realizarse con la frecuencia establecida para detectar desviaciones oportunamente.'},
+      {q:'¿Qué documento describe cómo ejecutar una tarea de forma consistente?',a:['Procedimiento estandarizado','Factura de compra','Lista de asistencia'],ok:0,why:'Un procedimiento estandarizado establece responsables, pasos, criterios y registros.'}
     ];
-    function startQuiz(){let i=0,score=0,locked=false;const paint=()=>{const x=quiz[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Quiz relámpago · ${i+1}/${quiz.length}</div><h2>${x.q}</h2></div><span class="reto-score">${score} aciertos</span></div><div class="reto-options">${x.a.map((a,n)=>`<button type="button" data-answer="${n}">${a}</button>`).join('')}</div><div class="reto-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{if(locked)return;locked=true;const n=+b.dataset.answer;const ok=n===x.ok;if(ok)score++;stage.querySelectorAll('[data-answer]').forEach((el,k)=>{el.disabled=true;el.classList.toggle('is-correct',k===x.ok);el.classList.toggle('is-wrong',k===n&&!ok);});const f=stage.querySelector('.reto-feedback');f.hidden=false;f.innerHTML=`<strong>${ok?'¡Correcto!':'Revisa esta idea'}</strong><span>${x.why}</span><button class="btn btn--primary" type="button">${i===quiz.length-1?'Ver resultado':'Siguiente'}</button>`;f.querySelector('button').addEventListener('click',()=>{i++;locked=false;i<quiz.length?paint():showResult('quiz','Quiz relámpago',score,quiz.length,startQuiz);});}));};paint();}
+    function startQuiz(){const quiz=shuffle(quizPool).slice(0,5);let i=0,score=0,locked=false;const paint=()=>{const x=quiz[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Quiz relámpago · ${i+1}/${quiz.length}</div><h2>${x.q}</h2></div><span class="reto-score">${score} aciertos</span></div><div class="reto-options">${x.a.map((a,n)=>`<button type="button" data-answer="${n}"><span>${String.fromCharCode(65+n)}</span>${a}</button>`).join('')}</div><div class="reto-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{if(locked)return;locked=true;const n=+b.dataset.answer;const ok=n===x.ok;if(ok)score++;stage.querySelectorAll('[data-answer]').forEach((el,k)=>{el.disabled=true;el.classList.toggle('is-correct',k===x.ok);el.classList.toggle('is-wrong',k===n&&!ok);});const f=stage.querySelector('.reto-feedback');f.hidden=false;f.innerHTML=`<strong>${ok?'¡Correcto!':'Revisa esta idea'}</strong><span>${x.why}</span><button class="btn btn--primary" type="button">${i===quiz.length-1?'Ver resultado':'Siguiente'}</button>`;f.querySelector('button').addEventListener('click',()=>{i++;locked=false;i<quiz.length?paint():showResult('quiz','Quiz relámpago',score,quiz.length,startQuiz);});}));};paint();}
     const hazards=[
       {id:'tabla',label:'Tabla con pollo crudo junto a vegetales',type:'Biológico',why:'Puede transferir microorganismos del pollo a alimentos listos para consumo.'},
       {id:'quimico',label:'Envase de químico sin etiqueta',type:'Químico',why:'Un producto sin identificar puede usarse por error o contaminar alimentos.'},
@@ -11321,15 +11346,27 @@ const Sections = (function(){
     function startDetective(){let found=new Set();stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Detective de inocuidad</div><h2>Inspecciona esta zona de preparación</h2><p>Encuentra los tres riesgos y selecciónalos.</p></div><span class="reto-score" id="hazard-count">0/${hazards.length}</span></div><div class="detective-scene" role="group" aria-label="Zona de preparación con tres riesgos">${hazards.map((h,i)=>`<button type="button" class="hazard hazard--${i+1}" data-hazard="${h.id}" aria-label="${h.label}"><span>${i+1}</span></button>`).join('')}<div class="detective-scene__bench"></div><div class="detective-scene__board">POLLO CRUDO</div><div class="detective-scene__bottle">?</div><div class="detective-scene__lamp">✦</div></div><div class="hazard-list">${hazards.map(h=>`<div data-hazard-info="${h.id}"><svg class="ic"><use href="#i-search"/></svg><span>Riesgo por identificar</span></div>`).join('')}</div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-hazard]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.hazard;if(found.has(id))return;found.add(id);b.classList.add('is-found');const h=hazards.find(x=>x.id===id);stage.querySelector(`[data-hazard-info="${id}"]`).innerHTML=`<svg class="ic"><use href="#i-check-circle"/></svg><span><strong>${h.type}:</strong> ${h.why}</span>`;stage.querySelector('#hazard-count').textContent=`${found.size}/${hazards.length}`;if(found.size===hazards.length)setTimeout(()=>showResult('detective','Detective de inocuidad',found.size,hazards.length,startDetective),650);}));}
     const processSteps=['Recibir materias primas','Inspeccionar y registrar','Almacenar según temperatura','Preparar con higiene','Verificar antes de liberar'];
     function startOrder(){let order=[...processSteps].sort(()=>Math.random()-.5);const paint=()=>{stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Ordena el proceso</div><h2>Secuencia de manejo seguro</h2><p>Usa las flechas para colocar las etapas en el orden correcto.</p></div></div><div class="order-list">${order.map((s,i)=>`<div class="order-item"><span>${i+1}</span><strong>${s}</strong><div><button type="button" data-move="up" data-i="${i}" aria-label="Subir etapa" ${i===0?'disabled':''}>↑</button><button type="button" data-move="down" data-i="${i}" aria-label="Bajar etapa" ${i===order.length-1?'disabled':''}>↓</button></div></div>`).join('')}</div><button class="btn btn--primary reto-check" type="button">Comprobar orden</button><div class="reto-feedback" id="order-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i,j=b.dataset.move==='up'?i-1:i+1;[order[i],order[j]]=[order[j],order[i]];paint();}));stage.querySelector('.reto-check').addEventListener('click',()=>{const correct=order.reduce((n,s,i)=>n+(s===processSteps[i]?1:0),0);if(correct===processSteps.length)showResult('orden','Ordena el proceso',correct,processSteps.length,startOrder);else{const f=stage.querySelector('#order-feedback');f.hidden=false;f.innerHTML=`<strong>${correct} de ${processSteps.length} etapas están en su lugar.</strong><span>Piensa qué debe verificarse antes de almacenar y qué ocurre justo antes de liberar.</span>`;}});};paint();}
-    const cards=[
+    const cardPool=[
       {front:'Contaminación cruzada',back:'Transferencia de peligros entre alimentos, superficies, equipos o personas.'},
       {front:'Punto crítico de control',back:'Etapa donde un control es esencial para prevenir, eliminar o reducir un peligro.'},
       {front:'Listeria monocytogenes',back:'Bacteria capaz de crecer a refrigeración y relevante en alimentos listos para consumo.'},
       {front:'Trazabilidad',back:'Capacidad de seguir el historial, aplicación o ubicación de un producto.'},
       {front:'Límite crítico',back:'Valor máximo o mínimo que separa una condición aceptable de una no aceptable.'},
-      {front:'PEPS',back:'Método de rotación: primero en entrar, primero en salir.'}
+      {front:'PEPS',back:'Método de rotación: primero en entrar, primero en salir.'},
+      {front:'Actividad de agua',back:'Medida del agua disponible para reacciones químicas y crecimiento microbiano.'},
+      {front:'Biofilm',back:'Comunidad microbiana adherida a una superficie y protegida por una matriz propia.'},
+      {front:'Validación',back:'Evidencia de que una medida de control puede alcanzar el resultado previsto.'},
+      {front:'Verificación',back:'Confirmación mediante evidencia de que los controles se ejecutan y funcionan.'},
+      {front:'Alérgeno',back:'Sustancia capaz de provocar una respuesta inmunitaria en personas sensibles.'},
+      {front:'Lote',back:'Cantidad definida de producto elaborada bajo condiciones esencialmente iguales.'},
+      {front:'Cadena de frío',back:'Mantenimiento continuo de temperaturas controladas desde origen hasta consumo.'},
+      {front:'ETA',back:'Enfermedad transmitida por alimentos contaminados con agentes biológicos o químicos.'},
+      {front:'Calibración',back:'Comparación de un instrumento contra una referencia conocida para determinar su exactitud.'},
+      {front:'Retiro de producto',back:'Acción para recuperar del mercado un alimento que representa un riesgo o incumplimiento.'},
+      {front:'BPM',back:'Prácticas básicas que aseguran condiciones higiénicas durante la elaboración de alimentos.'},
+      {front:'Monitoreo',back:'Observación o medición planificada para evaluar si una medida de control está bajo dominio.'}
     ];
-    function startFlashcards(){let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length}</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard" aria-label="Voltear tarjeta"><span class="flashcard__hint">Toca para voltear</span><strong>${flipped?c.back:c.front}</strong></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():showResult('flashcards','Flashcards',known,cards.length,startFlashcards);}));};paint();}
+    function startFlashcards(){let cards=shuffle(cardPool);try{const last=localStorage.getItem('alintec:retos:lastFlash');if(cards[0]?.front===last)cards.push(cards.shift());localStorage.setItem('alintec:retos:lastFlash',cards[0]?.front||'');}catch(e){}cards=cards.slice(0,6);let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length}</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard ${flipped?'is-flipped':''}" aria-label="Voltear tarjeta"><span class="flashcard__hint">${flipped?'Definición':'Concepto · toca para revelar'}</span><strong>${flipped?c.back:c.front}</strong><span class="flashcard__turn"><svg class="ic"><use href="#i-arrow-right"/></svg></span></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():showResult('flashcards','Flashcards',known,cards.length,startFlashcards);}));};paint();}
     const starters={quiz:startQuiz,detective:startDetective,orden:startOrder,flashcards:startFlashcards};
     container.querySelectorAll('[data-reto]').forEach(card=>card.addEventListener('click',()=>starters[card.dataset.reto]()));
   }
@@ -13054,13 +13091,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .retos-note{display:flex;align-items:flex-start;gap:12px;padding:15px 17px;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--primary) 7%,var(--surface));color:var(--text-2);font-size:12.5px;line-height:1.55}
 .retos-note .ic{width:20px;height:20px;color:var(--primary);flex-shrink:0;margin-top:1px}
 .retos-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-.reto-card{position:relative;overflow:hidden;min-height:230px;padding:24px;border-radius:24px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;text-align:left;width:100%;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
-.reto-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--reto-color,var(--primary)) 42%,var(--border));box-shadow:0 20px 42px color-mix(in srgb,var(--reto-color,var(--primary)) 13%,rgba(0,0,0,.1))}
-.reto-card::after{content:'';position:absolute;width:170px;height:170px;border-radius:50%;right:-75px;bottom:-90px;background:color-mix(in srgb,var(--reto-color,var(--primary)) 13%,transparent)}
+.reto-card{position:relative;isolation:isolate;overflow:hidden;min-height:230px;padding:24px;border-radius:24px;border:1px solid var(--border);background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--reto-color,var(--primary)) 5%,var(--surface)));display:flex;flex-direction:column;text-align:left;width:100%;box-shadow:0 12px 30px rgba(29,50,55,.055);transition:transform .28s cubic-bezier(.2,.8,.25,1),border-color .25s ease,box-shadow .25s ease}
+.reto-card:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--reto-color,var(--primary)) 38%,var(--border));box-shadow:0 24px 48px color-mix(in srgb,var(--reto-color,var(--primary)) 14%,rgba(22,45,52,.13))}
+.reto-card::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--reto-color),color-mix(in srgb,var(--reto-color) 35%,#fff));z-index:2}
+.reto-card::after{content:'';position:absolute;width:190px;height:190px;border-radius:50%;right:-82px;bottom:-102px;background:radial-gradient(circle,color-mix(in srgb,var(--reto-color,var(--primary)) 18%,transparent),transparent 66%);z-index:-1}
 .reto-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.reto-card__icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--reto-color,var(--primary)) 15%,transparent);color:var(--reto-color,var(--primary));border:1px solid color-mix(in srgb,var(--reto-color,var(--primary)) 24%,transparent)}
+.reto-card__icon{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,color-mix(in srgb,var(--reto-color) 16%,#fff),color-mix(in srgb,var(--reto-color) 8%,#fff));color:var(--reto-color,var(--primary));border:1px solid color-mix(in srgb,var(--reto-color,var(--primary)) 22%,transparent);box-shadow:0 10px 22px color-mix(in srgb,var(--reto-color) 14%,transparent)}
 .reto-card__icon .ic{width:25px;height:25px}
-.reto-card__status{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;border-radius:100px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border)}
+.reto-card__status{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border-radius:100px;color:var(--reto-color);background:color-mix(in srgb,var(--reto-color) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--reto-color) 20%,var(--border))}
 .reto-card__title{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.45px;margin-top:22px}
 .reto-card__desc{font-size:12.5px;line-height:1.6;color:var(--text-2);margin-top:7px;max-width:92%}
 .reto-card__foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:18px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);font-weight:700}
@@ -13074,11 +13112,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .reto-reward__pill{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:7px 11px;border-radius:100px;background:color-mix(in srgb,#C9A961 16%,transparent);color:#B38A35;border:1px solid color-mix(in srgb,#C9A961 32%,transparent);white-space:nowrap}
 .reto-stage:empty{display:none}.reto-stage{scroll-margin-top:90px}.reto-activity,.reto-result{padding:26px;border:1px solid var(--border);border-radius:24px;background:var(--surface);box-shadow:var(--shadow-card)}
 .reto-stage__head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.reto-stage__head h2,.reto-result h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;line-height:1.25;margin-top:5px}.reto-stage__head p,.reto-result p{color:var(--text-2);font-size:13px;margin-top:7px}.reto-stage__eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:#397A72}.reto-score{padding:7px 11px;border-radius:999px;background:#EEF4F2;color:#285F59;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;white-space:nowrap}
-.reto-options{display:grid;gap:10px}.reto-options button{padding:15px 17px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);text-align:left;font-size:13px;font-weight:650;transition:.18s ease}.reto-options button:hover:not(:disabled){border-color:#7EA7A1;background:#F4F8F7;transform:translateX(3px)}.reto-options button.is-correct{border-color:#62A181;background:#EAF6EF;color:#245F44}.reto-options button.is-wrong{border-color:#D7868E;background:#FFF0F1;color:#8B303A}
+.reto-options{display:grid;gap:10px}.reto-options button{display:flex;align-items:center;gap:12px;padding:14px 17px;border:1px solid var(--border-2);border-radius:15px;background:linear-gradient(145deg,var(--surface),var(--surface-2));text-align:left;font-size:13px;font-weight:650;box-shadow:0 6px 15px rgba(28,52,57,.04);transition:.18s ease}.reto-options button>span{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#E9EFF1;color:#3E626B;font:800 10px 'JetBrains Mono',monospace;flex-shrink:0}.reto-options button:hover:not(:disabled){border-color:#7EA7A1;background:#F4F8F7;transform:translateX(4px);box-shadow:0 10px 22px rgba(28,70,73,.08)}.reto-options button.is-correct{border-color:#62A181;background:#EAF6EF;color:#245F44}.reto-options button.is-correct>span{background:#317357;color:#fff}.reto-options button.is-wrong{border-color:#D7868E;background:#FFF0F1;color:#8B303A}.reto-options button.is-wrong>span{background:#A74651;color:#fff}
 .reto-feedback{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding:14px 16px;border-radius:14px;background:#F4F7F5;border:1px solid var(--border)}.reto-feedback[hidden]{display:none}.reto-feedback strong{color:var(--text)}.reto-feedback span{flex:1;min-width:200px;color:var(--text-2);font-size:12px}.reto-result{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px}.reto-result__icon{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;background:#F8ECCE;color:#A06B21}.reto-result__icon .ic{width:28px;height:28px}
 .detective-scene{height:260px;position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(#D8E8E5 0 58%,#B8C6C2 58%);border:1px solid var(--border)}.detective-scene::before{content:'';position:absolute;left:8%;right:8%;top:22%;height:12px;background:#78948D;box-shadow:0 45px #78948D}.detective-scene__bench{position:absolute;left:8%;right:8%;bottom:20%;height:22px;background:#6D7F7B;border-radius:5px}.detective-scene__board{position:absolute;left:17%;bottom:28%;padding:16px 24px;border-radius:6px;background:#E2B18F;color:#793E36;font-size:10px;font-weight:900}.detective-scene__bottle{position:absolute;left:51%;bottom:28%;width:43px;height:78px;border-radius:8px 8px 14px 14px;background:#A8C07D;display:grid;place-items:center;font-size:26px;font-weight:900}.detective-scene__lamp{position:absolute;right:17%;top:17%;width:64px;height:64px;border-radius:50%;background:#FFF4BE;display:grid;place-items:center;font-size:34px;box-shadow:0 0 30px rgba(255,225,105,.6)}.hazard{position:absolute;z-index:3;width:34px;height:34px;border-radius:50%;background:#B44A55;color:#fff;border:3px solid #fff;box-shadow:0 5px 16px rgba(60,20,20,.25);display:grid;place-items:center;font-size:12px;font-weight:900}.hazard--1{left:12%;bottom:22%}.hazard--2{left:48%;bottom:22%}.hazard--3{right:13%;top:13%}.hazard.is-found{background:#397A72;transform:scale(1.08)}.hazard-list{display:grid;gap:8px;margin-top:13px}.hazard-list>div{display:flex;gap:9px;align-items:flex-start;padding:11px 13px;border-radius:12px;background:var(--surface-2);font-size:12px;color:var(--text-2)}.hazard-list .ic{color:#397A72;margin-top:1px}
 .order-list{display:grid;gap:9px}.order-item{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}.order-item>span{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#E8EFF7;color:#315E91;font:800 11px 'JetBrains Mono',monospace}.order-item strong{font-size:12.5px}.order-item>div{display:flex;gap:5px}.order-item button{width:32px;height:32px;border:1px solid var(--border-2);border-radius:9px;background:var(--surface);font-weight:900}.order-item button:disabled{opacity:.3;cursor:not-allowed}.reto-check{margin-top:16px}
-.flashcard{width:100%;min-height:250px;padding:35px;border:1px solid #D8CEE8;border-radius:22px;background:linear-gradient(145deg,#F7F3FC,#EEE8F7);color:#3E3157;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;box-shadow:0 15px 34px rgba(72,49,101,.09);transition:transform .24s ease}.flashcard:hover{transform:translateY(-3px)}.flashcard__hint{font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;color:#806D9E}.flashcard strong{max-width:560px;font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(20px,3vw,29px);line-height:1.35}.flash-actions{display:flex;justify-content:center;gap:10px;margin-top:15px}.flash-actions[hidden]{display:none}
+.flashcard{position:relative;overflow:hidden;width:100%;min-height:270px;padding:42px;border:1px solid rgba(82,120,166,.22);border-radius:24px;background:radial-gradient(circle at 16% 12%,rgba(255,255,255,.16),transparent 25%),linear-gradient(145deg,#243F5B,#2A7475);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;box-shadow:0 20px 42px rgba(36,63,91,.2),inset 0 1px 0 rgba(255,255,255,.18);transform:perspective(1000px) rotateX(1deg);transition:transform .3s cubic-bezier(.2,.8,.25,1),box-shadow .3s ease}.flashcard::after{content:'';position:absolute;width:230px;height:230px;border-radius:50%;right:-105px;bottom:-140px;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 35px rgba(255,255,255,.025)}.flashcard.is-flipped{background:radial-gradient(circle at 84% 12%,rgba(255,255,255,.18),transparent 26%),linear-gradient(145deg,#6B537C,#8B6D85 70%,#B78458)}.flashcard:hover{transform:perspective(1000px) rotateX(0) translateY(-5px);box-shadow:0 27px 52px rgba(36,63,91,.26)}.flashcard__hint{font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.67)}.flashcard strong{position:relative;z-index:1;max-width:580px;font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(21px,3vw,30px);line-height:1.4}.flashcard__turn{position:absolute;right:20px;bottom:18px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);transform:rotate(45deg)}.flashcard__turn .ic{width:15px;height:15px}.flash-actions{display:flex;justify-content:center;gap:10px;margin-top:15px}.flash-actions[hidden]{display:none}
 
 @media(max-width:880px){
   .cursos-grid{grid-template-columns:1fr;gap:16px}
@@ -13262,8 +13300,11 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 
 /* Herramientas profesionales */
 .tool-section{overflow:hidden!important;padding:0!important;border-radius:24px!important}
-.tool-section__head{padding:20px 22px!important;background:linear-gradient(135deg,#16392A,#1F4B37)!important;color:#fff!important;border-bottom:0!important}
-.tool-section__title{color:#fff!important}.tool-section__icon{width:46px!important;height:46px!important;border-radius:14px!important;background:rgba(255,255,255,.1)!important;color:#F2C879!important;border:1px solid rgba(255,255,255,.14)!important}
+.tool-section__head{position:relative;padding:22px 24px!important;background:radial-gradient(circle at 92% 15%,rgba(242,184,95,.14),transparent 28%),linear-gradient(135deg,#193C49,#276067)!important;color:#fff!important;border-bottom:0!important;overflow:hidden}
+.tool-section__head::after{content:'';position:absolute;right:-25px;bottom:-52px;width:170px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.1);box-shadow:0 0 0 26px rgba(255,255,255,.025);pointer-events:none}
+.tool-section__title,.tool-section__title h1{color:#fff!important}.tool-section__title p{color:rgba(255,255,255,.7)!important}.tool-section__icon{width:48px!important;height:48px!important;border-radius:15px!important;background:rgba(255,255,255,.1)!important;color:#F2C879!important;border:1px solid rgba(255,255,255,.17)!important;box-shadow:0 10px 24px rgba(5,24,28,.2)!important}
+.tool-section__actions{position:relative;z-index:1}.tool-section__actions .btn--ghost{color:rgba(255,255,255,.86)!important;border-color:rgba(255,255,255,.18)!important;background:rgba(255,255,255,.08)!important}.tool-section__actions .btn--ghost:hover{background:rgba(255,255,255,.14)!important;color:#fff!important}
+.tool-section__actions .btn--primary{background:linear-gradient(135deg,#E8B45E,#C98935)!important;color:#2E2619!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 9px 22px rgba(10,31,35,.2)!important}.tool-section__actions .btn--primary:hover{transform:translateY(-2px)!important;box-shadow:0 13px 28px rgba(10,31,35,.28)!important}
 .tool-section>form,.tool-section>.tool-body,.tool-section>.ats-form,.tool-section>.iper-form{padding:22px!important}
 .tool-paywall{border-radius:22px!important;background:linear-gradient(145deg,#FFFFFF,#F8FAF7)!important}
 .hub-tool-card{padding:22px!important}.hub-tool-card .ic{color:#2F8B63!important}
