@@ -8004,7 +8004,7 @@ const Sections = (function(){
           ${c.disponibleSiempre ? '<span class="curso-card__cover-badge" style="background:var(--success);color:#0A120C;">DISPONIBLE</span>' : ''}
           ${esCursoConMuestra(c) && !tieneAccesoVipCompleto() ? `<span class="curso-card__cover-badge" style="left:12px;right:auto;background:var(--success);color:#0A120C;border-color:var(--success);">${c.sesiones.filter((_,si) => esClaseGratis(c,si)).length} CLASES GRATIS</span>` : ''}
           ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta === null ? '<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.9);color:var(--primary);border:1px solid var(--primary);">🔒 Termina el curso inicial</span>' : ''}
-          ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" title="${cuentaRegresivaCurso(c, diasFalta).fecha ? 'Se abre el ' + cuentaRegresivaCurso(c, diasFalta).fecha : ''}" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 ${(() => { const cr = cuentaRegresivaCurso(c, diasFalta); return (cr.singular ? 'Queda ' : 'Quedan ') + cr.corto; })()}</span>` : ''}
+          ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 ${(() => { const cr = cuentaRegresivaCurso(c, diasFalta); return (cr.singular ? 'Resta ' : 'Restan ') + cr.corto + ' para su desbloqueo'; })()}</span>` : ''}
         </div>
         <div class="curso-card__body">
           <div class="curso-card__tags">
@@ -9765,7 +9765,9 @@ const Sections = (function(){
       const q = fs.query(fs.collection(fs.db,'noticias_auto'), fs.orderBy('createdAt','desc'), fs.limit(6));
       const snap = await fs.getDocs(q);
       const arts = [];
-      snap.forEach(d=>arts.push(d.data()));
+      snap.forEach(d=>arts.push({ id: d.id, ...d.data() }));
+      window.__noticiasHome = {};
+      arts.forEach(n => { window.__noticiasHome[n.id] = n; });
       if (!arts.length){
         grid.innerHTML = '<div class="foro-empty" style="grid-column:1/-1;">Aún no hay noticias publicadas. Se actualizan cada mañana.</div>';
         _noticiasCargadas = true;
@@ -9774,7 +9776,7 @@ const Sections = (function(){
       grid.innerHTML = arts.map(n=>{
         const fecha = noticiaTiempoRel(n.createdAt || n.fechaPublicacion);
         const cover = n.imagen
-          ? `<div class="news-card__cover" style="background-image:url('${n.imagen}');background-size:cover;background-position:center;">
+          ? `<div class="news-card__cover" style="background-image:url('${urlSeguraNoticia(n.imagen)}');background-size:cover;background-position:center;">
                <span class="news-card__date">${fecha}</span>
                <span class="news-card__cat">${escapeHtml(n.categoriaNombre||n.categoria||'')}</span>
              </div>`
@@ -9784,24 +9786,61 @@ const Sections = (function(){
                <span class="news-card__cat">${escapeHtml(n.categoriaNombre||n.categoria||'')}</span>
              </div>`;
         return `
-        <article class="news-card" style="--cat-color:${n.color||'#43A047'};">
+        <article class="news-card" data-noticia="${escapeHtml(n.id)}" role="button" tabindex="0" style="cursor:pointer;--cat-color:${n.color||'#43A047'};">
           ${cover}
           <div class="news-card__body">
             <h3 class="news-card__title">${escapeHtml(n.titulo||'')}</h3>
             ${n.extracto?`<p class="news-card__excerpt">${escapeHtml(n.extracto).slice(0,140)}${(n.extracto||'').length>140?'…':''}</p>`:''}
             <div class="news-card__footer">
               <span class="news-card__source"><svg class="ic"><use href="#i-news"/></svg>${escapeHtml(n.fuente||'Fuente')}</span>
-              <a class="news-card__more" href="${n.link||'#'}" target="_blank" rel="noopener">Leer más<svg class="ic"><use href="#i-arrow-right"/></svg></a>
+              <span class="news-card__more">Lo esencial<svg class="ic"><use href="#i-arrow-right"/></svg></span>
             </div>
           </div>
         </article>`;
       }).join('');
+      grid.querySelectorAll('.news-card[data-noticia]').forEach(el => {
+        el.addEventListener('click', () => abrirNoticia(el.dataset.noticia));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirNoticia(el.dataset.noticia); } });
+      });
       _noticiasCargadas = true;
     } catch(e){
       console.error('noticias home', e);
       grid.innerHTML = '<div class="foro-empty" style="grid-column:1/-1;">No se pudieron cargar las noticias.</div>';
     }
   };
+  // Solo enlaces https; se codifican los caracteres que podrían romper el CSS url('...')
+  function urlSeguraNoticia(u){
+    const v = String(u || '').trim();
+    if (!/^https:\/\//i.test(v)) return '';
+    // encodeURIComponent NO codifica ' ( ) — se codifican a mano para que nada salga del url('...')
+    return v.replace(/['"()\s\\]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
+  }
+  // Ventana "Lo esencial": la noticia se lee dentro de la plataforma; el enlace original queda al final
+  function abrirNoticia(id){
+    const n = (window.__noticiasHome || {})[id];
+    if (!n) return;
+    const lineas = String(n.resumen || n.extracto || n.descripcion || '').split('\n').map(x => x.trim()).filter(Boolean);
+    const resumen = lineas.length > 1
+      ? '<ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;color:var(--text-2);font-size:14px;">' + lineas.map(l => '<li style="margin-bottom:6px;">' + escapeHtml(l) + '</li>').join('') + '</ul>'
+      : (lineas[0]
+        ? '<p style="margin:0 0 16px;line-height:1.65;color:var(--text-2);font-size:14px;">' + escapeHtml(lineas[0]) + '</p>'
+        : '<p style="margin:0 0 16px;line-height:1.6;color:var(--text-3);font-size:13.5px;">Esta noticia no incluye un resumen. Puedes leer la nota completa en la fuente original.</p>');
+    const img = urlSeguraNoticia(n.imagen);
+    const portada = img ? '<div style="height:190px;border-radius:12px;margin-bottom:16px;background:var(--surface-2) url(\'' + img + '\') center/cover no-repeat;"></div>' : '';
+    const enlaceOk = /^https:\/\//i.test(String(n.link || ''));
+    const enlace = enlaceOk
+      ? '<a href="' + escapeHtml(n.link) + '" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--text-3);text-decoration:underline;">Leer la nota original' + (n.fuente ? ' en ' + escapeHtml(n.fuente) : '') + ' ↗</a>'
+      : '';
+    Modal.open({
+      id: 'noticia-' + id, title: 'Lo esencial', subtitle: escapeHtml(n.categoriaNombre || 'Noticias del sector'), icon: 'i-news', size: 'lg',
+      body: portada
+        + '<h3 style="margin:0 0 12px;font-size:19px;line-height:1.3;color:var(--text);">' + escapeHtml(n.titulo || '') + '</h3>'
+        + resumen
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);">'
+        + '<span style="font-size:12px;color:var(--text-3);">' + escapeHtml(n.fuente || '') + '</span>' + enlace + '</div>',
+      footer: '<button class="btn btn--ghost" onclick="Modal.close(\'noticia-' + escapeHtml(id).replace(/'/g, '') + '\')">Cerrar</button>'
+    });
+  }
   function noticiaTiempoRel(ts){
     if(!ts) return 'Hoy';
     let d; try{ d=ts.toDate?ts.toDate():new Date(ts); }catch(e){ return 'Hoy'; }
@@ -11774,6 +11813,10 @@ const NOTIFS_DEMO = [
 // Los escribe el servidor en avisos/{uid}/items; aquí se mezclan con los generales.
 window.__notifsGlobal = [];
 window.__notifsPersonales = [];
+// Los textos de avisos pueden venir de fuentes externas (noticias) o de otras personas: se escapan
+function escNotif(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 function recombinarNotifs() {
   const todas = [...(window.__notifsPersonales || []), ...(window.__notifsGlobal || [])]
     .sort((a, b) => b.createdAtMs - a.createdAtMs);
@@ -11847,8 +11890,9 @@ function setupNotificacionesListener(intento = 0) {
           tipo: data.tipo || 'general',
           icono: data.icono || 'i-bell',
           color: data.color || '#43A047',
-          titulo: data.titulo || 'Sin título',
-          descripcion: data.descripcion || '',
+          titulo: escNotif(data.titulo || 'Sin título'),
+          descripcion: escNotif(data.descripcion || ''),
+          enlace: escNotif(data.enlace || ''),
           createdAtMs: data.createdAt?.toDate?.()?.getTime?.() || data.createdAt?.toMillis?.() || Date.now()
         };
       });

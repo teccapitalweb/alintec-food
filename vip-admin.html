@@ -1253,7 +1253,7 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Comunidad</div>
       <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros VIP<span class="nav-item__badge">486</span></a>
-      <a class="nav-item" data-section="noticias"><svg class="ic"><use href="#i-news"/></svg>Noticias</a>
+      <a class="nav-item" data-section="noticias"><svg class="ic"><use href="#i-news"/></svg>Noticias y datos</a>
       <a class="nav-item" data-section="foro"><svg class="ic"><use href="#i-users"/></svg>Foro<span class="nav-item__badge" id="badge-foro">0</span></a>
       <a class="nav-item" data-section="directorio"><svg class="ic"><use href="#i-user"/></svg>Directorio<span class="nav-item__badge" id="badge-dir">0</span></a>
     </div>
@@ -5490,54 +5490,162 @@ const Pages={
     }
   },
 
+  // ─────────── NOTICIAS Y DATOS CURIOSOS · publicar noticias y administrar el banco ───────────
   noticias(p){
-    p.innerHTML=`
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    const api = async (ruta, opciones = {}) => {
+      const token = await Pages._getAuthToken();
+      const r = await fetch(Pages._webhookUrl + ruta, { ...opciones, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'No se pudo completar la acción');
+      return d;
+    };
+    const post = (ruta, cuerpo) => api(ruta, { method: 'POST', body: JSON.stringify(cuerpo || {}) });
+    const fecha = ms => ms ? new Date(ms).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+    p.innerHTML = `
       <div class="fade-up">
         <div class="sec-hero">
-          <span class="sec-hero__eyebrow">Cron automático</span>
-          <h1 class="sec-hero__title">Noticias</h1>
-          <p class="sec-hero__sub">El cron de Railway corre cada día a las 7 AM y publica noticias del sector industrial en el panel VIP.</p>
+          <span class="sec-hero__eyebrow">Contenido</span>
+          <h1 class="sec-hero__title">Noticias y datos curiosos</h1>
+          <p class="sec-hero__sub">Publica tus propias noticias (se leen dentro de la plataforma) y administra el banco de datos curiosos que llegan a todos los miembros como notificación.</p>
         </div>
 
-        <section class="cron-card">
-          <div class="cron-card__row">
-            <div class="cron-card__icon"><svg class="ic" style="width:24px;height:24px;"><use href="#i-refresh"/></svg></div>
-            <div class="cron-card__info">
-              <span class="cron-card__lbl">${SEED.config.cronStatus==='activo'?'Cron en línea':'Cron pausado'}</span>
-              <div class="cron-card__title">NewsData → Firestore</div>
-              <div class="cron-card__sub">Última ejecución: <strong>${SEED.config.cronUltima}</strong> · Próxima: <strong>${SEED.config.cronProxima}</strong> · <strong>${SEED.config.noticiasGeneradas}</strong> noticias publicadas en mayo</div>
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-news"/></svg>Publicar una noticia</div></div>
+            <div class="form-grid">
+              <div class="form-field form-field--full"><label class="label">Título</label><input type="text" class="input" id="nt-titulo" maxlength="140" placeholder="Ej: Nueva guía de etiquetado frontal"></div>
+              <div class="form-field form-field--full"><label class="label">Lo esencial (una idea por línea)</label><textarea class="input" id="nt-resumen" rows="5" maxlength="1500" placeholder="Escribe de 2 a 5 ideas clave, una por línea. Así se muestran como puntos dentro de la plataforma."></textarea></div>
+              <div class="form-field"><label class="label">Categoría</label>
+                <select class="input" id="nt-cat">
+                  <option value="general">Industria Alimentaria</option><option value="inocuidad">Inocuidad Alimentaria</option>
+                  <option value="tecnologia">Tecnología de Alimentos</option><option value="normativa">Normativa y Etiquetado</option>
+                  <option value="innovacion">Innovación Alimentaria</option><option value="nutricion">Nutrición</option>
+                </select></div>
+              <div class="form-field"><label class="label">Fuente (opcional)</label><input type="text" class="input" id="nt-fuente" maxlength="60" placeholder="Alintec Food"></div>
+              <div class="form-field form-field--full"><label class="label">Imagen (opcional · enlace https)</label><input type="url" class="input" id="nt-imagen" maxlength="500" placeholder="https://…/foto.jpg"></div>
+              <div class="form-field form-field--full"><label class="label">Nota original (opcional · enlace https)</label><input type="url" class="input" id="nt-enlace" maxlength="500" placeholder="https://…"></div>
+              <div class="form-field form-field--full"><label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="nt-notif" checked> Avisar a todos en la campana de notificaciones</label></div>
             </div>
-            <button class="btn btn--ghost" id="cron-run"><svg class="ic"><use href="#i-refresh"/></svg>Ejecutar ahora</button>
+            <button class="btn btn--accent" id="nt-publicar" style="margin-top:12px;"><svg class="ic"><use href="#i-send"/></svg>Publicar noticia</button>
           </div>
-        </section>
 
-        <div class="section-header"><h2 class="section-header__title">Noticias publicadas hoy<span class="section-header__badge">${SEED.noticias.filter(n=>n.fecha==='Hoy').length} nuevas</span></h2></div>
-        <div class="adm-list">
-          ${SEED.noticias.map(n=>`
-            <div class="news-card" style="--c1:${n.color};">
-              <div class="news-card__cover"><svg class="ic"><use href="#i-news"/></svg></div>
-              <div class="news-card__body">
-                <div class="news-card__head">
-                  <span class="tag" style="color:${n.color};border-color:${n.color}40;background:${n.color}14;">${n.cat}</span>
-                  <span class="news-card__date">${n.fecha}</span>
-                </div>
-                <div class="news-card__title">${n.titulo}</div>
-                <div class="news-card__source"><svg class="ic"><use href="#i-news"/></svg>${n.fuente}</div>
-              </div>
-              <div class="adm-row__actions">
-                <button class="icon-action icon-action--danger" data-del-news="${n.id}" title="Eliminar"><svg class="ic"><use href="#i-trash"/></svg></button>
+          <div class="dash-card">
+            <div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-bolt"/></svg>Agregar un dato curioso</div></div>
+            <div class="form-grid">
+              <div class="form-field form-field--full"><label class="label">Dato curioso <span id="dc-cuenta" style="color:var(--text-3);font-weight:400;">(0 / 300)</span></label><textarea class="input" id="dc-texto" rows="4" maxlength="300" placeholder="Ej: La miel casi no se echa a perder porque tiene muy poca agua disponible y es ácida."></textarea></div>
+              <div class="form-field"><label class="label">Tema</label><select class="input" id="dc-tema"><option>General</option></select></div>
+              <div class="form-field"><label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:26px;"><input type="checkbox" id="dc-ahora"> Enviarlo ahora a todos</label></div>
+            </div>
+            <button class="btn btn--accent" id="dc-agregar" style="margin-top:12px;"><svg class="ic"><use href="#i-plus"/></svg>Agregar al banco</button>
+            <p style="font-size:12px;color:var(--text-3);margin-top:12px;line-height:1.5;">Cada <strong>martes y viernes a las 7:00 a.m.</strong> (hora de México) se envía automáticamente el siguiente dato del banco, por turnos, sin repetir hasta haber enviado todos.</p>
+          </div>
+        </div>
+
+        <div class="section-header"><h2 class="section-header__title">Noticias publicadas<span class="section-header__badge" id="nt-total">…</span></h2></div>
+        <div class="adm-list" id="nt-lista"><div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px;">Cargando…</div></div>
+
+        <div class="section-header"><h2 class="section-header__title">Banco de datos curiosos<span class="section-header__badge" id="dc-total">…</span></h2></div>
+        <div class="adm-list" id="dc-lista"><div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px;">Cargando…</div></div>
+      </div>`;
+
+    const cargarNoticias = async () => {
+      const lista = p.querySelector('#nt-lista'); if (!lista) return;
+      try {
+        const d = await api('/api/admin/noticias');
+        p.querySelector('#nt-total').textContent = d.noticias.length + ' recientes';
+        lista.innerHTML = d.noticias.length ? d.noticias.map(n => `
+          <div class="adm-row" style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
+            <div style="min-width:0;">
+              <div style="font-weight:700;font-size:13.5px;line-height:1.35;">${esc(n.titulo)}</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;">
+                <span class="tag">${n.origen === 'admin' ? 'Publicada por ti' : 'Automática'}</span> ${esc(n.categoriaNombre)} · ${esc(n.fuente)} ${n.creada ? '· ' + fecha(n.creada) : ''}
               </div>
             </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    document.getElementById('cron-run').addEventListener('click',()=>Toast.info('Cron ejecutado','Buscando noticias nuevas… 3 publicadas.'));
-    p.querySelectorAll('[data-del-news]').forEach(b=>b.addEventListener('click',()=>{
-      if(confirm('¿Eliminar esta noticia del panel?')){
-        const i=SEED.noticias.findIndex(x=>x.id===b.dataset.delNews);if(i>=0){SEED.noticias.splice(i,1);Pages.noticias(document.getElementById('page'));Toast.success('Noticia eliminada');}
-      }
-    }));
+            <button class="icon-action icon-action--danger" data-del-noticia="${esc(n.id)}" title="Eliminar"><svg class="ic"><use href="#i-trash"/></svg></button>
+          </div>`).join('') : '<div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px;">Aún no hay noticias.</div>';
+        lista.querySelectorAll('[data-del-noticia]').forEach(b => b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar esta noticia de la plataforma?')) return;
+          try { await post('/api/admin/noticias/' + encodeURIComponent(b.dataset.delNoticia) + '/eliminar'); Toast.success('Noticia eliminada'); cargarNoticias(); }
+          catch (e) { Toast.error('No se pudo eliminar', e.message); }
+        }));
+      } catch (e) { lista.innerHTML = '<div style="padding:24px;text-align:center;color:var(--danger);font-size:13px;">' + esc(e.message) + '</div>'; }
+    };
+
+    const cargarBanco = async () => {
+      const lista = p.querySelector('#dc-lista'); if (!lista) return;
+      try {
+        const d = await api('/api/admin/datos-curiosos');
+        const selTema = p.querySelector('#dc-tema');
+        if (selTema && selTema.options.length <= 1) selTema.innerHTML = d.temas.map(t => '<option' + (t === 'General' ? ' selected' : '') + '>' + esc(t) + '</option>').join('');
+        p.querySelector('#dc-total').textContent = d.total + ' datos · ' + d.activos + ' activos';
+        lista.innerHTML = d.datos.map(x => `
+          <div class="adm-row" style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;${x.activo ? '' : 'opacity:.55;'}">
+            <div style="min-width:0;">
+              <div style="font-size:13.5px;line-height:1.5;">${esc(x.texto)}</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:6px;">
+                <span class="tag">${esc(x.tema)}</span> ${x.origen === 'admin' ? '<span class="tag">Tuyo</span>' : ''}
+                · Enviado ${x.veces} ${x.veces === 1 ? 'vez' : 'veces'}${x.ultimoEnvio ? ' · último: ' + esc(x.ultimoEnvio) : ''}${x.activo ? '' : ' · en pausa'}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="btn btn--ghost btn--sm" data-dc-enviar="${esc(x.id)}" title="Enviar ahora a todos">Enviar ahora</button>
+              <button class="btn btn--ghost btn--sm" data-dc-toggle="${esc(x.id)}" data-activo="${x.activo}">${x.activo ? 'Pausar' : 'Activar'}</button>
+              <button class="icon-action icon-action--danger" data-dc-del="${esc(x.id)}" title="Eliminar"><svg class="ic"><use href="#i-trash"/></svg></button>
+            </div>
+          </div>`).join('');
+        const ruta = id => '/api/admin/datos-curiosos/' + encodeURIComponent(id);
+        lista.querySelectorAll('[data-dc-enviar]').forEach(b => b.addEventListener('click', async () => {
+          if (!confirm('¿Enviar este dato curioso ahora a todos los miembros?')) return;
+          try { await post(ruta(b.dataset.dcEnviar) + '/enviar'); Toast.success('Enviado', 'Ya está en la campana de los miembros'); cargarBanco(); }
+          catch (e) { Toast.error('No se pudo enviar', e.message); }
+        }));
+        lista.querySelectorAll('[data-dc-toggle]').forEach(b => b.addEventListener('click', async () => {
+          try { await post(ruta(b.dataset.dcToggle) + '/actualizar', { activo: b.dataset.activo !== 'true' }); cargarBanco(); }
+          catch (e) { Toast.error('No se pudo actualizar', e.message); }
+        }));
+        lista.querySelectorAll('[data-dc-del]').forEach(b => b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este dato curioso del banco?')) return;
+          try { await post(ruta(b.dataset.dcDel) + '/eliminar'); Toast.success('Dato eliminado'); cargarBanco(); }
+          catch (e) { Toast.error('No se pudo eliminar', e.message); }
+        }));
+      } catch (e) { lista.innerHTML = '<div style="padding:24px;text-align:center;color:var(--danger);font-size:13px;">' + esc(e.message) + '</div>'; }
+    };
+
+    p.querySelector('#dc-texto').addEventListener('input', e => { p.querySelector('#dc-cuenta').textContent = '(' + e.target.value.length + ' / 300)'; });
+
+    p.querySelector('#nt-publicar').addEventListener('click', async e => {
+      const btn = e.currentTarget; const orig = btn.innerHTML;
+      const v = id => p.querySelector('#' + id).value.trim();
+      btn.disabled = true; btn.textContent = 'Publicando…';
+      try {
+        await post('/api/admin/noticias', {
+          titulo: v('nt-titulo'), resumen: p.querySelector('#nt-resumen').value, categoria: v('nt-cat'), fuente: v('nt-fuente'),
+          imagen: v('nt-imagen'), enlace: v('nt-enlace'), notificar: p.querySelector('#nt-notif').checked
+        });
+        Toast.success('Noticia publicada', 'Ya la ven los miembros en su inicio');
+        ['nt-titulo', 'nt-resumen', 'nt-fuente', 'nt-imagen', 'nt-enlace'].forEach(id => { p.querySelector('#' + id).value = ''; });
+        cargarNoticias();
+      } catch (err) { Toast.error('No se pudo publicar', err.message); }
+      finally { btn.disabled = false; btn.innerHTML = orig; }
+    });
+
+    p.querySelector('#dc-agregar').addEventListener('click', async e => {
+      const btn = e.currentTarget; const orig = btn.innerHTML;
+      btn.disabled = true; btn.textContent = 'Agregando…';
+      try {
+        const ahora = p.querySelector('#dc-ahora').checked;
+        await post('/api/admin/datos-curiosos', { texto: p.querySelector('#dc-texto').value, tema: p.querySelector('#dc-tema').value, enviarAhora: ahora });
+        Toast.success('Dato agregado', ahora ? 'Ya se envió a todos los miembros' : 'Saldrá por turnos en los próximos envíos');
+        p.querySelector('#dc-texto').value = ''; p.querySelector('#dc-cuenta').textContent = '(0 / 300)'; p.querySelector('#dc-ahora').checked = false;
+        cargarBanco();
+      } catch (err) { Toast.error('No se pudo agregar', err.message); }
+      finally { btn.disabled = false; btn.innerHTML = orig; }
+    });
+
+    cargarNoticias();
+    cargarBanco();
   },
 
   config(p){
