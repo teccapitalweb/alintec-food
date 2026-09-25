@@ -9895,8 +9895,7 @@ const Sections = (function(){
         _noticiasCargadas = true;
         return;
       }
-      grid.innerHTML = '<div class="hojas">' + arts.map((n, i) => hojaHTML(n, i)).join('') + '</div>';
-      grid.querySelectorAll('a.hj-leer').forEach(a => a.addEventListener('click', e => e.stopPropagation()));
+      grid.innerHTML = '<div class="portadas">' + arts.map((n, i) => portadaHTML(n, i)).join('') + '</div>';
       grid.querySelectorAll('[data-noticia]').forEach(el => {
         el.addEventListener('click', () => abrirNoticia(el.dataset.noticia));
         el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirNoticia(el.dataset.noticia); } });
@@ -9907,36 +9906,80 @@ const Sections = (function(){
       grid.innerHTML = '<div class="foro-empty" style="grid-column:1/-1;">No se pudieron cargar las noticias.</div>';
     }
   };
-  // Cada noticia es su propia hoja de periódico. La plantilla la elige el administrador (verde, naranja, bicolor);
-  // las noticias sin plantilla se reparten entre las tres. El texto se acomoda en columnas justificadas con capitular.
+  // Las noticias se ven como portadas de revista (lista) y, al tocarlas, como una hoja de periódico completa.
+  // La plantilla la elige el administrador (verde, naranja, bicolor); las noticias sin plantilla se reparten entre las tres.
   const PLANTILLAS_HOJA = ['verde','naranja','bicolor'];
+  function cortarTexto(t, max){
+    t = String(t || '').trim();
+    if (t.length <= max) return t;
+    const corte = t.slice(0, max);
+    const sp = corte.lastIndexOf(' ');
+    return (sp > max * 0.6 ? corte.slice(0, sp) : corte).replace(/[\s,;:.\-–—]+$/, '') + '…';
+  }
+  // Limpia y reparte el texto de la nota en párrafos cortos (las notas automáticas llegan en un solo bloque largo)
+  function parrafosNoticia(n){
+    let bruto = String(n.resumen || n.extracto || n.descripcion || '');
+    bruto = bruto.replace(/\s*[-–—]?\s*La noticia[\s\S]{0,300}?fue publicada originalmente en[\s\S]*$/i, '');
+    let lineas = bruto.split('\n').map(x => x.trim()).filter(Boolean);
+    if (lineas.length <= 1 && lineas[0] && lineas[0].length > 260) {
+      const frases = lineas[0].split(/(?<=[.!?…])\s+(?=[A-ZÁÉÍÓÚÑ¿¡"“])/);
+      lineas = []; let actual = '';
+      frases.forEach(f => { if (actual && (actual + ' ' + f).length > 260) { lineas.push(actual); actual = f; } else { actual = actual ? actual + ' ' + f : f; } });
+      if (actual) lineas.push(actual);
+    }
+    const salida = []; let total = 0;
+    for (const l of lineas) {
+      if (total + l.length > 1300) { const resto = 1300 - total; if (resto > 120) salida.push(cortarTexto(l, resto)); break; }
+      salida.push(l); total += l.length;
+    }
+    return salida;
+  }
+  function plantillaNoticia(n, i){ return PLANTILLAS_HOJA.includes(n.plantilla) ? n.plantilla : PLANTILLAS_HOJA[i % 3]; }
+  function fotoNoticia(n, cls){
+    const u = urlSeguraNoticia(n.imagen);
+    if (u) return '<div class="' + cls + '" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"></div>';
+    const marca = escapeHtml(String(n.categoriaNombre || n.categoria || 'A').trim().slice(0,1).toUpperCase());
+    return '<div class="' + cls + ' hj-noimg" aria-hidden="true"><span>' + marca + '</span></div>';
+  }
+  function fechaNoticia(n){
+    try { const d = (n.createdAt && n.createdAt.toDate) ? n.createdAt.toDate() : new Date(n.createdAt || n.fechaPublicacion || Date.now()); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return ''; }
+  }
+  // Portada de revista para la lista de noticias: foto grande, cabecera de la plantilla y titular encima
+  function portadaHTML(n, i){
+    const tpl = plantillaNoticia(n, i);
+    const cat = escapeHtml(n.categoriaNombre || n.categoria || 'Actualidad');
+    const fuente = escapeHtml(n.fuente || 'Alintec Food');
+    const primera = cortarTexto((parrafosNoticia(n)[0] || ''), 110);
+    return '<div class="port-wrap"><article class="port port--' + tpl + '" data-noticia="' + escapeHtml(n.id) + '" role="button" tabindex="0" aria-label="' + escapeHtml(n.titulo || '') + '">'
+      + fotoNoticia(n, 'port__img') + '<div class="port__shade"></div>'
+      + '<header class="port__mast"><span>Alintec</span> <span>Actualidad</span></header>'
+      + '<div class="port__body"><span class="port__cat">' + cat + '</span><h3 class="port__title">' + escapeHtml(cortarTexto(n.titulo || '', 130)) + '</h3>'
+      + (primera ? '<p class="port__deck">' + escapeHtml(primera) + '</p>' : '')
+      + '<span class="port__go">Leer nota <svg class="ic"><use href="#i-arrow-right"/></svg></span></div>'
+      + '</article><p class="port-fecha">' + escapeHtml(fechaNoticia(n)) + ' · ' + fuente + '</p></div>';
+  }
+  // Hoja de periódico completa (ventana de lectura): texto en columnas justificadas con capitular
   function hojaHTML(n, i, grande){
-    const tpl = PLANTILLAS_HOJA.includes(n.plantilla) ? n.plantilla : PLANTILLAS_HOJA[i % 3];
-    const lineas = String(n.resumen || n.extracto || n.descripcion || '').split('\n').map(x => x.trim()).filter(Boolean);
+    const tpl = plantillaNoticia(n, i);
+    const parrafos = parrafosNoticia(n);
     const cat = escapeHtml(n.categoriaNombre || n.categoria || 'Actualidad');
     const fuente = escapeHtml(n.fuente || 'Alintec Food');
     const titulo = escapeHtml(n.titulo || '');
-    let fecha = '';
-    try { const d = (n.createdAt && n.createdAt.toDate) ? n.createdAt.toDate() : new Date(n.createdAt || n.fechaPublicacion || Date.now()); fecha = d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); } catch(e){ fecha = ''; }
-    const u = urlSeguraNoticia(n.imagen);
-    const marca = escapeHtml(String(n.categoriaNombre || n.categoria || 'A').trim().slice(0,1).toUpperCase());
-    const foto = u
-      ? '<div class="hj-img" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + titulo + '"></div>'
-      : '<div class="hj-img hj-noimg" aria-hidden="true"><span>' + marca + '</span></div>';
+    const fecha = fechaNoticia(n);
     const leer = /^https:\/\//i.test(String(n.link || ''))
       ? '<a class="hj-leer" href="' + escapeHtml(n.link) + '" target="_blank" rel="noopener noreferrer">Leer nota completa en ' + fuente + ' ↗</a>'
-      : '<span class="hj-leer hj-leer--off">Toca para leer lo esencial</span>';
-    const texto = lineas.length ? lineas.map(l => '<p>' + escapeHtml(l) + '</p>').join('') : '<p>Toca para leer lo esencial de esta nota.</p>';
-    const aparte = escapeHtml(String(n.extracto || lineas[0] || '').slice(0, 160));
+      : '<span class="hj-leer hj-leer--off">Fuente: ' + fuente + '</span>';
+    const texto = parrafos.length ? parrafos.map(l => '<p>' + escapeHtml(l) + '</p>').join('') : '<p>Toca «Leer nota completa» para ver el artículo original.</p>';
+    const aparte = escapeHtml(cortarTexto(parrafos[0] || '', 150));
     const abre = grande ? '' : ' data-noticia="' + escapeHtml(n.id) + '" role="button" tabindex="0"';
     return '<article class="hoja hoja--' + tpl + (grande ? ' hoja--grande' : '') + '"' + abre + '><div class="hj-paper">'
       + '<div class="hj-top"><span>alitecfood.com</span><span>' + escapeHtml(fecha) + '</span></div>'
       + '<header class="hj-mast"><h3 class="hj-brand"><span>Alintec</span> <span>Actualidad</span></h3><div class="hj-lema">' + cat + ' — <em>' + fuente + '</em></div></header>'
-      + '<figure class="hj-fig">' + foto + '<figcaption class="hj-cap"><span class="hj-tag">' + cat + '</span><strong>' + titulo + '</strong></figcaption></figure>'
+      + '<figure class="hj-fig">' + fotoNoticia(n, 'hj-img') + '<figcaption class="hj-cap"><span class="hj-tag">' + cat + '</span><strong>' + titulo + '</strong></figcaption></figure>'
       + '<div class="hj-body"><h4 class="hj-title">' + titulo + '</h4><div class="hj-deck">' + fuente + ' · ' + escapeHtml(noticiaTiempoRel(n.createdAt || n.fechaPublicacion)) + '</div>'
       + '<div class="hj-txt" lang="es">' + texto + '</div><p class="hj-by">Por ' + fuente + '</p></div>'
       + (aparte ? '<aside class="hj-box"><span class="hj-tag">Lo esencial</span><p lang="es">' + aparte + '</p></aside>' : '')
-      + '<footer class="hj-foot">' + leer + '<span class="hj-page">' + String(i + 1).padStart(2, '0') + '</span></footer>'
+      + '<footer class="hj-foot">' + leer + '<span class="hj-page">' + String((i || 0) + 1).padStart(2, '0') + '</span></footer>'
       + '</div></article>';
   }
   // Solo enlaces https; se codifican los caracteres que podrían romper el CSS url('...')
@@ -13974,6 +14017,50 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .af-hint-list li{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--text-2);line-height:1.5}
 .af-hint-list li svg{width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0;margin-top:1px}
 </style>
+<style id="alintec-portadas">
+/* ═══════════════════════════════════════════════════════════════════
+   Noticias · lista de portadas de revista (grandes, una por noticia)
+   Al tocar una portada se abre la hoja de periódico completa.
+   ═══════════════════════════════════════════════════════════════════ */
+.portadas{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:38px 28px;align-items:start;padding:4px 2px 8px}
+.port-wrap{display:grid;gap:14px;min-width:0;container-type:inline-size}
+.port{
+  --pc:#154034;position:relative;display:block;aspect-ratio:3/4.15;overflow:hidden;cursor:pointer;color:#fff;
+  border-radius:4px 14px 14px 4px;background:#10201a;
+  box-shadow:0 16px 36px rgba(10,10,10,.3),0 2px 6px rgba(10,10,10,.16);
+  transform:perspective(1100px) rotateY(-3deg);transform-origin:left center;
+  transition:transform .45s cubic-bezier(.2,.8,.25,1),box-shadow .35s ease;
+}
+.port::before{content:'';position:absolute;z-index:5;inset:0 auto 0 0;width:9px;background:linear-gradient(90deg,rgba(0,0,0,.45),rgba(255,255,255,.1) 55%,transparent);pointer-events:none}
+.port:hover,.port:focus-visible{transform:perspective(1100px) rotateY(0deg) translateY(-8px);box-shadow:0 30px 60px rgba(10,10,10,.36),0 4px 10px rgba(10,10,10,.18);outline:none}
+.port__img{position:absolute;inset:0;background:#2c3b33 center/cover no-repeat;transition:transform .7s cubic-bezier(.2,.8,.25,1)}
+.port:hover .port__img{transform:scale(1.05)}
+.port .hj-noimg{background:linear-gradient(150deg,var(--pc),#0a1a12)!important}
+.port .hj-noimg span{font:900 clamp(90px,50cqw,170px)/1 'Playfair Display',Georgia,serif;color:rgba(255,255,255,.2)}
+.port__shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,14,10,.4) 0%,rgba(6,14,10,0) 24%,rgba(6,14,10,.3) 50%,rgba(6,14,10,.94) 100%);pointer-events:none}
+.port__mast{position:absolute;z-index:3;left:0;right:0;top:0;padding:14px 16px 13px;text-align:center;font:900 clamp(20px,9.5cqw,34px)/1 'Playfair Display',Georgia,serif;letter-spacing:-.01em}
+.port__body{position:absolute;z-index:3;left:0;right:0;bottom:0;display:grid;gap:9px;padding:24px 20px 20px}
+.port__cat{justify-self:start;padding:4px 10px;background:var(--pc);color:#fff;font:800 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.port__title{margin:0;color:#fff;font:900 clamp(21px,8cqw,30px)/1.1 'Playfair Display',Georgia,serif;letter-spacing:-.015em;text-shadow:0 2px 16px rgba(0,0,0,.45)}
+.port__deck{margin:0;color:rgba(255,255,255,.88);font:500 13px/1.45 Inter,system-ui,sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.port__go{display:inline-flex;align-items:center;gap:6px;justify-self:start;margin-top:2px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.95);color:#10201a;font:800 12px Inter,system-ui,sans-serif}
+.port__go .ic{width:13px;height:13px}
+.port-fecha{margin:0;padding:0 2px;color:var(--text-3);font:600 12.5px Inter,system-ui,sans-serif}
+/* verde */
+.port--verde .port__mast{background:#154034;color:#F1EBD6;border-bottom:3px double rgba(241,235,214,.55)}
+/* naranja */
+.port--naranja{--pc:#B4470A}
+.port--naranja .port__mast{background:#B4470A;color:#fff;text-align:left;text-transform:uppercase;padding:14px 18px}
+.port--naranja .port__title{font-family:Inter,system-ui,sans-serif;font-weight:800;letter-spacing:-.02em}
+/* bicolor */
+.port--bicolor{--pc:#E8434B}
+.port--bicolor .port__img:not(.hj-noimg){filter:grayscale(1) contrast(1.05)}
+.port--bicolor .port__mast{display:flex;padding:0;text-transform:uppercase;font-size:clamp(17px,7.4cqw,28px);white-space:nowrap}
+.port--bicolor .port__mast span{flex:1;min-width:0;padding:10px 10px;background:#1b1b1b;color:#fff;text-align:left}
+.port--bicolor .port__mast span:first-child{background:#E8434B;text-align:right}
+.port--bicolor .port__title{text-transform:uppercase;font-size:clamp(19px,7cqw,27px)}
+@media(prefers-reduced-motion:reduce){.port,.port__img{transition:none}.port:hover{transform:none}}
+</style>
 <style id="alintec-hojas">
 /* ═══════════════════════════════════════════════════════════════════
    Noticias · cada noticia es una hoja de periódico con su propia plantilla
@@ -14013,7 +14100,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .hj-title{margin:0 0 8px;color:var(--hj-h);font:700 clamp(21px,6.4cqw,30px)/1.12 'Playfair Display',Georgia,serif;letter-spacing:-.01em}
 .hj-deck{display:inline-block;margin-bottom:12px;padding:3px 10px;background:var(--hj);color:var(--hj-on);font:700 11.5px Inter,system-ui,sans-serif}
 .hj-txt{column-count:2;column-gap:16px;column-rule:1px solid color-mix(in srgb,var(--hj-ink) 18%,transparent);text-align:justify;hyphens:auto;-webkit-hyphens:auto;font:12.5px/1.55 Georgia,'Times New Roman',serif;color:var(--hj-ink)}
-.hj-txt p{margin:0 0 8px;break-inside:avoid}
+.hj-txt p{margin:0 0 8px}
 .hj-txt p:first-child::first-letter{float:left;padding:3px 6px 0 0;color:var(--hj-k);font:900 3.1em/.82 'Playfair Display',Georgia,serif}
 .hj-by{margin:6px 0 0;text-align:right;font:italic 11px Georgia,serif;color:var(--hj-soft)}
 .hj-box{grid-area:box;padding:12px 14px;background:var(--hj-box);font:12px/1.5 Georgia,'Times New Roman',serif;color:var(--hj-ink)}
@@ -14074,6 +14161,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 
 /* Hojas angostas (celular): una sola columna */
 @container (max-width:400px){
+  .hj-txt{column-count:1!important}
   .hoja--verde .hj-paper{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "mast" "fig" "body" "box" "foot"}
   .hoja--naranja .hj-paper,.hoja--bicolor .hj-paper{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "mast" "fig" "body" "box" "foot";row-gap:14px}
   .hoja--naranja .hj-img,.hoja--bicolor .hj-img{height:auto;min-height:0;aspect-ratio:16/11}
