@@ -6996,6 +6996,26 @@ const Sections = (function(){
     return diasRuta >= cursoUnlockDay(curso);  // ← turno cada 8 días por orden VIP
   }
 
+  // Cuenta regresiva legible de un curso bloqueado: días completos, u horas cuando falta
+  // menos de un día. Usa la fecha EXACTA de desbloqueo que calcula el servidor.
+  function cuentaRegresivaCurso(c, diasFalta){
+    let ms = null;
+    if (c && c.desbloqueoEn) { const t = new Date(c.desbloqueoEn).getTime(); if (Number.isFinite(t)) ms = t - Date.now(); }
+    if (ms === null) {
+      const d = Number(diasFalta) || 0;
+      return { corto: d + (d === 1 ? ' día' : ' días'), singular: d === 1, fecha: '' };
+    }
+    if (ms <= 0) return { corto: 'unos minutos', singular: false, fecha: '' };
+    const horas = Math.ceil(ms / 3600000);
+    const dias = Math.ceil(ms / 86400000);
+    let corto, singular;
+    if (horas < 24) { singular = horas <= 1; corto = horas <= 1 ? 'menos de 1 hora' : horas + ' horas'; }
+    else { singular = dias === 1; corto = dias === 1 ? '1 día' : dias + ' días'; }
+    let fecha = '';
+    try { fecha = new Date(c.desbloqueoEn).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) {}
+    return { corto, singular, fecha };
+  }
+
   function diasParaDesbloquear(indexCurso, curso){
     if (esAdminReal()) return 0;
     if (curso && typeof curso.desbloqueadoServidor === 'boolean' && tieneAccesoVipCompleto()) {
@@ -7984,7 +8004,7 @@ const Sections = (function(){
           ${c.disponibleSiempre ? '<span class="curso-card__cover-badge" style="background:var(--success);color:#0A120C;">DISPONIBLE</span>' : ''}
           ${esCursoConMuestra(c) && !tieneAccesoVipCompleto() ? `<span class="curso-card__cover-badge" style="left:12px;right:auto;background:var(--success);color:#0A120C;border-color:var(--success);">${c.sesiones.filter((_,si) => esClaseGratis(c,si)).length} CLASES GRATIS</span>` : ''}
           ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta === null ? '<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.9);color:var(--primary);border:1px solid var(--primary);">🔒 Termina el curso inicial</span>' : ''}
-          ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 Se desbloquea en ${diasFalta} día${diasFalta!==1?'s':''}</span>` : ''}
+          ${tieneAccesoVipCompleto() && !desbloqueado && diasFalta > 0 ? `<span class="curso-card__cover-badge" title="${cuentaRegresivaCurso(c, diasFalta).fecha ? 'Se abre el ' + cuentaRegresivaCurso(c, diasFalta).fecha : ''}" style="background:rgba(14,10,6,.85);color:var(--primary);border:1px solid var(--primary);">🔒 ${(() => { const cr = cuentaRegresivaCurso(c, diasFalta); return (cr.singular ? 'Queda ' : 'Quedan ') + cr.corto; })()}</span>` : ''}
         </div>
         <div class="curso-card__body">
           <div class="curso-card__tags">
@@ -8049,7 +8069,7 @@ const Sections = (function(){
           <h3 style="color:var(--primary);">${diasFalta === null ? 'Completa primero el curso inicial' : 'Este curso se desbloquea pronto'}</h3>
           <p>${diasFalta === null
             ? 'Termina el curso de muestra y obtén su certificado. En ese momento comenzará tu <strong style="color:var(--primary);">día 0 VIP</strong>.'
-            : `Disponible en <strong style="color:var(--primary);">${diasFalta} día${diasFalta!==1?'s':''}</strong>. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.`}</p>
+            : (() => { const cr = cuentaRegresivaCurso(c, diasFalta); return `${cr.singular ? 'Queda' : 'Quedan'} <strong style="color:var(--primary);">${cr.corto}</strong> para que se desbloquee${cr.fecha ? ' (se abre el <strong>' + cr.fecha + '</strong>)' : ''}. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.`; })()}</p>
           <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Si quieres acceso anticipado, contáctanos.</p>
         </div>
       `;
