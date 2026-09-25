@@ -9688,17 +9688,6 @@ const Sections = (function(){
     }, 50);
   }
 
-  function _portadaMaterialArea(area) {
-    const a = String(area || '').toLowerCase();
-    if (/inocuidad|haccp|buenas prácticas|distintivo|microbiolog|seguridad/.test(a)) return 'assets/img/materiales/portada-inocuidad-v1.webp';
-    if (/calidad|normativa|etiquetado|ciencia de alimentos|laboratorio/.test(a)) return 'assets/img/materiales/portada-calidad-v1.webp';
-    if (/producción|tecnología|conservación|agroindustria|recubrimiento|planta|residuo/.test(a)) return 'assets/img/materiales/portada-produccion-v1.webp';
-    if (/logística|operaciones|gestión|finanzas|administrativo/.test(a)) return 'assets/img/materiales/portada-operaciones-v1.webp';
-    if (/mantenimiento|energía|agua|electroquímica|medio ambiente/.test(a)) return 'assets/img/materiales/portada-ingenieria-v1.webp';
-    if (/nutrición|formulación|suplement|nutracéutico|funcional|azúcar/.test(a)) return 'assets/img/materiales/portada-nutricion-v1.webp';
-    return 'assets/img/materiales/portada-calidad-v1.webp';
-  }
-
   function _renderPdfCard(m) {
     const colorMap = {
       'Seguridad':'#EF4444','Calidad':'#10B981','Logística':'#3B82F6',
@@ -9715,8 +9704,11 @@ const Sections = (function(){
     const diasFaltan = _diasParaMaterial(m);
     const tituloEsc = (m.titulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const cursoEsc = (m.cursoTitulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    const portada = _portadaMaterialArea(m.cursoArea);
-    const topStyle = `background-image:linear-gradient(180deg,rgba(7,18,12,.04),rgba(7,18,12,.82)),url('${portada}');background-size:cover;background-position:center;`;
+    // Portada del curso al que pertenece el material (misma imagen que la card del curso)
+    const portada = (m.cursoPortada || '').replace(/"/g,'&quot;').replace(/'/g,'%27');
+    const topStyle = portada
+      ? `background-image:linear-gradient(150deg,color-mix(in srgb,${c} 42%,transparent),rgba(10,18,12,.58)),url('${portada}');background-size:cover;background-position:center;`
+      : '';
 
     return `
       <article class="pdf-card ${!disponible ? 'pdf-card--soon' : ''}" style="--pdf-color:${c};cursor:pointer;"
@@ -9729,13 +9721,8 @@ const Sections = (function(){
         data-curso="${cursoEsc}"
         data-area="${m.cursoArea}">
         <div class="pdf-card__top" style="${topStyle}">
-          <span class="pdf-card__spine" aria-hidden="true"></span>
           <div class="pdf-card__icon"><svg class="ic"><use href="#${ic}"/></svg></div>
           <span class="pdf-card__size">${tipoLabel}</span>
-          <div class="pdf-card__cover-copy">
-            <span>${m.cursoArea || 'Biblioteca técnica'}</span>
-            <strong>${tituloEsc}</strong>
-          </div>
         </div>
         <div class="pdf-card__body">
           <div class="pdf-card__title">${tituloEsc}</div>
@@ -13756,24 +13743,6 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 .course-detail-description{margin:0 3px 23px;padding:0 2px 20px;border-bottom:1px solid var(--border);font-size:13.5px;line-height:1.75;color:var(--text-2)}
 .modulo{border-radius:15px!important;border-color:var(--border)!important;background:var(--surface-2)!important;box-shadow:0 7px 18px rgba(20,42,29,.04)}
 
-/* Materiales como libros físicos con portadas temáticas */
-.pdfs-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))!important;gap:32px 27px!important;padding:8px 5px 18px;perspective:1400px}
-.pdf-card{padding:14px 14px 0!important;border-radius:23px!important;overflow:visible!important;background:linear-gradient(180deg,color-mix(in srgb,var(--surface-2) 92%,var(--pdf-color) 8%),var(--surface))!important;border:1px solid var(--border)!important;box-shadow:0 18px 40px rgba(12,30,19,.1)!important;transform-style:preserve-3d}
-.pdf-card:hover{transform:translateY(-10px) rotateX(1deg)!important;box-shadow:0 32px 70px color-mix(in srgb,var(--pdf-color) 16%,rgba(8,26,15,.2))!important}
-.pdf-card__top{min-height:330px!important;border-radius:8px 19px 19px 8px!important;padding:22px!important;align-items:flex-start!important;justify-content:flex-start!important;transform:perspective(1100px) rotateY(-5deg) translateZ(8px)!important;transform-origin:left center;box-shadow:inset 14px 0 18px rgba(4,15,9,.3),inset -2px 0 rgba(255,255,255,.24),12px 16px 28px rgba(5,19,11,.28)!important}
-.pdf-card:hover .pdf-card__top{transform:perspective(1100px) rotateY(-1deg) translateY(-3px) translateZ(10px)!important;box-shadow:inset 12px 0 16px rgba(4,15,9,.24),inset -2px 0 rgba(255,255,255,.25),18px 23px 35px rgba(5,19,11,.32)!important}
-.pdf-card__top::before{background:linear-gradient(120deg,rgba(255,255,255,.24),transparent 28%,rgba(255,255,255,.045) 48%,transparent 67%)!important;background-size:auto!important;mask-image:none!important;-webkit-mask-image:none!important}
-.pdf-card__top::after{content:'ALINTEC FOOD · EDICIÓN TÉCNICA'!important;left:24px!important;bottom:18px!important;font-size:8px!important;letter-spacing:1.5px!important}
-.pdf-card__spine{position:absolute;z-index:3;inset:0 auto 0 0;width:13px;border-radius:8px 0 0 8px;background:linear-gradient(90deg,rgba(0,0,0,.46),rgba(255,255,255,.16),rgba(0,0,0,.18));box-shadow:2px 0 7px rgba(0,0,0,.24)}
-.pdf-card__icon{position:absolute!important;right:18px;top:18px;width:45px!important;height:45px!important;border-radius:13px!important;background:rgba(9,25,16,.68)!important;border:1px solid rgba(255,255,255,.24);box-shadow:0 9px 22px rgba(0,0,0,.2)!important;backdrop-filter:blur(8px)}
-.pdf-card__size{position:absolute!important;left:24px;top:23px;background:rgba(8,22,14,.67)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important;backdrop-filter:blur(8px)}
-.pdf-card__cover-copy{position:absolute;z-index:3;left:25px;right:22px;bottom:54px;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.55)}
-.pdf-card__cover-copy span{display:block;margin-bottom:8px;font:800 8.5px 'JetBrains Mono',monospace;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.78)}
-.pdf-card__cover-copy strong{display:block;font:800 clamp(18px,2vw,24px)/1.15 'Plus Jakarta Sans',sans-serif;letter-spacing:-.55px}
-.pdf-card__body{padding:19px 9px 21px!important;gap:10px!important}
-.pdf-card__title{font-size:15px!important;font-weight:800!important}.pdf-card__meta{padding-top:2px}
-.pdf-card__tags{padding-top:13px!important;border-top:1px solid var(--border)}
-
 /* Noticias · composición de revista y periódico contemporáneo */
 .news-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:25px!important;align-items:stretch}
 .news-card{border-radius:25px!important;background:var(--surface)!important;border:1px solid color-mix(in srgb,var(--cat-color) 20%,var(--border))!important;box-shadow:0 18px 39px rgba(20,42,29,.085),0 3px 0 color-mix(in srgb,var(--cat-color) 15%,transparent)!important;transform-style:preserve-3d}
@@ -13824,7 +13793,7 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 :root[data-theme="night"] .news-card__rubric,:root[data-theme="night"] .course-detail-description{border-color:var(--border-2)}
 
 @media(max-width:1050px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.news-card--lead{grid-column:1/-1}}
-@media(max-width:700px){.news-grid{grid-template-columns:1fr}.news-card--lead{display:flex!important;grid-column:auto}.news-card--lead .news-card__cover{height:245px!important;min-height:0;margin:10px 10px 0}.news-card--lead .news-card__body{padding:21px 22px!important}.news-card--lead .news-card__title{font-size:25px!important}.course-detail-hero,.course-detail-hero__content{min-height:285px}.course-detail-hero__content{padding:25px}.pdf-card__top{min-height:345px!important}}
+@media(max-width:700px){.news-grid{grid-template-columns:1fr}.news-card--lead{display:flex!important;grid-column:auto}.news-card--lead .news-card__cover{height:245px!important;min-height:0;margin:10px 10px 0}.news-card--lead .news-card__body{padding:21px 22px!important}.news-card--lead .news-card__title{font-size:25px!important}.course-detail-hero,.course-detail-hero__content{min-height:285px}.course-detail-hero__content{padding:25px}}
 </style>
 <!-- ─── Service Worker · permite instalar Alintec Food como app y abrir más rápido ─── -->
 <script>
