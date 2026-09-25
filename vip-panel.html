@@ -13982,6 +13982,100 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .af-hint-list li{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--text-2);line-height:1.5}
 .af-hint-list li svg{width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0;margin-top:1px}
 </style>
+<style id="alintec-cursos-vp">
+/* ═══════════════════════════════════════════════════════════════════
+   Cursos · estética de aula (referencia: Visión Pecuaria)
+   Solo presentación: tarjetas limpias con línea de color al pasar el cursor,
+   detalle del curso como tarjeta clara con insignia, título y portada,
+   y lista de clases tipo "aula". Conserva los colores y las funciones de Alintec.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Catálogo: tarjetas ── */
+.cursos-grid{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))!important;gap:22px!important}
+.cursos-grid .curso-card{
+  --vp-c:var(--area-color,var(--primary));
+  position:relative;display:flex;flex-direction:column;padding:0!important;overflow:hidden!important;
+  border-radius:22px!important;background:var(--surface)!important;
+  border:1px solid var(--border)!important;box-shadow:0 2px 8px rgba(10,10,10,.06)!important;
+  transform:none!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+}
+.cursos-grid .curso-card::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:4px;z-index:3;pointer-events:none;
+  background:linear-gradient(90deg,var(--vp-c),color-mix(in srgb,var(--vp-c) 55%,#fff));
+  transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+.cursos-grid .curso-card:hover,.cursos-grid .curso-card:focus-visible{
+  transform:translateY(-4px)!important;
+  border-color:color-mix(in srgb,var(--vp-c) 42%,var(--border))!important;
+  box-shadow:0 20px 48px rgba(10,10,10,.10)!important;
+}
+.cursos-grid .curso-card:hover::before,.cursos-grid .curso-card:focus-visible::before{transform:scaleX(1)}
+.cursos-grid .curso-card__cover{height:172px!important;margin:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important}
+.cursos-grid .curso-card__body{padding:20px 22px 22px!important;gap:10px!important;flex:1}
+.cursos-grid .curso-card__tags .tag{border-radius:999px!important;padding:5px 12px!important;font-size:9.5px!important;letter-spacing:.6px!important}
+.cursos-grid .curso-card__title{font-size:17px!important;font-weight:800!important;line-height:1.25!important;letter-spacing:-.02em!important;color:var(--text)}
+.cursos-grid .curso-card__desc{font-size:13px!important;line-height:1.6!important;color:var(--text-2)}
+.cursos-grid .curso-card__meta{margin-top:auto;padding-top:14px!important;border-top:1px solid var(--border);gap:14px!important}
+.cursos-grid .curso-card__body::after{
+  content:'Ver curso  →';display:block;margin-top:2px;font-size:12.5px;font-weight:700;letter-spacing:-.005em;color:var(--vp-c);
+  transition:transform .18s ease;
+}
+.cursos-grid .curso-card:hover .curso-card__body::after{transform:translateX(4px)}
+
+/* ── Detalle del curso: tarjeta clara con insignia, título y portada ── */
+.course-detail-hero{
+  --vp-c:var(--course-color,var(--primary));
+  display:grid!important;grid-template-columns:minmax(0,1fr) 230px;gap:28px;align-items:center;
+  min-height:0!important;padding:30px 32px!important;margin:0 0 20px!important;overflow:hidden;
+  background:var(--surface)!important;background-image:none!important;color:var(--text)!important;
+  border:1px solid var(--border);border-radius:24px!important;box-shadow:0 2px 8px rgba(10,10,10,.06)!important;
+}
+.course-detail-hero__shade{display:none!important}
+.course-detail-hero::after{
+  content:'';position:static!important;right:auto;bottom:auto;grid-column:2;grid-row:1;
+  width:100%;height:100%;min-height:190px;border:0!important;border-radius:18px;
+  box-shadow:0 12px 28px rgba(10,10,10,.14)!important;
+  background:var(--course-hero) center/cover no-repeat;
+}
+.course-detail-hero__content{grid-column:1;grid-row:1;min-height:0!important;padding:0!important;max-width:none!important;justify-content:center!important}
+.course-detail-hero__kicker{
+  align-self:flex-start;display:inline-flex!important;align-items:center;gap:8px;margin:0 0 14px!important;padding:6px 14px;border-radius:999px;
+  background:color-mix(in srgb,var(--vp-c) 12%,transparent);color:var(--vp-c)!important;
+  font:700 11.5px 'Plus Jakarta Sans',sans-serif!important;letter-spacing:0!important;text-transform:none!important;
+}
+.course-detail-hero__kicker .ic{display:none}
+.course-detail-hero__kicker::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--vp-c);animation:vpPulso 2s ease-in-out infinite;
+}
+@keyframes vpPulso{0%,100%{opacity:1}50%{opacity:.4}}
+.course-detail-hero__tags{margin-bottom:12px!important}
+.course-detail-hero__tags .tag:not([style*="--success"]){
+  color:var(--text-2)!important;background:var(--surface-2)!important;border:1px solid var(--border)!important;border-radius:999px!important;
+}
+.course-detail-hero__tags .tag:first-child:not([style*="--success"]){
+  color:var(--vp-c)!important;background:color-mix(in srgb,var(--vp-c) 10%,transparent)!important;
+  border-color:color-mix(in srgb,var(--vp-c) 35%,transparent)!important;
+}
+.course-detail-hero__title{max-width:none!important;margin:0 0 12px!important;color:var(--text)!important;font-size:clamp(24px,3.4vw,34px)!important;line-height:1.12!important;letter-spacing:-.03em!important}
+.course-detail-hero__meta{color:var(--text-2)!important;font-size:13px!important;gap:18px!important}
+.course-detail-hero__meta .ic{color:var(--text-3)!important}
+@media(max-width:700px){
+  .course-detail-hero{grid-template-columns:1fr;gap:20px;padding:22px 20px!important;border-radius:20px!important}
+  .course-detail-hero::after{grid-column:1;grid-row:1;min-height:150px;height:150px}
+  .course-detail-hero__content{grid-row:2}
+}
+
+/* ── Clases del curso: lista tipo aula ── */
+.modulos-list{gap:8px!important}
+.modulo{
+  padding:14px 18px!important;border-radius:14px!important;background:var(--surface)!important;
+  border:1px solid var(--border)!important;box-shadow:none!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+.modulo[onclick]:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--primary) 45%,var(--border))!important;box-shadow:0 8px 22px rgba(10,10,10,.07)!important}
+.modulo__num{width:30px!important;height:30px!important;border-radius:9px!important;font-size:12px!important}
+.modulo__title{font-size:14px!important;font-weight:600!important;letter-spacing:-.005em}
+</style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
 function afFolio(prefijo){
