@@ -8029,6 +8029,7 @@ const Sections = (function(){
             ${c.materiales?.length ? `<span><svg class="ic"><use href="#i-news"/></svg>${c.materiales.length} PDF${c.materiales.length!==1?'s':''}</span>` : ''}
           </div>
         </div>
+        ${(() => { const pctTarjeta = progresoCursoPct(c.id, c.sesiones ? c.sesiones.length : 0); return pctTarjeta > 0 ? `<div class="curso-card__pbar" title="${pctTarjeta}% completado"><span style="width:${pctTarjeta}%"></span></div>` : ''; })()}
       </article>
     `;}).join('')}</div>`;
     list.querySelectorAll('.curso-card').forEach(card=>{
@@ -13984,97 +13985,118 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 </style>
 <style id="alintec-cursos-vp">
 /* ═══════════════════════════════════════════════════════════════════
-   Cursos · estética de aula (referencia: Visión Pecuaria)
-   Solo presentación: tarjetas limpias con línea de color al pasar el cursor,
-   detalle del curso como tarjeta clara con insignia, título y portada,
-   y lista de clases tipo "aula". Conserva los colores y las funciones de Alintec.
+   Cursos · estilo "portada de película" (referencia: club de Visión Pecuaria)
+   Tarjetas con foto a todo el tamaño, degradado oscuro, chips de vidrio,
+   título y datos abajo; al pasar el cursor la foto se acerca y aparece "Ver curso".
+   Detalle: portada grande con título y una línea de tiempo de clases.
+   Solo presentación: conserva colores por área, candados y funciones de Alintec.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Catálogo: tarjetas ── */
-.cursos-grid{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))!important;gap:22px!important}
+/* ── Catálogo: tarjetas con foto ── */
+.cursos-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;gap:20px!important}
 .cursos-grid .curso-card{
   --vp-c:var(--area-color,var(--primary));
-  position:relative;display:flex;flex-direction:column;padding:0!important;overflow:hidden!important;
-  border-radius:22px!important;background:var(--surface)!important;
-  border:1px solid var(--border)!important;box-shadow:0 2px 8px rgba(10,10,10,.06)!important;
-  transform:none!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+  position:relative;display:block;padding:0!important;overflow:hidden!important;isolation:isolate;
+  height:260px;color:#fff;
+  border-radius:24px!important;border:0!important;background:#0d1220!important;
+  box-shadow:0 8px 24px rgba(10,10,10,.16)!important;
+  transform:none!important;transition:transform .25s ease,box-shadow .25s ease!important;
 }
-.cursos-grid .curso-card::before{
-  content:'';position:absolute;left:0;right:0;top:0;height:4px;z-index:3;pointer-events:none;
-  background:linear-gradient(90deg,var(--vp-c),color-mix(in srgb,var(--vp-c) 55%,#fff));
-  transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.4,0,.2,1);
+.cursos-grid .curso-card:hover,.cursos-grid .curso-card:focus-visible{transform:translateY(-5px)!important;box-shadow:0 22px 48px rgba(10,10,10,.28)!important}
+/* la foto ocupa toda la tarjeta y se acerca al pasar el cursor */
+.cursos-grid .curso-card__cover{
+  position:absolute!important;inset:0;height:100%!important;margin:0!important;border-radius:0!important;padding:0!important;
+  box-shadow:none!important;transform:none;transition:transform .7s cubic-bezier(.2,.8,.25,1),filter .3s ease!important;
 }
-.cursos-grid .curso-card:hover,.cursos-grid .curso-card:focus-visible{
-  transform:translateY(-4px)!important;
-  border-color:color-mix(in srgb,var(--vp-c) 42%,var(--border))!important;
-  box-shadow:0 20px 48px rgba(10,10,10,.10)!important;
+.cursos-grid .curso-card:hover .curso-card__cover{transform:scale(1.06)}
+.cursos-grid .curso-card__cover::before{display:none!important}
+.cursos-grid .curso-card__cover::after{
+  content:'';position:absolute;inset:0!important;height:auto!important;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(13,18,32,0) 25%,rgba(13,18,32,.55) 60%,rgba(8,12,22,.94) 100%)!important;
 }
-.cursos-grid .curso-card:hover::before,.cursos-grid .curso-card:focus-visible::before{transform:scaleX(1)}
-.cursos-grid .curso-card__cover{height:172px!important;margin:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important}
-.cursos-grid .curso-card__body{padding:20px 22px 22px!important;gap:10px!important;flex:1}
-.cursos-grid .curso-card__tags .tag{border-radius:999px!important;padding:5px 12px!important;font-size:9.5px!important;letter-spacing:.6px!important}
-.cursos-grid .curso-card__title{font-size:17px!important;font-weight:800!important;line-height:1.25!important;letter-spacing:-.02em!important;color:var(--text)}
-.cursos-grid .curso-card__desc{font-size:13px!important;line-height:1.6!important;color:var(--text-2)}
-.cursos-grid .curso-card__meta{margin-top:auto;padding-top:14px!important;border-top:1px solid var(--border);gap:14px!important}
+.cursos-grid .curso-card__cover>.ic{display:none!important}
+/* botón circular de flecha, arriba a la derecha */
+.cursos-grid .curso-card::after{
+  content:'↗';position:absolute;top:14px;right:14px;left:auto;z-index:5;width:34px;height:34px;font-size:15px;
+  background:rgba(255,255,255,.2)!important;border:1px solid rgba(255,255,255,.3)!important;
+}
+.cursos-grid .curso-card:hover::after{background:var(--vp-c)!important;transform:rotate(8deg) scale(1.06)}
+/* Etiquetas como chips de vidrio arriba a la izquierda */
+.cursos-grid .curso-card__body{position:absolute;inset:0;z-index:3;padding:18px!important;gap:0!important;display:flex;flex-direction:column;justify-content:flex-end;background:none!important}
+.cursos-grid .curso-card__tags{position:absolute;top:14px;left:14px;right:60px;order:0;flex-wrap:wrap;gap:6px}
+.cursos-grid .curso-card__tags .tag{
+  color:#fff!important;background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.3)!important;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px!important;padding:5px 11px!important;font-size:9.5px!important;letter-spacing:.5px!important;
+}
+.cursos-grid .curso-card__tags .tag:first-child{background:color-mix(in srgb,var(--vp-c) 55%,rgba(13,18,32,.55))!important;border-color:color-mix(in srgb,var(--vp-c) 70%,#fff)!important}
+.cursos-grid .curso-card__title{font-size:19px!important;font-weight:800!important;line-height:1.18!important;letter-spacing:-.025em!important;color:#fff!important;margin:0 0 8px;text-shadow:0 2px 14px rgba(0,0,0,.4)}
+.cursos-grid .curso-card__desc{display:none!important}
+.cursos-grid .curso-card__meta{margin:0!important;padding:0!important;border:0!important;gap:4px 12px!important;color:rgba(255,255,255,.88)!important;font-size:11.5px}
+.cursos-grid .curso-card__meta .ic{color:rgba(255,255,255,.85)}
+.cursos-grid .curso-card__title,.cursos-grid .curso-card__meta{transition:transform .25s ease}
+/* Al pasar el cursor: el texto sube y aparece "Ver curso" */
+.cursos-grid .curso-card:hover .curso-card__title,.cursos-grid .curso-card:hover .curso-card__meta{transform:translateY(-42px)}
 .cursos-grid .curso-card__body::after{
-  content:'Ver curso  →';display:block;margin-top:2px;font-size:12.5px;font-weight:700;letter-spacing:-.005em;color:var(--vp-c);
-  transition:transform .18s ease;
+  content:'Ver curso  →';position:absolute;left:18px;bottom:18px;z-index:4;padding:8px 16px;border-radius:999px;
+  background:#fff;color:#142a5c;font-size:12px;font-weight:800;letter-spacing:-.005em;
+  opacity:0;transform:translateY(10px);transition:opacity .25s ease,transform .25s ease;pointer-events:none;
 }
-.cursos-grid .curso-card:hover .curso-card__body::after{transform:translateX(4px)}
+.cursos-grid .curso-card:hover .curso-card__body::after{opacity:1;transform:none}
+/* Insignias (Disponible, clases gratis, candado con cuenta regresiva): chicas, debajo de la flecha */
+.cursos-grid .curso-card__cover-badge{
+  position:absolute!important;top:56px!important;right:14px!important;left:auto!important;z-index:6;
+  max-width:50%;width:auto;padding:3px 9px!important;border-radius:999px!important;
+  font:600 9.5px/1.25 Inter,system-ui,sans-serif!important;text-transform:none!important;letter-spacing:0!important;white-space:normal;text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+}
+.cursos-grid .curso-card__cover-badge~.curso-card__cover-badge{top:90px!important}
+.cursos-grid .curso-card__cover-badge:not([style*="--success"]){background:rgba(255,255,255,.2)!important;color:#fff!important;border:1px solid rgba(255,255,255,.34)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.cursos-grid .curso-card__pbar{position:absolute;left:0;right:0;bottom:0;height:4px;z-index:6;background:rgba(255,255,255,.24)}
+.cursos-grid .curso-card__pbar span{display:block;height:100%;background:var(--vp-c);border-radius:0 3px 3px 0}
+.cursos-grid .curso-card--locked .curso-card__cover{filter:grayscale(.25) brightness(.72)}
+.cursos-grid .curso-card--locked:hover .curso-card__cover{filter:grayscale(.1) brightness(.85)}
+@media(max-width:560px){.cursos-grid{grid-template-columns:minmax(0,1fr)!important}.cursos-grid .curso-card{height:250px;min-width:0;width:100%}}
+@media(hover:none){
+  .cursos-grid .curso-card:hover .curso-card__title,.cursos-grid .curso-card:hover .curso-card__meta{transform:none}
+  .cursos-grid .curso-card__body::after{display:none}
+}
 
-/* ── Detalle del curso: tarjeta clara con insignia, título y portada ── */
+/* ── Detalle del curso: portada grande con título ── */
 .course-detail-hero{
   --vp-c:var(--course-color,var(--primary));
-  display:grid!important;grid-template-columns:minmax(0,1fr) 230px;gap:28px;align-items:center;
-  min-height:0!important;padding:30px 32px!important;margin:0 0 20px!important;overflow:hidden;
-  background:var(--surface)!important;background-image:none!important;color:var(--text)!important;
-  border:1px solid var(--border);border-radius:24px!important;box-shadow:0 2px 8px rgba(10,10,10,.06)!important;
+  display:flex!important;min-height:340px!important;padding:0!important;margin:0 0 22px!important;overflow:hidden;
+  color:#fff!important;border:0!important;border-radius:28px!important;
+  background-color:#0d1220!important;background-image:var(--course-hero)!important;background-size:cover!important;background-position:center!important;
+  box-shadow:0 20px 48px rgba(10,10,10,.22)!important;
 }
-.course-detail-hero__shade{display:none!important}
-.course-detail-hero::after{
-  content:'';position:static!important;right:auto;bottom:auto;grid-column:2;grid-row:1;
-  width:100%;height:100%;min-height:190px;border:0!important;border-radius:18px;
-  box-shadow:0 12px 28px rgba(10,10,10,.14)!important;
-  background:var(--course-hero) center/cover no-repeat;
-}
-.course-detail-hero__content{grid-column:1;grid-row:1;min-height:0!important;padding:0!important;max-width:none!important;justify-content:center!important}
-.course-detail-hero__kicker{
-  align-self:flex-start;display:inline-flex!important;align-items:center;gap:8px;margin:0 0 14px!important;padding:6px 14px;border-radius:999px;
-  background:color-mix(in srgb,var(--vp-c) 12%,transparent);color:var(--vp-c)!important;
-  font:700 11.5px 'Plus Jakarta Sans',sans-serif!important;letter-spacing:0!important;text-transform:none!important;
-}
-.course-detail-hero__kicker .ic{display:none}
-.course-detail-hero__kicker::before{
-  content:'';width:6px;height:6px;border-radius:50%;background:var(--vp-c);animation:vpPulso 2s ease-in-out infinite;
-}
-@keyframes vpPulso{0%,100%{opacity:1}50%{opacity:.4}}
+.course-detail-hero::after{display:none!important}
+.course-detail-hero__shade{display:block!important;background:linear-gradient(180deg,rgba(13,18,32,.12) 0%,rgba(13,18,32,.55) 55%,rgba(8,12,22,.94) 100%)!important}
+.course-detail-hero__content{min-height:340px!important;padding:30px 32px!important;max-width:none!important;justify-content:flex-end!important}
+.course-detail-hero__kicker{display:none!important}
 .course-detail-hero__tags{margin-bottom:12px!important}
 .course-detail-hero__tags .tag:not([style*="--success"]){
-  color:var(--text-2)!important;background:var(--surface-2)!important;border:1px solid var(--border)!important;border-radius:999px!important;
+  color:#fff!important;background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.3)!important;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px!important;
 }
-.course-detail-hero__tags .tag:first-child:not([style*="--success"]){
-  color:var(--vp-c)!important;background:color-mix(in srgb,var(--vp-c) 10%,transparent)!important;
-  border-color:color-mix(in srgb,var(--vp-c) 35%,transparent)!important;
-}
-.course-detail-hero__title{max-width:none!important;margin:0 0 12px!important;color:var(--text)!important;font-size:clamp(24px,3.4vw,34px)!important;line-height:1.12!important;letter-spacing:-.03em!important}
-.course-detail-hero__meta{color:var(--text-2)!important;font-size:13px!important;gap:18px!important}
-.course-detail-hero__meta .ic{color:var(--text-3)!important}
-@media(max-width:700px){
-  .course-detail-hero{grid-template-columns:1fr;gap:20px;padding:22px 20px!important;border-radius:20px!important}
-  .course-detail-hero::after{grid-column:1;grid-row:1;min-height:150px;height:150px}
-  .course-detail-hero__content{grid-row:2}
-}
+.course-detail-hero__title{max-width:none!important;margin:0 0 12px!important;color:#fff!important;font-size:clamp(26px,4vw,38px)!important;line-height:1.08!important;letter-spacing:-.03em!important}
+.course-detail-hero__meta{color:rgba(255,255,255,.88)!important;font-size:13px!important;gap:18px!important}
+.course-detail-hero__meta .ic{color:#fff!important}
+@media(max-width:700px){.course-detail-hero{min-height:300px!important;border-radius:22px!important}.course-detail-hero__content{min-height:300px!important;padding:22px 20px!important}}
 
-/* ── Clases del curso: lista tipo aula ── */
-.modulos-list{gap:8px!important}
-.modulo{
-  padding:14px 18px!important;border-radius:14px!important;background:var(--surface)!important;
-  border:1px solid var(--border)!important;box-shadow:none!important;
-  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+/* ── Clases del curso: línea de tiempo ── */
+.modulos-list{position:relative;gap:2px!important}
+.modulos-list::before{content:'';position:absolute;top:24px;bottom:24px;left:15px;width:2px;background:var(--border-2);pointer-events:none}
+.modulos-list .modulo{
+  position:relative;padding:10px 12px 10px 0!important;gap:14px!important;align-items:center;
+  border:0!important;border-radius:14px!important;background:transparent!important;box-shadow:none!important;
+  transition:background .15s ease!important;
 }
-.modulo[onclick]:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--primary) 45%,var(--border))!important;box-shadow:0 8px 22px rgba(10,10,10,.07)!important}
-.modulo__num{width:30px!important;height:30px!important;border-radius:9px!important;font-size:12px!important}
-.modulo__title{font-size:14px!important;font-weight:600!important;letter-spacing:-.005em}
+.modulos-list .modulo[onclick]:hover{background:var(--surface-2)!important;transform:none}
+.modulos-list .modulo__num{
+  position:relative;z-index:1;width:32px!important;height:32px!important;border-radius:50%!important;
+  border:2px solid var(--border-2);background:var(--surface);font-size:11px!important;
+}
+.modulos-list .modulo__title{font-size:14px!important;font-weight:600!important}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
