@@ -14497,7 +14497,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
    al pasar el cursor se endereza y sube. El título va en la portada y debajo.
    Solo presentación: el clic abre el documento igual que antes.
    ═══════════════════════════════════════════════════════════════════ */
-.pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:30px 22px!important;align-items:start!important;padding:6px 4px 18px}
+.pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(215px,1fr))!important;gap:40px 30px!important;align-items:start!important;padding:6px 4px 18px}
 .pdfs-grid .pdf-card{
   --pc:var(--pdf-color,var(--primary));
   display:grid!important;gap:14px;padding:0!important;overflow:visible!important;
@@ -14531,9 +14531,9 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
   font-size:0!important;pointer-events:none;
 }
 .pdfs-grid .pdf-card__icon{display:none!important}
-.pdfs-grid .pdf-card__cover-copy{position:absolute;z-index:2;left:20px;right:14px;bottom:36px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.pdfs-grid .pdf-card__cover-copy{position:absolute;z-index:2;left:24px;right:18px;bottom:46px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)}
 .pdfs-grid .pdf-card__cover-copy i{display:block;margin-bottom:8px;width:26px;height:0;border-top:2px solid var(--pc)}
-.pdfs-grid .pdf-card__cover-copy strong{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font:800 14px/1.2 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em}
+.pdfs-grid .pdf-card__cover-copy strong{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font:800 19px/1.15 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em}
 /* etiqueta de tipo (PDF, Excel…) como pastilla blanca abajo a la derecha */
 .pdfs-grid .pdf-card__size{
   position:absolute!important;z-index:4;left:auto!important;top:auto!important;right:9px;bottom:9px;
@@ -14549,8 +14549,8 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .pdfs-grid .pdf-card--soon .pdf-card__top{filter:grayscale(.3) brightness(.85)}
 /* texto debajo de la portada */
 .pdfs-grid .pdf-card__body{padding:0 2px!important;gap:4px!important}
-.pdfs-grid .pdf-card__title{font-size:13.5px!important;font-weight:700!important;line-height:1.3!important;letter-spacing:-.01em!important;-webkit-line-clamp:3}
-.pdfs-grid .pdf-card__meta{font-size:11px!important;gap:6px 10px!important;color:var(--text-3)!important}
+.pdfs-grid .pdf-card__title{font-size:15.5px!important;font-weight:700!important;line-height:1.3!important;letter-spacing:-.01em!important;-webkit-line-clamp:3}
+.pdfs-grid .pdf-card__meta{font-size:12px!important;gap:6px 10px!important;color:var(--text-3)!important}
 .pdfs-grid .pdf-card__meta span:nth-child(2){display:none}
 .pdfs-grid .pdf-card__tags{padding:2px 0 0!important;border:0!important;margin:0!important}
 .pdfs-grid .pdf-card__tags .row-btn{display:none!important}
@@ -14566,7 +14566,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .pdfs-grid .pdf-card .lock-overlay__ic svg{width:13px;height:13px}
 .pdfs-grid .pdf-card .lock-overlay__txt{font-size:9px;color:#fff;letter-spacing:.6px}
 .pdfs-grid .pdf-card[data-locked="true"] .pdf-card__lock{display:none}
-@media(max-width:560px){.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:26px 16px!important}}
+@media(max-width:560px){.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:30px 16px!important}.pdfs-grid .pdf-card__cover-copy strong{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.pdfs-grid .pdf-card__top{transition:none!important}}
 </style>
 <style id="alintec-cursos-vp">
