@@ -11538,20 +11538,20 @@ const Sections = (function(){
       }
     ];
 
+    // Arte de cada práctica: mascota o ilustración con estilo de figura, sobre un mosaico de color suave
+    const ARTE = {
+      quiz: '<svg viewBox="0 0 96 96" aria-hidden="true"><defs><linearGradient id="rzq" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5BA8FF"/><stop offset="1" stop-color="#1F55D6"/></linearGradient><linearGradient id="rzb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#F59E0B"/></linearGradient></defs><ellipse cx="46" cy="87" rx="22" ry="6" fill="#F5A623" opacity=".9"/><path d="M30 33c0-11 7.5-18 18.500-18S67 22 67 32c0 7-3.500 11-9 15-4 3-6 5.500-6 10v3H41v-4c0-7 3.500-11.500 9-15.500 3.500-2.500 5-4.500 5-7.500 0-4-3-6.500-7-6.500s-7 3-7 8z" fill="url(#rzq)" stroke="#1740A8" stroke-width="2" stroke-linejoin="round"/><circle cx="46.500" cy="73" r="6.500" fill="url(#rzq)" stroke="#1740A8" stroke-width="2"/><path d="M70 40 58 60h8l-5 17 19-24h-9l6-13z" fill="url(#rzb)" stroke="#D97706" stroke-width="1.600" stroke-linejoin="round"/></svg>',
+      detective: '<img src="assets/img/mascotas/lacto-investigador.webp" alt="" loading="lazy">',
+      orden: '<svg viewBox="0 0 96 96" aria-hidden="true"><defs><linearGradient id="rzo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9B7BFF"/><stop offset="1" stop-color="#5B3FD6"/></linearGradient></defs><rect x="12" y="12" width="50" height="19" rx="7" fill="url(#rzo)"/><rect x="24" y="38" width="50" height="19" rx="7" fill="#7C5CF0"/><rect x="36" y="64" width="50" height="19" rx="7" fill="#A48CFF"/><circle cx="23" cy="21.500" r="6" fill="#fff"/><circle cx="35" cy="47.500" r="6" fill="#fff"/><circle cx="47" cy="73.500" r="6" fill="#fff"/><text x="23" y="25" text-anchor="middle" font-size="9" font-weight="800" fill="#5B3FD6" font-family="Inter,Arial,sans-serif">1</text><text x="35" y="51" text-anchor="middle" font-size="9" font-weight="800" fill="#5B3FD6" font-family="Inter,Arial,sans-serif">2</text><text x="47" y="77" text-anchor="middle" font-size="9" font-weight="800" fill="#5B3FD6" font-family="Inter,Arial,sans-serif">3</text><path d="M70 22c8 0 12 4 12 10M66 48c9 0 14 4 14 11" fill="none" stroke="#FFC23D" stroke-width="3.500" stroke-linecap="round"/><path d="M78 57l3 6 5-5" fill="none" stroke="#FFC23D" stroke-width="3.500" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      flashcards: '<svg viewBox="0 0 96 96" aria-hidden="true"><defs><linearGradient id="rzf1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2FB5A0"/><stop offset="1" stop-color="#0F7A6A"/></linearGradient><linearGradient id="rzf2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB454"/><stop offset="1" stop-color="#E8741A"/></linearGradient></defs><path d="M10 28l37 9v45L10 73z" fill="url(#rzf1)" stroke="#0B5E51" stroke-width="2" stroke-linejoin="round"/><path d="M86 28 49 37v45l37-9z" fill="url(#rzf2)" stroke="#B85510" stroke-width="2" stroke-linejoin="round"/><path d="M28 50h11M28 58h11M57 50h11M57 58h11" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/><path d="M48 6l3.600 7.300 8 1.200-5.800 5.600 1.400 8L48 24.400l-7.200 3.700 1.400-8L36.400 14.500l8-1.200z" fill="#FFD23F" stroke="#E59A00" stroke-width="1.500" stroke-linejoin="round"/></svg>'
+    };
+    const FONDO = { quiz:'#E6EEFF', detective:'#E2F4EA', orden:'#ECE7FB', flashcards:'#FCEFDD' };
+    // Reto del día: rota entre los cuatro tipos según la fecha (hora de México)
+    const retoHoy = retos[Math.floor((Date.now() - 6 * 3600 * 1000) / 86400000) % retos.length];
+
     container.innerHTML = `
-      <div class="fade-up retos-shell">
-        <section class="retos-hero">
-          <div style="position:relative;z-index:1;">
-            <div class="retos-hero__eyebrow">Aprende jugando · Ya disponible</div>
-            <h1 class="retos-hero__title">Convierte cada repaso en un pequeño logro</h1>
-            <p class="retos-hero__sub">Cuatro actividades breves para practicar inocuidad, procesos y conceptos esenciales a tu ritmo.</p>
-          </div>
-          <div class="retos-mascots" aria-label="Equipo de laboratorio de los retos">
-            <img class="retos-story-team" src="assets/img/retos/equipo-alintec-v3.webp" alt="Especialistas y guía microbiológica de Alintec Food">
-            <div class="retos-team-caption">Tu equipo de laboratorio</div>
-            <span class="retos-mascots__count"><strong>4</strong> formatos</span>
-          </div>
-        </section>
+      <div class="fade-up rz">
+        <div class="rz-head"><h1>Zona de retos</h1><span class="rz-xp" id="rz-xp"></span></div>
 
         <div class="retos-note" style="flex-wrap:wrap;">
           <svg class="ic"><use href="#i-shield-check"/></svg>
@@ -11560,23 +11560,40 @@ const Sections = (function(){
             : '<div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Solo para miembros.</strong> Puedes ver cómo son los retos, pero para resolverlos y sumar XP necesitas una suscripción activa.</div><button class="btn btn--accent btn--sm" type="button" id="retos-suscribirme">Ver suscripción</button>'}
         </div>
 
-        <div class="retos-grid">
-          ${retos.map((r,idx) => `
-            <button class="reto-card${miembro ? '' : ' is-locked'}" type="button" data-reto="${r.id}" style="--reto-color:${r.color};">
-              <div class="reto-card__top">
-                <div class="reto-card__icon"><svg class="ic"><use href="#${r.icono}"/></svg></div>
-                <span class="reto-card__number">${String(idx+1).padStart(2,'0')}</span>
-                <span class="reto-card__status">${miembro ? 'Comenzar' : 'Solo miembros'}</span>
-              </div>
-              <h2 class="reto-card__title">${r.titulo}</h2>
-              <p class="reto-card__desc">${r.desc}</p>
-              <div class="reto-card__foot"><span><svg class="ic"><use href="#i-clock"/></svg>${r.tiempo}</span><svg class="ic reto-card__arrow"><use href="#i-arrow-right"/></svg></div>
+        <section class="rz-hero${miembro ? '' : ' is-locked'}" data-reto="historia" role="button" tabindex="0" aria-label="Comenzar el modo historia">
+          <div class="rz-hero__txt">
+            <span class="rz-eyebrow">Nueva experiencia · Modo historia</span>
+            <h2>Aprende a <em>leer</em> la planta.</h2>
+            <p>Avanza por mundos, toma decisiones dentro de la planta de alimentos y domina cada control desde lo básico.</p>
+            <span class="rz-hero__btn">${miembro ? 'Comenzar historia' : 'Solo miembros'} <svg class="ic"><use href="#i-arrow-right"/></svg></span>
+          </div>
+          <div class="rz-cast" aria-label="Guías de la historia">
+            <figure><span><img src="assets/img/mascotas/bacteria-guardiana.webp" alt="" loading="lazy"></span><figcaption>Guardi</figcaption></figure>
+            <figure><span><img src="assets/img/mascotas/lacto-investigador.webp" alt="" loading="lazy"></span><figcaption>Lacto</figcaption></figure>
+          </div>
+        </section>
+
+        <button class="rz-daily${miembro ? '' : ' is-locked'}" type="button" data-reto="${retoHoy.id}">
+          <span class="rz-daily__ic"><svg class="ic"><use href="#i-calendar"/></svg></span>
+          <span><strong>Reto del día</strong><small>${retoHoy.titulo} · hasta 10 XP</small></span>
+          <svg class="ic rz-daily__arrow"><use href="#i-arrow-right"/></svg>
+        </button>
+
+        <div class="rz-grid">
+          ${retos.map(r => `
+            <button class="rz-card${miembro ? '' : ' is-locked'}" type="button" data-reto="${r.id}">
+              <span class="rz-card__tile" style="background:${FONDO[r.id] || '#E6F1EA'}">${ARTE[r.id] || ''}</span>
+              <svg class="ic rz-card__go"><use href="#i-arrow-right"/></svg>
+              <strong class="rz-card__title">${r.titulo}</strong>
+              <span class="rz-card__meta">${miembro ? r.tiempo : 'Solo miembros · ' + r.tiempo}</span>
             </button>
           `).join('')}
         </div>
 
         <section class="reto-stage" id="reto-stage" aria-live="polite"></section>
       </div>`;
+    // XP acumulados (los calcula el servidor)
+    try { Promise.resolve(cargarEstadoRetos()).then(e => { const el = container.querySelector('#rz-xp'); if (el && e) el.textContent = (e.xp || 0) + ' XP acumulados'; }).catch(() => {}); } catch(e){}
 
     const stage=container.querySelector('#reto-stage');
     const saveResult=(id,score,total)=>{try{const key='alintec:retos:resultados';const all=JSON.parse(localStorage.getItem(key)||'{}');const prev=all[id];if(!prev||score>prev.score)all[id]={score,total,updatedAt:Date.now()};localStorage.setItem(key,JSON.stringify(all));}catch(e){}};
@@ -11671,13 +11688,143 @@ const Sections = (function(){
       {front:'Monitoreo',back:'Observación o medición planificada para evaluar si una medida de control está bajo dominio.'}
     ];
     function startFlashcards(){let cards=shuffle(cardPool);try{const last=localStorage.getItem('alintec:retos:lastFlash');if(cards[0]?.front===last)cards.push(cards.shift());localStorage.setItem('alintec:retos:lastFlash',cards[0]?.front||'');}catch(e){}cards=cards.slice(0,6);let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length}</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard ${flipped?'is-flipped':''}" aria-label="Voltear tarjeta"><span class="flashcard__hint">${flipped?'Definición':'Concepto · toca para revelar'}</span><strong>${flipped?c.back:c.front}</strong><span class="flashcard__turn"><svg class="ic"><use href="#i-arrow-right"/></svg></span></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():showResult('flashcards','Flashcards',known,cards.length,startFlashcards);}));};paint();}
-    const starters={quiz:startQuiz,detective:startDetective,orden:startOrder,flashcards:startFlashcards};
+    // ── Modo historia: "Aprende a leer la planta" ──
+    // Tres mundos con cuatro decisiones cada uno. Para abrir el siguiente mundo hay que acertar al menos 3 de 4.
+    // El progreso se guarda en este dispositivo; el XP lo decide el servidor (un capítulo da XP una vez al día).
+    const HISTORIA_KEY = 'alintec:historia:v1';
+    const historiaMundos = [
+      { id:1, titulo:'Recepción de materia prima', sub:'La puerta de entrada de la planta', imagen:'assets/img/retos/detective-camara-fria-v1.webp',
+        intro:'Hoy llegan tres camiones. Lo que deje pasar la recepción lo tendrá que controlar el resto de la planta. ¡Abre bien los ojos!',
+        casos:[
+          { escena:'Llega un camión de lácteos y tu termómetro marca 9 °C en el producto. La especificación pide 5 °C o menos.',
+            a:['Rechazarlo o retenerlo, registrar la desviación y avisar a calidad','Recibirlo y meterlo rápido a la cámara fría','Recibirlo y usarlo primero para que no se eche a perder'],
+            ok:0,
+            why:'Un producto refrigerado fuera de especificación no se acepta: se rechaza o se retiene según el procedimiento, con registro y aviso a calidad. Enfriarlo después no borra el tiempo que pasó en zona de peligro.' },
+          { escena:'Una caja de pollo llega con el empaque roto y líquido escurriendo sobre otras cajas.',
+            a:['Lavar la caja y seguir con la descarga','Pasarlo a producción antes que los demás','Segregar y rechazar el lote dañado, y limpiar y desinfectar el área'],
+            ok:2,
+            why:'El empaque roto y los jugos del producto crudo son fuente de contaminación cruzada. Se separa, se rechaza y se desinfecta la zona de recepción.' },
+          { escena:'El proveedor entrega un ingrediente nuevo, pero su certificado de análisis está vencido.',
+            a:['Liberarlo: es el proveedor de siempre','Usarlo solo en productos que se cocinan','Retenerlo hasta verificar un certificado vigente'],
+            ok:2,
+            why:'Sin certificado vigente no hay evidencia de que cumple la especificación. El ingrediente queda retenido hasta verificarlo.' },
+          { escena:'Junto a unas verduras con tierra visible, otro compañero acomoda producto listo para consumo.',
+            a:['No pasa nada: todo está en la misma tarima','Separar y ordenar: lo sucio y lo listo para consumo no comparten espacio','Cubrir las verduras con una lona'],
+            ok:1,
+            why:'La tierra y los residuos contaminan lo que tocan. El producto crudo y el listo para consumo se almacenan por separado.' }
+        ] },
+      { id:2, titulo:'Producción y buenas prácticas', sub:'Manos, utensilios y limpieza', imagen:'assets/img/retos/detective-higiene-personal-v1.webp',
+        intro:'Entramos a producción. Aquí lo que cuenta son los hábitos: cada pequeño descuido puede llegar hasta el consumidor.',
+        casos:[
+          { escena:'Un operador de la línea de producto expuesto tiene tos y se cubre la boca con la mano enguantada.',
+            a:['Seguir trabajando: trae guantes','Avisar al supervisor y reasignarlo fuera del producto expuesto','Ponerse un segundo par de guantes'],
+            ok:1,
+            why:'Los guantes no sustituyen la salud ni el lavado de manos. El personal con síntomas se reporta y no manipula producto expuesto.' },
+          { escena:'La línea pasará de una barra con cacahuate a una sin alérgenos.',
+            a:['Enjuagar con agua y arrancar','Arrancar y revisar al final del turno','Hacer una limpieza validada, verificarla y cambiar etiquetas antes de arrancar'],
+            ok:2,
+            why:'Para controlar alérgenos se segregan ingredientes y se valida la limpieza; también se verifica que cada producto lleve su etiqueta correcta.' },
+          { escena:'Ves un cuchillo de la tabla roja (crudos) sobre la tabla verde (vegetales listos para consumo).',
+            a:['Sacudirlo y seguir','Ignorarlo si se ve limpio','Detener el trabajo, retirar los utensilios, limpiarlos y desinfectarlos, y reforzar el código de colores'],
+            ok:2,
+            why:'El código de colores existe para evitar la contaminación cruzada. Se detiene, se limpia y desinfecta, y se refuerza la práctica con el equipo.' },
+          { escena:'La tira reactiva indica que el desinfectante quedó más diluido de lo que pide el procedimiento.',
+            a:['Preparar una solución nueva a la concentración correcta y verificarla con la tira','Usarla así para no detener la línea','Agregar más agua para que alcance'],
+            ok:0,
+            why:'Un desinfectante diluido no elimina los microorganismos. Se prepara de nuevo a la concentración indicada y se verifica.' }
+        ] },
+      { id:3, titulo:'Almacén, frío y trazabilidad', sub:'Cuando algo sale mal, todo se rastrea', imagen:'assets/img/retos/detective-inocuidad-realista-v1.webp',
+        intro:'Último tramo: el producto ya está terminado. Frío, fechas y registros deciden si podemos responder rápido ante un problema.',
+        casos:[
+          { escena:'El termómetro de la cámara fría marca 8 °C porque la puerta quedó entreabierta.',
+            a:['Cerrar la puerta y seguir como si nada','Corregir la falla, evaluar tiempo y temperatura del producto, retener lo comprometido y registrar','Sacar todo y llevarlo hoy a producción'],
+            ok:1,
+            why:'Una desviación de temperatura se corrige, se evalúa el producto según el tiempo fuera de rango y se documenta la acción.' },
+          { escena:'Llega un reclamo de un cliente sobre un lote de producto terminado.',
+            a:['Descartar el reclamo por ser uno solo','Cambiar la etiqueta del lote','Activar la trazabilidad: identificar el lote, aislar lo que queda y rastrear origen y destino'],
+            ok:2,
+            why:'La trazabilidad permite saber de dónde vino y a dónde fue cada lote para actuar rápido y retirar solo lo necesario.' },
+          { escena:'En el anaquel de producto terminado encuentras cajas con fecha de caducidad vencida.',
+            a:['Retirarlas, identificarlas como no conformes, registrar y revisar la rotación PEPS','Cambiarles la fecha','Dejarlas al fondo del anaquel'],
+            ok:0,
+            why:'El producto vencido se retira e identifica como no conforme, y se revisa por qué falló la rotación PEPS (primero en entrar, primero en salir).' },
+          { escena:'Detectas excremento de roedor cerca de una tarima de empaques.',
+            a:['Barrerlo discretamente y seguir','Esperar a la próxima auditoría','Notificar de inmediato, aislar la zona, limpiar y activar el control de plagas con una acción correctiva'],
+            ok:2,
+            why:'Los indicios de plagas se reportan al momento. Se aísla, se limpia y se corrige la causa con el programa de control de plagas.' }
+        ] }
+    ];
+    const historiaLeer = () => { try { return JSON.parse(localStorage.getItem(HISTORIA_KEY) || '{}') || {}; } catch(e){ return {}; } };
+    const historiaGuardar = (mundo, aciertos) => { try { const p = historiaLeer(); if (!p[mundo] || aciertos > p[mundo]) p[mundo] = aciertos; localStorage.setItem(HISTORIA_KEY, JSON.stringify(p)); } catch(e){} };
+    const historiaEstrellas = n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0;
+    const historiaEstrellasHTML = n => '<span class="hs-stars" aria-label="' + historiaEstrellas(n) + ' de 3 estrellas">' + [0,1,2].map(i => i < historiaEstrellas(n) ? '★' : '<span class="off">★</span>').join('') + '</span>';
+    const historiaAbierto = (m, prog) => m.id === 1 || (prog[m.id - 1] || 0) >= 3;
+    const informarResultado = (id, score, total) => {
+      window.__enviarResultadoReto?.(id, score, total).then(r => {
+        if (!r || typeof Toast === 'undefined') return;
+        if (r.xpGanado > 0) Toast.success('+' + r.xpGanado + ' XP', 'Capítulo superado · ya suma a tu nivel');
+        else if (score / total >= 0.6) Toast.info('Capítulo superado', 'Hoy ya cobraste los XP de este reto. Vuelve mañana.');
+        (r.nuevas || []).forEach(n => Toast.success('🏅 Nueva insignia', n.nombre + ' · +' + n.xp + ' XP'));
+      });
+    };
+    function historiaMapa(){
+      const prog = historiaLeer();
+      stage.innerHTML = '<div class="reto-activity hs-mapa"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Modo historia</div><h2>Aprende a leer la planta</h2>'
+        + '<p class="hs-lead">Acompaña a <strong>Lacto</strong> y <strong>Guardi</strong> por tres mundos. Elige la mejor decisión en cada situación; con 3 aciertos de 4 abres el siguiente mundo.</p></div></div>'
+        + '<div class="hs-mundos">' + historiaMundos.map(m => {
+          const abierto = historiaAbierto(m, prog);
+          return '<article class="hs-mundo' + (abierto ? '' : ' is-locked') + '"><div class="hs-mundo__img" style="background-image:url(\'' + m.imagen + '\')"></div>'
+            + '<div class="hs-mundo__txt"><span class="hs-mundo__n">Mundo ' + m.id + '</span><h3>' + m.titulo + '</h3><p>' + m.sub + '</p>'
+            + '<div class="hs-mundo__pie">' + historiaEstrellasHTML(prog[m.id] || 0)
+            + (abierto ? '<button class="btn btn--primary btn--sm" type="button" data-mundo="' + m.id + '">' + (prog[m.id] ? 'Jugar otra vez' : 'Jugar') + '</button>'
+              : '<span class="hs-cerrado"><svg class="ic"><use href="#i-lock"/></svg>Acierta 3 de 4 en el mundo ' + (m.id - 1) + '</span>') + '</div></div></article>';
+        }).join('') + '</div></div>';
+      stage.querySelectorAll('[data-mundo]').forEach(b => b.addEventListener('click', () => historiaJugar(historiaMundos.find(m => m.id === Number(b.dataset.mundo)))));
+      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+    function historiaJugar(m){
+      const casos = shuffle(m.casos).map(c => ({ escena: c.escena, why: c.why, opciones: shuffle(c.a.map((t, n) => ({ t, ok: n === c.ok }))) }));
+      let i = 0, aciertos = 0, bloqueado = false;
+      const pintar = () => {
+        const c = casos[i];
+        stage.innerHTML = '<div class="reto-activity hs"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Mundo ' + m.id + ' · Caso ' + (i + 1) + '/' + casos.length + '</div><h2>' + m.titulo + '</h2></div><span class="reto-score">' + aciertos + ' aciertos</span></div>'
+          + '<div class="hs-scene" style="background-image:url(\'' + m.imagen + '\')"><div class="hs-guide"><img src="assets/img/mascotas/lacto-investigador.webp" alt="" loading="lazy"><div class="hs-bubble"><strong>Lacto</strong><p>' + (i === 0 ? m.intro + ' ' : '') + c.escena + '</p></div></div></div>'
+          + '<div class="reto-options">' + c.opciones.map((o, n) => '<button type="button" data-opcion="' + n + '"><span>' + String.fromCharCode(65 + n) + '</span>' + o.t + '</button>').join('') + '</div><div class="reto-feedback" hidden></div></div>';
+        stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+        stage.querySelectorAll('[data-opcion]').forEach(b => b.addEventListener('click', () => {
+          if (bloqueado) return; bloqueado = true;
+          const n = Number(b.dataset.opcion); const ok = c.opciones[n].ok; if (ok) aciertos++;
+          stage.querySelectorAll('[data-opcion]').forEach((el, k) => { el.disabled = true; el.classList.toggle('is-correct', c.opciones[k].ok); el.classList.toggle('is-wrong', k === n && !ok); });
+          const f = stage.querySelector('.reto-feedback'); f.hidden = false;
+          f.innerHTML = '<strong>' + (ok ? '¡Buena decisión!' : 'Piénsalo de nuevo') + '</strong><span>' + c.why + '</span><button class="btn btn--primary" type="button">' + (i === casos.length - 1 ? 'Ver resultado' : 'Siguiente caso') + '</button>';
+          f.querySelector('button').addEventListener('click', () => { i++; bloqueado = false; i < casos.length ? pintar() : terminar(); });
+        }));
+      };
+      const terminar = () => {
+        historiaGuardar(m.id, aciertos); informarResultado('historia', aciertos, casos.length);
+        const supera = aciertos >= 3; const siguiente = historiaMundos.find(x => x.id === m.id + 1);
+        stage.innerHTML = '<div class="reto-result"><div class="reto-result__icon"><svg class="ic"><use href="#' + (supera ? 'i-trophy' : 'i-check-circle') + '"/></svg></div><div>'
+          + '<div class="reto-stage__eyebrow">Mundo ' + m.id + (supera ? ' superado' : ' terminado') + '</div><h2>' + m.titulo + '</h2>'
+          + '<p>Acertaste <strong>' + aciertos + ' de ' + casos.length + '</strong>. ' + (supera ? (siguiente ? '¡Muy bien! Ya puedes entrar al mundo ' + siguiente.id + '.' : '¡Terminaste la historia! Ya sabes leer la planta.') : 'Necesitas 3 aciertos para abrir el siguiente mundo. Repasa las explicaciones y vuelve a intentarlo.') + '</p>'
+          + historiaEstrellasHTML(aciertos)
+          + '<div class="hs-acciones"><button class="btn btn--primary" type="button" id="hs-mapa">Ver el mapa</button>'
+          + (supera && siguiente ? '<button class="btn btn--accent" type="button" id="hs-sig">Ir al mundo ' + siguiente.id + '</button>' : '')
+          + '<button class="btn btn--ghost" type="button" id="hs-repetir">Repetir este mundo</button></div></div></div>';
+        stage.querySelector('#hs-mapa').addEventListener('click', historiaMapa);
+        stage.querySelector('#hs-repetir').addEventListener('click', () => historiaJugar(m));
+        stage.querySelector('#hs-sig')?.addEventListener('click', () => historiaJugar(siguiente));
+        stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+      };
+      pintar();
+    }
+    const starters={quiz:startQuiz,detective:startDetective,orden:startOrder,flashcards:startFlashcards,historia:historiaMapa};
     const irSuscripcion = () => window.__mostrarPaywallAlintec?.('Retos para miembros', 'Activa tu suscripción para resolver los retos y sumar XP.');
     container.querySelectorAll('[data-reto]').forEach(card=>card.addEventListener('click',()=>{
       if (!miembro) { irSuscripcion(); return; }
       starters[card.dataset.reto]();
     }));
     container.querySelector('#retos-suscribirme')?.addEventListener('click', irSuscripcion);
+    container.querySelectorAll('.rz-hero').forEach(h => h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } }));
   }
 
   return {
@@ -14172,6 +14319,99 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
   .hoja--naranja .hj-txt{column-count:1}
 }
 @media(prefers-reduced-motion:reduce){.hoja{transition:none}.hoja:hover{transform:none}}
+</style>
+<style id="alintec-retos-vp">
+/* ═══════════════════════════════════════════════════════════════════
+   Zona de retos · estilo del club de Visión Pecuaria
+   Cabecera con XP, portada del modo historia con guías, "Reto del día"
+   y mosaicos con ilustración. Solo presentación; los retos siguen igual.
+   ═══════════════════════════════════════════════════════════════════ */
+.rz{display:flex;flex-direction:column;gap:18px}
+.rz-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.rz-head h1{margin:0;font:800 clamp(24px,3vw,32px)/1.1 'Plus Jakarta Sans',Inter,sans-serif;letter-spacing:-.03em;color:var(--text)}
+.rz-xp{font:700 12px Inter,system-ui,sans-serif;color:var(--text-3);letter-spacing:.02em}
+.rz .retos-note{margin:0}
+
+/* Portada del modo historia */
+.rz-hero{
+  position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:18px;
+  min-height:270px;padding:34px;border-radius:28px;cursor:pointer;color:#fff;
+  background:linear-gradient(90deg,rgba(9,38,25,.96) 0%,rgba(9,38,25,.84) 46%,rgba(9,38,25,.3) 100%),url('assets/img/retos/historia-laboratorio-v3.jpg') center/cover;
+  box-shadow:0 18px 44px rgba(9,38,25,.3);
+}
+.rz-hero::before{content:'';position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(115deg,rgba(255,255,255,.055) 0 1px,transparent 1px 52px);pointer-events:none}
+.rz-eyebrow{font:800 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#F2D27A}
+.rz-hero h2{margin:12px 0 10px;max-width:13ch;font:800 clamp(32px,5.4vw,52px)/1.03 'Plus Jakarta Sans',Inter,sans-serif;letter-spacing:-.035em;color:#fff}
+.rz-hero h2 em{font-style:normal;color:#8EE0B0}
+.rz-hero p{margin:0 0 22px;max-width:46ch;font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.82)}
+.rz-hero__btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;background:#fff;color:#0f3a26;font:800 14px Inter,system-ui,sans-serif;transition:transform .2s ease}
+.rz-hero__btn .ic{width:16px;height:16px}
+.rz-hero:hover .rz-hero__btn{transform:translateX(5px)}
+.rz-hero:focus-visible{outline:3px solid #8EE0B0;outline-offset:3px}
+.rz-cast{display:flex;gap:12px;align-items:flex-end}
+.rz-cast figure{margin:0;text-align:center}
+.rz-cast span{display:block;width:92px;height:92px;overflow:hidden;border-radius:50%;background:radial-gradient(circle at 50% 30%,#FFF8E3,#EBDDB4);border:3px solid #fff;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.rz-cast img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;transform:scale(1.25)}
+.rz-cast figcaption{margin-top:7px;font:700 11.5px Inter,system-ui,sans-serif;color:#fff}
+
+/* Reto del día */
+.rz-daily{display:flex;align-items:center;gap:16px;width:100%;padding:18px 20px;text-align:left;cursor:pointer;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:0 2px 8px rgba(10,10,10,.05);transition:transform .2s ease,box-shadow .2s ease}
+.rz-daily:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(10,10,10,.1)}
+.rz-daily__ic{display:grid;place-items:center;flex-shrink:0;width:50px;height:50px;border-radius:15px;background:color-mix(in srgb,var(--primary) 12%,var(--surface));color:var(--primary)}
+.rz-daily__ic .ic{width:22px;height:22px}
+.rz-daily strong{display:block;color:var(--text);font:800 15px Inter,system-ui,sans-serif}
+.rz-daily small{display:block;margin-top:2px;color:var(--text-3);font-size:12.5px}
+.rz-daily__arrow{margin-left:auto;width:18px;height:18px;color:var(--text-3)}
+
+/* Mosaicos de práctica */
+.rz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:16px}
+.rz-card{position:relative;display:grid;gap:14px;align-content:start;min-height:214px;padding:22px 22px 20px;text-align:left;cursor:pointer;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 2px 8px rgba(10,10,10,.05);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.rz-card:hover,.rz-card:focus-visible{transform:translateY(-6px);box-shadow:0 20px 44px rgba(10,10,10,.12);border-color:color-mix(in srgb,var(--primary) 35%,var(--border));outline:none}
+.rz-card__tile{display:grid;place-items:center;width:92px;height:92px;overflow:hidden;border-radius:26px}
+.rz-card__tile svg{width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.2));transition:transform .3s ease}
+.rz-card__tile img{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.22));transition:transform .3s ease}
+.rz-card:hover .rz-card__tile svg,.rz-card:hover .rz-card__tile img{transform:scale(1.1) rotate(-3deg)}
+.rz-card__go{position:absolute;top:22px;right:22px;width:18px;height:18px;color:var(--text-3);transform:rotate(-45deg);transition:transform .25s ease,color .25s ease}
+.rz-card:hover .rz-card__go{transform:rotate(-45deg) translateX(3px);color:var(--primary)}
+.rz-card__title{color:var(--text);font:800 17px/1.2 Inter,system-ui,sans-serif;letter-spacing:-.02em}
+.rz-card__meta{color:var(--text-3);font-size:12.5px}
+.rz-card.is-locked,.rz-daily.is-locked,.rz-hero.is-locked{filter:saturate(.8)}
+:root[data-theme="night"] .rz-card__tile{filter:brightness(.92)}
+
+/* Modo historia (mapa y escenas) */
+.hs-lead{margin:8px 0 0;max-width:62ch;color:var(--text-2);font-size:13.5px;line-height:1.6}
+.hs-mundos{display:grid;gap:14px}
+.hs-mundo{display:grid;grid-template-columns:170px minmax(0,1fr);gap:18px;overflow:hidden;border:1px solid var(--border);border-radius:20px;background:var(--surface)}
+.hs-mundo.is-locked{opacity:.62}
+.hs-mundo__img{min-height:140px;background:#0d2a1c center/cover no-repeat}
+.hs-mundo.is-locked .hs-mundo__img{filter:grayscale(.7)}
+.hs-mundo__txt{padding:16px 18px 16px 0}
+.hs-mundo__n{font:800 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--primary)}
+.hs-mundo h3{margin:4px 0 2px;font:800 18px/1.2 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:var(--text)}
+.hs-mundo p{margin:0 0 12px;color:var(--text-3);font-size:13px}
+.hs-mundo__pie{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hs-stars{font-size:18px;letter-spacing:3px;color:#E5A100}
+.hs-stars .off{color:var(--border-2)}
+.hs-cerrado{display:inline-flex;align-items:center;gap:6px;color:var(--text-3);font-size:12px;font-weight:600}
+.hs-cerrado .ic{width:13px;height:13px}
+.hs-scene{position:relative;display:flex;align-items:flex-end;min-height:210px;margin:0 0 18px;padding:16px;overflow:hidden;border-radius:18px;background:#0d2a1c center/cover no-repeat}
+.hs-scene::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,20,13,.12),rgba(6,20,13,.78))}
+.hs-guide{position:relative;display:flex;align-items:flex-end;gap:12px}
+.hs-guide img{flex-shrink:0;width:88px;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.45))}
+.hs-bubble{padding:12px 15px;border-radius:16px 16px 16px 4px;background:rgba(255,255,255,.97);color:#14261c;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.hs-bubble strong{display:block;margin-bottom:4px;color:#2a7a4f;font:800 10.5px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.hs-bubble p{margin:0;font:500 14px/1.5 Inter,system-ui,sans-serif}
+.hs-acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+@media(max-width:600px){
+  .rz-hero{grid-template-columns:minmax(0,1fr);min-height:0;padding:24px}
+  .rz-cast{justify-content:flex-start}
+  .rz-cast span{width:72px;height:72px}
+  .hs-mundo{grid-template-columns:minmax(0,1fr);gap:0}
+  .hs-mundo__img{min-height:120px}
+  .hs-mundo__txt{padding:14px 16px 16px}
+  .hs-guide img{width:64px}
+}
+@media(prefers-reduced-motion:reduce){.rz-card,.rz-daily,.rz-hero__btn,.rz-card__tile svg,.rz-card__tile img{transition:none}}
 </style>
 <style id="alintec-pdfs-vp">
 /* ═══════════════════════════════════════════════════════════════════
