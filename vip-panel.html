@@ -9692,6 +9692,33 @@ const Sections = (function(){
     }, 50);
   }
 
+  // Portadas ilustradas de los materiales: 7 diseños distintos por área. El color sale del área del curso
+  // y cada material elige su diseño según su título, así que las portadas de una misma área no se repiten.
+  let _pdfUid = 0;
+  function _pdfHash(t){ let h = 0; const s = String(t || ''); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  function _pdfHex(cx, cy, r){ let p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k + Math.PI / 6; p.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return p.join(' '); }
+  function _pdfArteSVG(v){
+    const u = ++_pdfUid;
+    switch (v % 7) {
+      case 0: // anillos concéntricos
+        return '<circle cx="230" cy="96" r="160" class="a-w" opacity=".06"/><circle cx="230" cy="96" r="118" class="a-pc" opacity=".34"/><circle cx="230" cy="96" r="76" class="a-w" opacity=".1"/><circle cx="230" cy="96" r="36" class="a-pc" opacity=".8"/>';
+      case 1: // franjas diagonales
+        return '<g transform="rotate(-24 150 200)"><rect x="-80" y="20" width="460" height="50" class="a-pc" opacity=".55"/><rect x="-80" y="90" width="460" height="18" class="a-w" opacity=".13"/><rect x="-80" y="128" width="460" height="74" class="a-pc" opacity=".26"/><rect x="-80" y="222" width="460" height="12" class="a-w" opacity=".16"/></g>';
+      case 2: // puntos tipo impresión
+        return '<defs><pattern id="pd' + u + '" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="9" cy="9" r="3.4" fill="#fff"/></pattern><linearGradient id="pg' + u + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".75" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="pm' + u + '"><rect width="300" height="400" fill="url(#pg' + u + ')"/></mask></defs><rect width="300" height="400" fill="url(#pd' + u + ')" mask="url(#pm' + u + ')" opacity=".5"/><circle cx="82" cy="126" r="62" class="a-pc" opacity=".62"/>';
+      case 3: // hexágonos (moléculas)
+        return '<g fill="none" stroke="#fff" stroke-width="2" stroke-opacity=".3"><polygon points="' + _pdfHex(220, 70, 46) + '"/><polygon points="' + _pdfHex(146, 70, 46) + '"/><polygon points="' + _pdfHex(183, 134, 46) + '"/><polygon points="' + _pdfHex(257, 134, 46) + '"/></g><polygon points="' + _pdfHex(183, 134, 46) + '" class="a-pc" opacity=".55"/><polygon points="' + _pdfHex(220, 70, 46) + '" class="a-w" opacity=".1"/><circle cx="146" cy="70" r="7" class="a-w" opacity=".8"/><circle cx="257" cy="134" r="7" class="a-w" opacity=".8"/>';
+      case 4: // ondas
+        return '<path d="M0 232C60 200 112 262 172 232S262 212 300 238V400H0Z" class="a-pc" opacity=".4"/><path d="M0 274C70 242 122 304 192 274S272 254 300 280V400H0Z" class="a-w" opacity=".11"/><path d="M0 318C64 288 120 346 186 318S268 300 300 322V400H0Z" class="a-pc" opacity=".6"/>';
+      case 5: // cuadrícula técnica
+        return '<g stroke="#fff" stroke-opacity=".11" stroke-width="1">' + [30, 60, 90, 120, 150, 180, 210, 240, 270].map(x => '<path d="M' + x + ' 0V400"/>').join('') + [40, 80, 120, 160, 200, 240, 280, 320, 360].map(y => '<path d="M0 ' + y + 'H300"/>').join('') + '</g><rect x="150" y="34" width="116" height="116" class="a-pc" opacity=".52"/><rect x="176" y="60" width="64" height="64" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="2"/><path d="M0 0H90L0 90Z" class="a-w" opacity=".1"/>';
+      default: { // sol naciente con rayos
+        let rayos = ''; for (let k = 0; k < 13; k++) { const a = Math.PI + Math.PI / 12 * k; rayos += '<path d="M150 214L' + (150 + 190 * Math.cos(a)).toFixed(1) + ' ' + (214 + 190 * Math.sin(a)).toFixed(1) + '"/>'; }
+        return '<g stroke="#fff" stroke-opacity=".13" stroke-width="2">' + rayos + '</g><circle cx="150" cy="214" r="92" class="a-pc" opacity=".58"/><path d="M28 214A122 122 0 0 1 272 214" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="2"/>';
+      }
+    }
+  }
+
   function _renderPdfCard(m) {
     const colorMap = {
       'Seguridad':'#EF4444','Calidad':'#10B981','Logística':'#3B82F6',
@@ -9708,11 +9735,9 @@ const Sections = (function(){
     const diasFaltan = _diasParaMaterial(m);
     const tituloEsc = (m.titulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const cursoEsc = (m.cursoTitulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    // Portada del curso al que pertenece el material (misma imagen que la card del curso)
-    const portada = (m.cursoPortada || '').replace(/"/g,'&quot;').replace(/'/g,'%27');
-    const topStyle = portada
-      ? `background-image:linear-gradient(150deg,color-mix(in srgb,${c} 42%,transparent),rgba(10,18,12,.58)),url('${portada}');background-size:cover;background-position:center;`
-      : '';
+    // Portada ilustrada: 7 diseños por área (el color y el ícono salen del área del curso)
+    const variante = _pdfHash((m.titulo || '') + '|' + (m.cursoId || '') + '|' + (m.materialIndex || 0)) % 7;
+    const iconoArea = ICON_AREA[m.cursoArea] || 'i-book';
 
     return `
       <article class="pdf-card ${!disponible ? 'pdf-card--soon' : ''}" style="--pdf-color:${c};cursor:pointer;"
@@ -9724,7 +9749,9 @@ const Sections = (function(){
         data-titulo="${tituloEsc}"
         data-curso="${cursoEsc}"
         data-area="${m.cursoArea}">
-        <div class="pdf-card__top" style="${topStyle}">
+        <div class="pdf-card__top pcv pcv--${variante}">
+          <svg class="pdf-card__arte" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${_pdfArteSVG(variante)}</svg>
+          <svg class="ic pdf-card__glyph" aria-hidden="true"><use href="#${iconoArea}"/></svg>
           <div class="pdf-card__icon"><svg class="ic"><use href="#${ic}"/></svg></div>
           <span class="pdf-card__size">${tipoLabel}</span>
           ${!disponible ? `<span class="pdf-card__lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>` : ''}
@@ -14497,7 +14524,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
    al pasar el cursor se endereza y sube. El título va en la portada y debajo.
    Solo presentación: el clic abre el documento igual que antes.
    ═══════════════════════════════════════════════════════════════════ */
-.pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:30px 22px!important;align-items:start!important;padding:6px 4px 18px}
+.pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(215px,1fr))!important;gap:40px 30px!important;align-items:start!important;padding:6px 4px 18px}
 .pdfs-grid .pdf-card{
   --pc:var(--pdf-color,var(--primary));
   display:grid!important;gap:14px;padding:0!important;overflow:visible!important;
@@ -14531,9 +14558,9 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
   font-size:0!important;pointer-events:none;
 }
 .pdfs-grid .pdf-card__icon{display:none!important}
-.pdfs-grid .pdf-card__cover-copy{position:absolute;z-index:2;left:20px;right:14px;bottom:36px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.pdfs-grid .pdf-card__cover-copy{position:absolute;z-index:2;left:24px;right:18px;bottom:46px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)}
 .pdfs-grid .pdf-card__cover-copy i{display:block;margin-bottom:8px;width:26px;height:0;border-top:2px solid var(--pc)}
-.pdfs-grid .pdf-card__cover-copy strong{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font:800 14px/1.2 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em}
+.pdfs-grid .pdf-card__cover-copy strong{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font:800 19px/1.15 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em}
 /* etiqueta de tipo (PDF, Excel…) como pastilla blanca abajo a la derecha */
 .pdfs-grid .pdf-card__size{
   position:absolute!important;z-index:4;left:auto!important;top:auto!important;right:9px;bottom:9px;
@@ -14549,8 +14576,8 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .pdfs-grid .pdf-card--soon .pdf-card__top{filter:grayscale(.3) brightness(.85)}
 /* texto debajo de la portada */
 .pdfs-grid .pdf-card__body{padding:0 2px!important;gap:4px!important}
-.pdfs-grid .pdf-card__title{font-size:13.5px!important;font-weight:700!important;line-height:1.3!important;letter-spacing:-.01em!important;-webkit-line-clamp:3}
-.pdfs-grid .pdf-card__meta{font-size:11px!important;gap:6px 10px!important;color:var(--text-3)!important}
+.pdfs-grid .pdf-card__title{font-size:15.5px!important;font-weight:700!important;line-height:1.3!important;letter-spacing:-.01em!important;-webkit-line-clamp:3}
+.pdfs-grid .pdf-card__meta{font-size:12px!important;gap:6px 10px!important;color:var(--text-3)!important}
 .pdfs-grid .pdf-card__meta span:nth-child(2){display:none}
 .pdfs-grid .pdf-card__tags{padding:2px 0 0!important;border:0!important;margin:0!important}
 .pdfs-grid .pdf-card__tags .row-btn{display:none!important}
@@ -14566,7 +14593,16 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .pdfs-grid .pdf-card .lock-overlay__ic svg{width:13px;height:13px}
 .pdfs-grid .pdf-card .lock-overlay__txt{font-size:9px;color:#fff;letter-spacing:.6px}
 .pdfs-grid .pdf-card[data-locked="true"] .pdf-card__lock{display:none}
-@media(max-width:560px){.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:26px 16px!important}}
+/* Arte de las portadas */
+.pdfs-grid .pdf-card__arte{position:absolute;inset:0;width:100%!important;height:100%!important;z-index:0}
+.pdfs-grid .a-pc{fill:var(--pc)}
+.pdfs-grid .a-w{fill:#fff}
+.pdfs-grid .pdf-card__glyph{position:absolute;z-index:2;width:74px!important;height:74px!important;top:15%;right:12%;color:#fff;opacity:.94;stroke-width:1.5;filter:drop-shadow(0 8px 12px rgba(0,0,0,.4))}
+.pdfs-grid .pcv--1 .pdf-card__glyph,.pdfs-grid .pcv--3 .pdf-card__glyph,.pdfs-grid .pcv--5 .pdf-card__glyph{right:auto;left:14%;top:17%}
+.pdfs-grid .pcv--2 .pdf-card__glyph{right:auto;left:12%;top:20%}
+.pdfs-grid .pcv--6 .pdf-card__glyph{right:auto;left:50%;top:26%;transform:translateX(-50%)}
+.pdfs-grid .pcv--0 .pdf-card__top{background-image:linear-gradient(160deg,color-mix(in srgb,var(--pc) 45%,#10301f),#0a1a12)}
+@media(max-width:560px){.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:30px 16px!important}.pdfs-grid .pdf-card__cover-copy strong{font-size:15px}.pdfs-grid .pdf-card__glyph{width:52px!important;height:52px!important}}
 @media(prefers-reduced-motion:reduce){.pdfs-grid .pdf-card__top{transition:none!important}}
 </style>
 <style id="alintec-cursos-vp">
