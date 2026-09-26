@@ -3089,6 +3089,7 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
   .thx-itrow{grid-template-columns:1fr 48px 92px 38px;gap:6px}
 }
 </style>
+<script src="assets/js/avatares.js"></script>
 </head>
 <body style="visibility:hidden">
 
@@ -3445,6 +3446,7 @@ if (window.__isDemoMode) {
       window.UserState.nombre = nombre;
       window.UserState.displayName = nombre;        // todo el panel lee de aquí
       window.UserState.iniciales = calcIniciales(nombre);
+      window.UserState.avatar = (window.AlintecAvatares && window.AlintecAvatares.valido(md.avatar)) ? md.avatar : '';
     })();
 
     document.body.style.visibility = 'visible';
@@ -10794,6 +10796,7 @@ const Sections = (function(){
     const _nom = escapeHtml(S.nombre || S.displayName || 'Ingeniero');
     const _em  = escapeHtml(S.email || '—');
     const _ini = (S.iniciales || 'IN');
+    const _conAv = !!(S.avatar && window.AlintecAvatares && window.AlintecAvatares.valido(S.avatar));
     // ── Datos REALES (nada de valores de demostración) ──
     const _esVip = tieneAccesoVipCompleto();
     const _planTxt = _esVip ? (esAdminReal() ? 'Administrador' : 'VIP Anual') : 'Sin membresía';
@@ -10830,7 +10833,7 @@ const Sections = (function(){
         </div>
 
         <section class="perfil-hero">
-          <div class="perfil-hero__avatar">${_ini}</div>
+          <div class="perfil-hero__avatar${_conAv ? ' has-avatar' : ''}" id="perfil-avatar" role="button" tabindex="0" title="Cambiar avatar">${_conAv ? AlintecAvatares.html(S.avatar, 92) : escapeHtml(_ini)}<span class="perfil-hero__avatar-edit" aria-hidden="true"><svg class="ic"><use href="#i-tools"/></svg></span></div>
           <div class="perfil-hero__info">
             <h2 class="perfil-hero__name">${_nom}</h2>
             <div class="perfil-hero__email">${_em}</div>
@@ -12036,6 +12039,64 @@ async function guardarPerfilSeguro(cambios){
   return data.perfil;
 }
 
+// ─── Avatares del perfil ───
+function escAv(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function pintarAvatarUsuario(){
+  const S = window.UserState || {};
+  const conAvatar = !!(S.avatar && window.AlintecAvatares && AlintecAvatares.valido(S.avatar));
+  const top = document.querySelector('.avatar__circle');
+  if (top) {
+    if (conAvatar) { top.innerHTML = AlintecAvatares.html(S.avatar, 26); top.classList.add('avatar__circle--ilus'); }
+    else { top.textContent = S.iniciales || 'IN'; top.classList.remove('avatar__circle--ilus'); }
+  }
+  const hero = document.querySelector('.perfil-hero__avatar');
+  if (hero) {
+    hero.innerHTML = (conAvatar ? AlintecAvatares.html(S.avatar, 92) : escAv(S.iniciales || 'IN'))
+      + '<span class="perfil-hero__avatar-edit" aria-hidden="true"><svg class="ic"><use href="#i-tools"/></svg></span>';
+    hero.classList.toggle('has-avatar', conAvatar);
+  }
+}
+window.__pintarAvatarUsuario = pintarAvatarUsuario;
+
+function abrirAvatares(){
+  if (!window.AlintecAvatares) { Toast.error('Avatares no disponibles', 'Recarga la página e inténtalo de nuevo'); return; }
+  const S = window.UserState || {};
+  let elegido = S.avatar || '';
+  const tarjeta = id => { const i = AlintecAvatares.info(id); return '<button type="button" class="av-op' + (id === elegido ? ' is-selected' : '') + '" data-av="' + id + '" aria-pressed="' + (id === elegido) + '">' + AlintecAvatares.html(id, 76) + '<strong>' + escAv(i.nombre) + '</strong><small>' + escAv(i.rol) + '</small></button>'; };
+  Modal.open({
+    id: 'avatares', title: 'Elige tu avatar', subtitle: 'Personajes del mundo Alintec Food', icon: 'i-users', size: 'lg',
+    body: '<p style="margin:0 0 14px;color:var(--text-2);font-size:13.5px;line-height:1.55;">Es tu imagen en el panel. Puedes cambiarla cuando quieras. Para cambiar tu nombre u otros datos, toca el lápiz junto a cada campo.</p><div class="av-grid">' + AlintecAvatares.lista.map(tarjeta).join('') + '</div>',
+    footer: '<button class="btn btn--ghost" id="av-quitar" type="button">Usar mis iniciales</button><button class="btn btn--ghost" type="button" onclick="Modal.close(\'avatares\')">Cancelar</button><button class="btn btn--accent" id="av-guardar" type="button">Guardar</button>'
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.av-op').forEach(b => b.addEventListener('click', () => {
+      elegido = b.dataset.av;
+      document.querySelectorAll('.av-op').forEach(x => { const on = x === b; x.classList.toggle('is-selected', on); x.setAttribute('aria-pressed', String(on)); });
+    }));
+    const aplicar = async (valor, mensaje) => {
+      const btns = [document.getElementById('av-guardar'), document.getElementById('av-quitar')];
+      btns.forEach(b => b && (b.disabled = true));
+      try {
+        // En la demo no hay cuenta: se muestra el avatar pero no se guarda
+        if (window.__isDemoMode !== true) await guardarPerfilSeguro({ avatar: valor });
+        window.UserState.avatar = valor;
+        pintarAvatarUsuario();
+        Modal.close('avatares');
+        Toast.success('Avatar actualizado', window.__isDemoMode === true ? 'Crea tu cuenta para conservarlo' : mensaje);
+      } catch(e) {
+        btns.forEach(b => b && (b.disabled = false));
+        Toast.error('No se pudo guardar', e.message || 'Intenta nuevamente');
+      }
+    };
+    document.getElementById('av-guardar')?.addEventListener('click', () => {
+      if (!elegido) { Toast.info('Elige un avatar', 'Toca uno de los personajes o usa tus iniciales'); return; }
+      aplicar(elegido, 'Ya aparece en tu perfil y en el panel');
+    });
+    document.getElementById('av-quitar')?.addEventListener('click', () => aplicar('', 'Volverás a ver tus iniciales'));
+  }, 60);
+}
+window.__abrirAvatares = abrirAvatares;
+
 function openEditField(field){
   const wrap=document.querySelector(`[data-field="${field}"]`);
   if(!wrap) return;
@@ -12723,8 +12784,8 @@ function initNav(){
     }
 
     // Editar perfil (tip)
-    if(t.closest('#btn-edit-profile')){
-      Toast.info('Edita cada campo','Da click en el ícono ✏️ junto al campo que quieres cambiar');
+    if(t.closest('#btn-edit-profile') || t.closest('#perfil-avatar')){
+      abrirAvatares();
       return;
     }
 
@@ -12822,7 +12883,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const avatarCircle = document.querySelector('.avatar__circle');
     const avatarName = document.querySelector('.avatar__name');
     const avatarPlan = document.querySelector('.avatar__plan');
-    if (avatarCircle) avatarCircle.textContent = S.iniciales;
+    if (avatarCircle) { if (typeof window.__pintarAvatarUsuario === 'function') window.__pintarAvatarUsuario(); else avatarCircle.textContent = S.iniciales; }
     if (avatarName) {
       avatarName.textContent = S.modo === 'invitado'
         ? 'Invitado'
@@ -14412,6 +14473,22 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
   .hs-guide img{width:64px}
 }
 @media(prefers-reduced-motion:reduce){.rz-card,.rz-daily,.rz-hero__btn,.rz-card__tile svg,.rz-card__tile img{transition:none}}
+</style>
+<style id="alintec-avatares">
+/* Avatares ilustrados del perfil */
+.avatar__circle--ilus{background:none!important;padding:0;overflow:hidden}
+.avatar__circle--ilus .avatar-ilus{width:100%!important;height:100%!important}
+.perfil-hero__avatar{position:relative;cursor:pointer}
+.perfil-hero__avatar.has-avatar{background:transparent!important;padding:0!important}
+.perfil-hero__avatar .avatar-ilus{width:100%!important;height:100%!important;border-radius:inherit}
+.perfil-hero__avatar-edit{position:absolute;right:-8px;bottom:-8px;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--border-2);color:var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.perfil-hero__avatar-edit .ic{width:14px;height:14px}
+.av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px}
+.av-op{display:grid;justify-items:center;gap:3px;padding:14px 8px 12px;text-align:center;cursor:pointer;border:2px solid var(--border);border-radius:18px;background:var(--surface);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.av-op:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--primary) 40%,var(--border))}
+.av-op.is-selected{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 7%,var(--surface));box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+.av-op strong{margin-top:6px;color:var(--text);font-size:12.5px;font-weight:700;line-height:1.2}
+.av-op small{color:var(--text-3);font-size:11px;line-height:1.3}
 </style>
 <style id="alintec-pdfs-vp">
 /* ═══════════════════════════════════════════════════════════════════

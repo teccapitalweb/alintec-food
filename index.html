@@ -623,37 +623,58 @@
         <p class="section-subtitle">Nuestros alumnos nos recomiendan con 5 estrellas en Facebook.</p>
         <div class="section-divider"></div>
       </div>
-      <div class="testimonios-grid reveal">
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-text">"100% recomendados, buena atención, los docentes explican muy bien, cursos accesibles y muy interesantes."</p>
-          <div class="test-author">— Yaric Domínguez</div>
-          <div class="test-source">Reseña en Facebook</div>
+      <div class="tm reveal">
+        <div class="tm-resumen">
+          <strong>5.0</strong>
+          <span class="tm-stars" aria-label="5 de 5 estrellas">★★★★★</span>
+          <span>Reseñas de alumnos en Facebook</span>
         </div>
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-text">"Excelentes cursos y ponentes muy capacitados que resuelven dudas y brindan material adicional de consulta y referencia. Recomiendo ampliamente."</p>
-          <div class="test-author">— Octavio Sánchez</div>
-          <div class="test-source">Reseña en Facebook</div>
+
+        <article class="tm-principal">
+          <span class="tm-quote" aria-hidden="true">“</span>
+          <span class="tm-avatar tm-avatar--grande" data-avatar="tecnico" data-tam="132">YD</span>
+          <div class="tm-cuerpo">
+            <div class="tm-stars" aria-label="5 de 5 estrellas">★★★★★</div>
+            <p class="tm-text">100% recomendados, buena atención, los docentes explican muy bien, cursos accesibles y muy interesantes.</p>
+            <footer class="tm-autor"><div><strong class="tm-nombre">Yaric Domínguez</strong><small class="tm-rol">Alumno · Reseña en Facebook</small></div></footer>
+          </div>
+        </article>
+
+        <div class="tm-grid">
+          <article class="tm-card">
+            <header class="tm-autor">
+              <span class="tm-avatar" data-avatar="inspector" data-tam="60">OS</span>
+              <div><strong class="tm-nombre">Octavio Sánchez</strong><small class="tm-rol">Alumno · Reseña en Facebook</small></div>
+            </header>
+            <div class="tm-stars" aria-label="5 de 5 estrellas">★★★★★</div>
+            <p class="tm-text">Excelentes cursos y ponentes muy capacitados que resuelven dudas y brindan material adicional de consulta y referencia. Recomiendo ampliamente.</p>
+          </article>
+          <article class="tm-card">
+            <header class="tm-autor">
+              <span class="tm-avatar" data-avatar="tecnica" data-tam="60">AG</span>
+              <div><strong class="tm-nombre">Andrea González</strong><small class="tm-rol">Alumna · Reseña en Facebook</small></div>
+            </header>
+            <div class="tm-stars" aria-label="5 de 5 estrellas">★★★★★</div>
+            <p class="tm-text">Buenos cursos, concretos y fáciles de entender, los maestros siempre están a la disposición de contestar preguntas y dudas, dan la confianza de opinar.</p>
+          </article>
+          <article class="tm-card">
+            <header class="tm-autor">
+              <span class="tm-avatar" data-avatar="auditor" data-tam="60">AA</span>
+              <div><strong class="tm-nombre">Alfredo Alonso</strong><small class="tm-rol">Alumno · Reseña en Facebook</small></div>
+            </header>
+            <div class="tm-stars" aria-label="5 de 5 estrellas">★★★★★</div>
+            <p class="tm-text">Cursos estructurados, accesibles, con clases que se graban y que se pueden visualizar posteriormente e incluye materiales adicionales.</p>
+          </article>
+          <article class="tm-card">
+            <header class="tm-autor">
+              <span class="tm-avatar" data-avatar="nutriologa" data-tam="60">PM</span>
+              <div><strong class="tm-nombre">Pérez María</strong><small class="tm-rol">Alumna · Reseña en Facebook</small></div>
+            </header>
+            <div class="tm-stars" aria-label="5 de 5 estrellas">★★★★★</div>
+            <p class="tm-text">Cursos dinámicos, accesibles, con instructores capacitados, materiales dinámicos, muy recomendados.</p>
+          </article>
         </div>
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-text">"Buenos cursos, concretos y fáciles de entender, los maestros siempre están a la disposición de contestar preguntas y dudas, dan la confianza de opinar."</p>
-          <div class="test-author">— Andrea González</div>
-          <div class="test-source">Reseña en Facebook</div>
-        </div>
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-text">"Cursos estructurados, accesibles, con clases que se graban y que se pueden visualizar posteriormente e incluye materiales adicionales."</p>
-          <div class="test-author">— Alfredo Alonso</div>
-          <div class="test-source">Reseña en Facebook</div>
-        </div>
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-text">"Cursos dinámicos, accesibles, con instructores capacitados, materiales dinámicos, muy recomendados."</p>
-          <div class="test-author">— Pérez María</div>
-          <div class="test-source">Reseña en Facebook</div>
-        </div>
+        <p class="tm-nota">Ilustraciones representativas de nuestros alumnos. Las reseñas son reales y están publicadas en nuestra página de Facebook.</p>
       </div>
     </div>
   </section>
@@ -834,6 +855,7 @@
 
   <!-- SCRIPTS -->
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/avatares.js"></script>
   <script src="assets/js/cookie-consent.js" defer></script>
 </body>
 </html>

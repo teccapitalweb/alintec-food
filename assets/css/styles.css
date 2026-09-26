@@ -735,6 +735,59 @@ body {
 .test-author { font-weight: 600; color: var(--primary); font-size: 0.88rem; }
 .test-source { font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 4px; }
 
+/* ══════ TESTIMONIOS · reseña principal + tarjetas con avatar ══════ */
+.tm { display: grid; gap: 26px; }
+.tm-resumen {
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+  color: rgba(255,255,255,0.7); font-size: 0.92rem;
+}
+.tm-resumen strong { font-size: 2.2rem; font-weight: 800; color: var(--white); letter-spacing: -1px; }
+.tm-stars { color: #fbbf24; font-size: 1.15rem; letter-spacing: 3px; }
+.tm-avatar {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 60px; height: 60px; border-radius: 50%; overflow: hidden;
+  background: rgba(88,183,27,0.2); color: var(--white); font-weight: 700; font-size: 0.9rem;
+  box-shadow: 0 0 0 3px rgba(88,183,27,0.55), 0 10px 24px rgba(0,0,0,0.35);
+}
+.tm-avatar.tiene-avatar { font-size: 0; }
+.tm-avatar--grande { width: 132px; height: 132px; box-shadow: 0 0 0 5px rgba(88,183,27,0.6), 0 18px 40px rgba(0,0,0,0.4); }
+.tm-nombre { display: block; color: var(--white); font-weight: 700; font-size: 1rem; }
+.tm-rol { display: block; margin-top: 3px; color: rgba(255,255,255,0.5); font-size: 0.78rem; }
+.tm-text { color: rgba(255,255,255,0.78); line-height: 1.7; font-size: 0.95rem; margin: 0; }
+
+.tm-principal {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 34px; align-items: center;
+  padding: 44px 48px; border-radius: 28px;
+  background: linear-gradient(135deg, rgba(88,183,27,0.18), rgba(255,255,255,0.04));
+  border: 1px solid rgba(88,183,27,0.32);
+}
+.tm-quote {
+  position: absolute; right: 30px; top: -8px; pointer-events: none;
+  font: 900 10rem/1 Georgia, 'Times New Roman', serif; color: rgba(88,183,27,0.16);
+}
+.tm-principal .tm-cuerpo { position: relative; display: grid; gap: 14px; }
+.tm-principal .tm-text {
+  font: 500 clamp(1.15rem, 2.2vw, 1.5rem)/1.55 Georgia, 'Times New Roman', serif; color: var(--white);
+}
+
+.tm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.tm-card {
+  display: grid; gap: 14px; align-content: start; padding: 28px;
+  background: rgba(255,255,255,0.045); border: 1px solid rgba(88,183,27,0.14); border-radius: 22px;
+  transition: transform 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+}
+.tm-card:hover { transform: translateY(-5px); border-color: rgba(88,183,27,0.4); background: rgba(88,183,27,0.08); }
+.tm-autor { display: flex; align-items: center; gap: 16px; margin: 0; }
+.tm-nota { margin: 0; text-align: center; color: rgba(255,255,255,0.38); font-size: 0.75rem; }
+
+@media (max-width: 800px) {
+  .tm-principal { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding: 34px 24px; gap: 22px; }
+  .tm-principal .tm-autor { justify-content: center; }
+  .tm-quote { right: 14px; font-size: 7rem; }
+  .tm-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* ══════ GALERIA ══════ */
 .galeria-section { background: var(--primary-ghost); overflow: hidden; }
 .gallery-carousel {
