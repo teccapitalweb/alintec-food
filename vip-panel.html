@@ -8049,6 +8049,12 @@ const Sections = (function(){
     const portada = c.portada || PORTADA_DEFAULT;
     const colorArea = COLOR_AREA[c.area] || '#43A047';
     const iconArea = ICON_AREA[c.area] || 'i-book';
+    const progresoDetalle = getProgresoCurso(c.id);
+    const sesionesDetalle = Array.isArray(c.sesiones) ? c.sesiones : [];
+    let siguienteClase = sesionesDetalle.findIndex((s, i) => !progresoDetalle.clasesVistas.includes(s.numero || (i + 1)) && claseDesbloqueada(c.id, i, sesionesDetalle));
+    if (siguienteClase < 0 && sesionesDetalle.length && desbloqueado) siguienteClase = Math.max(0, sesionesDetalle.length - 1);
+    const numeroSiguiente = siguienteClase >= 0 ? (sesionesDetalle[siguienteClase].numero || (siguienteClase + 1)) : 0;
+    const inicialesInstructor = String(c.instructor || 'Alintec Food').trim().split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase();
 
     // Body con sesiones (clases) y materiales reales
     let bodyContent = `
@@ -8066,6 +8072,10 @@ const Sections = (function(){
           ${c.instructor ? `<span><svg class="ic" style="color:#fff;"><use href="#i-user"/></svg> ${c.instructor}</span>` : ''}
           ${c.horas ? `<span><svg class="ic" style="color:#fff;"><use href="#i-clock"/></svg> ${c.horas}h</span>` : ''}
           ${c.sesiones?.length ? `<span><svg class="ic" style="color:#fff;"><use href="#i-book"/></svg> ${c.sesiones.length} clase${c.sesiones.length!==1?'s':''}</span>` : ''}
+        </div>
+        <div class="course-detail-hero__footer">
+          <div class="course-detail-author"><span>${inicialesInstructor}</span><div><strong>${c.instructor || 'Equipo Alintec Food'}</strong><small>Curso especializado · Alintec Food</small></div></div>
+          ${desbloqueado && siguienteClase >= 0 ? `<button class="course-detail-continue" type="button" onclick="window.abrirClaseAlintec('${c.id}',${siguienteClase})">${progresoDetalle.clasesVistas.length ? 'Continuar con la clase '+numeroSiguiente : 'Comenzar el curso'}<span><svg class="ic"><use href="#i-play"/></svg></span></button>` : ''}
         </div>
         </div>
       </div>
@@ -8118,6 +8128,7 @@ const Sections = (function(){
                 return `
                 <div class="modulo" onclick="${accion}" style="cursor:pointer;background:color-mix(in srgb,var(--success) 8%,var(--surface-2));border-color:color-mix(in srgb,var(--success) 30%,transparent);" data-bypass-paywall="true">
                   <div class="modulo__num" style="background:var(--success);color:#0A120C;">✓</div>
+                  <span class="modulo__thumb" style="--module-cover:url('${portada}')"></span>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title">${s.titulo}</div>
                     <div class="modulo__meta" style="color:var(--success);">${esMuestraGratis ? 'Clase gratuita · ' : ''}Vista · click para repasar</div>
@@ -8129,6 +8140,7 @@ const Sections = (function(){
                 return `
                 <div class="modulo" onclick="${accion}" style="cursor:pointer;${esMuestraGratis?'border-color:color-mix(in srgb,var(--success) 45%,transparent);background:color-mix(in srgb,var(--success) 7%,var(--surface-2));':''}" data-bypass-paywall="true">
                   <div class="modulo__num"${esMuestraGratis?' style="background:var(--success);color:#0A120C;"':''}>${numSes}</div>
+                  <span class="modulo__thumb" style="--module-cover:url('${portada}')"></span>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title">${s.titulo}</div>
                     <div class="modulo__meta"${esMuestraGratis?' style="color:var(--success);font-weight:700;"':''}>${esMuestraGratis?'CLASE GRATIS · Click para verla':'▶ Click para ver la clase'}</div>
@@ -8141,6 +8153,7 @@ const Sections = (function(){
                   return `
                 <div class="modulo" style="cursor:not-allowed;opacity:.6;">
                   <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
+                  <span class="modulo__thumb" style="--module-cover:url('${portada}')"></span>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
                     <div class="modulo__meta" style="color:var(--success);">Clase gratuita · marca como vista la anterior para desbloquear</div>
@@ -8151,6 +8164,7 @@ const Sections = (function(){
                 return `
                 <div class="modulo" onclick="${accion}" style="cursor:pointer;opacity:.72;" data-bypass-paywall="true">
                   <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
+                  <span class="modulo__thumb" style="--module-cover:url('${portada}')"></span>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
                     <div class="modulo__meta">Activa tu membresía para ver esta clase</div>
@@ -8161,6 +8175,7 @@ const Sections = (function(){
               return `
                 <div class="modulo" style="cursor:not-allowed;opacity:.55;">
                   <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
+                  <span class="modulo__thumb" style="--module-cover:url('${portada}')"></span>
                   <div style="flex:1;min-width:0;">
                     <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
                     <div class="modulo__meta">Marca como vista la clase anterior para desbloquear</div>
@@ -8903,6 +8918,12 @@ const Sections = (function(){
     const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/retos', { headers: { 'Authorization': 'Bearer ' + token } });
     return r.ok ? await r.json() : null;
   }
+  async function cargarClasificacionRetos(){
+    if (window.__isDemoMode === true || !window.__currentUser) return null;
+    const token = await window.__currentUser.getIdToken();
+    const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/retos/clasificacion', { headers: { 'Authorization': 'Bearer ' + token } });
+    return r.ok ? await r.json() : null;
+  }
   // El panel solo informa el resultado; el servidor decide cuánto XP vale y qué insignias se ganan
   window.__enviarResultadoReto = async function(retoId, puntaje, total){
     try {
@@ -9552,6 +9573,52 @@ const Sections = (function(){
     return 'pdf'; // default
   }
 
+  // Biblioteca visual: 7 portadas editoriales nuevas + fotografías existentes
+  // de cursos. El asignador prioriza coincidencia temática y evita repetir una
+  // imagen mientras queden portadas libres en la vista actual.
+  const MATERIAL_COVER_LIBRARY = [
+    {src:'assets/img/materiales/microbiologia-v1.png', temas:['microbiología','microbiologico','inocuidad','agua','bacter']},
+    {src:'assets/img/materiales/higiene-produccion-v1.png', temas:['bpm','manufactura','higiene','limpieza','distintivo']},
+    {src:'assets/img/materiales/nutricion-formulacion-v1.png', temas:['nutrición','nutrimental','formulación','suplement','funcional']},
+    {src:'assets/img/materiales/etiquetado-v1.png', temas:['normativa','etiquetado','nom-051','empaque','regulación']},
+    {src:'assets/img/materiales/haccp-v1.png', temas:['haccp','peligro','control','calidad','auditor']},
+    {src:'assets/img/materiales/agroindustria-v1.png', temas:['agroindustria','residuo','huerto','materia prima','grano']},
+    {src:'assets/img/materiales/cadena-frio-v1.png', temas:['conservación','cadena de frío','temperatura','almacén','vida de anaquel']},
+    {src:'assets/img/cursos/agua.jpg', temas:['agua','microbiología','inocuidad']},
+    {src:'assets/img/cursos/azucar.jpg', temas:['azúcar','formulación','nutrición']},
+    {src:'assets/img/cursos/bpm.jpg', temas:['bpm','manufactura','higiene']},
+    {src:'assets/img/cursos/distintivo-h.jpg', temas:['distintivo','higiene','servicio']},
+    {src:'assets/img/cursos/electroquimica.jpg', temas:['electroquímica','tecnología','innovación']},
+    {src:'assets/img/cursos/haccp.jpg', temas:['haccp','peligro','control']},
+    {src:'assets/img/cursos/huertos.jpg', temas:['huerto','agroindustria','vegetal']},
+    {src:'assets/img/cursos/microbiologia-alimentos.jpg', temas:['microbiología','alimentos','bacter']},
+    {src:'assets/img/cursos/microbiologico.jpg', temas:['control microbiológico','conservación','microbiología']},
+    {src:'assets/img/cursos/nom-051.jpg', temas:['nom-051','normativa','etiquetado']},
+    {src:'assets/img/cursos/nutraceuticos.jpg', temas:['nutracéutico','funcional','salud']},
+    {src:'assets/img/cursos/nutrimentales.jpg', temas:['nutrimental','nutrición','tabla']},
+    {src:'assets/img/cursos/plantas.jpg', temas:['planta','extracto','natural']},
+    {src:'assets/img/cursos/recubrimientos.jpg', temas:['recubrimiento','conservación','tecnología']},
+    {src:'assets/img/cursos/residuos.jpg', temas:['residuo','agroindustria','sostenibilidad']},
+    {src:'assets/img/cursos/suplementos.jpg', temas:['suplemento','formulación','nutrición']},
+    {src:'assets/img/cursos/tablas-nutricionales.jpg', temas:['tabla','nutricional','etiquetado']}
+  ];
+  function _textoTemaMaterial(m){
+    return String([m.titulo,m.cursoTitulo,m.cursoArea].filter(Boolean).join(' ')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  }
+  function _hashMaterial(texto){let h=0;for(let i=0;i<texto.length;i++)h=((h<<5)-h)+texto.charCodeAt(i),h|=0;return Math.abs(h);}
+  function _asignarPortadasMaterial(lista){
+    const usadas=new Set();
+    return lista.map((m,posicion)=>{
+      const texto=_textoTemaMaterial(m);
+      const giro=_hashMaterial(texto+'|'+m.cursoId+'|'+m.materialIndex)%MATERIAL_COVER_LIBRARY.length;
+      const candidatas=MATERIAL_COVER_LIBRARY.map((p,i)=>({p,i,puntaje:p.temas.reduce((s,t)=>s+(texto.includes(t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())?10:0),0),orden:(i-giro+MATERIAL_COVER_LIBRARY.length)%MATERIAL_COVER_LIBRARY.length}))
+        .filter(x=>!usadas.has(x.i)).sort((a,b)=>(b.puntaje-a.puntaje)||(a.orden-b.orden));
+      const elegida=candidatas[0]||{p:MATERIAL_COVER_LIBRARY[(giro+posicion)%MATERIAL_COVER_LIBRARY.length],i:-1};
+      if(elegida.i>=0)usadas.add(elegida.i);
+      return Object.assign({},m,{_coverImage:elegida.p.src});
+    });
+  }
+
   async function renderPDFs(container){
     // Asegurar cursos cargados antes de renderizar
     if (!_cursosLoaded && !_cursosLoading) {
@@ -9634,7 +9701,7 @@ const Sections = (function(){
             </div>
           </div>
           <div class="pdfs-grid" id="pdfs-grid-container">
-            ${materialesTodos.slice().sort((a,b) => (_materialDisponible(b)?1:0) - (_materialDisponible(a)?1:0)).map(m => _renderPdfCard(m)).join('')}
+            ${_asignarPortadasMaterial(materialesTodos.slice().sort((a,b) => (_materialDisponible(b)?1:0) - (_materialDisponible(a)?1:0))).map(m => _renderPdfCard(m)).join('')}
           </div>
         `}
       </div>
@@ -9708,8 +9775,9 @@ const Sections = (function(){
     const diasFaltan = _diasParaMaterial(m);
     const tituloEsc = (m.titulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const cursoEsc = (m.cursoTitulo || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    // Portada del curso al que pertenece el material (misma imagen que la card del curso)
-    const portada = (m.cursoPortada || '').replace(/"/g,'&quot;').replace(/'/g,'%27');
+    // Portada editorial asignada por tema. Solo recurre a la portada del curso
+    // si no existe una imagen de biblioteca disponible.
+    const portada = (m._coverImage || m.cursoPortada || '').replace(/"/g,'&quot;').replace(/'/g,'%27');
     const topStyle = portada
       ? `background-image:linear-gradient(150deg,color-mix(in srgb,${c} 42%,transparent),rgba(10,18,12,.58)),url('${portada}');background-size:cover;background-position:center;`
       : '';
@@ -9728,7 +9796,8 @@ const Sections = (function(){
           <div class="pdf-card__icon"><svg class="ic"><use href="#${ic}"/></svg></div>
           <span class="pdf-card__size">${tipoLabel}</span>
           ${!disponible ? `<span class="pdf-card__lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>` : ''}
-          <div class="pdf-card__cover-copy"><i></i><strong>${tituloEsc}</strong></div>
+          <div class="pdf-card__cover-brand"><span>ALINTEC</span><b>FOOD</b></div>
+          <div class="pdf-card__cover-copy"><small>${m.cursoArea || 'Biblioteca técnica'}</small><i></i><strong>${tituloEsc}</strong><em>Guía profesional</em></div>
         </div>
         <div class="pdf-card__body">
           <div class="pdf-card__title">${tituloEsc}</div>
@@ -11593,10 +11662,53 @@ const Sections = (function(){
           `).join('')}
         </div>
 
+        <section class="reto-ranking" id="reto-ranking" aria-live="polite" aria-busy="true">
+          <div class="reto-ranking__head">
+            <div><span class="reto-ranking__eyebrow">Avance verificado</span><h2>Clasificación del club</h2><p>El XP proviene de retos superados y validados por Alintec Food.</p></div>
+            <span class="reto-ranking__secure"><svg class="ic"><use href="#i-shield-check"/></svg>Datos de retos</span>
+          </div>
+          <div class="reto-ranking__loading"><span></span><span></span><span></span></div>
+        </section>
+
         <section class="reto-stage" id="reto-stage" aria-live="polite"></section>
       </div>`;
     // XP acumulados (los calcula el servidor)
     try { Promise.resolve(cargarEstadoRetos()).then(e => { const el = container.querySelector('#rz-xp'); if (el && e) el.textContent = (e.xp || 0) + ' XP acumulados'; }).catch(() => {}); } catch(e){}
+    const rankingEl = container.querySelector('#reto-ranking');
+    const inicialesRanking = nombre => String(nombre || 'A').trim().split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase();
+    const avatarRanking = fila => {
+      if (fila.avatar && window.AlintecAvatares && AlintecAvatares.valido(fila.avatar)) return AlintecAvatares.html(fila.avatar, 58);
+      return `<span class="reto-ranking__initials">${escapeHtml(inicialesRanking(fila.nombre))}</span>`;
+    };
+    try {
+      Promise.resolve(cargarClasificacionRetos()).then(data => {
+        if (!rankingEl) return;
+        const filas = Array.isArray(data?.clasificacion) ? data.clasificacion : [];
+        if (!filas.length) {
+          rankingEl.innerHTML = `<div class="reto-ranking__empty"><svg class="ic"><use href="#i-trophy"/></svg><strong>La clasificación comienza contigo</strong><span>Supera tu primer reto para estrenar el tablero.</span></div>`;
+          rankingEl.setAttribute('aria-busy','false');
+          return;
+        }
+        const top = filas.filter(f => f.posicion <= 3).sort((a,b) => ({2:0,1:1,3:2}[a.posicion] ?? 3) - ({2:0,1:1,3:2}[b.posicion] ?? 3));
+        const resto = filas.filter(f => f.posicion > 3);
+        rankingEl.innerHTML = `
+          <div class="reto-ranking__head">
+            <div><span class="reto-ranking__eyebrow">Avance verificado</span><h2>Clasificación del club</h2><p>El XP proviene de retos superados y validados por Alintec Food.</p></div>
+            <span class="reto-ranking__secure"><svg class="ic"><use href="#i-shield-check"/></svg>${data.total || filas.length} participantes</span>
+          </div>
+          <div class="reto-podium">
+            ${top.map(f => `<article class="reto-podium__card ${f.esTu?'is-you':''}" data-pos="${f.posicion}">
+              <span class="reto-podium__position">${f.posicion === 1 ? '<svg class="ic"><use href="#i-trophy"/></svg>' : '#'+f.posicion}</span>
+              <span class="reto-podium__avatar">${avatarRanking(f)}</span>
+              <strong>${escapeHtml(f.nombre)}</strong><small>${f.retos} reto${f.retos===1?'':'s'} superado${f.retos===1?'':'s'}</small><b>${f.xp} XP</b>
+            </article>`).join('')}
+          </div>
+          ${resto.length ? `<div class="reto-ranking__list">${resto.map(f => `<div class="reto-ranking__row ${f.esTu?'is-you':''}">
+            <b>${f.posicion}</b><span class="reto-ranking__avatar-sm">${avatarRanking(f)}</span><span><strong>${escapeHtml(f.nombre)}${f.esTu?' <em>Tú</em>':''}</strong><small>${f.retos} reto${f.retos===1?'':'s'} superado${f.retos===1?'':'s'}</small></span><span>${f.xp} XP</span>
+          </div>`).join('')}</div>` : ''}`;
+        rankingEl.setAttribute('aria-busy','false');
+      }).catch(() => { if (rankingEl) rankingEl.hidden = true; });
+    } catch(e){ if (rankingEl) rankingEl.hidden = true; }
 
     const stage=container.querySelector('#reto-stage');
     const saveResult=(id,score,total)=>{try{const key='alintec:retos:resultados';const all=JSON.parse(localStorage.getItem(key)||'{}');const prev=all[id];if(!prev||score>prev.score)all[id]={score,total,updatedAt:Date.now()};localStorage.setItem(key,JSON.stringify(all));}catch(e){}};
@@ -14683,6 +14795,38 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
   border:2px solid var(--border-2);background:var(--surface);font-size:11px!important;
 }
 .modulos-list .modulo__title{font-size:14px!important;font-weight:600!important}
+</style>
+<style id="alintec-catalogo-v2">
+/* Detalle de curso · composición de catálogo editorial */
+.modal-backdrop[data-modal-id^="curso-"]{padding:12px;align-items:stretch}
+.modal-backdrop[data-modal-id^="curso-"] .modal{width:min(1180px,100%);max-width:1180px;max-height:calc(100vh - 24px);border-radius:28px}
+.modal-backdrop[data-modal-id^="curso-"] .modal__header{padding:14px 22px;background:var(--surface);position:relative;z-index:4}
+.modal-backdrop[data-modal-id^="curso-"] .modal__title{font-size:13px}.modal-backdrop[data-modal-id^="curso-"] .modal__subtitle{display:none}
+.modal-backdrop[data-modal-id^="curso-"] .modal__body{padding:18px 20px 30px}
+.modal-backdrop[data-modal-id^="curso-"] .modal__footer{display:none}
+.course-detail-hero{min-height:380px!important}.course-detail-hero__content{min-height:380px!important;padding:28px 30px!important}
+.course-detail-hero__meta{margin-bottom:20px}
+.course-detail-hero__footer{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
+.course-detail-author{display:flex;align-items:center;gap:11px;min-width:0}.course-detail-author>span{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;flex-shrink:0;background:#4F9367;border:1px solid rgba(255,255,255,.55);font:800 11px 'JetBrains Mono',monospace;color:#fff}.course-detail-author strong,.course-detail-author small{display:block}.course-detail-author strong{font-size:12.5px;color:#fff}.course-detail-author small{margin-top:2px;color:rgba(255,255,255,.68);font-size:10.5px}
+.course-detail-continue{display:flex;align-items:center;gap:12px;padding:11px 12px 11px 20px;border-radius:999px;background:#fff;color:#194C34;font-size:12.5px;font-weight:800;box-shadow:0 10px 24px rgba(0,0,0,.18)}.course-detail-continue:hover{transform:translateY(-2px)}.course-detail-continue>span{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#174B34;color:#fff}.course-detail-continue .ic{width:14px;height:14px}
+.modulos-list{margin-left:2px}.modulos-list::before{left:16px!important}.modulos-list .modulo{min-height:66px!important;padding:8px 12px 8px 0!important}.modulo__thumb{width:72px;height:46px;border-radius:10px;flex-shrink:0;background-image:linear-gradient(180deg,transparent,rgba(5,16,10,.25)),var(--module-cover);background-size:cover;background-position:center;box-shadow:0 5px 14px rgba(13,36,23,.13)}
+
+/* Biblioteca · libros fotográficos distintos y con acabado de edición */
+.pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important;gap:44px 34px!important}
+.pdfs-grid .pdf-card__top{aspect-ratio:3/4.15;border-radius:7px 16px 16px 7px!important;box-shadow:inset -7px 0 10px rgba(255,255,255,.1),0 14px 28px rgba(9,27,17,.24)!important}
+.pdfs-grid .pdf-card__top::before{width:13px;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(255,255,255,.18) 58%,rgba(0,0,0,.08))!important}
+.pdfs-grid .pdf-card__top::after{background:linear-gradient(180deg,rgba(5,15,9,.07),rgba(5,15,9,.16) 34%,rgba(5,15,9,.9) 100%)!important}
+.pdf-card__cover-brand{position:absolute;z-index:4;top:18px;left:26px;display:flex;gap:4px;align-items:baseline;color:#fff;text-shadow:0 2px 9px rgba(0,0,0,.35);font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.6px}.pdf-card__cover-brand b{color:#B9D9B8;font-weight:900}
+.pdfs-grid .pdf-card__cover-copy{left:27px;right:22px;bottom:42px}.pdfs-grid .pdf-card__cover-copy small{display:block;margin-bottom:8px;color:#D8E9D9;font:800 8px 'JetBrains Mono',monospace;letter-spacing:1.1px;text-transform:uppercase}.pdfs-grid .pdf-card__cover-copy strong{font-size:clamp(18px,2vw,23px);line-height:1.08}.pdfs-grid .pdf-card__cover-copy em{display:block;margin-top:10px;color:rgba(255,255,255,.72);font:500 10px Inter,sans-serif;font-style:normal;letter-spacing:.2px}.pdfs-grid .pdf-card__cover-copy i{border-color:#C9A961;width:32px}.pdfs-grid .pdf-card__body{padding:0 5px!important}.pdfs-grid .pdf-card__title{font-size:16px!important}.pdfs-grid .pdf-card__meta span:first-child{color:var(--primary);font-weight:650}
+
+/* Retos · clasificación real del club */
+.reto-ranking{margin-top:28px;padding:28px;border:1px solid var(--border);border-radius:28px;background:var(--surface);box-shadow:0 18px 44px rgba(20,49,32,.08)}
+.reto-ranking__head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:24px}.reto-ranking__eyebrow{color:var(--primary);font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase}.reto-ranking__head h2{margin:7px 0 6px;font:800 23px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.6px}.reto-ranking__head p{margin:0;color:var(--text-2);font-size:12.5px}.reto-ranking__secure{display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;background:color-mix(in srgb,var(--primary) 8%,var(--surface));color:var(--primary);font-size:10px;font-weight:750;white-space:nowrap}.reto-ranking__secure .ic{width:13px;height:13px}
+.reto-podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;max-width:620px;margin:0 auto 22px}.reto-podium__card{position:relative;display:grid;justify-items:center;align-content:start;width:31%;min-height:168px;padding:28px 12px 16px;border:1px solid var(--border);border-radius:20px;background:var(--surface-2);text-align:center}.reto-podium__card[data-pos="1"]{min-height:194px;padding-top:36px;border-color:#DFC167;background:linear-gradient(180deg,#FFF9E8,var(--surface));box-shadow:0 14px 32px rgba(190,147,45,.14)}.reto-podium__card.is-you{box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent),0 14px 32px rgba(25,68,43,.12)}.reto-podium__position{position:absolute;top:-13px;display:grid;place-items:center;min-width:29px;height:29px;padding:0 7px;border-radius:999px;background:#174B34;color:#fff;font:800 10px 'JetBrains Mono',monospace}.reto-podium__card[data-pos="1"] .reto-podium__position{background:#D7A515;color:#fff}.reto-podium__position .ic{width:14px;height:14px}.reto-podium__avatar,.reto-ranking__avatar-sm{display:grid;place-items:center;border-radius:50%;overflow:hidden;background:#E1EBE1;color:#174B34}.reto-podium__avatar{width:58px;height:58px;margin-bottom:10px;border:3px solid var(--surface)}.reto-podium__card strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}.reto-podium__card small{margin-top:4px;color:var(--text-3);font-size:9.5px}.reto-podium__card b{margin-top:12px;color:#2C7A4B;font:800 12px 'JetBrains Mono',monospace}.reto-ranking__initials{font:800 14px 'Plus Jakarta Sans',sans-serif}
+.reto-ranking__list{border-top:1px solid var(--border)}.reto-ranking__row{display:grid;grid-template-columns:28px 38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--border)}.reto-ranking__row.is-you{margin:5px 0;border:1px solid color-mix(in srgb,var(--primary) 38%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--primary) 5%,var(--surface))}.reto-ranking__row>b{color:var(--text-3);font:800 10px 'JetBrains Mono',monospace}.reto-ranking__avatar-sm{width:36px;height:36px}.reto-ranking__avatar-sm .avatar-ilus{width:36px!important;height:36px!important}.reto-ranking__row>span:nth-child(3) strong,.reto-ranking__row>span:nth-child(3) small{display:block}.reto-ranking__row>span:nth-child(3) strong{font-size:11.5px}.reto-ranking__row>span:nth-child(3) strong em{margin-left:5px;padding:2px 6px;border-radius:999px;background:var(--primary);color:#fff;font:700 8px Inter,sans-serif;font-style:normal}.reto-ranking__row>span:nth-child(3) small{margin-top:2px;color:var(--text-3);font-size:9.5px}.reto-ranking__row>span:last-child{color:#2C7A4B;font:800 10px 'JetBrains Mono',monospace}.reto-ranking__loading{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.reto-ranking__loading span{height:150px;border-radius:18px;background:linear-gradient(100deg,var(--surface-2),var(--surface-3),var(--surface-2));background-size:220% 100%;animation:rankload 1.3s linear infinite}.reto-ranking__empty{display:grid;justify-items:center;gap:6px;padding:34px;color:var(--text-2);text-align:center}.reto-ranking__empty .ic{width:32px;height:32px;color:#C49A32}.reto-ranking__empty strong{color:var(--text)}.reto-ranking__empty span{font-size:12px}@keyframes rankload{to{background-position:-220% 0}}
+:root[data-theme="night"] .reto-podium__card[data-pos="1"]{background:linear-gradient(180deg,rgba(201,169,97,.16),var(--surface));border-color:rgba(201,169,97,.48)}:root[data-theme="night"] .reto-podium__avatar,:root[data-theme="night"] .reto-ranking__avatar-sm{background:var(--surface-3)}:root[data-theme="night"] .reto-ranking__row>span:last-child,:root[data-theme="night"] .reto-podium__card b{color:#91C59F}
+@media(max-width:700px){.modal-backdrop[data-modal-id^="curso-"]{padding:0}.modal-backdrop[data-modal-id^="curso-"] .modal{max-height:100vh;border-radius:0}.modal-backdrop[data-modal-id^="curso-"] .modal__body{padding:10px 12px 28px}.course-detail-hero,.course-detail-hero__content{min-height:420px!important}.course-detail-hero__content{padding:22px 18px!important}.course-detail-hero__footer{align-items:flex-start;flex-direction:column}.course-detail-continue{width:100%;justify-content:space-between}.modulo__thumb{width:56px;height:40px}.reto-ranking{padding:20px 14px;border-radius:22px}.reto-ranking__head{flex-direction:column}.reto-podium{gap:6px}.reto-podium__card{width:33.333%;padding-left:6px;padding-right:6px}.reto-podium__avatar{width:48px;height:48px}.reto-podium__card strong{font-size:10px}.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:30px 16px!important}.pdfs-grid .pdf-card__cover-copy{left:20px;right:14px}.pdf-card__cover-brand{left:20px}.pdfs-grid .pdf-card__cover-copy strong{font-size:15px}.pdfs-grid .pdf-card__cover-copy em{display:none}}
+@media(prefers-reduced-motion:reduce){.reto-ranking__loading span{animation:none}.course-detail-continue{transition:none}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
