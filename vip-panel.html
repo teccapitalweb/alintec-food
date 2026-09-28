@@ -9619,6 +9619,269 @@ const Sections = (function(){
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // Biblioteca · libros de lectura (no PDF descargable)
+  // Contenido real y verificado: normas oficiales mexicanas, texto legal
+  // excluido de derechos de autor (Art. 14, Ley Federal del Derecho de Autor).
+  // Cada libro cita su fuente oficial y el enlace para leer el documento íntegro.
+  // ═══════════════════════════════════════════════════════════════════
+  const BIBLIOTECA_LIBROS = [
+    {
+      id:'nom-051', autor:'Secretaría de Economía y Secretaría de Salud',
+      titulo:'NOM-051-SCFI/SSA1-2010 (modificación 2020)',
+      subtitulo:'Especificaciones generales de etiquetado para alimentos y bebidas no alcohólicas preenvasados',
+      categoria:'Normativa y Etiquetado', color:'#689F38', icono:'i-clipboard-check',
+      fuenteNombre:'Diario Oficial de la Federación · 27 de marzo de 2020',
+      fuenteUrl:'https://dof.gob.mx/2020/SEECO/NOM_051.pdf',
+      resumen:'El texto oficial detrás de los sellos de advertencia: qué obliga a etiquetar la norma, sus definiciones clave y las reglas para leyendas y verificación.',
+      paginas:[
+        {titulo:'Índice', lista:true, parrafos:[
+          '1. Objetivo y Campo de Aplicación','2. Referencias Normativas','3. Términos, Definiciones, Símbolos y Abreviaturas',
+          '4. Especificaciones','5. Cálculos','6. Declaraciones de Propiedades','7. Leyendas',
+          '8. Verificación y Vigilancia','9. Procedimiento para la Evaluación de la Conformidad',
+          '10. Concordancia con Normas Internacionales','Apéndice A (Normativo)','11. Bibliografía'
+        ]},
+        {titulo:'1. Objetivo y Campo de Aplicación', parrafos:[
+          'Esta Norma Oficial Mexicana tiene por objeto establecer la información comercial y sanitaria que debe contener el etiquetado del producto preenvasado destinado al consumidor final, de fabricación nacional o extranjera, comercializado en territorio nacional, así como determinar las características de dicha información y establecer un sistema de etiquetado frontal, el cual debe advertir de forma clara y veraz sobre el contenido de nutrimentos críticos e ingredientes que representan riesgos para su salud en un consumo excesivo.',
+          'La presente Norma Oficial Mexicana no se aplica a: a) los alimentos y las bebidas no alcohólicas preenvasados que estén sujetos a disposiciones de información comercial y sanitaria contenidas en Normas Oficiales Mexicanas específicas que no incluyan como referencia normativa a esta Norma, o en alguna otra reglamentación federal vigente que explícitamente excluya de su cumplimiento al presente ordenamiento; b) los alimentos y las bebidas no alcohólicas a granel; c) los alimentos y las bebidas no alcohólicas envasados en punto de venta; y d) los demás productos que determine la autoridad competente, conforme a sus atribuciones.'
+        ]},
+        {titulo:'2. Referencias Normativas', parrafos:[
+          'Los siguientes documentos referidos, sus modificaciones o los que los sustituyan son indispensables para la aplicación de esta Norma Oficial Mexicana.',
+          '2.1 NOM-008-SCFI-2002, Sistema General de Unidades de Medida, publicada en el Diario Oficial de la Federación el 27 de noviembre de 2002.',
+          '2.2 NOM-030-SCFI-2006, Información comercial · Declaración de cantidad en la etiqueta · Especificaciones, publicada en el Diario Oficial de la Federación el 6 de noviembre de 2006.'
+        ]},
+        {titulo:'3. Definiciones (I)', parrafos:[
+          '3.2 Aditivo: cualquier sustancia que en cuanto tal no se consume normalmente como alimento, ni tampoco se usa como ingrediente básico en alimentos, tenga o no valor nutritivo, y cuya adición al producto con fines tecnológicos en sus fases de producción, elaboración, preparación, tratamiento, envasado, empaquetado, transporte o almacenamiento, resulte o pueda preverse razonablemente que resulte, por sí o sus subproductos, en un componente del producto.',
+          '3.3 Alimento: cualquier sustancia o producto sólido, semisólido, natural o transformado, que proporciona al organismo elementos para su nutrición.',
+          '3.4 Azúcares: todos los monosacáridos y los disacáridos presentes en un alimento o en una bebida no alcohólica.',
+          '3.6 Azúcares libres: monosacáridos y disacáridos disponibles añadidos a los alimentos y a las bebidas no alcohólicas por el fabricante, más los azúcares que están presentes naturalmente en miel, jarabes y jugos de frutas u hortalizas.'
+        ]},
+        {titulo:'3. Definiciones (II)', parrafos:[
+          '3.7 Bebida no alcohólica: cualquier líquido natural o transformado, que proporciona al organismo elementos para su nutrición y que contiene menos de 2.0% en volumen de alcohol etílico.',
+          '3.9 Consumidor o consumidor final: es la persona física o moral que adquiere o que disfruta como destinatario final de un producto preenvasado.',
+          '3.14 Declaración nutrimental: relación o enumeración del contenido de nutrimentos de un alimento o de una bebida no alcohólica preenvasados.',
+          '3.15 Edulcorantes: sustancias diferentes de los monosacáridos y de los disacáridos, que imparten un sabor dulce a los productos.'
+        ]},
+        {titulo:'4. Especificaciones sobre sellos y leyendas', parrafos:[
+          '4.1.4 Bis La etiqueta de los productos preenvasados que no contengan los sellos y leyendas precautorias puede declararlo únicamente de forma escrita mediante la frase "Este producto no contiene sellos ni leyendas" y no debe utilizar elementos gráficos o descriptivos alusivos a los mismos.',
+          '4.1.5 Los productos preenvasados que ostenten uno o más sellos de advertencia o la leyenda de edulcorantes no deben: a) incluir en la etiqueta personajes infantiles, animaciones, dibujos animados, celebridades, deportistas o mascotas, elementos interactivos tales como juegos visual-espaciales o descargas digitales, que estando dirigidos a niños inciten, promuevan o fomenten el consumo, compra o elección de productos con exceso de nutrimentos críticos o con edulcorantes; y b) hacer referencia en la etiqueta a elementos ajenos al mismo con las mismas finalidades del inciso anterior.'
+        ]},
+        {titulo:'7. Leyendas precautorias', parrafos:[
+          '7.1.3 Si la lista de ingredientes incluye edulcorantes, se debe colocar la leyenda precautoria frontal en letras mayúsculas "CONTIENE EDULCORANTES, NO RECOMENDABLE EN NIÑOS".',
+          '7.1.4 Cuando el producto preenvasado contenga cafeína adicionada dentro de la lista de ingredientes en cualquier cantidad, se debe incluir la leyenda precautoria en letras mayúsculas "CONTIENE CAFEÍNA EVITAR EN NIÑOS", la cual forma parte del sistema de etiquetado frontal, conforme se establece en el Apéndice A (Normativo).'
+        ]},
+        {titulo:'8. Verificación y Vigilancia', parrafos:[
+          'La verificación y vigilancia de la presente Norma Oficial Mexicana se llevará a cabo por la Procuraduría Federal del Consumidor, la Comisión Federal para la Protección contra Riesgos Sanitarios y las dependencias competentes, en el ámbito de sus respectivas competencias, de acuerdo con la Ley Federal de Protección al Consumidor, la Ley General de Salud, la Ley Federal sobre Metrología y Normalización y demás ordenamientos jurídicos aplicables.'
+        ]},
+        {titulo:'9. Evaluación de la conformidad', parrafos:[
+          '9.1 Introducción. El presente procedimiento establece las directrices que deben observar los productores y comercializadores que de manera voluntaria pretendan demostrar el cumplimiento con esta Norma Oficial Mexicana.',
+          '9.2 Objetivo y campo de aplicación. Este Procedimiento para la Evaluación de la Conformidad tiene por objeto establecer los requisitos que deben seguir las personas acreditadas y aprobadas en términos de lo dispuesto por la Ley Federal sobre Metrología y Normalización y su Reglamento, para evaluar el cumplimiento de la presente Norma Oficial Mexicana de los productos preenvasados, de fabricación nacional y extranjera, destinados al consumidor final en el territorio nacional.'
+        ]}
+      ]
+    },
+    {
+      id:'nom-251', autor:'Secretaría de Salud',
+      titulo:'NOM-251-SSA1-2009',
+      subtitulo:'Prácticas de higiene para el proceso de alimentos, bebidas o suplementos alimenticios',
+      categoria:'Inocuidad Alimentaria', color:'#2E7D32', icono:'i-shield-check',
+      fuenteNombre:'Diario Oficial de la Federación · 1 de marzo de 2010',
+      fuenteUrl:'https://dof.gob.mx/normasOficiales/3980/salud/salud.htm',
+      resumen:'La base de las Buenas Prácticas de Manufactura en México: qué exige a instalaciones, equipo, control de operaciones y a la higiene del personal.',
+      paginas:[
+        {titulo:'Índice', lista:true, parrafos:[
+          '1. Objetivo y Campo de Aplicación','2. Referencias','3. Definiciones','4. Símbolos y Abreviaturas',
+          '5. Disposiciones Generales','6. Fábricas de Alimentos, Bebidas o Suplementos Alimenticios',
+          '7. Establecimientos de Servicios de Alimentos o Bebidas','8. Expendios',
+          '9. Concordancia con Normas Internacionales','10. Bibliografía','11. Observancia de la Norma','12. Vigencia'
+        ]},
+        {titulo:'1. Objetivo y Campo de Aplicación', parrafos:[
+          'Esta Norma Oficial Mexicana establece los requisitos mínimos de buenas prácticas de higiene que deben observarse en el proceso de alimentos, bebidas o suplementos alimenticios y sus materias primas a fin de evitar su contaminación a lo largo de su proceso.',
+          'Esta Norma Oficial Mexicana es de observancia obligatoria para las personas físicas o morales que se dedican al proceso de alimentos, bebidas o suplementos alimenticios, destinados a los consumidores en territorio nacional.'
+        ]},
+        {titulo:'3. Definiciones (selección)', parrafos:[
+          '3.1 Agua potable: agua que no contiene contaminantes objetables, químicos o agentes infecciosos y que no causa efectos nocivos para la salud.',
+          '3.7 Contaminación: presencia de materia extraña, sustancias tóxicas o microorganismos, en cantidades que rebasen los límites permisibles establecidos por la Secretaría de Salud.',
+          '3.25 Inocuo: lo que no hace o causa daño a la salud.',
+          '3.32 Peligro: agente biológico, químico o físico presente en el alimento, bebida o suplemento alimenticio, o bien la condición en que éste se halla, que puede causar un efecto adverso para la salud.'
+        ]},
+        {titulo:'5. Disposiciones Generales — temario', lista:true, parrafos:[
+          '5.1 Instalaciones y áreas','5.2 Equipo y utensilios','5.3 Servicios','5.4 Almacenamiento',
+          '5.5 Control de operaciones','5.6 Control de materias primas','5.7 Control del envasado',
+          '5.8 Control del agua en contacto con los alimentos','5.9 Mantenimiento y limpieza','5.10 Control de plagas',
+          '5.11 Manejo de residuos','5.12 Salud e higiene del personal','5.13 Transporte','5.14 Capacitación'
+        ]}
+      ]
+    }
+  ];
+  const BIB_GUARDADOS_KEY = 'alintec:biblioteca:guardados';
+  function bibGuardadosLeer(){ try{ return new Set(JSON.parse(localStorage.getItem(BIB_GUARDADOS_KEY)||'[]')); }catch(e){ return new Set(); } }
+  function bibGuardadosToggle(id){
+    const s = bibGuardadosLeer();
+    s.has(id) ? s.delete(id) : s.add(id);
+    try{ localStorage.setItem(BIB_GUARDADOS_KEY, JSON.stringify([...s])); }catch(e){}
+    return s.has(id);
+  }
+
+  // ── Tarjeta de libro (grid) ──
+  function _libroCardHTML(l){
+    const guardado = bibGuardadosLeer().has('libro:'+l.id);
+    return `
+      <article class="libro-card" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
+        <button type="button" class="libro-card__save${guardado?' is-on':''}" data-guardar="libro:${l.id}" aria-label="Guardar" title="Guardar"><svg class="ic"><use href="#i-pin"/></svg></button>
+        <div class="libro-card__top">
+          <svg class="ic libro-card__glyph" aria-hidden="true"><use href="#${l.icono}"/></svg>
+          <span class="libro-card__pages">${l.paginas.length} págs</span>
+          <div class="libro-card__cover-copy"><small>${escapeHtml(l.categoria)}</small><strong>${escapeHtml(l.titulo)}</strong></div>
+        </div>
+        <div class="libro-card__body">
+          <div class="libro-card__title">${escapeHtml(l.titulo)}</div>
+          <div class="libro-card__autor">${escapeHtml(l.autor)}</div>
+        </div>
+      </article>`;
+  }
+  // ── Libro destacado (arriba de todo, estilo "portada grande" de biblioteca) ──
+  function _libroDestacadoHTML(l){
+    const guardado = bibGuardadosLeer().has('libro:'+l.id);
+    return `
+      <article class="libro-feat" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
+        <div class="libro-feat__cover">
+          <svg class="ic libro-feat__glyph" aria-hidden="true"><use href="#${l.icono}"/></svg>
+          <span class="libro-feat__pages"><svg class="ic"><use href="#i-book-2"/></svg>Libro · ${l.paginas.length} págs</span>
+        </div>
+        <div class="libro-feat__info">
+          <span class="tag tag--soon" style="color:${l.color};border-color:${l.color}40;background:${l.color}14;">${escapeHtml(l.categoria)}</span>
+          <h2>${escapeHtml(l.titulo)}</h2>
+          <p class="libro-feat__autor">${escapeHtml(l.autor)}</p>
+          <p class="libro-feat__desc">${escapeHtml(l.resumen)}</p>
+          <div class="libro-feat__foot">
+            <span class="btn btn--accent btn--sm">Leer <svg class="ic"><use href="#i-arrow-right"/></svg></span>
+            <button type="button" class="icon-action${guardado?' is-on':''}" data-guardar="libro:${l.id}" title="Guardar" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-pin"/></svg></button>
+          </div>
+        </div>
+      </article>`;
+  }
+  // ── Pestañas de la biblioteca (Todo · Guardados · Guías · PDF · Libros · Presentaciones) ──
+  function _bibTabsHTML(){
+    return `
+      <div class="bib-tabs" role="tablist" aria-label="Filtrar biblioteca">
+        <button type="button" class="bib-tab is-active" data-bib="todo">Todo</button>
+        <button type="button" class="bib-tab" data-bib="guardados"><svg class="ic"><use href="#i-pin"/></svg>Guardados</button>
+        <button type="button" class="bib-tab" data-bib="guias">Guías</button>
+        <button type="button" class="bib-tab" data-bib="pdf">PDF</button>
+        <button type="button" class="bib-tab" data-bib="libros">Libros</button>
+        <button type="button" class="bib-tab" data-bib="ppt">Presentaciones</button>
+      </div>`;
+  }
+  function _bibAplicarFiltro(container, modo){
+    const $ = sel => container.querySelectorAll(sel);
+    const guardados = bibGuardadosLeer();
+    const mostrar = (el, on) => { el.style.display = on ? '' : 'none'; };
+    const bloqueLibros = container.querySelector('#bib-libros-bloque');
+    const bloqueDocs = container.querySelector('#bib-docs-bloque');
+    if (modo === 'libros') { mostrar(bloqueLibros, true); mostrar(bloqueDocs, false); }
+    else if (modo === 'pdf' || modo === 'guias' || modo === 'ppt') { mostrar(bloqueLibros, false); mostrar(bloqueDocs, true); }
+    else { mostrar(bloqueLibros, true); mostrar(bloqueDocs, true); }
+    $('.libro-feat, .libro-card').forEach(el => {
+      const id = 'libro:' + el.dataset.libro;
+      const pasaGuardado = modo !== 'guardados' || guardados.has(id);
+      const pasaTipo = modo === 'todo' || modo === 'guardados' || modo === 'libros';
+      el.style.display = (pasaGuardado && pasaTipo) ? '' : 'none';
+    });
+    $('.pdf-card').forEach(el => {
+      const id = 'doc:' + el.dataset.cursoId + ':' + el.dataset.materialIndex;
+      const tipo = el.dataset.tipo || 'pdf';
+      const pasaGuardado = modo !== 'guardados' || guardados.has(id);
+      const mapaTipo = { pdf:'pdf', doc:'guias', excel:'guias', ppt:'ppt' };
+      const pasaTipo = modo === 'todo' || modo === 'guardados' || mapaTipo[tipo] === modo;
+      el.style.display = (pasaGuardado && pasaTipo) ? '' : 'none';
+    });
+  }
+  // ═══ Lector de libros: pantalla completa, una página a la vez, con efecto de hoja al pasar ═══
+  function abrirLector(id, paginaInicial){
+    const l = BIBLIOTECA_LIBROS.find(x => x.id === id); if (!l) return;
+    let i = Math.max(0, Math.min((paginaInicial || 1) - 1, l.paginas.length - 1));
+    let animando = false;
+    const overlay = document.createElement('div');
+    overlay.className = 'rdr-overlay';
+    overlay.style.setProperty('--lc', l.color);
+    overlay.innerHTML = `
+      <header class="rdr-head">
+        <button type="button" class="rdr-back" id="rdr-back"><svg class="ic ic--flip"><use href="#i-arrow-right"/></svg>Biblioteca</button>
+        <div class="rdr-head-c"><span class="rdr-titulo">${escapeHtml(l.titulo)}</span></div>
+        <button type="button" class="rdr-close" id="rdr-close" aria-label="Cerrar"><svg class="ic"><use href="#i-x"/></svg></button>
+      </header>
+      <div class="rdr-escenario">
+        <button type="button" class="rdr-flecha rdr-flecha--izq" id="rdr-prev" aria-label="Página anterior"><svg class="ic ic--flip"><use href="#i-arrow-right"/></svg></button>
+        <div class="rdr-libro"><div class="rdr-hoja" id="rdr-hoja"></div></div>
+        <button type="button" class="rdr-flecha rdr-flecha--der" id="rdr-next" aria-label="Página siguiente"><svg class="ic"><use href="#i-arrow-right"/></svg></button>
+      </div>
+      <footer class="rdr-pie">
+        <button type="button" class="rdr-ir" id="rdr-ir-btn">Ir a página</button>
+        <div class="rdr-progreso" id="rdr-progreso" title="Arrastra para ir a una página"><div class="rdr-progreso-fill" id="rdr-progreso-fill"></div></div>
+        <div class="rdr-paginador"><strong id="rdr-actual"></strong> de ${l.paginas.length}</div>
+      </footer>`;
+    document.body.appendChild(overlay);
+    const antesOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const hoja = overlay.querySelector('#rdr-hoja');
+    const btnPrev = overlay.querySelector('#rdr-prev');
+    const btnNext = overlay.querySelector('#rdr-next');
+
+    function contenidoPagina(p){
+      const esUltima = i === l.paginas.length - 1;
+      const cuerpo = p.lista
+        ? '<ol class="rdr-lista">' + p.parrafos.map(t => '<li>' + escapeHtml(t) + '</li>').join('') + '</ol>'
+        : p.parrafos.map(t => '<p>' + escapeHtml(t) + '</p>').join('');
+      return `
+        <div class="rdr-pag-top"><span>${escapeHtml(l.titulo)}</span><span>Pág. ${i + 1}</span></div>
+        <h3 class="rdr-pag-titulo">${escapeHtml(p.titulo)}</h3>
+        <div class="rdr-pag-texto">${cuerpo}</div>
+        ${esUltima ? `<div class="rdr-fuente"><svg class="ic"><use href="#i-shield-check"/></svg><span>Extracto oficial verificado · ${escapeHtml(l.fuenteNombre)}. <a href="${l.fuenteUrl}" target="_blank" rel="noopener noreferrer">Leer el documento íntegro ↗</a></span></div>` : ''}`;
+    }
+    function pintar(){
+      hoja.innerHTML = contenidoPagina(l.paginas[i]);
+      overlay.querySelector('#rdr-actual').textContent = i + 1;
+      overlay.querySelector('#rdr-progreso-fill').style.width = ((i + 1) / l.paginas.length * 100) + '%';
+      btnPrev.disabled = i === 0;
+      btnNext.disabled = i === l.paginas.length - 1;
+    }
+    function ir(nuevo, sentido){
+      if (animando || nuevo < 0 || nuevo >= l.paginas.length || nuevo === i) return;
+      animando = true;
+      hoja.classList.add(sentido > 0 ? 'is-saliendo-der' : 'is-saliendo-izq');
+      setTimeout(() => {
+        i = nuevo;
+        pintar();
+        hoja.classList.remove('is-saliendo-der', 'is-saliendo-izq');
+        hoja.classList.add(sentido > 0 ? 'is-entrando-der' : 'is-entrando-izq');
+        setTimeout(() => { hoja.classList.remove('is-entrando-der', 'is-entrando-izq'); animando = false; }, 260);
+      }, 220);
+    }
+    btnPrev.addEventListener('click', () => ir(i - 1, -1));
+    btnNext.addEventListener('click', () => ir(i + 1, 1));
+    const cerrar = () => { document.body.style.overflow = antesOverflow; overlay.remove(); document.removeEventListener('keydown', teclado); };
+    const teclado = e => {
+      if (e.key === 'Escape') cerrar();
+      else if (e.key === 'ArrowRight') ir(i + 1, 1);
+      else if (e.key === 'ArrowLeft') ir(i - 1, -1);
+    };
+    document.addEventListener('keydown', teclado);
+    overlay.querySelector('#rdr-back').addEventListener('click', cerrar);
+    overlay.querySelector('#rdr-close').addEventListener('click', cerrar);
+    overlay.querySelector('#rdr-progreso').addEventListener('click', e => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const pct = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      ir(Math.round(pct * (l.paginas.length - 1)), pct * (l.paginas.length - 1) > i ? 1 : -1);
+    });
+    overlay.querySelector('#rdr-ir-btn').addEventListener('click', () => {
+      const n = prompt('Ir a la página (1-' + l.paginas.length + '):', String(i + 1));
+      const v = parseInt(n, 10);
+      if (Number.isInteger(v) && v >= 1 && v <= l.paginas.length) ir(v - 1, v - 1 > i ? 1 : -1);
+    });
+    pintar();
+  }
+  window.__abrirLector = abrirLector;
+
   async function renderPDFs(container){
     // Asegurar cursos cargados antes de renderizar
     if (!_cursosLoaded && !_cursosLoading) {
@@ -9666,6 +9929,14 @@ const Sections = (function(){
           <h1 class="sec-hero__title">PDFs y material</h1>
           <p class="sec-hero__sub">Plantillas en Excel, checklists, procedimientos y formatos oficiales listos para tu planta. <strong style="color:var(--primary);">Se desbloquean según tus días de membresía</strong>, igual que las clases.</p>
         </div>
+        ${_bibTabsHTML()}
+        <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-book-2"/></svg>Libros</div>
+        <div id="bib-libros-bloque">
+          ${_libroDestacadoHTML(BIBLIOTECA_LIBROS[0])}
+          <div class="bib-libros-grid">${BIBLIOTECA_LIBROS.slice(1).map(_libroCardHTML).join('')}</div>
+        </div>
+        <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-folder"/></svg>Documentos y plantillas</div>
+        <div id="bib-docs-bloque">
         ${total === 0 ? `
           <div style="text-align:center;padding:60px 24px;background:var(--surface-2);border:1px dashed var(--border-2);border-radius:14px;margin-top:18px;">
             <div style="width:64px;height:64px;border-radius:50%;background:color-mix(in srgb, var(--primary) 12%, transparent);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
@@ -9704,6 +9975,7 @@ const Sections = (function(){
             ${_asignarPortadasMaterial(materialesTodos.slice().sort((a,b) => (_materialDisponible(b)?1:0) - (_materialDisponible(a)?1:0))).map(m => _renderPdfCard(m)).join('')}
           </div>
         `}
+        </div>
       </div>
     `;
 
@@ -9756,6 +10028,23 @@ const Sections = (function(){
           }
         });
       });
+
+      // ── Biblioteca: pestañas, libros y guardados ──
+      container.querySelectorAll('.bib-tab').forEach(tab => tab.addEventListener('click', () => {
+        container.querySelectorAll('.bib-tab').forEach(t => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+        _bibAplicarFiltro(container, tab.dataset.bib);
+      }));
+      container.querySelectorAll('.libro-feat, .libro-card').forEach(el => {
+        el.addEventListener('click', () => window.__abrirLector(el.dataset.libro));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter') window.__abrirLector(el.dataset.libro); });
+      });
+      container.querySelectorAll('[data-guardar]').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const on = bibGuardadosToggle(btn.dataset.guardar);
+        btn.classList.toggle('is-on', on);
+        if (typeof Toast !== 'undefined') Toast.info(on ? 'Guardado' : 'Quitado de guardados', on ? 'Lo verás en la pestaña Guardados' : '');
+      }));
     }, 50);
   }
 
@@ -9791,7 +10080,9 @@ const Sections = (function(){
         data-dias-faltan="${diasFaltan}"
         data-titulo="${tituloEsc}"
         data-curso="${cursoEsc}"
-        data-area="${m.cursoArea}">
+        data-area="${m.cursoArea}"
+        data-tipo="${tipo}">
+        <button type="button" class="pdf-card__save${bibGuardadosLeer().has('doc:'+m.cursoId+':'+m.materialIndex)?' is-on':''}" data-guardar="doc:${m.cursoId}:${m.materialIndex}" aria-label="Guardar" title="Guardar" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-pin"/></svg></button>
         <div class="pdf-card__top" style="${topStyle}">
           <div class="pdf-card__icon"><svg class="ic"><use href="#${ic}"/></svg></div>
           <span class="pdf-card__size">${tipoLabel}</span>
@@ -14601,6 +14892,134 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .av-op.is-selected{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 7%,var(--surface));box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
 .av-op strong{margin-top:6px;color:var(--text);font-size:12.5px;font-weight:700;line-height:1.2}
 .av-op small{color:var(--text-3);font-size:11px;line-height:1.3}
+</style>
+<style id="alintec-biblioteca">
+/* ═══════════════════════════════════════════════════════════════════
+   Biblioteca de libros · PDFs y material
+   Pestañas de filtro, libro destacado, estante de libros y lector a
+   pantalla completa con efecto de hoja al pasar de página.
+   ═══════════════════════════════════════════════════════════════════ */
+.ic--flip{transform:scaleX(-1)}
+
+/* Pestañas */
+.bib-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}
+.bib-tab{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s ease}
+.bib-tab .ic{width:13px;height:13px}
+.bib-tab:hover{border-color:color-mix(in srgb,var(--primary) 35%,var(--border))}
+.bib-tab.is-active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* Libro destacado */
+.libro-feat{
+  --lc:#43A047;position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:230px minmax(0,1fr);gap:26px;align-items:center;
+  margin-bottom:26px;padding:22px;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 2px 8px rgba(10,10,10,.06);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;
+}
+.libro-feat:hover,.libro-feat:focus-visible{transform:translateY(-4px);box-shadow:0 20px 44px rgba(10,10,10,.12);outline:none}
+.libro-feat__cover{
+  position:relative;aspect-ratio:3/4;border-radius:6px 16px 16px 6px;overflow:hidden;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--lc) 55%,#10301f),#0a1a12);
+  box-shadow:0 14px 30px rgba(10,10,10,.28);transform:perspective(1000px) rotateY(-6deg);transform-origin:left center;transition:transform .4s ease;
+}
+.libro-feat:hover .libro-feat__cover{transform:perspective(1000px) rotateY(0deg)}
+.libro-feat__cover::before{content:'';position:absolute;inset:0 auto 0 0;width:10px;background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(255,255,255,.14) 55%,transparent)}
+.libro-feat__glyph{position:absolute;top:20px;left:24px;width:34px!important;height:34px!important;color:rgba(255,255,255,.9)}
+.libro-feat__pages{position:absolute;left:22px;bottom:16px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.94);color:#10201a;font:800 10.5px 'JetBrains Mono',monospace}
+.libro-feat__pages .ic{width:12px;height:12px}
+.libro-feat__info{min-width:0}
+.libro-feat__info h2{margin:10px 0 4px;font:800 clamp(19px,2.4vw,26px)/1.2 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;color:var(--text)}
+.libro-feat__autor{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--text-2)}
+.libro-feat__desc{margin:0 0 16px;font-size:13.5px;line-height:1.6;color:var(--text-2);max-width:60ch}
+.libro-feat__foot{display:flex;align-items:center;gap:10px}
+
+/* Estante de libros */
+.bib-libros-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:26px;margin-bottom:32px}
+.libro-card{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;--lc:#43A047;transition:transform .25s ease}
+.libro-card:hover,.libro-card:focus-visible{transform:translateY(-6px);outline:none}
+.libro-card__save,.libro-feat__foot .icon-action{position:absolute;z-index:5;top:9px;right:9px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.06);color:var(--text-3);cursor:pointer}
+.libro-card__save .ic{width:13px;height:13px}
+.libro-card__save.is-on,.icon-action.is-on{color:var(--accent,#F7941D)}
+.libro-card__top{
+  position:relative;aspect-ratio:3/4;border-radius:5px 14px 14px 5px;overflow:hidden;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--lc) 55%,#10301f),#0a1a12);
+  box-shadow:0 10px 22px rgba(10,10,10,.24);transform:perspective(1000px) rotateY(-6deg);transform-origin:left center;transition:transform .4s ease;
+}
+.libro-card:hover .libro-card__top{transform:perspective(1000px) rotateY(0deg) translateY(-3px)}
+.libro-card__top::before{content:'';position:absolute;inset:0 auto 0 0;width:9px;background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(255,255,255,.13) 55%,transparent)}
+.libro-card__glyph{position:absolute;top:16px;left:18px;width:26px!important;height:26px!important;color:rgba(255,255,255,.88)}
+.libro-card__pages{position:absolute;right:9px;top:9px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.9);color:#10201a;font:800 9px 'JetBrains Mono',monospace}
+.libro-card__cover-copy{position:absolute;left:18px;right:16px;bottom:16px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.libro-card__cover-copy small{display:block;margin-bottom:6px;font:800 8px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.78)}
+.libro-card__cover-copy strong{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:800 13.5px/1.25 'Plus Jakarta Sans',sans-serif}
+.libro-card__body{padding:12px 2px 0}
+.libro-card__title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.libro-card__autor{margin-top:3px;font-size:11.5px;color:var(--text-3)}
+
+.bib-seccion-titulo{display:flex;align-items:center;gap:10px;margin:6px 0 4px;font:800 11px 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3)}
+.bib-seccion-titulo .ic{width:15px;height:15px;color:var(--primary)}
+
+/* Botón de guardar sobre las tarjetas de PDF */
+.pdf-card{position:relative}
+.pdf-card__save{position:absolute;z-index:6;top:9px;left:9px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.pdf-card__save .ic{width:12px;height:12px}
+.pdf-card__save.is-on{color:var(--accent,#F7941D);background:rgba(255,255,255,.9)}
+
+/* ── Lector a pantalla completa ── */
+.rdr-overlay{--lc:#43A047;position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#0d1a13;animation:rdrIn .2s ease both}
+@keyframes rdrIn{from{opacity:0}to{opacity:1}}
+.rdr-head{display:flex;align-items:center;gap:14px;padding:14px 20px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.rdr-back{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,.85);font-size:12.5px;font-weight:700;cursor:pointer}
+.rdr-back:hover{color:#fff}
+.rdr-back .ic{width:15px;height:15px}
+.rdr-head-c{flex:1;min-width:0;text-align:center}
+.rdr-titulo{color:#fff;font-size:12.5px;font-weight:700;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rdr-close{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;flex-shrink:0}
+.rdr-close .ic{width:15px;height:15px}
+.rdr-escenario{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:18px;padding:20px}
+.rdr-flecha{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);color:rgba(255,255,255,.9);cursor:pointer;transition:.15s ease}
+.rdr-flecha:hover:not(:disabled){background:rgba(255,255,255,.16);transform:scale(1.05)}
+.rdr-flecha:disabled{opacity:.15;pointer-events:none}
+.rdr-flecha .ic{width:18px;height:18px}
+.rdr-libro{width:min(600px,90vw);height:min(72vh,760px);perspective:1600px}
+.rdr-hoja{
+  width:100%;height:100%;overflow-y:auto;padding:38px 42px;border-radius:6px;background:#faf7f0;color:#1c1c18;
+  box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.06);
+  background-image:linear-gradient(90deg,rgba(0,0,0,.05),transparent 3%),repeating-linear-gradient(transparent,transparent 27px,rgba(0,0,0,.025) 27px 28px);
+  transform-origin:left center;transition:transform .22s ease-in,opacity .22s ease-in,box-shadow .22s ease-in;
+}
+:root[data-theme="night"] .rdr-hoja{background-color:#241f19;color:#ece7dd}
+.rdr-hoja.is-saliendo-der{transform:perspective(1600px) rotateY(-96deg);opacity:0;box-shadow:40px 0 60px rgba(0,0,0,.35)}
+.rdr-hoja.is-saliendo-izq{transform-origin:right center;transform:perspective(1600px) rotateY(96deg);opacity:0;box-shadow:-40px 0 60px rgba(0,0,0,.35)}
+.rdr-hoja.is-entrando-der{transform-origin:right center;animation:rdrEntraDer .26s ease-out both}
+.rdr-hoja.is-entrando-izq{transform-origin:left center;animation:rdrEntraIzq .26s ease-out both}
+@keyframes rdrEntraDer{from{transform:perspective(1600px) rotateY(80deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes rdrEntraIzq{from{transform:perspective(1600px) rotateY(-80deg);opacity:0}to{transform:none;opacity:1}}
+.rdr-pag-top{display:flex;justify-content:space-between;gap:12px;padding-bottom:10px;margin-bottom:16px;border-bottom:1px solid rgba(0,0,0,.12);font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.6px;text-transform:uppercase;color:#7c7361}
+:root[data-theme="night"] .rdr-pag-top{border-color:rgba(255,255,255,.12);color:#a39c8c}
+.rdr-pag-titulo{margin:0 0 16px;font:800 clamp(17px,2.4vw,21px)/1.25 'Plus Jakarta Sans',sans-serif;letter-spacing:-.015em;color:var(--lc)}
+.rdr-pag-texto{font:13.5px/1.75 Georgia,'Times New Roman',serif;text-align:justify;hyphens:auto}
+.rdr-pag-texto p{margin:0 0 14px}
+.rdr-lista{margin:0;padding-left:22px;font:600 13.5px/2 'Plus Jakarta Sans',sans-serif}
+.rdr-lista li{margin-bottom:2px}
+.rdr-fuente{display:flex;gap:10px;align-items:flex-start;margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.12);font-size:11.5px;line-height:1.6;color:#655d4d}
+:root[data-theme="night"] .rdr-fuente{border-color:rgba(255,255,255,.12);color:#b3ab98}
+.rdr-fuente .ic{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:var(--lc)}
+.rdr-fuente a{color:var(--lc);font-weight:700;text-decoration:underline}
+.rdr-pie{display:flex;align-items:center;gap:16px;padding:12px 22px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.rdr-ir{color:rgba(255,255,255,.82);font-size:11.5px;font-weight:700;white-space:nowrap;cursor:pointer;padding:6px 10px;border-radius:8px}
+.rdr-ir:hover{background:rgba(255,255,255,.08)}
+.rdr-progreso{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.14);cursor:pointer;position:relative}
+.rdr-progreso-fill{height:100%;border-radius:3px;background:var(--lc);transition:width .25s ease}
+.rdr-paginador{color:rgba(255,255,255,.85);font-size:11.5px;font-weight:700;white-space:nowrap}
+.rdr-paginador strong{color:#fff}
+
+@media(max-width:760px){
+  .libro-feat{grid-template-columns:minmax(0,1fr);text-align:left}
+  .libro-feat__cover{max-width:210px}
+  .rdr-libro{width:94vw;height:78vh}
+  .rdr-hoja{padding:26px 22px}
+  .rdr-flecha{width:38px;height:38px}
+  .rdr-escenario{padding:12px;gap:10px}
+}
+@media(prefers-reduced-motion:reduce){.rdr-hoja,.libro-feat__cover,.libro-card__top{transition:none;animation:none!important}}
 </style>
 <style id="alintec-pdfs-vp">
 /* ═══════════════════════════════════════════════════════════════════
