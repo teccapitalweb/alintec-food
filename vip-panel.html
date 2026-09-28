@@ -9630,6 +9630,7 @@ const Sections = (function(){
       id:'nom-051', autor:'Secretaría de Economía y Secretaría de Salud',
       titulo:'NOM-051-SCFI/SSA1-2010 (modificación 2020)',
       subtitulo:'Especificaciones generales de etiquetado para alimentos y bebidas no alcohólicas preenvasados',
+      portada:'assets/img/libros/nom-051-portada.png',
       categoria:'Normativa y Etiquetado', color:'#689F38', icono:'i-clipboard-check',
       fuenteNombre:'Diario Oficial de la Federación · 27 de marzo de 2020',
       fuenteUrl:'https://dof.gob.mx/2020/SEECO/NOM_051.pdf',
@@ -9683,6 +9684,7 @@ const Sections = (function(){
       id:'nom-251', autor:'Secretaría de Salud',
       titulo:'NOM-251-SSA1-2009',
       subtitulo:'Prácticas de higiene para el proceso de alimentos, bebidas o suplementos alimenticios',
+      portada:'assets/img/libros/nom-251-portada.png',
       categoria:'Inocuidad Alimentaria', color:'#2E7D32', icono:'i-shield-check',
       fuenteNombre:'Diario Oficial de la Federación · 1 de marzo de 2010',
       fuenteUrl:'https://dof.gob.mx/normasOficiales/3980/salud/salud.htm',
@@ -9711,6 +9713,35 @@ const Sections = (function(){
           '5.11 Manejo de residuos','5.12 Salud e higiene del personal','5.13 Transporte','5.14 Capacitación'
         ]}
       ]
+    },
+    {
+      id:'nom-210', autor:'Secretaría de Salud',
+      titulo:'NOM-210-SSA1-2014',
+      subtitulo:'Métodos de prueba microbiológicos para indicadores y microorganismos patógenos',
+      portada:'assets/img/libros/nom-210-portada.png',
+      categoria:'Microbiología de Alimentos', color:'#315A78', icono:'i-search',
+      fuenteNombre:'Diario Oficial de la Federación · 26 de junio de 2015',
+      fuenteUrl:'https://dof.gob.mx/nota_detalle_popup.php?codigo=5398468',
+      resumen:'Edición de consulta de la norma mexicana que reúne criterios y métodos oficiales para detectar microorganismos indicadores y patógenos en alimentos.',
+      paginas:[
+        {titulo:'Índice de consulta', lista:true, parrafos:[
+          '1. Objetivo y campo de aplicación','2. Referencias','3. Definiciones','4. Símbolos y abreviaturas',
+          '5. Disposiciones generales','Apéndice A · Microorganismos indicadores','Apéndice B · Salmonella spp.',
+          'Apéndice C · Staphylococcus aureus','Apéndices D–J · Métodos para patógenos específicos'
+        ]},
+        {titulo:'1. Objetivo y alcance', parrafos:[
+          'Esta Norma Oficial Mexicana establece los métodos de prueba microbiológicos para la determinación de microorganismos indicadores y de microorganismos patógenos en productos y servicios.',
+          'Los procedimientos están destinados a laboratorios que realizan control sanitario y verificación microbiológica de alimentos, bebidas, agua y materias primas dentro de su campo de aplicación.'
+        ]},
+        {titulo:'Preparación y control del análisis', parrafos:[
+          'Antes de iniciar un método debe verificarse la identificación de la muestra, la integridad del recipiente, la temperatura de recepción y la trazabilidad de reactivos, medios de cultivo y controles.',
+          'La técnica seleccionada, las diluciones, los tiempos y las temperaturas deben corresponder al microorganismo investigado y quedar documentados en la hoja de trabajo del laboratorio.'
+        ]},
+        {titulo:'Lectura e interpretación', parrafos:[
+          'Los resultados deben interpretarse únicamente cuando los controles del método sean satisfactorios. Las colonias presuntivas requieren las pruebas confirmatorias indicadas en el apéndice aplicable.',
+          'El informe debe expresar el método utilizado, la unidad de reporte, el límite de detección cuando corresponda y cualquier desviación que pueda afectar la validez del resultado.'
+        ]}
+      ]
     }
   ];
   const BIB_GUARDADOS_KEY = 'alintec:biblioteca:guardados';
@@ -9725,13 +9756,13 @@ const Sections = (function(){
   // ── Tarjeta de libro (grid) ──
   function _libroCardHTML(l){
     const guardado = bibGuardadosLeer().has('libro:'+l.id);
+    const portada = escapeHtml(l.portada || '');
     return `
       <article class="libro-card" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
         <button type="button" class="libro-card__save${guardado?' is-on':''}" data-guardar="libro:${l.id}" aria-label="Guardar" title="Guardar"><svg class="ic"><use href="#i-pin"/></svg></button>
-        <div class="libro-card__top">
-          <svg class="ic libro-card__glyph" aria-hidden="true"><use href="#${l.icono}"/></svg>
-          <span class="libro-card__pages">${l.paginas.length} págs</span>
-          <div class="libro-card__cover-copy"><small>${escapeHtml(l.categoria)}</small><strong>${escapeHtml(l.titulo)}</strong></div>
+        <div class="libro-card__top" style="--book-cover:url('${portada}')">
+          <span class="libro-card__edition">Edición de consulta</span>
+          <div class="libro-card__cover-copy"><small>${escapeHtml(l.categoria)}</small><strong>${escapeHtml(l.titulo)}</strong><em>${escapeHtml(l.subtitulo)}</em></div>
         </div>
         <div class="libro-card__body">
           <div class="libro-card__title">${escapeHtml(l.titulo)}</div>
@@ -9742,11 +9773,12 @@ const Sections = (function(){
   // ── Libro destacado (arriba de todo, estilo "portada grande" de biblioteca) ──
   function _libroDestacadoHTML(l){
     const guardado = bibGuardadosLeer().has('libro:'+l.id);
+    const portada = escapeHtml(l.portada || '');
     return `
       <article class="libro-feat" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
-        <div class="libro-feat__cover">
-          <svg class="ic libro-feat__glyph" aria-hidden="true"><use href="#${l.icono}"/></svg>
-          <span class="libro-feat__pages"><svg class="ic"><use href="#i-book-2"/></svg>Libro · ${l.paginas.length} págs</span>
+        <div class="libro-feat__cover" style="--book-cover:url('${portada}')">
+          <span class="libro-feat__edition">Biblioteca técnica</span>
+          <div class="libro-feat__cover-copy"><small>${escapeHtml(l.categoria)}</small><strong>${escapeHtml(l.titulo)}</strong></div>
         </div>
         <div class="libro-feat__info">
           <span class="tag tag--soon" style="color:${l.color};border-color:${l.color}40;background:${l.color}14;">${escapeHtml(l.categoria)}</span>
@@ -9796,10 +9828,15 @@ const Sections = (function(){
       el.style.display = (pasaGuardado && pasaTipo) ? '' : 'none';
     });
   }
-  // ═══ Lector de libros: pantalla completa, una página a la vez, con efecto de hoja al pasar ═══
+  // ═══ Lector editorial: libro abierto, página individual y giro de hoja ═══
   function abrirLector(id, paginaInicial){
     const l = BIBLIOTECA_LIBROS.find(x => x.id === id); if (!l) return;
-    let i = Math.max(0, Math.min((paginaInicial || 1) - 1, l.paginas.length - 1));
+    const progresoKey = 'alintec:lector:' + l.id + ':pagina';
+    let guardada = 1;
+    try { guardada = Math.max(1, parseInt(localStorage.getItem(progresoKey) || '1', 10) || 1); } catch(e){}
+    let i = Math.max(0, Math.min((paginaInicial || guardada) - 1, l.paginas.length - 1));
+    let vista = window.matchMedia('(max-width:760px)').matches ? 'single' : 'spread';
+    if (vista === 'spread') i = Math.floor(i / 2) * 2;
     let animando = false;
     const overlay = document.createElement('div');
     overlay.className = 'rdr-overlay';
@@ -9807,63 +9844,97 @@ const Sections = (function(){
     overlay.innerHTML = `
       <header class="rdr-head">
         <button type="button" class="rdr-back" id="rdr-back"><svg class="ic ic--flip"><use href="#i-arrow-right"/></svg>Biblioteca</button>
-        <div class="rdr-head-c"><span class="rdr-titulo">${escapeHtml(l.titulo)}</span></div>
+        <div class="rdr-head-c"><span class="rdr-titulo">${escapeHtml(l.titulo)}</span><small>${escapeHtml(l.categoria)}</small></div>
+        <button type="button" class="rdr-view" id="rdr-view" aria-label="Cambiar vista"><svg class="ic"><use href="#i-book-2"/></svg><span>Una página</span></button>
         <button type="button" class="rdr-close" id="rdr-close" aria-label="Cerrar"><svg class="ic"><use href="#i-x"/></svg></button>
       </header>
+      ${guardada > 1 ? `<div class="rdr-resume"><svg class="ic"><use href="#i-pin"/></svg>Continuar desde la página ${guardada}</div>` : ''}
       <div class="rdr-escenario">
         <button type="button" class="rdr-flecha rdr-flecha--izq" id="rdr-prev" aria-label="Página anterior"><svg class="ic ic--flip"><use href="#i-arrow-right"/></svg></button>
-        <div class="rdr-libro"><div class="rdr-hoja" id="rdr-hoja"></div></div>
+        <div class="rdr-libro" id="rdr-libro" aria-label="Libro abierto; presiona una hoja para verla sola">
+          <article class="rdr-hoja rdr-hoja--left" data-page=""></article>
+          <span class="rdr-lomo" aria-hidden="true"></span>
+          <article class="rdr-hoja rdr-hoja--right" data-page=""></article>
+          <span class="rdr-turn-sheet" aria-hidden="true"></span>
+        </div>
         <button type="button" class="rdr-flecha rdr-flecha--der" id="rdr-next" aria-label="Página siguiente"><svg class="ic"><use href="#i-arrow-right"/></svg></button>
       </div>
       <footer class="rdr-pie">
         <button type="button" class="rdr-ir" id="rdr-ir-btn">Ir a página</button>
-        <div class="rdr-progreso" id="rdr-progreso" title="Arrastra para ir a una página"><div class="rdr-progreso-fill" id="rdr-progreso-fill"></div></div>
+        <span class="rdr-hint">Presiona una hoja para verla sola</span>
+        <div class="rdr-progreso" id="rdr-progreso" title="Presiona para ir a una página"><div class="rdr-progreso-fill" id="rdr-progreso-fill"></div></div>
         <div class="rdr-paginador"><strong id="rdr-actual"></strong> de ${l.paginas.length}</div>
       </footer>`;
     document.body.appendChild(overlay);
     const antesOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const hoja = overlay.querySelector('#rdr-hoja');
+    const libro = overlay.querySelector('#rdr-libro');
+    const hojas = [...overlay.querySelectorAll('.rdr-hoja')];
     const btnPrev = overlay.querySelector('#rdr-prev');
     const btnNext = overlay.querySelector('#rdr-next');
+    const btnVista = overlay.querySelector('#rdr-view');
 
-    function contenidoPagina(p){
-      const esUltima = i === l.paginas.length - 1;
+    function contenidoPagina(indice){
+      const p = l.paginas[indice];
+      if (!p) return '<div class="rdr-pagina-vacia"><span>Fin de la edición</span></div>';
       const cuerpo = p.lista
         ? '<ol class="rdr-lista">' + p.parrafos.map(t => '<li>' + escapeHtml(t) + '</li>').join('') + '</ol>'
         : p.parrafos.map(t => '<p>' + escapeHtml(t) + '</p>').join('');
       return `
-        <div class="rdr-pag-top"><span>${escapeHtml(l.titulo)}</span><span>Pág. ${i + 1}</span></div>
+        <div class="rdr-pag-top"><span>${escapeHtml(l.titulo)}</span><span>${indice + 1}</span></div>
         <h3 class="rdr-pag-titulo">${escapeHtml(p.titulo)}</h3>
         <div class="rdr-pag-texto">${cuerpo}</div>
-        ${esUltima ? `<div class="rdr-fuente"><svg class="ic"><use href="#i-shield-check"/></svg><span>Extracto oficial verificado · ${escapeHtml(l.fuenteNombre)}. <a href="${l.fuenteUrl}" target="_blank" rel="noopener noreferrer">Leer el documento íntegro ↗</a></span></div>` : ''}`;
+        ${indice === l.paginas.length - 1 ? `<div class="rdr-fuente"><svg class="ic"><use href="#i-shield-check"/></svg><span>Edición de consulta basada en la fuente oficial: ${escapeHtml(l.fuenteNombre)}.</span></div>` : ''}`;
     }
+    function persistir(){ try { localStorage.setItem(progresoKey, String(i + 1)); } catch(e){} }
     function pintar(){
-      hoja.innerHTML = contenidoPagina(l.paginas[i]);
-      overlay.querySelector('#rdr-actual').textContent = i + 1;
-      overlay.querySelector('#rdr-progreso-fill').style.width = ((i + 1) / l.paginas.length * 100) + '%';
+      libro.classList.toggle('is-single', vista === 'single');
+      const izquierda = i;
+      const derecha = vista === 'spread' ? i + 1 : -1;
+      hojas[0].innerHTML = contenidoPagina(izquierda);
+      hojas[0].dataset.page = String(izquierda);
+      hojas[1].innerHTML = vista === 'spread' ? contenidoPagina(derecha) : '';
+      hojas[1].dataset.page = derecha >= 0 && derecha < l.paginas.length ? String(derecha) : '';
+      const finVisible = vista === 'spread' ? Math.min(i + 2, l.paginas.length) : i + 1;
+      overlay.querySelector('#rdr-actual').textContent = vista === 'spread' && finVisible > i + 1 ? `${i + 1}–${finVisible}` : String(i + 1);
+      overlay.querySelector('#rdr-progreso-fill').style.width = (finVisible / l.paginas.length * 100) + '%';
       btnPrev.disabled = i === 0;
-      btnNext.disabled = i === l.paginas.length - 1;
+      btnNext.disabled = finVisible >= l.paginas.length;
+      btnVista.querySelector('span').textContent = vista === 'spread' ? 'Una página' : 'Libro abierto';
+      persistir();
     }
     function ir(nuevo, sentido){
-      if (animando || nuevo < 0 || nuevo >= l.paginas.length || nuevo === i) return;
+      if (vista === 'spread') nuevo = Math.floor(nuevo / 2) * 2;
+      nuevo = Math.max(0, Math.min(nuevo, l.paginas.length - 1));
+      if (animando || nuevo === i) return;
       animando = true;
-      hoja.classList.add(sentido > 0 ? 'is-saliendo-der' : 'is-saliendo-izq');
+      libro.classList.add(sentido > 0 ? 'is-turn-next' : 'is-turn-prev');
       setTimeout(() => {
         i = nuevo;
         pintar();
-        hoja.classList.remove('is-saliendo-der', 'is-saliendo-izq');
-        hoja.classList.add(sentido > 0 ? 'is-entrando-der' : 'is-entrando-izq');
-        setTimeout(() => { hoja.classList.remove('is-entrando-der', 'is-entrando-izq'); animando = false; }, 260);
-      }, 220);
+        libro.classList.remove('is-turn-next', 'is-turn-prev');
+        libro.classList.add('is-settling');
+        setTimeout(() => { libro.classList.remove('is-settling'); animando = false; }, 210);
+      }, 390);
     }
-    btnPrev.addEventListener('click', () => ir(i - 1, -1));
-    btnNext.addEventListener('click', () => ir(i + 1, 1));
+    const paso = () => vista === 'spread' ? 2 : 1;
+    btnPrev.addEventListener('click', () => ir(i - paso(), -1));
+    btnNext.addEventListener('click', () => ir(i + paso(), 1));
+    hojas.forEach(hoja => hoja.addEventListener('click', () => {
+      const pagina = parseInt(hoja.dataset.page, 10);
+      if (!Number.isInteger(pagina)) return;
+      if (vista === 'spread') { vista = 'single'; i = pagina; pintar(); }
+    }));
+    btnVista.addEventListener('click', () => {
+      vista = vista === 'spread' ? 'single' : 'spread';
+      if (vista === 'spread') i = Math.floor(i / 2) * 2;
+      pintar();
+    });
     const cerrar = () => { document.body.style.overflow = antesOverflow; overlay.remove(); document.removeEventListener('keydown', teclado); };
     const teclado = e => {
       if (e.key === 'Escape') cerrar();
-      else if (e.key === 'ArrowRight') ir(i + 1, 1);
-      else if (e.key === 'ArrowLeft') ir(i - 1, -1);
+      else if (e.key === 'ArrowRight') ir(i + paso(), 1);
+      else if (e.key === 'ArrowLeft') ir(i - paso(), -1);
     };
     document.addEventListener('keydown', teclado);
     overlay.querySelector('#rdr-back').addEventListener('click', cerrar);
@@ -9871,7 +9942,8 @@ const Sections = (function(){
     overlay.querySelector('#rdr-progreso').addEventListener('click', e => {
       const r = e.currentTarget.getBoundingClientRect();
       const pct = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-      ir(Math.round(pct * (l.paginas.length - 1)), pct * (l.paginas.length - 1) > i ? 1 : -1);
+      const destino = Math.round(pct * (l.paginas.length - 1));
+      ir(destino, destino > i ? 1 : -1);
     });
     overlay.querySelector('#rdr-ir-btn').addEventListener('click', () => {
       const n = prompt('Ir a la página (1-' + l.paginas.length + '):', String(i + 1));
@@ -9924,10 +9996,13 @@ const Sections = (function(){
 
     container.innerHTML = `
       <div class="fade-up">
-        <div class="sec-hero">
-          <span class="sec-hero__eyebrow">Descargables</span>
-          <h1 class="sec-hero__title">PDFs y material</h1>
-          <p class="sec-hero__sub">Plantillas en Excel, checklists, procedimientos y formatos oficiales listos para tu planta. <strong style="color:var(--primary);">Se desbloquean según tus días de membresía</strong>, igual que las clases.</p>
+        <div class="sec-hero sec-hero--library">
+          <div class="sec-hero__copy">
+            <span class="sec-hero__eyebrow">Biblioteca profesional</span>
+            <h1 class="sec-hero__title">Libros, PDFs y materiales</h1>
+            <p class="sec-hero__sub">Consulta libros técnicos en el lector interactivo y abre tus plantillas, checklists y procedimientos desde una biblioteca visual más clara.</p>
+          </div>
+          <div class="bib-hero__visual" aria-hidden="true"><span></span><span></span><span></span><i>ALINTEC<br>LIBRARY</i></div>
         </div>
         ${_bibTabsHTML()}
         <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-book-2"/></svg>Libros</div>
@@ -10068,7 +10143,7 @@ const Sections = (function(){
     // si no existe una imagen de biblioteca disponible.
     const portada = (m._coverImage || m.cursoPortada || '').replace(/"/g,'&quot;').replace(/'/g,'%27');
     const topStyle = portada
-      ? `background-image:linear-gradient(150deg,color-mix(in srgb,${c} 42%,transparent),rgba(10,18,12,.58)),url('${portada}');background-size:cover;background-position:center;`
+      ? `background-image:url('${portada}');background-size:cover;background-position:center;`
       : '';
 
     return `
@@ -11914,7 +11989,10 @@ const Sections = (function(){
 
     container.innerHTML = `
       <div class="fade-up rz">
-        <div class="rz-head"><h1>Zona de retos</h1><span class="rz-xp" id="rz-xp"></span></div>
+        <div class="rz-head">
+          <div><span class="rz-head__eyebrow">Laboratorio de habilidades</span><h1>Zona de retos</h1><p>Practica, supera misiones cortas y fortalece lo aprendido en tus cursos.</p></div>
+          <span class="rz-xp" id="rz-xp">0 XP acumulados</span>
+        </div>
 
         <div class="retos-note" style="flex-wrap:wrap;">
           <svg class="ic"><use href="#i-shield-check"/></svg>
@@ -11944,10 +12022,12 @@ const Sections = (function(){
 
         <div class="rz-grid">
           ${retos.map(r => `
-            <button class="rz-card${miembro ? '' : ' is-locked'}" type="button" data-reto="${r.id}">
+            <button class="rz-card${miembro ? '' : ' is-locked'}" type="button" data-reto="${r.id}" style="--rz-accent:${r.color}">
               <span class="rz-card__tile" style="background:${FONDO[r.id] || '#E6F1EA'}">${ARTE[r.id] || ''}</span>
+              <span class="rz-card__level">Misión ${String(retos.indexOf(r) + 1).padStart(2,'0')}</span>
               <svg class="ic rz-card__go"><use href="#i-arrow-right"/></svg>
               <strong class="rz-card__title">${r.titulo}</strong>
+              <span class="rz-card__desc">${r.desc}</span>
               <span class="rz-card__meta">${miembro ? r.tiempo : 'Solo miembros · ' + r.tiempo}</span>
             </button>
           `).join('')}
@@ -15246,6 +15326,61 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 :root[data-theme="night"] .reto-podium__card[data-pos="1"]{background:linear-gradient(180deg,rgba(201,169,97,.16),var(--surface));border-color:rgba(201,169,97,.48)}:root[data-theme="night"] .reto-podium__avatar,:root[data-theme="night"] .reto-ranking__avatar-sm{background:var(--surface-3)}:root[data-theme="night"] .reto-ranking__row>span:last-child,:root[data-theme="night"] .reto-podium__card b{color:#91C59F}
 @media(max-width:700px){.modal-backdrop[data-modal-id^="curso-"]{padding:0}.modal-backdrop[data-modal-id^="curso-"] .modal{max-height:100vh;border-radius:0}.modal-backdrop[data-modal-id^="curso-"] .modal__body{padding:10px 12px 28px}.course-detail-hero,.course-detail-hero__content{min-height:420px!important}.course-detail-hero__content{padding:22px 18px!important}.course-detail-hero__footer{align-items:flex-start;flex-direction:column}.course-detail-continue{width:100%;justify-content:space-between}.modulo__thumb{width:56px;height:40px}.reto-ranking{padding:20px 14px;border-radius:22px}.reto-ranking__head{flex-direction:column}.reto-podium{gap:6px}.reto-podium__card{width:33.333%;padding-left:6px;padding-right:6px}.reto-podium__avatar{width:48px;height:48px}.reto-podium__card strong{font-size:10px}.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:30px 16px!important}.pdfs-grid .pdf-card__cover-copy{left:20px;right:14px}.pdf-card__cover-brand{left:20px}.pdfs-grid .pdf-card__cover-copy strong{font-size:15px}.pdfs-grid .pdf-card__cover-copy em{display:none}}
 @media(prefers-reduced-motion:reduce){.reto-ranking__loading span{animation:none}.course-detail-continue{transition:none}}
+</style>
+<style id="alintec-library-pro-v3">
+/* Biblioteca profesional · sin velos verdes sobre las portadas */
+.sec-hero--library{display:grid!important;grid-template-columns:minmax(0,1fr) 220px;align-items:center;gap:28px;min-height:190px!important;padding:34px 38px!important;background:linear-gradient(125deg,#F8F5EE 0%,#F3F6F8 58%,#E9F0F4 100%)!important;border-color:#DDE4E7!important}
+.sec-hero--library::before{background:linear-gradient(180deg,#D49A48,#C06E43)!important}.sec-hero--library::after{background:radial-gradient(circle,rgba(63,101,124,.13),transparent 68%)!important}
+.sec-hero--library .sec-hero__eyebrow{color:#8D5F2F!important}.sec-hero--library .sec-hero__sub strong{color:#315A78!important}
+.bib-hero__visual{position:relative;height:132px;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 18px 18px rgba(25,43,55,.16))}
+.bib-hero__visual span{display:block;width:58px;height:108px;margin-left:-13px;border-radius:4px 11px 11px 4px;border:1px solid rgba(19,38,52,.16);box-shadow:inset 5px 0 rgba(255,255,255,.2);transform:rotate(-7deg);background:linear-gradient(155deg,#27465B,#10283A)}
+.bib-hero__visual span:nth-child(2){height:126px;transform:translateY(-2px) rotate(2deg);background:linear-gradient(155deg,#D8A85B,#9D6336)}.bib-hero__visual span:nth-child(3){height:114px;transform:rotate(10deg);background:linear-gradient(155deg,#7A97A7,#3D5E72)}
+.bib-hero__visual i{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);color:#fff;text-align:center;font:800 10px/1.45 'JetBrains Mono',monospace;letter-spacing:1.2px;font-style:normal;text-shadow:0 2px 8px rgba(0,0,0,.28)}
+
+.libro-feat{grid-template-columns:250px minmax(0,1fr);padding:26px;background:linear-gradient(135deg,var(--surface),color-mix(in srgb,#315A78 4%,var(--surface)));border-color:color-mix(in srgb,#315A78 18%,var(--border));box-shadow:0 16px 40px rgba(34,55,67,.09)}
+.libro-feat__cover,.libro-card__top{background-image:linear-gradient(180deg,rgba(7,19,29,.04) 30%,rgba(7,19,29,.18) 58%,rgba(7,19,29,.92) 100%),var(--book-cover)!important;background-size:cover!important;background-position:center!important}
+.libro-feat__cover::after,.libro-card__top::after{content:'';position:absolute;inset:0;border:1px solid rgba(255,255,255,.18);border-radius:inherit;pointer-events:none}
+.libro-feat__edition,.libro-card__edition{position:absolute;z-index:3;top:17px;left:22px;padding:6px 9px;border-radius:5px;background:#F7F3EA;color:#173044;font:800 8px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 10px rgba(0,0,0,.18)}
+.libro-feat__cover-copy{position:absolute;z-index:2;left:24px;right:20px;bottom:24px;color:#fff;text-shadow:0 3px 14px rgba(0,0,0,.6)}.libro-feat__cover-copy small{display:block;margin-bottom:8px;font:800 8px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#EFD9B0}.libro-feat__cover-copy strong{display:block;font:800 21px/1.08 'Plus Jakarta Sans',sans-serif;letter-spacing:-.03em}
+.libro-card__cover-copy{bottom:18px}.libro-card__cover-copy small{color:#F1D8AA}.libro-card__cover-copy strong{font-size:15px;line-height:1.18}.libro-card__cover-copy em{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:7px;color:rgba(255,255,255,.76);font:500 9px/1.35 Inter,sans-serif;font-style:normal}
+.bib-libros-grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:32px}.libro-card__top{box-shadow:7px 16px 26px rgba(21,37,47,.24);border-radius:5px 13px 13px 5px}.libro-card__body{padding-top:14px}.libro-card__title{font-size:14px}
+
+.pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))!important;gap:38px 28px!important}
+.pdfs-grid .pdf-card{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.pdfs-grid .pdf-card__top{aspect-ratio:3/4.18!important;border-radius:5px 13px 13px 5px!important;background-color:#E8ECEE!important;box-shadow:7px 16px 27px rgba(25,42,53,.22)!important;filter:none!important}
+.pdfs-grid .pdf-card__top::before{width:10px!important;background:linear-gradient(90deg,rgba(7,18,27,.58),rgba(255,255,255,.22) 58%,transparent)!important}
+.pdfs-grid .pdf-card__top::after{display:none!important;background:none!important}
+.pdf-card__cover-brand{top:16px;left:20px;padding:6px 8px;border-radius:5px;background:#F7F5EF;color:#173044!important;text-shadow:none!important;box-shadow:0 4px 12px rgba(8,20,29,.2)}.pdf-card__cover-brand b{color:#A96F3B!important}
+.pdfs-grid .pdf-card__cover-copy{left:10px!important;right:0!important;bottom:22px!important;padding:15px 17px 16px;background:#122C3F;color:#fff;text-shadow:none;border-left:4px solid #D6A653}.pdfs-grid .pdf-card__cover-copy small{margin-bottom:7px;color:#E8CC99;font-size:7.5px}.pdfs-grid .pdf-card__cover-copy i{display:none}.pdfs-grid .pdf-card__cover-copy strong{font-size:16px!important;line-height:1.18!important;-webkit-line-clamp:3}.pdfs-grid .pdf-card__cover-copy em{margin-top:7px;color:rgba(255,255,255,.68);font-size:9px}
+.pdfs-grid .pdf-card__size{top:14px!important;right:12px!important;bottom:auto!important;left:auto!important;width:auto!important;height:auto!important;min-height:0!important;background:#F7F5EF!important;color:#173044!important;border:0!important;box-shadow:0 4px 12px rgba(8,20,29,.18)}
+.pdf-card__save{top:52px;left:auto;right:12px;background:#173044;border-color:rgba(255,255,255,.3)}.pdfs-grid .pdf-card__body{padding:15px 3px 0!important}.pdfs-grid .pdf-card__title{font-size:14.5px!important}.pdfs-grid .pdf-card__meta span:first-child{color:#49697D!important}
+.pdfs-grid .pdf-card>.lock-overlay{inset:52px 12px auto auto!important;width:auto!important;height:27px!important;max-height:27px!important;min-height:0!important;padding:4px 9px!important;display:flex!important;flex-direction:row!important;gap:5px!important;border-radius:8px!important;background:#F7F5EF!important;border:1px solid rgba(18,44,63,.14)!important;color:#173044!important;box-shadow:0 5px 12px rgba(8,20,29,.16)!important;backdrop-filter:none!important;opacity:1!important}.pdfs-grid .pdf-card>.lock-overlay .lock-overlay__ic{width:13px!important;height:13px!important;color:#173044!important}.pdfs-grid .pdf-card>.lock-overlay .lock-overlay__txt{color:#173044!important;font-size:7.5px!important;letter-spacing:.5px!important}.pdfs-grid .pdf-card[data-locked="true"] .pdf-card__save{left:12px;right:auto}
+
+/* Lector tipo libro abierto */
+.rdr-overlay{background:linear-gradient(135deg,#A9BECE,#C7D5DF)!important}.rdr-head{padding:10px 16px;background:#64788D!important;border-color:rgba(255,255,255,.16)!important}.rdr-head-c{display:grid;gap:2px}.rdr-head-c small{color:rgba(255,255,255,.58);font-size:9px;letter-spacing:.7px;text-transform:uppercase}.rdr-view{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.17);color:#fff;font-size:10.5px;font-weight:750;cursor:pointer}.rdr-view .ic{width:14px;height:14px}.rdr-resume{margin:0 14px;padding:10px 15px;border-radius:0 0 14px 14px;background:#6D6F68;color:#fff;font-size:11px;font-weight:750;border-bottom:1px solid rgba(214,166,83,.7)}.rdr-resume .ic{width:12px;height:12px;margin-right:7px;color:#F0CC79}
+.rdr-escenario{gap:20px;padding:24px}.rdr-libro{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);width:min(940px,82vw);height:min(68vh,650px);background:#F8F5EE;border-radius:7px;box-shadow:0 30px 65px rgba(25,43,56,.34);perspective:1800px;transition:width .25s ease}
+.rdr-hoja{width:auto;height:100%;padding:34px 38px;overflow-y:auto;border-radius:0;background-color:#FBFAF6!important;color:#1E2528!important;box-shadow:none!important;background-image:repeating-linear-gradient(transparent,transparent 28px,rgba(18,44,63,.023) 28px 29px)!important;transform:none;transition:none;cursor:zoom-in;scrollbar-width:thin}
+.rdr-hoja--left{border-radius:7px 0 0 7px;background-image:linear-gradient(90deg,transparent 92%,rgba(36,39,36,.08)),repeating-linear-gradient(transparent,transparent 28px,rgba(18,44,63,.023) 28px 29px)!important}.rdr-hoja--right{border-radius:0 7px 7px 0;background-image:linear-gradient(90deg,rgba(36,39,36,.08),transparent 8%),repeating-linear-gradient(transparent,transparent 28px,rgba(18,44,63,.023) 28px 29px)!important}
+.rdr-lomo{position:absolute;z-index:6;left:50%;top:0;bottom:0;width:10px;transform:translateX(-50%);background:linear-gradient(90deg,rgba(41,43,39,.14),rgba(255,255,255,.65) 48%,rgba(41,43,39,.16));box-shadow:0 0 14px rgba(30,33,31,.16);pointer-events:none}
+.rdr-libro.is-single{grid-template-columns:minmax(0,1fr);width:min(610px,78vw)}.rdr-libro.is-single .rdr-hoja--right,.rdr-libro.is-single .rdr-lomo{display:none}.rdr-libro.is-single .rdr-hoja--left{border-radius:7px;cursor:default;background-image:repeating-linear-gradient(transparent,transparent 28px,rgba(18,44,63,.023) 28px 29px)!important}
+.rdr-turn-sheet{display:none;position:absolute;z-index:8;top:0;bottom:0;width:50%;background:#FBFAF6;box-shadow:0 0 32px rgba(19,28,32,.26);backface-visibility:hidden}.rdr-libro.is-turn-next .rdr-turn-sheet{display:block;right:0;transform-origin:left center;animation:rdrLeafNext .78s cubic-bezier(.55,.05,.25,1) both}.rdr-libro.is-turn-prev .rdr-turn-sheet{display:block;left:0;transform-origin:right center;animation:rdrLeafPrev .78s cubic-bezier(.55,.05,.25,1) both}.rdr-libro.is-single .rdr-turn-sheet{width:100%}
+@keyframes rdrLeafNext{0%{transform:rotateY(0);background:#FBFAF6}50%{box-shadow:-18px 5px 32px rgba(19,28,32,.28)}100%{transform:rotateY(-180deg);background:#E9E5DB}}@keyframes rdrLeafPrev{0%{transform:rotateY(0);background:#FBFAF6}50%{box-shadow:18px 5px 32px rgba(19,28,32,.28)}100%{transform:rotateY(180deg);background:#E9E5DB}}
+.rdr-pag-top{color:#71808A}.rdr-pag-titulo{color:#193E55}.rdr-pag-texto{font-size:12.5px;line-height:1.7}.rdr-fuente{color:#5C6468}.rdr-pie{background:#526B82!important}.rdr-hint{color:rgba(255,255,255,.62);font-size:10.5px}.rdr-progreso-fill{background:#E1B45F}.rdr-flecha{background:#5F758A;border-color:rgba(255,255,255,.28)}
+.rdr-lista{list-style:none!important;padding-left:0!important}.rdr-lista li{padding-left:0!important}
+
+/* Retos · tablero de misiones más editorial y menos verde */
+.rz-head{position:relative;overflow:hidden;align-items:center;padding:30px 32px;border-radius:28px;background:linear-gradient(125deg,#162B3A 0%,#223F50 63%,#31576A 100%);box-shadow:0 20px 46px rgba(20,40,53,.2);color:#fff}.rz-head::after{content:'';position:absolute;width:240px;height:240px;right:-70px;top:-120px;border:1px solid rgba(255,255,255,.1);border-radius:50%;box-shadow:0 0 0 34px rgba(255,255,255,.025),0 0 0 68px rgba(255,255,255,.018)}
+.rz-head__eyebrow{display:block;margin-bottom:9px;color:#E2B863;font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.7px;text-transform:uppercase}.rz-head h1{color:#fff;font-size:clamp(28px,4vw,42px)}.rz-head p{max-width:570px;margin:8px 0 0;color:rgba(255,255,255,.68);font-size:13px;line-height:1.55}.rz-xp{position:relative;z-index:2;padding:12px 16px;border-radius:14px;background:#F3C66C!important;color:#1E3544!important;border:0!important;box-shadow:0 10px 24px rgba(9,25,35,.25);font-size:11px!important}
+.rz .retos-note{margin-top:16px;padding:14px 18px;background:var(--surface);border-color:var(--border);box-shadow:0 9px 24px rgba(30,49,59,.05)}
+.rz-hero{background:linear-gradient(120deg,#2A3F54,#172A3B)!important;box-shadow:0 22px 48px rgba(19,38,51,.2)!important}.rz-hero h2 em{color:#F3C66C!important}.rz-eyebrow{color:#AFC8D7!important}.rz-hero__btn{color:#173044!important}.rz-hero:focus-visible{outline-color:#F3C66C!important}
+.rz-daily{border-color:#D9C28E!important;background:linear-gradient(90deg,#FFF7E5,var(--surface))!important}.rz-daily__ic{background:#D89B40!important;color:#fff!important}
+.rz-grid{grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:18px}.rz-card{min-height:320px;padding:15px 15px 18px;border-radius:25px;background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--rz-accent) 3%,var(--surface)));border-color:color-mix(in srgb,var(--rz-accent) 18%,var(--border));box-shadow:0 12px 30px rgba(28,48,60,.08)}.rz-card::after{content:'';position:absolute;left:18px;right:18px;bottom:0;height:3px;border-radius:4px 4px 0 0;background:var(--rz-accent)}.rz-card:hover,.rz-card:focus-visible{border-color:color-mix(in srgb,var(--rz-accent) 50%,var(--border));box-shadow:0 24px 48px color-mix(in srgb,var(--rz-accent) 13%,rgba(28,48,60,.15))}
+.rz-card__tile{width:100%;height:132px;border-radius:18px}.rz-card__tile svg{width:76px;height:76px}.rz-card__tile img{width:102px;height:102px}.rz-card__level{position:absolute;top:26px;left:27px;padding:5px 8px;border-radius:7px;background:rgba(255,255,255,.9);color:#304959;font:800 8px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;box-shadow:0 5px 13px rgba(25,43,54,.12)}.rz-card__go{top:27px;right:27px;padding:7px;width:31px;height:31px;border-radius:50%;background:rgba(255,255,255,.9);color:#304959;box-shadow:0 5px 13px rgba(25,43,54,.12)}.rz-card__title{margin:2px 4px 0;font:800 18px/1.2 'Plus Jakarta Sans',sans-serif}.rz-card__desc{margin:0 4px;color:var(--text-2);font-size:11.5px;line-height:1.5}.rz-card__meta{display:inline-flex;align-items:center;width:max-content;margin:0 4px;padding:6px 9px;border-radius:8px;background:color-mix(in srgb,var(--rz-accent) 9%,var(--surface));color:color-mix(in srgb,var(--rz-accent) 70%,var(--text));font:750 9.5px 'JetBrains Mono',monospace}
+.reto-ranking{border-color:#DCE3E7;background:linear-gradient(145deg,var(--surface),color-mix(in srgb,#315A78 4%,var(--surface)));box-shadow:0 20px 46px rgba(25,43,55,.09)}.reto-ranking__eyebrow,.reto-ranking__row>span:last-child,.reto-podium__card b{color:#496F86!important}.reto-ranking__secure{background:#EAF0F4;color:#315A78}.reto-podium__position{background:#315A78}.reto-podium__card[data-pos="1"]{border-color:#D7AF5C;background:linear-gradient(180deg,#FFF7E5,var(--surface))}
+:root[data-theme="night"] .sec-hero--library{background:linear-gradient(125deg,#1C2830,#17242C)!important;border-color:#30424C!important}:root[data-theme="night"] .libro-feat{background:linear-gradient(135deg,var(--surface),#182831)}:root[data-theme="night"] .rz-daily{background:linear-gradient(90deg,#322C20,var(--surface))!important}:root[data-theme="night"] .reto-ranking{border-color:#31434E;background:linear-gradient(145deg,var(--surface),#182831)}
+@media(max-width:760px){.sec-hero--library{grid-template-columns:1fr;padding:27px 22px!important}.bib-hero__visual{display:none}.libro-feat{grid-template-columns:150px minmax(0,1fr);gap:18px;padding:17px}.bib-libros-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:27px 16px}.rdr-view,.rdr-hint{display:none}.rdr-escenario{padding:12px;gap:8px}.rdr-libro,.rdr-libro.is-single{width:min(74vw,560px);height:76vh;grid-template-columns:1fr}.rdr-libro:not(.is-single){grid-template-columns:1fr}.rdr-libro .rdr-hoja--right,.rdr-libro .rdr-lomo{display:none}.rdr-hoja{padding:28px 23px;border-radius:7px}.rdr-flecha{width:36px;height:36px}.rz-head{padding:25px 22px}.rz-xp{margin-top:14px}.rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.rz-card{min-height:290px;padding:11px}.rz-card__tile{height:110px}.rz-card__title{font-size:15px}.rz-card__desc{font-size:10.5px}.rz-card__level{top:20px;left:20px}.rz-card__go{top:20px;right:20px}.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:30px 15px!important}.pdfs-grid .pdf-card__cover-copy{padding:12px!important}.pdfs-grid .pdf-card__cover-copy strong{font-size:13px!important}}
+@media(max-width:460px){.libro-feat{grid-template-columns:118px minmax(0,1fr)}.libro-feat__info h2{font-size:17px}.libro-feat__desc{display:none}.libro-feat__cover-copy{left:14px;right:10px;bottom:15px}.libro-feat__cover-copy small{font-size:6px}.libro-feat__cover-copy strong{font-size:12px;line-height:1.15}.libro-feat__edition{left:13px;font-size:6px}.libro-card__edition{font-size:6px;left:13px}.rz-grid{grid-template-columns:1fr}.rz-card{min-height:300px}}
+@media(prefers-reduced-motion:reduce){.rdr-turn-sheet{animation:none!important}.rdr-libro{transition:none}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
