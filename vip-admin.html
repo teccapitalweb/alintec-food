@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0A120C">
+<meta name="theme-color" content="#09111A">
 <script>
 /* Tema · anti-parpadeo. Corre antes de pintar la página.
    Primera visita (nada guardado) → modo DÍA.
@@ -12,7 +12,7 @@
 if(t!=='day'&&t!=='night')t='day';
 document.documentElement.setAttribute('data-theme',t);
 var m=document.querySelector('meta[name="theme-color"]');
-if(m)m.setAttribute('content',t==='night'?'#0A120C':'#EEF7EE');}catch(e){}})();
+if(m)m.setAttribute('content',t==='night'?'#09111A':'#F3F5F1');}catch(e){}})();
 </script>
 <meta name="description" content="Alintec Food Admin · Panel de administración">
 <title>Alintec Food · Admin</title>
@@ -1152,6 +1152,27 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 :root[data-theme="night"] .news-template-picker{background:#101913;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2820;border-color:rgba(114,173,132,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 @media(max-width:880px){.app{grid-template-columns:1fr}.page{padding:16px 14px 104px}.topbar{padding:10px 14px}.sec-hero{padding:24px 21px;border-radius:20px}.mobile-nav{background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(18px);box-shadow:0 -10px 30px rgba(21,53,57,.08)}.mobile-nav__item.is-active{color:var(--primary)}}
 @media(max-width:720px){.news-template-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Modo oscuro del administrador · azul tinta, sin dominante verdosa */
+:root[data-theme="night"]{color-scheme:dark;--bg:#09111A;--bg-deep:#060C12;--surface:#111C27;--surface-2:#172431;--surface-3:#213140;--text:#F2F6F8;--text-2:#B5C2CC;--text-3:#7E8E9A;--border:rgba(221,233,241,.075);--border-2:rgba(221,233,241,.14);--border-strong:rgba(221,233,241,.23);--primary:#70AFCC;--primary-soft:#9BC9DE;--primary-deep:#397B9A;--primary-glow:rgba(91,157,188,.13);--highlight:#9788CF;--success:#5BB18D;--info:#70AFCC;--accent:#A797E2;--warning:#E3B465;--shadow-card:0 18px 46px rgba(0,0,0,.34)}
+:root[data-theme="night"] body{background:radial-gradient(circle at 74% -15%,rgba(112,175,204,.09),transparent 31%),radial-gradient(circle at 12% 92%,rgba(151,136,207,.06),transparent 30%),linear-gradient(145deg,#09111A,#0E1822)!important}
+:root[data-theme="night"] body::before{opacity:1;background:radial-gradient(circle at 82% 4%,rgba(217,119,87,.06),transparent 28%),radial-gradient(circle at 18% 88%,rgba(151,136,207,.05),transparent 31%)!important}
+:root[data-theme="night"] .sidebar{background:linear-gradient(180deg,#0B1621,#101E2A 58%,#0C1721)!important;border-right-color:var(--border)!important;box-shadow:14px 0 42px rgba(0,0,0,.24)}
+:root[data-theme="night"] .nav-item{color:#A9B7C1}:root[data-theme="night"] .nav-item:hover{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.065)}:root[data-theme="night"] .nav-item.is-active{color:#DDECF3;background:linear-gradient(135deg,rgba(112,175,204,.2),rgba(151,136,207,.08));border-color:rgba(112,175,204,.22);box-shadow:inset 3px 0 #70AFCC,0 10px 24px rgba(0,0,0,.18)}
+:root[data-theme="night"] .topbar{background:rgba(15,26,36,.86)!important;border-color:var(--border)!important;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+:root[data-theme="night"] .theme-toggle,:root[data-theme="night"] .icon-btn,:root[data-theme="night"] .avatar{background:#172431!important;border-color:var(--border-2)!important;color:var(--text)}
+:root[data-theme="night"] .sec-hero{background:radial-gradient(circle at 90% 0,rgba(151,136,207,.11),transparent 31%),linear-gradient(145deg,#111E2A,#172735)!important;border-color:var(--border-2)!important;box-shadow:var(--shadow-card)!important}
+:root[data-theme="night"] .sec-hero::before{background:linear-gradient(#70AFCC,#9788CF)}:root[data-theme="night"] .sec-hero__eyebrow{color:#8FC2D8}
+:root[data-theme="night"] .kpi-card,:root[data-theme="night"] .dash-card,:root[data-theme="night"] .form-card,:root[data-theme="night"] .adm-composer,:root[data-theme="night"] .adm-row,:root[data-theme="night"] .foro-admin-card,:root[data-theme="night"] .dir-adm-card,:root[data-theme="night"] .curso-card,:root[data-theme="night"] .curso-row,:root[data-theme="night"] .cron-card,:root[data-theme="night"] .news-card{background:linear-gradient(155deg,#121E2A,#101923)!important;border-color:var(--border)!important;box-shadow:var(--shadow-card)!important;color:var(--text)}
+:root[data-theme="night"] .input,:root[data-theme="night"] .select,:root[data-theme="night"] .textarea,:root[data-theme="night"] select,:root[data-theme="night"] textarea,:root[data-theme="night"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),:root[data-theme="night"] .searchbar input,:root[data-theme="night"] .curso-search__input,:root[data-theme="night"] .adm-composer__input,:root[data-theme="night"] .adm-reply__in{background:#172431!important;color:var(--text)!important;border-color:var(--border-2)!important}
+:root[data-theme="night"] input::placeholder,:root[data-theme="night"] textarea::placeholder{color:#718493!important}:root[data-theme="night"] option{background:#172431;color:#F2F6F8}
+:root[data-theme="night"] .input:focus,:root[data-theme="night"] .select:focus,:root[data-theme="night"] .textarea:focus,:root[data-theme="night"] input:focus,:root[data-theme="night"] textarea:focus{background:#1C2B3A!important;border-color:#70AFCC!important;box-shadow:0 0 0 4px rgba(112,175,204,.12)!important}
+:root[data-theme="night"] .tabs,:root[data-theme="night"] .curso-orden,:root[data-theme="night"] .curso-view,:root[data-theme="night"] .curso-toolbar,:root[data-theme="night"] .curso-pills{background:rgba(17,28,39,.88)!important;border-color:var(--border)!important}
+:root[data-theme="night"] .tab.is-active,:root[data-theme="night"] .curso-pill[data-active="1"]{background:#24465A!important;border-color:#376B84!important;color:#F4F8FA!important;box-shadow:0 8px 18px rgba(0,0,0,.22)}
+:root[data-theme="night"] .btn--accent{background:linear-gradient(135deg,#397B9A,#526AA1)!important;color:#F8FBFC!important;box-shadow:0 10px 24px rgba(57,123,154,.24)}
+:root[data-theme="night"] .modal-backdrop{background:rgba(3,8,14,.74)!important}:root[data-theme="night"] .modal,:root[data-theme="night"] .modal__body{background:#111C27!important;color:var(--text)}:root[data-theme="night"] .modal__footer{background:#172431!important;border-color:var(--border)!important}
+:root[data-theme="night"] .mobile-nav{background:rgba(12,23,33,.95)!important;border-color:var(--border)!important}
+:root[data-theme="night"] .news-template-picker{background:#101B27;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2A39;border-color:rgba(112,175,204,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 </style>
 <script src="assets/alintec-bunny-catalog.js"></script>
 </head>
