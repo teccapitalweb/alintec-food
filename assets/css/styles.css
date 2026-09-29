@@ -1679,9 +1679,12 @@ body { background: #F4F1EC; }
 .navbar .nav-inner { background: rgba(255,254,252,.96); }
 .nav-links a.active { color: var(--primary-dark); background: rgba(111,175,123,.1); }
 .nav-vip { background: var(--primary-dark) !important; box-shadow: 0 8px 20px rgba(57,118,85,.2) !important; }
-.hero { background: #182A35; }
-.hero::before { background: rgba(18,38,49,.72) !important; }
-.hero::after { background: rgba(111,175,123,.12) !important; }
+.hero { background: #17291F; }
+.hero::before {
+  background: linear-gradient(90deg,rgba(13,36,26,.96) 0%,rgba(18,48,34,.88) 37%,rgba(18,48,34,.38) 66%,rgba(18,48,34,.05) 100%) !important;
+}
+/* Recupera el remate curvo claro de la fotografía principal. */
+.hero::after { height: 118px; bottom: -66px; background: #F4F1EC !important; }
 .hero h1 em { color: #B8DBBE; background: none; }
 .hero-kicker,.hero-badge { color: #C7E1CC; }
 .btn-primary { background: var(--primary-dark) !important; box-shadow: 0 10px 24px rgba(57,118,85,.22) !important; }
@@ -1697,5 +1700,6 @@ body { background: #F4F1EC; }
 .contacto-section,.site-footer { background: #182A35; }
 .form-submit { background: var(--primary-dark); }
 @media (max-width:760px) {
-  .hero::before { background: rgba(18,38,49,.8) !important; }
+  .hero::before { background: linear-gradient(180deg,rgba(15,39,28,.5) 0%,rgba(15,39,28,.72) 38%,rgba(13,34,25,.96) 76%,#0D2219 100%) !important; }
+  .hero::after { height: 88px; bottom: -50px; }
 }

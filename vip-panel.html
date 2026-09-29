@@ -3963,7 +3963,6 @@ window.__setDisplayName = async (nombre) => {
       <!-- Saludo compacto: deja que el contenido útil sea el protagonista -->
       <section class="home-greeting fade-up">
         <div>
-          <span class="home-greeting__eyebrow"><span class="home-greeting__dot"></span><span id="greeting-label">En vivo</span><span class="banner__version">v.2026.05</span></span>
           <h1 class="home-greeting__title" id="hero-title">Hola de nuevo</h1>
           <p class="home-greeting__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
         </div>
@@ -4176,9 +4175,7 @@ function applyGreeting(){
   const now=new Date();
   const h=now.getHours();
   const greet=h<12?'Buen día':h<19?'Buenas tardes':'Buenas noches';
-  const eyebrow=h<12?'Modo enfoque · Mañana':h<19?'Modo enfoque · Tarde':'Modo enfoque · Noche';
   const t=document.getElementById('hero-title');if(t)t.textContent=greet+', colega';
-  const l=document.getElementById('greeting-label');if(l)l.textContent=eyebrow;
   const d=document.getElementById('home-current-date');
   if(d){d.dateTime=now.toISOString().slice(0,10);d.textContent=now.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 }
@@ -9369,6 +9366,7 @@ const Sections = (function(){
     usuario.racha = racha; usuario.diasActivos = dias.length;
     const nivelActual=getNivel(usuario.xp);
     const pct=Math.round(((usuario.xp-nivelActual.desde)/(nivelActual.hasta-nivelActual.desde))*100);
+    const pctSeguro=Math.max(0,Math.min(100,Number.isFinite(pct)?pct:100));
     const xpRest=nivelActual.hasta-usuario.xp;
     const proxNivel=niveles[nivelActual.id]?.nombre||'Maestro';
     const ganados=logros.filter(l=>l.unlock).length;
@@ -9404,8 +9402,21 @@ const Sections = (function(){
               <span class="logro-hero__racha-lbl">días</span>
             </div>
           </div>
-          <div class="logro-hero__xp-bar"><div class="logro-hero__xp-fill" style="width:${pct}%"></div></div>
-          <div class="logro-hero__xp-text"><span><strong>${usuario.xp}</strong> XP</span><span>${xpRest>0?xpRest+' XP para '+proxNivel:'¡Nivel máximo!'}</span><span><strong>${nivelActual.hasta===99999?'∞':nivelActual.hasta}</strong> XP</span></div>
+          <div class="logro-orbit">
+            <div class="logro-orbit__gauge" role="img" aria-label="${pctSeguro}% de avance hacia ${proxNivel}">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="logro-orbit__track" cx="60" cy="60" r="52" pathLength="100"></circle>
+                <circle class="logro-orbit__value" cx="60" cy="60" r="52" pathLength="100" style="stroke-dasharray:${pctSeguro} 100"></circle>
+              </svg>
+              <span><strong>${pctSeguro}%</strong><small>avance</small></span>
+            </div>
+            <div class="logro-orbit__copy">
+              <span class="logro-orbit__eyebrow">Siguiente rango</span>
+              <strong>${xpRest>0?proxNivel:'Nivel máximo alcanzado'}</strong>
+              <p>${xpRest>0?`Te faltan <b>${xpRest} XP</b>. Cada insignia y reto completado acerca tu perfil al siguiente rango.`:'Has completado toda la trayectoria de niveles disponible.'}</p>
+              <div class="logro-orbit__numbers"><span><b>${usuario.xp}</b> XP actuales</span><span><b>${nivelActual.hasta===99999?'∞':nivelActual.hasta}</b> XP objetivo</span></div>
+            </div>
+          </div>
         </div>
 
         <section class="nivel-path" style="--nivel-progress:${Math.max(7,Math.min(93,((nivelActual.id-1)/(niveles.length-1))*100+(pct/100)*(100/(niveles.length-1))))}%">
@@ -10719,7 +10730,7 @@ const Sections = (function(){
   function plantillaNoticia(n, i){ return PLANTILLAS_HOJA.includes(n.plantilla) ? n.plantilla : PLANTILLAS_HOJA[i % 3]; }
   function fotoNoticia(n, cls){
     const u = urlSeguraNoticia(n.imagen);
-    if (u) return '<div class="' + cls + '" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"><img src="' + escapeHtml(u) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'assets/img/hero-alintec-lab-v1.png\';this.parentElement.style.backgroundImage=\'url(assets/img/hero-alintec-lab-v1.png)\';this.parentElement.classList.add(\'news-image-fallback\')"></div>';
+    if (u) return '<div class="' + cls + '" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"><img src="' + escapeHtml(u) + '" alt="" loading="eager" decoding="async" onerror="this.onerror=null;this.src=\'assets/img/hero-alintec-lab-v1.png\';this.parentElement.style.backgroundImage=\'url(assets/img/hero-alintec-lab-v1.png)\';this.parentElement.classList.add(\'news-image-fallback\')"></div>';
     const marca = escapeHtml(String(n.categoriaNombre || n.categoria || 'A').trim().slice(0,1).toUpperCase());
     return '<div class="' + cls + ' hj-noimg" aria-hidden="true"><span>' + marca + '</span></div>';
   }
@@ -12299,25 +12310,25 @@ const Sections = (function(){
         id:'quiz',
         titulo:'Quiz relámpago',
         desc:'Cinco preguntas cortas para repasar conceptos clave de tus cursos.',
-        icono:'i-bolt', color:'#2F6D8D', tiempo:'2 min · 5 preguntas'
+        icono:'i-bolt', color:'#5B8F68', tiempo:'2 min · 5 preguntas'
       },
       {
         id:'detective',
         titulo:'Detective de inocuidad',
         desc:'Observa una situación de planta e identifica los riesgos antes de que sea tarde.',
-        icono:'i-search', color:'#D97757', tiempo:'3 min · caso visual'
+        icono:'i-search', color:'#A8677F', tiempo:'3 min · caso visual'
       },
       {
         id:'orden',
         titulo:'Ordena el proceso',
         desc:'Coloca cada etapa en el orden correcto y refuerza procedimientos esenciales.',
-        icono:'i-clipboard-check', color:'#7567AE', tiempo:'2 min · secuencia'
+        icono:'i-clipboard-check', color:'#7D6AA5', tiempo:'2 min · secuencia'
       },
       {
         id:'flashcards',
         titulo:'Flashcards',
         desc:'Repasa definiciones, microorganismos, normas y controles con tarjetas rápidas.',
-        icono:'i-book-2', color:'#C58A36', tiempo:'3 min · repaso'
+        icono:'i-book-2', color:'#789B5F', tiempo:'3 min · repaso'
       }
     ];
 
@@ -12338,12 +12349,11 @@ const Sections = (function(){
           <span class="rz-xp" id="rz-xp">0 XP acumulados</span>
         </div>
 
-        <div class="retos-note" style="flex-wrap:wrap;">
+        ${miembro ? '' : `<div class="retos-note" style="flex-wrap:wrap;">
           <svg class="ic"><use href="#i-shield-check"/></svg>
-          ${miembro
-            ? '<div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Cada reto suma.</strong> Al superarlo ganas XP para tu nivel (una vez por reto al día) y puedes desbloquear insignias. Tus mejores resultados también se guardan en este dispositivo. No modifica tus certificados.</div>'
-            : '<div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Solo para miembros.</strong> Puedes ver cómo son los retos, pero para resolverlos y sumar XP necesitas una suscripción activa.</div><button class="btn btn--accent btn--sm" type="button" id="retos-suscribirme">Ver suscripción</button>'}
-        </div>
+          <div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Solo para miembros.</strong> Puedes ver cómo son los retos, pero para resolverlos y sumar XP necesitas una suscripción activa.</div>
+          <button class="btn btn--accent btn--sm" type="button" id="retos-suscribirme">Ver suscripción</button>
+        </div>`}
 
         <section class="rz-hero${miembro ? '' : ' is-locked'}" data-reto="historia" role="button" tabindex="0" aria-label="Comenzar el modo historia">
           <div class="rz-hero__txt">
@@ -15787,8 +15797,8 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   --alintec-green-soft:#EAF4EC;
   --alintec-ink:#1D3442;
   --alintec-blue-soft:#EAF1F5;
-  --alintec-coral:#D77A61;
-  --alintec-amber:#D3A44E;
+  --alintec-coral:#A8677F;
+  --alintec-amber:#83A76F;
   --alintec-lilac:#8B7FBA;
 }
 
@@ -15801,11 +15811,11 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .home-greeting__date{flex:0 0 auto;padding:8px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-3);font:650 10px 'JetBrains Mono',monospace;text-transform:capitalize}
 #continuar-widget{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(290px,.82fr)!important;gap:16px!important;margin-bottom:30px!important;background:none!important;border:0!important;box-shadow:none!important}
 .home-course-hero.continuar__main{position:relative;isolation:isolate;min-height:440px;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:26px;background-color:#203746!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important;box-shadow:0 20px 46px rgba(29,52,66,.18)!important}
-.home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(15,35,47,.48)}
+.home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(20,48,33,.45)}
 .home-course-hero__content{display:flex;min-height:440px;flex-direction:column;justify-content:flex-end;width:min(64%,560px);padding:34px 34px 30px;color:#fff}
 .home-course-hero .continuar__eyebrow{color:#B8DBBE!important}
 .home-course-hero .continuar__titulo{color:#fff!important;text-shadow:0 2px 14px rgba(0,0,0,.25)}
-.home-course-hero .continuar__card{margin-top:17px;padding:18px;border:1px solid rgba(255,255,255,.22);border-radius:17px;background:rgba(20,43,55,.84)!important;box-shadow:none!important;backdrop-filter:blur(5px)}
+.home-course-hero .continuar__card{margin-top:17px;padding:18px;border:1px solid rgba(255,255,255,.22);border-radius:17px;background:rgba(35,68,47,.84)!important;box-shadow:none!important;backdrop-filter:blur(5px)}
 .home-course-hero .continuar__clase{background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.18)!important}
 .home-course-hero .continuar__clase-lbl{color:#D9EADB!important}.home-course-hero .continuar__barra{background:rgba(255,255,255,.18)!important}.home-course-hero .continuar__barra-fill{background:var(--alintec-green)!important}
 .home-course-hero .continuar__ir{background:#F7FBF8!important;color:#274B39!important;border:0!important;box-shadow:none!important}.home-course-hero .continuar__ir:hover{background:#EAF4EC!important}
@@ -15813,24 +15823,30 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .home-learning__side{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:14px;min-width:0}
 #continuar-widget .continuar__meta{padding:25px 24px!important;border:1px solid var(--border)!important;border-radius:24px!important;background:var(--surface)!important;box-shadow:0 15px 34px rgba(29,52,66,.08)!important}
 #continuar-widget .continuar__meta-eyebrow{color:var(--alintec-green-deep)!important}#continuar-widget .continuar__paso-ic{background:var(--alintec-green-soft)!important;color:var(--alintec-green-deep)!important}
-.home-kpis.banner__stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:9px!important;width:100%!important}
-.home-kpis .banner__stat{min-width:0!important;padding:14px 11px!important;border:1px solid var(--border)!important;border-radius:15px!important;background:var(--surface)!important;box-shadow:0 9px 22px rgba(29,52,66,.06)!important}
+.home-kpis.banner__stats{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important;width:100%!important}
+.home-kpis .banner__stat{min-width:0!important;min-height:92px;padding:15px 14px!important;border:1px solid var(--border)!important;border-radius:17px!important;background:var(--surface)!important;box-shadow:0 9px 22px rgba(29,52,66,.06)!important}
 .home-kpis .banner__stat::after{content:'Abrir →';margin-top:5px;font-size:6.8px}.home-kpis .banner__stat:hover{transform:translateY(-2px)!important;border-color:rgba(111,175,123,.42)!important}
-.home-kpis .banner__stat-val{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important}.home-kpis .banner__stat:nth-child(1){box-shadow:inset 0 3px var(--alintec-green),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(2){box-shadow:inset 0 3px var(--alintec-coral),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(3){box-shadow:inset 0 3px var(--alintec-amber),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(4){box-shadow:inset 0 3px var(--alintec-lilac),0 9px 22px rgba(29,52,66,.06)!important}
+.home-kpis .banner__stat-val{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important}.home-kpis .banner__stat:nth-child(1){background:linear-gradient(145deg,#FBFDF9,#EAF4EC)!important;box-shadow:inset 0 3px var(--alintec-green),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(2){background:linear-gradient(145deg,#FFFDFE,#F3E8ED)!important;box-shadow:inset 0 3px var(--alintec-coral),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(3){background:linear-gradient(145deg,#FDFEF9,#ECF3E7)!important;box-shadow:inset 0 3px var(--alintec-amber),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(4){background:linear-gradient(145deg,#FEFDFE,#F0ECF7)!important;box-shadow:inset 0 3px var(--alintec-lilac),0 9px 22px rgba(29,52,66,.06)!important}
+.continuar__kpis[hidden]{display:none!important}
 .section-header--home-news{margin:0 0 18px!important;padding:14px 17px!important;border:1px solid var(--border)!important;border-left:4px solid var(--alintec-coral)!important;border-radius:7px 16px 16px 7px!important;background:var(--surface)!important;box-shadow:0 9px 24px rgba(29,52,66,.06)!important}.section-header--home-news .section-header__title{color:var(--text)!important}.section-header--home-news .section-header__badge{background:#FFF5E4!important;border-color:#E9D4A5!important;color:#9B6A21!important}
 
 /* Encabezados de secciones: una sola familia visual, sin degradados. */
-.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{position:relative;background:var(--surface)!important;border:1px solid var(--border)!important;box-shadow:0 14px 34px rgba(29,52,66,.07)!important}
+.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{position:relative;background:linear-gradient(125deg,color-mix(in srgb,var(--alintec-green) 10%,var(--surface)),var(--surface) 62%,color-mix(in srgb,var(--alintec-lilac) 7%,var(--surface)))!important;border:1px solid color-mix(in srgb,var(--alintec-green) 20%,var(--border))!important;box-shadow:0 14px 34px rgba(29,52,66,.07)!important}
 .sec-hero::before,.sec-hero:not(.sec-hero--library)::before,.sec-hero--library::before{top:25px!important;bottom:25px!important;width:4px!important;background:var(--alintec-green)!important}
 .sec-hero::after,.sec-hero:not(.sec-hero--library)::after,.sec-hero--library::after{display:none!important;background:none!important}
 .sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:var(--alintec-green-deep)!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:var(--text)!important}.sec-hero__title::after{width:46px!important;background:var(--alintec-coral)!important}
 
 /* Retos y tarjetas: color por acento, no por fondos saturados. */
-.rz-head{background:#24465A!important}.rz-head::after{display:none!important}.rz-hero{background:#2B4E61!important}.rz-daily{background:var(--surface)!important}.rz-card{background:var(--surface)!important}.rz-card::before{display:none!important}.rz-card::after{background:var(--rz-accent)!important}.rz-card__title{background:color-mix(in srgb,var(--rz-accent) 9%,var(--surface))!important}.rz-card__tile::after{background:rgba(15,35,47,.12)!important}.reto-ranking{background:var(--surface)!important}.reto-podium__card[data-pos="1"]{background:#FFF9EA!important}
+.rz-head{background:linear-gradient(135deg,#426F50,#6A9771)!important}.rz-head::after{display:none!important}.rz-hero{background:linear-gradient(135deg,#456C50,#66886C)!important}.rz-daily{background:var(--surface)!important}.rz-card{background:var(--surface)!important}.rz-card::before{display:none!important}.rz-card::after{background:var(--rz-accent)!important}.rz-card__title{background:color-mix(in srgb,var(--rz-accent) 9%,var(--surface))!important}.rz-card__tile::after{background:rgba(15,35,47,.12)!important}.reto-ranking{background:var(--surface)!important}.reto-podium__card[data-pos="1"]{background:#FFF9EA!important}
 
 /* Biblioteca/PDF: retirar velos verdosos y conservar fotografía natural. */
 .pdfs-grid .pdf-card__top::after{background:rgba(18,44,63,.08)!important}.pdfs-grid .pdf-card__cover-copy{background:rgba(255,255,255,.94)!important}.libro-feature,.bib-shelf-title{background:var(--surface)!important}
-.port__img img,.hj-img img{display:block;width:100%;height:100%;object-fit:cover}.news-image-fallback img{object-position:center 38%}.port--bicolor .port__img img{filter:grayscale(1) contrast(1.05)}
+.port__img img,.hj-img img{display:block;width:100%;height:100%;object-fit:cover}.news-image-fallback img{object-position:center 38%}.port__shade{background:linear-gradient(180deg,rgba(9,24,17,.06) 0%,rgba(9,24,17,0) 48%,rgba(9,24,17,.82) 100%)!important}.port--bicolor .port__img,.port--bicolor .port__img img{filter:none!important}
+
+/* Logros: medidor circular, no una barra de progreso convencional. */
+.logro-hero{background:linear-gradient(135deg,#3E6C4D,#648D6D)!important}.logro-hero__xp-bar,.logro-hero__xp-text{display:none!important}.logro-orbit{position:relative;z-index:1;display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:26px;padding:18px;border:1px solid rgba(255,255,255,.15);border-radius:22px;background:rgba(255,255,255,.07)}
+.logro-orbit__gauge{position:relative;width:138px;aspect-ratio:1;display:grid;place-items:center}.logro-orbit__gauge svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}.logro-orbit__gauge circle{fill:none;stroke-width:9}.logro-orbit__track{stroke:rgba(255,255,255,.13)}.logro-orbit__value{stroke:#A9D3AF;stroke-linecap:round;transition:stroke-dasharray .8s ease}.logro-orbit__gauge>span{display:flex;flex-direction:column;align-items:center}.logro-orbit__gauge strong{font:800 27px 'Plus Jakarta Sans',sans-serif;color:#fff}.logro-orbit__gauge small{font:700 8px 'JetBrains Mono',monospace;color:rgba(255,255,255,.62);letter-spacing:1px;text-transform:uppercase}
+.logro-orbit__copy{min-width:0}.logro-orbit__eyebrow{display:block;margin-bottom:5px;color:#B8DBBE;font:750 9px 'JetBrains Mono',monospace;letter-spacing:1.3px;text-transform:uppercase}.logro-orbit__copy>strong{display:block;color:#fff;font:800 clamp(19px,2vw,27px) 'Plus Jakarta Sans',sans-serif}.logro-orbit__copy p{max-width:620px;margin:8px 0 15px;color:rgba(255,255,255,.72);font-size:12px;line-height:1.55}.logro-orbit__copy p b{color:#fff}.logro-orbit__numbers{display:flex;gap:10px;flex-wrap:wrap}.logro-orbit__numbers span{padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(11,33,25,.18);color:rgba(255,255,255,.7);font:650 9px 'JetBrains Mono',monospace}.logro-orbit__numbers b{color:#fff}
 
 /* Noche: carbón neutro; el verde aparece sólo como acento. */
 :root[data-theme="night"] body{background:#0D141B!important}:root[data-theme="night"] body::before{display:none!important}
@@ -15840,7 +15856,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .home-greeting__date{background:#131F29}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
 
 @media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}}
-@media(max-width:680px){.home-greeting{align-items:flex-start;flex-direction:column}.home-greeting__date{display:none}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:680px){.home-greeting{align-items:flex-start;flex-direction:column}.home-greeting__date{display:none}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
