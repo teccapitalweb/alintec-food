@@ -3088,6 +3088,66 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
   .thx-card{padding:16px 13px}
   .thx-itrow{grid-template-columns:1fr 48px 92px 38px;gap:6px}
 }
+
+/* ── Inicio: "Continúa tu curso" ── */
+/* ═══════════════════════════════════════════════════════════════════
+   Inicio · "Continúa tu curso" (datos reales: curso, siguiente clase,
+   progreso, próximos pasos y KPIs de la cuenta). Se oculta si el
+   usuario aún no puede continuar ningún curso.
+   ═══════════════════════════════════════════════════════════════════ */
+.continuar{
+  display:grid;grid-template-columns:1.35fr 1fr;gap:18px;margin-bottom:0;
+}
+.continuar__main{
+  position:relative;isolation:isolate;overflow:hidden;padding:30px 32px;border-radius:24px;color:#fff;
+  background:linear-gradient(150deg,#0f2f1e 0%,#174a2e 55%,#0d2718 100%);
+  box-shadow:0 18px 44px rgba(9,38,25,.28);
+}
+.continuar__main::before{content:'';position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 1px,transparent 1px 46px)}
+.continuar__eyebrow{display:block;margin-bottom:10px;font:800 10px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#9BD9AE}
+.continuar__titulo{margin:0 0 20px;font:800 clamp(22px,2.6vw,28px)/1.15 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;color:#fff}
+.continuar__card{padding:20px 22px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px)}
+.continuar__card-lbl{display:block;margin-bottom:8px;font:800 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.62)}
+.continuar__card-curso{margin:0 0 14px;font:800 17px/1.3 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em;color:#fff}
+.continuar__clase{
+  display:flex;flex-direction:column;gap:3px;align-items:flex-start;width:100%;padding:12px 14px;margin-bottom:14px;
+  border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);cursor:pointer;text-align:left;transition:.15s ease;
+}
+.continuar__clase:hover{background:rgba(255,255,255,.14)}
+.continuar__clase-lbl{font:800 9px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#9BD9AE}
+.continuar__clase-nombre{font:700 13px/1.35 'Plus Jakarta Sans',sans-serif;color:#fff}
+.continuar__barra{height:6px;border-radius:3px;background:rgba(255,255,255,.16);overflow:hidden;margin-bottom:8px}
+.continuar__barra-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#7FCB4A,#F7941D);transition:width .5s ease}
+.continuar__barra-txt{display:flex;justify-content:space-between;font-size:11.5px;color:rgba(255,255,255,.72);margin-bottom:16px}
+.continuar__ir{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:999px;background:#fff;color:#0f2f1e;font:800 13px 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:transform .18s ease}
+.continuar__ir:hover{transform:translateY(-2px)}
+.continuar__ir .ic{width:14px;height:14px}
+.continuar__link{display:inline-flex;align-items:center;gap:6px;margin-top:16px;color:rgba(255,255,255,.78);font-size:12.5px;font-weight:600;text-decoration:none}
+.continuar__link:hover{color:#fff}
+.continuar__link .ic{width:13px;height:13px}
+
+.continuar__meta{padding:26px 24px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:0 2px 8px rgba(10,10,10,.05)}
+.continuar__meta-eyebrow{display:inline-flex;align-items:center;gap:6px;font:800 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+.continuar__meta-eyebrow .ic{width:12px;height:12px}
+.continuar__meta-titulo{margin:10px 0 18px;font:800 18px/1.25 'Plus Jakarta Sans',sans-serif;letter-spacing:-.015em;color:var(--text)}
+.continuar__pasos{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:14px}
+.continuar__paso{display:flex;gap:12px;align-items:flex-start}
+.continuar__paso-ic{flex-shrink:0;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+.continuar__paso.is-hecho .continuar__paso-ic{background:color-mix(in srgb,var(--success,#43A047) 16%,transparent);color:var(--success,#43A047)}
+.continuar__paso-ic .ic{width:14px;height:14px}
+.continuar__paso-txt small{display:block;margin-bottom:2px;font:800 9px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+.continuar__paso-txt strong{display:block;font-size:13px;font-weight:700;color:var(--text);line-height:1.35}
+.continuar__kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding-top:16px;border-top:1px solid var(--border)}
+.continuar__kpi{display:flex;flex-direction:column;gap:2px;font-size:10.5px;font-weight:600;color:var(--text-3)}
+.continuar__kpi span{font:800 19px 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+
+@media(max-width:900px){
+  .continuar{grid-template-columns:1fr}
+  .continuar__main{padding:24px}
+}
+@media(max-width:480px){
+  .continuar__kpis{grid-template-columns:repeat(2,1fr);row-gap:14px}
+}
 </style>
 <script src="assets/js/avatares.js"></script>
 </head>
@@ -3864,7 +3924,43 @@ window.__setDisplayName = async (nombre) => {
         </div>
       </section>
 
-      <div style="height:22px"></div>
+      <!-- Continúa tu curso: retoma justo donde te quedaste (datos reales) -->
+      <section class="continuar" id="continuar-widget" style="display:none;">
+        <div class="continuar__main">
+          <span class="continuar__eyebrow" id="continuar-eyebrow">TU PROGRESO</span>
+          <h2 class="continuar__titulo" id="continuar-titulo">Continúa tu curso.</h2>
+          <div class="continuar__card" id="continuar-card">
+            <span class="continuar__card-lbl" id="continuar-card-lbl">CURSO ACTUAL</span>
+            <h3 class="continuar__card-curso" id="continuar-curso"></h3>
+            <button type="button" class="continuar__clase" id="continuar-clase-btn">
+              <span class="continuar__clase-lbl" id="continuar-clase-lbl"></span>
+              <span class="continuar__clase-nombre" id="continuar-clase-nombre"></span>
+            </button>
+            <div class="continuar__barra">
+              <div class="continuar__barra-fill" id="continuar-barra-fill"></div>
+            </div>
+            <div class="continuar__barra-txt">
+              <span id="continuar-barra-txt"></span><span id="continuar-barra-pct"></span>
+            </div>
+            <button type="button" class="continuar__ir" id="continuar-ir-btn"><svg class="ic"><use href="#i-play"/></svg><span id="continuar-ir-txt">Continuar</span></button>
+          </div>
+          <a href="#" class="continuar__link" data-section="cursos">Ver todos los cursos <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+        </div>
+        <div class="continuar__meta">
+          <span class="continuar__meta-eyebrow"><svg class="ic"><use href="#i-bolt"/></svg>TU SIGUIENTE META</span>
+          <h3 class="continuar__meta-titulo" id="continuar-meta-titulo">Completa tu siguiente clase</h3>
+          <ul class="continuar__pasos" id="continuar-pasos"></ul>
+          <div class="continuar__kpis">
+            <div class="continuar__kpi"><span id="continuar-kpi-cursos">0</span>Cursos</div>
+            <div class="continuar__kpi"><span id="continuar-kpi-clases">0</span>Clases</div>
+            <div class="continuar__kpi"><span id="continuar-kpi-pdfs">0</span>PDFs</div>
+            <div class="continuar__kpi"><span id="continuar-kpi-pro">0</span>Pro</div>
+          </div>
+        </div>
+      </section>
+
+      <div style="height:22px" id="continuar-spacer"></div>
+
 
       <!-- Noticias diarias (reales desde Firestore) -->
       <section>
@@ -8446,8 +8542,97 @@ const Sections = (function(){
       setBar('com-bar', 0);
       if (comBtn) comBtn.textContent = 'Crear mi tarjeta';
     }
+
+    try { await actualizarContinuarWidget(); } catch (e) {}
   }
   window.__actualizarWidgetsActividad = actualizarWidgetsActividad;
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🏠 INICIO · "Continúa tu curso" (retoma donde te quedaste, con
+  //     datos reales: mismo curso/progreso que usa Mis cursos).
+  // ═══════════════════════════════════════════════════════════════
+  async function actualizarContinuarWidget() {
+    const wrap = document.getElementById('continuar-widget');
+    const spacer = document.getElementById('continuar-spacer');
+    if (!wrap) return;
+    try { if (!_cursosLoaded) await cargarCursosBackend?.(); } catch (e) {}
+
+    const esVipUser = window.UserState?.modo === 'vip' || (typeof esAdminReal === 'function' && esAdminReal()) || window.UserState?.isAdmin;
+    const disponibles = (cursos || [])
+      .map((c, idx) => ({ c, idx }))
+      .filter(({ c, idx }) => cursoDesbloqueado(idx, c) && Array.isArray(c.sesiones) && c.sesiones.length);
+
+    // Curso "actual": el de mayor avance sin terminar; si ninguno tiene
+    // avance todavía, el primer curso disponible (invita a comenzar).
+    let elegido = null, mejorAvance = -1;
+    disponibles.forEach(({ c }) => {
+      const p = getProgresoCurso(c.id);
+      if (p.completado) return;
+      if (p.clasesVistas.length > mejorAvance) { mejorAvance = p.clasesVistas.length; elegido = c; }
+    });
+    if (!elegido) { const libre = disponibles.find(({ c }) => !getProgresoCurso(c.id).completado); elegido = libre ? libre.c : null; }
+
+    if (!elegido) { wrap.style.display = 'none'; if (spacer) spacer.style.display = ''; return; }
+
+    const progreso = getProgresoCurso(elegido.id);
+    const sesiones = Array.isArray(elegido.sesiones) ? elegido.sesiones : [];
+    let siguienteClase = sesiones.findIndex((s, i) => !progreso.clasesVistas.includes(s.numero || (i + 1)) && claseDesbloqueada(elegido.id, i, sesiones));
+    if (siguienteClase < 0 && sesiones.length) siguienteClase = Math.max(0, sesiones.length - 1);
+    const numeroSiguiente = siguienteClase >= 0 ? (sesiones[siguienteClase].numero || (siguienteClase + 1)) : 0;
+    const esInicio = progreso.clasesVistas.length === 0;
+    const esUltima = siguienteClase === sesiones.length - 1;
+
+    wrap.style.display = '';
+    if (spacer) spacer.style.display = 'none';
+
+    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+
+    setTxt('continuar-curso', elegido.titulo || '');
+    setTxt('continuar-clase-lbl', esInicio ? 'PRIMERA CLASE' : `SIGUIENTE CLASE · ${numeroSiguiente} DE ${sesiones.length}`);
+    setTxt('continuar-clase-nombre', sesiones[siguienteClase]?.titulo || `Clase ${numeroSiguiente}`);
+    setTxt('continuar-ir-txt', esInicio ? 'Comenzar' : 'Continuar');
+
+    const pct = progresoCursoPct(elegido.id, sesiones.length);
+    setTxt('continuar-barra-txt', `${progreso.clasesVistas.length} de ${sesiones.length} clases vistas`);
+    setTxt('continuar-barra-pct', `${pct}%`);
+    const fill = document.getElementById('continuar-barra-fill'); if (fill) fill.style.width = pct + '%';
+
+    const abrir = () => window.abrirClaseAlintec(elegido.id, siguienteClase);
+    const btnClase = document.getElementById('continuar-clase-btn'); if (btnClase) btnClase.onclick = abrir;
+    const btnIr = document.getElementById('continuar-ir-btn'); if (btnIr) btnIr.onclick = abrir;
+
+    // "Tu siguiente meta": AHORA / DESPUÉS / AL COMPLETAR
+    const pasos = document.getElementById('continuar-pasos');
+    if (pasos) {
+      const filas = [
+        { small: 'AHORA', icon: 'i-play', txt: esInicio ? `Comienza «${elegido.titulo}»` : `Termina la clase ${numeroSiguiente} de «${elegido.titulo}»` },
+        { small: 'DESPUÉS', icon: 'i-arrow-right', txt: esUltima ? 'Presenta la evaluación final del curso' : `Avanza a la clase ${numeroSiguiente + 1} de ${sesiones.length}` },
+        { small: 'AL COMPLETAR', icon: 'i-trophy', txt: 'Obtén tu certificado y desbloquea el siguiente curso' },
+      ];
+      pasos.innerHTML = filas.map(f => `
+        <li class="continuar__paso">
+          <span class="continuar__paso-ic"><svg class="ic"><use href="#${f.icon}"/></svg></span>
+          <span class="continuar__paso-txt"><small>${f.small}</small><strong>${f.txt}</strong></span>
+        </li>`).join('');
+    }
+    setTxt('continuar-meta-titulo', esInicio ? `Comienza «${elegido.titulo}»` : `Avanza en «${elegido.titulo}»`);
+
+    // KPIs reales (mismos cálculos que usa el resto del panel)
+    const cursosCompletados = disponibles.filter(({ c }) => getProgresoCurso(c.id).completado).length;
+    let clasesVistasTotal = 0;
+    disponibles.forEach(({ c }) => { clasesVistasTotal += getProgresoCurso(c.id).clasesVistas.length; });
+    setTxt('continuar-kpi-cursos', `${cursosCompletados}/${disponibles.length}`);
+    setTxt('continuar-kpi-clases', String(clasesVistasTotal));
+    try { setTxt('continuar-kpi-pdfs', String((typeof _allMaterialesFromCursos === 'function' ? _allMaterialesFromCursos() : []).length)); } catch (e) { setTxt('continuar-kpi-pdfs', '0'); }
+    let proUsadas = 0;
+    if (esVipUser) {
+      const proKeys = ['alintec:iper:current', 'alintec:oee:current', 'alintec:ats:current', 'alintec:logi:current'];
+      proKeys.forEach(k => { try { if (localStorage.getItem(k)) proUsadas++; } catch (e) {} });
+    }
+    setTxt('continuar-kpi-pro', `${proUsadas}/5`);
+  }
+  window.__actualizarContinuarWidget = actualizarContinuarWidget;
+
 
   async function renderCertificados(container){
     container.innerHTML = '<div class="fade-up" style="padding:64px 24px;text-align:center;color:var(--text-2);font-size:14px;">Cargando tus certificados…</div>';
@@ -9667,6 +9852,15 @@ const Sections = (function(){
           '4.1.4 Bis La etiqueta de los productos preenvasados que no contengan los sellos y leyendas precautorias puede declararlo únicamente de forma escrita mediante la frase "Este producto no contiene sellos ni leyendas" y no debe utilizar elementos gráficos o descriptivos alusivos a los mismos.',
           '4.1.5 Los productos preenvasados que ostenten uno o más sellos de advertencia o la leyenda de edulcorantes no deben: a) incluir en la etiqueta personajes infantiles, animaciones, dibujos animados, celebridades, deportistas o mascotas, elementos interactivos tales como juegos visual-espaciales o descargas digitales, que estando dirigidos a niños inciten, promuevan o fomenten el consumo, compra o elección de productos con exceso de nutrimentos críticos o con edulcorantes; y b) hacer referencia en la etiqueta a elementos ajenos al mismo con las mismas finalidades del inciso anterior.'
         ]},
+        {titulo:'5. Cálculos de energía', parrafos:[
+          'La cantidad de energía que debe declararse debe calcularse utilizando los siguientes factores de conversión: hidratos de carbono disponibles y proteínas, 4 kcal/g (17 kJ/g); grasas, 9 kcal/g (37 kJ/g); alcohol (etanol), 7 kcal/g (29 kJ/g); polioles (sorbitol, xilitol, maltitol, isomalt, isomaltitol, lactitol, manitol), 2.4 kcal/g (10 kJ/g); eritritol y alulosa, 0 kcal/g; tagatosa, 1.5 kcal/g (6.276 kJ/g).',
+          'Cuando se hace un cálculo teórico del contenido energético se deben usar los factores de conversión específicos para polioles, eritritol, tagatosa y alulosa y no calcularse dentro de los hidratos de carbono disponibles.'
+        ]},
+        {titulo:'6. Declaraciones de propiedades condicionales', parrafos:[
+          'Se permiten las siguientes declaraciones de propiedades condicionadas a la particular condición asignada a cada una de ellas: a) puede indicarse que un alimento ha adquirido un valor nutritivo especial o superior gracias a la adición de nutrimentos, tales como vitaminas, nutrimentos inorgánicos (minerales) y aminoácidos, sólo si dicha adición ha sido hecha sobre la base de consideraciones nutrimentales de acuerdo con el marco jurídico aplicable.',
+          'c) Términos como "orgánico", "ecológico", "biológico" y las denominaciones con prefijos "bio" y "eco", deben ajustarse a lo establecido en la Ley de Productos Orgánicos, y aplicar los demás términos que se establezcan en alguna otra Norma Oficial Mexicana o marco jurídico aplicable.',
+          'e) Pueden utilizarse declaraciones de propiedades que destaquen la ausencia o no adición de determinadas sustancias a los alimentos, siempre que no sean engañosas y la sustancia no esté sujeta a requisitos específicos en ninguna norma, sea una de las que los consumidores esperan encontrar normalmente en el alimento, no haya sido sustituida por otra que confiera al alimento características equivalentes a menos que la naturaleza de la sustitución se declare explícitamente con igual prominencia, y sea un ingrediente cuya presencia o adición en el alimento esté permitida.'
+        ]},
         {titulo:'7. Leyendas precautorias', parrafos:[
           '7.1.3 Si la lista de ingredientes incluye edulcorantes, se debe colocar la leyenda precautoria frontal en letras mayúsculas "CONTIENE EDULCORANTES, NO RECOMENDABLE EN NIÑOS".',
           '7.1.4 Cuando el producto preenvasado contenga cafeína adicionada dentro de la lista de ingredientes en cualquier cantidad, se debe incluir la leyenda precautoria en letras mayúsculas "CONTIENE CAFEÍNA EVITAR EN NIÑOS", la cual forma parte del sistema de etiquetado frontal, conforme se establece en el Apéndice A (Normativo).'
@@ -9711,35 +9905,51 @@ const Sections = (function(){
           '5.5 Control de operaciones','5.6 Control de materias primas','5.7 Control del envasado',
           '5.8 Control del agua en contacto con los alimentos','5.9 Mantenimiento y limpieza','5.10 Control de plagas',
           '5.11 Manejo de residuos','5.12 Salud e higiene del personal','5.13 Transporte','5.14 Capacitación'
+        ]},
+        {titulo:'5.1 Instalaciones y áreas', parrafos:[
+          'Los pisos, paredes y techos del área de producción o elaboración deben ser de fácil limpieza, sin grietas o roturas.',
+          'Las puertas y ventanas de las áreas de producción o elaboración deben estar provistas de protecciones para evitar la entrada de lluvia, fauna nociva o plagas.',
+          'Debe evitarse que las tuberías, conductos, rieles, vigas, cables, etc., pasen por encima de tanques y áreas de producción donde el producto sin envasar esté expuesto.'
+        ]},
+        {titulo:'5.12 Salud e higiene del personal', parrafos:[
+          '5.12.1 Debe excluirse de cualquier operación en la que pueda contaminar al producto, a cualquier persona que presente signos como: tos frecuente, secreción nasal, diarrea, vómito, fiebre, ictericia o lesiones en áreas corporales que entren en contacto directo con los alimentos.',
+          '5.12.4 Al inicio de las labores, al regresar de cada ausencia y en cualquier momento cuando las manos puedan estar sucias o contaminadas, toda persona que opere en las áreas de producción o elaboración debe lavarse las manos.',
+          '5.12.5 Si se emplean guantes, éstos deben mantenerse limpios e íntegros. El uso de guantes no exime el lavado de las manos antes de su colocación.'
         ]}
       ]
     },
     {
       id:'nom-210', autor:'Secretaría de Salud',
       titulo:'NOM-210-SSA1-2014',
-      subtitulo:'Métodos de prueba microbiológicos para indicadores y microorganismos patógenos',
+      subtitulo:'Productos y servicios. Métodos de prueba microbiológicos. Determinación de microorganismos indicadores. Determinación de microorganismos patógenos',
       portada:'assets/img/libros/nom-210-portada.png',
       categoria:'Microbiología de Alimentos', color:'#315A78', icono:'i-search',
       fuenteNombre:'Diario Oficial de la Federación · 26 de junio de 2015',
       fuenteUrl:'https://dof.gob.mx/nota_detalle_popup.php?codigo=5398468',
-      resumen:'Edición de consulta de la norma mexicana que reúne criterios y métodos oficiales para detectar microorganismos indicadores y patógenos en alimentos.',
+      resumen:'La norma mexicana que define los métodos oficiales para detectar Salmonella, E. coli, S. aureus y otros microorganismos indicadores y patógenos en alimentos, bebidas y agua.',
       paginas:[
-        {titulo:'Índice de consulta', lista:true, parrafos:[
-          '1. Objetivo y campo de aplicación','2. Referencias','3. Definiciones','4. Símbolos y abreviaturas',
-          '5. Disposiciones generales','Apéndice A · Microorganismos indicadores','Apéndice B · Salmonella spp.',
-          'Apéndice C · Staphylococcus aureus','Apéndices D–J · Métodos para patógenos específicos'
+        {titulo:'Índice', lista:true, parrafos:[
+          '1. Objetivo y Campo de Aplicación','2. Referencias','3. Definiciones','4. Símbolos y Abreviaturas',
+          '5. Consideraciones Generales','6. Equipos','7. Medios de Cultivo','8. Cepas de Referencia',
+          '9. Concordancia con Normas Internacionales y Mexicanas','10. Bibliografía','11. Vigilancia de la Norma','12. Vigencia'
         ]},
-        {titulo:'1. Objetivo y alcance', parrafos:[
-          'Esta Norma Oficial Mexicana establece los métodos de prueba microbiológicos para la determinación de microorganismos indicadores y de microorganismos patógenos en productos y servicios.',
-          'Los procedimientos están destinados a laboratorios que realizan control sanitario y verificación microbiológica de alimentos, bebidas, agua y materias primas dentro de su campo de aplicación.'
+        {titulo:'1. Objetivo y Campo de Aplicación', parrafos:[
+          'Esta Norma tiene por objeto establecer los métodos generales y alternativos de prueba para la determinación de los siguientes indicadores microbianos y patógenos en alimentos, bebidas y agua para uso y consumo humano: Salmonella spp., S. aureus, L. monocytogenes, Enterococos, Coliformes Fecales y E. coli.',
+          'Esta Norma es de observancia obligatoria en el territorio nacional para las personas físicas o morales que se dedican a efectuar los métodos a que se refiere el punto anterior en alimentos para consumo nacional o de importación y productos de exportación.'
         ]},
-        {titulo:'Preparación y control del análisis', parrafos:[
-          'Antes de iniciar un método debe verificarse la identificación de la muestra, la integridad del recipiente, la temperatura de recepción y la trazabilidad de reactivos, medios de cultivo y controles.',
-          'La técnica seleccionada, las diluciones, los tiempos y las temperaturas deben corresponder al microorganismo investigado y quedar documentados en la hoja de trabajo del laboratorio.'
+        {titulo:'3. Definiciones (selección)', parrafos:[
+          '3.3 Coliformes fecales: bacilos cortos Gram negativos, aerobios o anaerobios facultativos, que fermentan la lactosa con producción de ácido y de gas dentro de las 48 h a 44.5 °C.',
+          '3.7 Escherichia coli (E. coli): microorganismo que está presente en el intestino del hombre y animales de sangre caliente, por lo que su presencia en una muestra de alimento no es deseable.',
+          '3.19 Patógeno: microorganismo capaz de producir una enfermedad.'
         ]},
-        {titulo:'Lectura e interpretación', parrafos:[
-          'Los resultados deben interpretarse únicamente cuando los controles del método sean satisfactorios. Las colonias presuntivas requieren las pruebas confirmatorias indicadas en el apéndice aplicable.',
-          'El informe debe expresar el método utilizado, la unidad de reporte, el límite de detección cuando corresponda y cualquier desviación que pueda afectar la validez del resultado.'
+        {titulo:'Apéndices normativos', lista:true, parrafos:[
+          'Apéndice A · Método de referencia para el aislamiento de Salmonella spp.',
+          'Apéndice B · Método de referencia para la estimación de la cuenta de S. aureus',
+          'Apéndice C · Método de referencia para el aislamiento de L. monocytogenes',
+          'Apéndices D–G · Métodos para determinación de Enterococos (alternativo, referencia, filtración, monitoreo)',
+          'Apéndice H · Estimación de densidad de coliformes fecales y E. coli',
+          'Apéndice I · E. coli en productos de pesca',
+          'Apéndice J · Enumeración de E. coli β-glucuronidasa a 44 °C'
         ]}
       ]
     }
@@ -13222,7 +13432,7 @@ function initNav(){
   });
 
   document.querySelectorAll('[data-open-tool]').forEach(btn=>btn.addEventListener('click',()=>{const t=btn.dataset.openTool;if(Tools[t])Tools[t].open();}));
-  document.querySelectorAll('.section-header__link[data-section], .widget [data-section], .banner__stat[data-section]').forEach(el=>{el.addEventListener('click',e=>{e.preventDefault();navigateToSection(el.dataset.section);});});
+  document.querySelectorAll('.section-header__link[data-section], .widget [data-section], .banner__stat[data-section], .continuar [data-section]').forEach(el=>{el.addEventListener('click',e=>{e.preventDefault();navigateToSection(el.dataset.section);});});
 
   // ─── Botones del DOM estático (topbar, sidebar, widgets siempre presentes) ───
   document.getElementById('btn-logout')?.addEventListener('click',openLogoutModal);
@@ -13899,7 +14109,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   border-radius:11px;
   box-shadow:0 16px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);
   padding:5px;
-  z-index:50;
+  z-index:400;
   max-height:280px;overflow-y:auto;
   opacity:0;visibility:hidden;transform:translateY(-6px);
   transition:opacity .15s ease, transform .15s ease, visibility .15s ease;
@@ -13909,6 +14119,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   box-shadow:0 16px 40px rgba(18,52,26,.18),0 0 0 1px rgba(18,52,26,.04);
 }
 .dd-fancy__menu.is-open{opacity:1;visibility:visible;transform:translateY(0)}
+/* En PDFs y material el filtro de áreas queda justo encima de la biblioteca: más aire para que el menú no toque las portadas */
+.toolbar:has(#pdf-area-trigger){margin-bottom:38px}
 .dd-fancy__menu::-webkit-scrollbar{width:6px}
 .dd-fancy__menu::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
 .dd-fancy__item{
