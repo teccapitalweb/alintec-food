@@ -10689,7 +10689,7 @@ const Sections = (function(){
         _noticiasCargadas = true;
         return;
       }
-      grid.innerHTML = '<div class="portadas">' + arts.map((n, i) => portadaHTML(n, i)).join('') + '</div>';
+      grid.innerHTML = '<div class="hojas hojas--tarjetas">' + arts.map((n, i) => hojaHTML(n, i, false)).join('') + '</div>';
       grid.querySelectorAll('[data-noticia]').forEach(el => {
         el.addEventListener('click', () => abrirNoticia(el.dataset.noticia));
         el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirNoticia(el.dataset.noticia); } });
@@ -10700,7 +10700,7 @@ const Sections = (function(){
       grid.innerHTML = '<div class="foro-empty" style="grid-column:1/-1;">No se pudieron cargar las noticias.</div>';
     }
   };
-  // Las noticias se ven como portadas de revista (lista) y, al tocarlas, como una hoja de periódico completa.
+  // Las noticias se muestran directamente como hojas de periódico; al tocarlas se abre una lectura más amplia.
   // La plantilla la elige el administrador (verde, naranja, bicolor); las noticias sin plantilla se reparten entre las tres.
   const PLANTILLAS_HOJA = ['verde','naranja','bicolor'];
   function cortarTexto(t, max){
@@ -10738,20 +10738,6 @@ const Sections = (function(){
   function fechaNoticia(n){
     try { const d = (n.createdAt && n.createdAt.toDate) ? n.createdAt.toDate() : new Date(n.createdAt || n.fechaPublicacion || Date.now()); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return ''; }
   }
-  // Portada de revista para la lista de noticias: foto grande, cabecera de la plantilla y titular encima
-  function portadaHTML(n, i){
-    const tpl = plantillaNoticia(n, i);
-    const cat = escapeHtml(n.categoriaNombre || n.categoria || 'Actualidad');
-    const fuente = escapeHtml(n.fuente || 'Alintec Food');
-    const primera = cortarTexto((parrafosNoticia(n)[0] || ''), 110);
-    return '<div class="port-wrap"><article class="port port--' + tpl + '" data-noticia="' + escapeHtml(n.id) + '" role="button" tabindex="0" aria-label="' + escapeHtml(n.titulo || '') + '">'
-      + fotoNoticia(n, 'port__img') + '<div class="port__shade"></div>'
-      + '<header class="port__mast"><span>Alintec</span> <span>Actualidad</span></header>'
-      + '<div class="port__body"><span class="port__cat">' + cat + '</span><h3 class="port__title">' + escapeHtml(cortarTexto(n.titulo || '', 130)) + '</h3>'
-      + (primera ? '<p class="port__deck">' + escapeHtml(primera) + '</p>' : '')
-      + '<span class="port__go">Leer nota <svg class="ic"><use href="#i-arrow-right"/></svg></span></div>'
-      + '</article><p class="port-fecha">' + escapeHtml(fechaNoticia(n)) + ' · ' + fuente + '</p></div>';
-  }
   // Hoja de periódico completa (ventana de lectura): texto en columnas justificadas con capitular
   function hojaHTML(n, i, grande){
     const tpl = plantillaNoticia(n, i);
@@ -10763,17 +10749,21 @@ const Sections = (function(){
     const leer = /^https:\/\//i.test(String(n.link || ''))
       ? '<a class="hj-leer" href="' + escapeHtml(n.link) + '" target="_blank" rel="noopener noreferrer">Leer nota completa en ' + fuente + ' ↗</a>'
       : '<span class="hj-leer hj-leer--off">Fuente: ' + fuente + '</span>';
-    const texto = parrafos.length ? parrafos.map(l => '<p>' + escapeHtml(l) + '</p>').join('') : '<p>Toca «Leer nota completa» para ver el artículo original.</p>';
+    const texto = parrafos.length ? parrafos.map(l => '<p>' + escapeHtml(l) + '</p>').join('') : '<p>No hay un resumen disponible. Puedes consultar la fuente original al final de la nota.</p>';
+    const resumenTarjeta = cortarTexto(parrafos.join(' '), 430);
+    const cuerpo = grande
+      ? '<div class="hj-txt" lang="es">' + texto + '</div><p class="hj-by">Por ' + fuente + '</p>'
+      : '<div class="hj-summary" lang="es"><p>' + escapeHtml(resumenTarjeta || 'Consulta los puntos principales de esta noticia y abre la fuente original si deseas conocer todos los detalles.') + '</p></div>';
     const aparte = escapeHtml(cortarTexto(parrafos[0] || '', 150));
     const abre = grande ? '' : ' data-noticia="' + escapeHtml(n.id) + '" role="button" tabindex="0"';
-    return '<article class="hoja hoja--' + tpl + (grande ? ' hoja--grande' : '') + '"' + abre + '><div class="hj-paper">'
+    const pie = grande ? leer : '<span class="hj-leer">Ver resumen ampliado →</span>';
+    return '<article class="hoja hoja--' + tpl + (grande ? ' hoja--grande' : ' hoja--tarjeta') + '"' + abre + '><div class="hj-paper">'
       + '<div class="hj-top"><span>alitecfood.com</span><span>' + escapeHtml(fecha) + '</span></div>'
       + '<header class="hj-mast"><h3 class="hj-brand"><span>Alintec</span> <span>Actualidad</span></h3><div class="hj-lema">' + cat + ' — <em>' + fuente + '</em></div></header>'
       + '<figure class="hj-fig">' + fotoNoticia(n, 'hj-img') + '<figcaption class="hj-cap"><span class="hj-tag">' + cat + '</span><strong>' + titulo + '</strong></figcaption></figure>'
-      + '<div class="hj-body"><h4 class="hj-title">' + titulo + '</h4><div class="hj-deck">' + fuente + ' · ' + escapeHtml(noticiaTiempoRel(n.createdAt || n.fechaPublicacion)) + '</div>'
-      + '<div class="hj-txt" lang="es">' + texto + '</div><p class="hj-by">Por ' + fuente + '</p></div>'
-      + (aparte ? '<aside class="hj-box"><span class="hj-tag">Lo esencial</span><p lang="es">' + aparte + '</p></aside>' : '')
-      + '<footer class="hj-foot">' + leer + '<span class="hj-page">' + String((i || 0) + 1).padStart(2, '0') + '</span></footer>'
+      + '<div class="hj-body"><h4 class="hj-title">' + titulo + '</h4><div class="hj-deck">' + fuente + ' · ' + escapeHtml(noticiaTiempoRel(n.createdAt || n.fechaPublicacion)) + '</div>' + cuerpo + '</div>'
+      + (grande && aparte ? '<aside class="hj-box"><span class="hj-tag">Lo esencial</span><p lang="es">' + aparte + '</p></aside>' : '')
+      + '<footer class="hj-foot">' + pie + '<span class="hj-page">' + String((i || 0) + 1).padStart(2, '0') + '</span></footer>'
       + '</div></article>';
   }
   // Solo enlaces https; se codifican los caracteres que podrían romper el CSS url('...')
@@ -15115,7 +15105,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
    (verde, naranja, bicolor). El texto va en columnas justificadas con capitular,
    como en las portadas de referencia. La plantilla la elige el administrador.
    ═══════════════════════════════════════════════════════════════════ */
-.hojas{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:28px 26px;align-items:start}
+.hojas{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:38px 28px;align-items:start;padding:4px 2px 8px}
 .hoja{
   --hj:#154034;--hj-on:#F1EBD6;--hj2:#154034;--hj-k:#154034;--hj-h:#154034;
   --hj-paper:#FFFEFA;--hj-ink:#1d1d1b;--hj-soft:#5a5a54;--hj-box:#ECE9DC;
@@ -15150,6 +15140,8 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .hj-txt{column-count:2;column-gap:16px;column-rule:1px solid color-mix(in srgb,var(--hj-ink) 18%,transparent);text-align:justify;hyphens:auto;-webkit-hyphens:auto;font:12.5px/1.55 Georgia,'Times New Roman',serif;color:var(--hj-ink)}
 .hj-txt p{margin:0 0 8px}
 .hj-txt p:first-child::first-letter{float:left;padding:3px 6px 0 0;color:var(--hj-k);font:900 3.1em/.82 'Playfair Display',Georgia,serif}
+.hj-summary{color:var(--hj-ink);font:11.5px/1.48 Georgia,'Times New Roman',serif;text-align:left;hyphens:auto;-webkit-hyphens:auto}
+.hj-summary p{display:-webkit-box;margin:0;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:6}
 .hj-by{margin:6px 0 0;text-align:right;font:italic 11px Georgia,serif;color:var(--hj-soft)}
 .hj-box{grid-area:box;padding:12px 14px;background:var(--hj-box);font:12px/1.5 Georgia,'Times New Roman',serif;color:var(--hj-ink)}
 .hj-box p{margin:8px 0 0;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
@@ -15157,6 +15149,20 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .hj-leer{color:var(--hj-k);font:700 11.5px Inter,system-ui,sans-serif;text-decoration:underline}
 .hj-leer--off{text-decoration:none;color:var(--hj-soft);font-weight:600}
 .hj-page{padding:3px 8px;background:var(--hj-ink);color:var(--hj-paper);font:700 11px 'JetBrains Mono',monospace}
+
+/* Hoja compacta de la cuadrícula: misma huella que la antigua portada, sin lomo ni efecto de libro. */
+.hojas--tarjetas .hoja--tarjeta{aspect-ratio:3/4.15;min-width:0;overflow:hidden;border-radius:4px 14px 14px 4px}
+.hojas--tarjetas .hoja--tarjeta .hj-paper{height:100%;padding:13px;gap:8px;overflow:hidden;border-radius:inherit;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto 118px minmax(0,1fr) auto!important;grid-template-areas:"top" "mast" "fig" "body" "foot"!important}
+.hojas--tarjetas .hoja--tarjeta .hj-top{font-size:8px;padding-bottom:4px}
+.hojas--tarjetas .hoja--tarjeta .hj-mast{padding:9px 10px!important;background:var(--hj)!important;color:var(--hj-on)!important;text-align:left!important}
+.hojas--tarjetas .hoja--tarjeta .hj-brand{font-size:clamp(20px,8cqw,27px)!important;line-height:1!important}
+.hojas--tarjetas .hoja--tarjeta .hj-lema{max-width:100%;margin-top:5px!important;padding:0!important;border:0!important;overflow:hidden;color:var(--hj-on)!important;font:650 8px/1.25 Inter,system-ui,sans-serif!important;letter-spacing:.04em!important;text-align:left!important;text-overflow:ellipsis;white-space:nowrap}
+.hojas--tarjetas .hoja--tarjeta .hj-fig{height:118px}.hojas--tarjetas .hoja--tarjeta .hj-img{width:100%;height:100%!important;min-height:0!important;aspect-ratio:auto!important;filter:none!important}.hojas--tarjetas .hoja--tarjeta .hj-cap{display:none!important}
+.hojas--tarjetas .hoja--tarjeta .hj-body{min-height:0;padding:0!important;overflow:hidden;border:0!important;background:transparent!important;color:var(--hj-ink)!important}
+.hojas--tarjetas .hoja--tarjeta .hj-title{display:-webkit-box!important;margin:0 0 5px!important;overflow:hidden;color:var(--hj-h)!important;font:750 17px/1.12 'Playfair Display',Georgia,serif!important;letter-spacing:-.01em!important;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.hojas--tarjetas .hoja--tarjeta .hj-deck{display:block;margin:0 0 7px;padding:0;background:none!important;color:var(--hj-k)!important;font:750 8px/1.25 'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hojas--tarjetas .hoja--tarjeta .hj-box,.hojas--tarjetas .hoja--tarjeta .hj-by{display:none!important}
+.hojas--tarjetas .hoja--tarjeta .hj-foot{padding-top:6px}.hojas--tarjetas .hoja--tarjeta .hj-leer{font-size:9px;text-decoration:none}.hojas--tarjetas .hoja--tarjeta .hj-page{font-size:8px}
 
 /* ── Plantilla VERDE (portada clásica) ── */
 .hoja--verde .hj-paper{grid-template-columns:minmax(0,1fr) 34%;grid-template-areas:"top top" "mast mast" "fig fig" "body box" "foot foot"}
@@ -15885,6 +15891,8 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .sidebar{background:#101922!important}:root[data-theme="night"] .nav-item.is-active{background:#192831!important;border-color:rgba(111,175,123,.28)!important;box-shadow:inset 3px 0 var(--alintec-green)!important;color:#EAF4EC!important}:root[data-theme="night"] .nav-item.is-active .ic{color:#91C99B!important}
 :root[data-theme="night"] .topbar{background:#121D26!important}
 :root[data-theme="night"] #continuar-widget .continuar__meta,:root[data-theme="night"] .home-kpis .banner__stat,:root[data-theme="night"] .section-header--home-news,:root[data-theme="night"] .rz-card,:root[data-theme="night"] .reto-ranking{background:#131F29!important}
+:root[data-theme="night"] .home-course-hero.continuar__main{background-color:#15271F!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important}
+:root[data-theme="night"] .home-course-hero__shade{background:rgba(7,18,13,.58)!important}
 :root[data-theme="night"] .sec-hero,:root[data-theme="night"] .sec-hero:not(.sec-hero--library),:root[data-theme="night"] .sec-hero--library{background:rgba(73,116,83,.42)!important;border-color:rgba(145,201,155,.3)!important;box-shadow:inset 0 1px rgba(255,255,255,.09),0 20px 42px rgba(0,0,0,.22)!important;color:#F4FAF5!important}
 :root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
 :root[data-theme="night"] .home-greeting{background:#131F29!important}:root[data-theme="night"] .home-greeting__mark,:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
