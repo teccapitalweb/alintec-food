@@ -9370,6 +9370,7 @@ const Sections = (function(){
     const pctSeguro=Math.max(0,Math.min(100,Number.isFinite(pct)?pct:100));
     const xpRest=nivelActual.hasta-usuario.xp;
     const proxNivel=niveles[nivelActual.id]?.nombre||'Maestro';
+    const trayectoriaPct=nivelActual.id>=niveles.length?100:Math.round((((nivelActual.id-1)+pctSeguro/100)/(niveles.length-1))*100);
     const ganados=logros.filter(l=>l.unlock).length;
     const totalXp=usuario.xp;
     const cats=['Operación','Especialización','Excelencia','Comunidad','Maestría','Retos'];
@@ -9384,23 +9385,29 @@ const Sections = (function(){
         </div>`;
     container.innerHTML=`
       <div class="fade-up">
-        <div class="sec-hero sec-hero--achievements">
-          <span class="sec-hero__eyebrow">Tu progreso</span>
-          <h1 class="sec-hero__title">Mis logros</h1>
-          <p class="sec-hero__sub">Cada curso, herramienta y participación te suma XP. Sube de nivel y desbloquea medallas. Llega a <em style="color:var(--primary);">Maestro</em>.</p>
-        </div>
         ${avisoVistaPrevia}
         <div class="logro-hero">
           <div class="logro-hero__row">
             <div class="logro-hero__icon"><svg class="ic ic--xl"><use href="#i-trophy"/></svg></div>
             <div>
               <div class="logro-hero__lbl">Nivel ${nivelActual.id} de 5</div>
-              <div class="logro-hero__name">${nivelActual.nombre}</div>
+              <h1 class="logro-hero__name">${nivelActual.nombre}</h1>
             </div>
             <div class="logro-hero__racha">
               <svg class="ic" style="width:14px;height:14px;color:var(--primary);"><use href="#i-bolt"/></svg>
               <span class="logro-hero__racha-num">${usuario.racha}</span>
               <span class="logro-hero__racha-lbl">días</span>
+            </div>
+          </div>
+          <div class="logro-journey" aria-label="Trayectoria profesional: nivel ${nivelActual.id} de ${niveles.length}">
+            <div class="logro-journey__rail" aria-hidden="true"><i style="width:${trayectoriaPct}%"></i></div>
+            <div class="logro-journey__stages">
+              ${niveles.map(n=>{
+                const estado=n.id<nivelActual.id?'is-done':n.id===nivelActual.id?'is-current':'is-next';
+                return `<span class="logro-journey__node ${estado}"${n.id===nivelActual.id?' aria-current="step"':''}>
+                  <b>${n.id<nivelActual.id?'✓':n.id}</b><small>${n.nombre}</small>
+                </span>`;
+              }).join('')}
             </div>
           </div>
           <div class="logro-orbit">
@@ -9419,55 +9426,6 @@ const Sections = (function(){
             </div>
           </div>
         </div>
-
-        <section class="nivel-path">
-          <div class="nivel-path__head">
-            <div>
-              <span class="nivel-path__eyebrow">Trayectoria profesional</span>
-              <h2 class="nivel-path__title">Tu pasaporte profesional</h2>
-              <p>Cada nivel reconoce una nueva etapa de tu formación en alimentos.</p>
-            </div>
-            <span class="nivel-path__balance"><b>${usuario.xp}</b> XP acumulados</span>
-          </div>
-          <div class="nivel-path__layout">
-            <article class="nivel-path__spotlight">
-              <span class="nivel-path__current">Estás aquí</span>
-              <div class="nivel-path__rank">0${nivelActual.id}</div>
-              <div class="nivel-path__spot-copy">
-                <span>Nivel actual</span>
-                <h3>${nivelActual.nombre}</h3>
-                <p>${xpRest>0?`Te separan <strong>${xpRest} XP</strong> de ${proxNivel}.`:'Has alcanzado el rango más alto disponible.'}</p>
-              </div>
-              <div class="nivel-path__spot-meta">
-                <span><b>${usuario.xp}</b> XP actuales</span>
-                <span><b>${nivelActual.id}</b> de 5 niveles</span>
-              </div>
-            </article>
-            <div class="nivel-path__map">
-              <div class="nivel-path__map-head"><span>Mapa de niveles</span><small>Tu recorrido completo</small></div>
-              <div class="nivel-path__milestones">
-                ${niveles.map((n,idx)=>{
-                  const iconosNivel=[
-                    '<svg class="ic"><use href="#i-book-2"/></svg>',
-                    '<svg class="ic"><use href="#i-tools"/></svg>',
-                    '<svg class="ic"><use href="#i-badge"/></svg>',
-                    '<svg class="ic"><use href="#i-shield-check"/></svg>',
-                    '<svg class="ic"><use href="#i-crown"/></svg>'
-                  ];
-                  const isCurrent=n.id===nivelActual.id;
-                  const isDone=n.id<nivelActual.id;
-                  const cls=isCurrent?'is-current':isDone?'is-done':'is-locked';
-                  return `<div class="nivel-step ${cls}"${isCurrent?' aria-current="step"':''}>
-                    <span class="nivel-step__index">0${n.id}</span>
-                    <div class="nivel-step__icon">${iconosNivel[idx]||'·'}</div>
-                    <div class="nivel-step__copy"><div class="nivel-step__name">${n.nombre}</div><div class="nivel-step__xp">Desde ${n.desde} XP</div></div>
-                    <span class="nivel-step__state">${isCurrent?'Actual':isDone?'✓':'Bloqueado'}</span>
-                  </div>`;
-                }).join('')}
-              </div>
-            </div>
-          </div>
-        </section>
 
         ${tarjetaPremios}
         <div class="kpi-grid">
@@ -9498,7 +9456,7 @@ const Sections = (function(){
     `;
     if (!miembroLogros) {
       const irSuscripcion = () => window.__mostrarPaywallAlintec?.('Solo para miembros', 'Activa tu suscripción para ver el detalle de tus insignias y premios.');
-      container.querySelectorAll('.logro, .premios-card, .nivel-path').forEach(el=>{
+      container.querySelectorAll('.logro, .premios-card').forEach(el=>{
         el.style.cursor = 'pointer';
         if (!el.classList.contains('logro')) { el.setAttribute('tabindex','0'); el.setAttribute('role','button'); }
         el.addEventListener('click', irSuscripcion);
@@ -15925,7 +15883,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   display:none!important;content:none!important;background:none!important;box-shadow:none!important;
 }
 .sec-hero::after,.sec-hero:not(.sec-hero--library)::after,.sec-hero--library::after{display:none!important;content:none!important;background:none!important}
-.sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:#397655!important;font-weight:850!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:#173427!important;font-size:clamp(31px,4vw,43px)!important;font-weight:850!important;letter-spacing:-1.5px!important;text-shadow:none!important}
+.sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:#397655!important;font-weight:850!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:#173427!important;font-family:'Plus Jakarta Sans','Inter',sans-serif!important;font-size:clamp(31px,4vw,43px)!important;font-weight:850!important;line-height:1.06!important;letter-spacing:-1.65px!important;text-shadow:none!important}
 .sec-hero__title::after{display:none!important}.sec-hero__sub,.sec-hero--library .sec-hero__sub{max-width:780px;color:#3F5B49!important;font-size:13.5px!important;font-weight:550!important;line-height:1.6!important}.sec-hero__sub strong,.sec-hero__sub em,.sec-hero--library .sec-hero__sub strong{color:#24593B!important}
 
 /* Materiales: filtro funcional por encima de la cuadrícula. */
@@ -15974,13 +15932,33 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .nivel-step.is-done{background:#F0F6F1!important}.nivel-step.is-done .nivel-step__index{color:#397655}.nivel-step.is-done .nivel-step__state{background:#DDECE0;color:#397655}.nivel-step.is-done .nivel-step__icon{border-color:#C8DECD!important;background:#E5F0E7!important;color:#397655!important}
 .nivel-step.is-current{border-color:#9FC3A7!important;background:#ECF4EE!important;box-shadow:inset 3px 0 #477B5A!important}.nivel-step.is-current .nivel-step__index,.nivel-step.is-current .nivel-step__name{color:#397655!important}.nivel-step.is-current .nivel-step__state{background:#477B5A;color:#fff}.nivel-step.is-current .nivel-step__icon{border-color:#B5D0BA!important;background:#fff!important;color:#397655!important}.nivel-step.is-current .nivel-step__xp{color:#64806B!important}.nivel-step.is-locked .nivel-step__icon{opacity:1!important;filter:none!important}
 
+/* Logros: la trayectoria vive dentro de la tarjeta principal y ocupa una sola franja. */
+.logro-hero{isolation:isolate;background:#4B7E5F!important;border-color:rgba(255,255,255,.17)!important;box-shadow:0 22px 48px rgba(39,82,55,.2)!important}
+.logro-hero::before{content:''!important;display:block!important;position:absolute!important;inset:auto -58px -72px auto!important;width:220px!important;height:220px!important;border-radius:50%!important;background:rgba(239,166,144,.17)!important;filter:none!important;animation:none!important;pointer-events:none}
+.logro-hero::after{content:''!important;display:block!important;position:absolute!important;inset:-82px auto auto 42%!important;width:180px!important;height:180px!important;border-radius:50%!important;background:rgba(126,187,207,.13)!important;background-image:none!important;mask-image:none!important;-webkit-mask-image:none!important;pointer-events:none}
+.logro-hero__icon{background:rgba(244,197,105,.15)!important;border-color:rgba(255,222,154,.32)!important;color:#FFD67B!important;box-shadow:none!important}
+.logro-hero__name{margin:4px 0 0!important;font:850 clamp(30px,4vw,43px)/1.02 'Plus Jakarta Sans','Inter',sans-serif!important;letter-spacing:-1.5px!important}
+.logro-hero__racha{background:rgba(239,166,144,.14)!important;border-color:rgba(255,193,176,.26)!important;box-shadow:none!important}.logro-hero__racha .ic{color:#FFB8A5!important}.logro-hero__racha-num{color:#FFD67B!important}
+.logro-journey{position:relative;z-index:2;margin:0 4px;padding:1px 0 0}
+.logro-journey__rail{position:absolute;z-index:0;top:14px;left:9.5%;right:9.5%;height:3px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.16)}
+.logro-journey__rail i{display:block;height:100%;border-radius:inherit;background:#BDE2C5;transition:width .8s ease}
+.logro-journey__stages{position:relative;z-index:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.logro-journey__node{display:flex;min-width:0;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.58);text-align:center}
+.logro-journey__node b{display:grid;width:29px;height:29px;place-items:center;border:2px solid rgba(255,255,255,.2);border-radius:50%;background:#4B7E5F;color:rgba(255,255,255,.68);font:800 9px 'JetBrains Mono',monospace;box-shadow:0 0 0 4px rgba(75,126,95,.94)}
+.logro-journey__node small{max-width:100%;overflow:hidden;color:inherit;font:750 7.5px 'JetBrains Mono',monospace;letter-spacing:.45px;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap}
+.logro-journey__node.is-done{color:#DFF3E3}.logro-journey__node.is-done b{border-color:#BDE2C5;background:#BDE2C5;color:#28533A}
+.logro-journey__node.is-current{color:#FFF0C8}.logro-journey__node.is-current b{border-color:#FFD67B;background:#FFD67B;color:#614A16;box-shadow:0 0 0 5px rgba(255,214,123,.16)}
+.logro-journey__node:nth-child(4).is-next b{border-color:rgba(255,184,165,.45);color:#FFCFBF}.logro-journey__node:nth-child(5).is-next b{border-color:rgba(201,183,231,.48);color:#DED0F3}
+.logro-orbit{background:rgba(23,66,43,.24)!important;border-color:rgba(255,255,255,.18)!important}.logro-orbit__value{stroke:#BDE2C5!important}.logro-orbit__eyebrow{color:#9DD4E4!important}.logro-orbit__numbers span:first-child{background:rgba(126,187,207,.13)!important;border-color:rgba(157,211,229,.2)!important}.logro-orbit__numbers span:last-child{background:rgba(244,197,105,.13)!important;border-color:rgba(255,214,123,.2)!important}
+
 /* Noticias: más contenido visible y respaldo fotográfico real para fuentes incompatibles. */
 .hojas--tarjetas .hoja--tarjeta .hj-summary{font-size:11.5px!important;line-height:1.5!important}.hojas--tarjetas .hoja--tarjeta .hj-summary p{-webkit-line-clamp:8!important}.hj-img.news-image-fallback{background-color:#DDE8E1;background-position:center;background-size:cover}.hj-img.news-image-fallback img{object-position:center}
 
 :root[data-theme="night"] .nivel-path{border-color:#283A34!important;background:#121D1A!important;box-shadow:0 18px 42px rgba(0,0,0,.28)!important}:root[data-theme="night"] .nivel-path__balance{border-color:#355245;background:#192722;color:#A8D0AF}:root[data-theme="night"] .nivel-path__map{border-color:#2A3C35;background:#17231F}:root[data-theme="night"] .nivel-step{background:#1B2823!important}:root[data-theme="night"] .nivel-step.is-done{background:#1D3027!important}:root[data-theme="night"] .nivel-step.is-done .nivel-step__state,:root[data-theme="night"] .nivel-step.is-done .nivel-step__icon{background:#243C30!important;color:#A8D0AF!important}:root[data-theme="night"] .nivel-step.is-current{border-color:#4D765B!important;background:#203329!important}:root[data-theme="night"] .nivel-step__state{background:#202D28;color:#9AABA1}:root[data-theme="night"] .nivel-step__icon{border-color:#31433D!important;background:#202D28!important}
+:root[data-theme="night"] .logro-hero{background:#294A39!important;border-color:rgba(189,226,197,.18)!important}:root[data-theme="night"] .logro-journey__node b{background:#294A39;box-shadow:0 0 0 4px rgba(41,74,57,.95)}:root[data-theme="night"] .logro-journey__node.is-current b{box-shadow:0 0 0 5px rgba(255,214,123,.15)}
 
 @media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}.nivel-path__layout{grid-template-columns:1fr}.nivel-path__spotlight{min-height:255px}}
-@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
+@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.logro-journey{margin-inline:-4px}.logro-journey__node{gap:5px}.logro-journey__node b{width:26px;height:26px}.logro-journey__rail{top:12px}.logro-journey__node small{font-size:6.3px;letter-spacing:0}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
