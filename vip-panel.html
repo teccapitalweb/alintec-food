@@ -8732,7 +8732,7 @@ const Sections = (function(){
     if (certs.length === 0) {
       container.innerHTML = `
         <div class="fade-up">
-          <div class="sec-hero">
+          <div class="sec-hero sec-hero--certificates">
             <span class="sec-hero__eyebrow">Tu trayectoria</span>
             <h1 class="sec-hero__title">Mis certificados</h1>
             <p class="sec-hero__sub">Cada certificado Alintec Food incluye <strong style="color:var(--primary);">folio único, código QR verificable y firma del instructor</strong>. Se otorgan al completar el 100% de las clases de un curso VIP.</p>
@@ -8770,7 +8770,7 @@ const Sections = (function(){
     // Render real cuando SÍ hay certificados
     container.innerHTML = `
       <div class="fade-up">
-        <div class="sec-hero">
+        <div class="sec-hero sec-hero--certificates">
           <span class="sec-hero__eyebrow">Tu trayectoria</span>
           <h1 class="sec-hero__title">Mis certificados</h1>
           <p class="sec-hero__sub">Cada certificado tiene un folio único <strong style="color:var(--primary);font-family:'JetBrains Mono',monospace;">ALINTEC-2026-XXXXXX</strong> y código QR verificable. Compártelos en LinkedIn o descárgalos en PDF.</p>
@@ -9071,7 +9071,7 @@ const Sections = (function(){
     const promedio=certificados.length?Math.round(certificados.reduce((s,c)=>s+c.calificacion,0)/certificados.length):0;
     container.innerHTML=`
       <div class="fade-up">
-        <div class="sec-hero">
+        <div class="sec-hero sec-hero--certificates">
           <span class="sec-hero__eyebrow">Tu trayectoria</span>
           <h1 class="sec-hero__title">Mis certificados</h1>
           <p class="sec-hero__sub">Cada certificado tiene un folio único <strong style="color:var(--primary);font-family:'JetBrains Mono',monospace;">ALINTEC-2026-XXXXX</strong> y código QR verificable. Compártelos en LinkedIn o descárgalos en PDF.</p>
@@ -9383,7 +9383,7 @@ const Sections = (function(){
         </div>`;
     container.innerHTML=`
       <div class="fade-up">
-        <div class="sec-hero">
+        <div class="sec-hero sec-hero--achievements">
           <span class="sec-hero__eyebrow">Tu progreso</span>
           <h1 class="sec-hero__title">Mis logros</h1>
           <p class="sec-hero__sub">Cada curso, herramienta y participación te suma XP. Sube de nivel y desbloquea medallas. Llega a <em style="color:var(--primary);">Maestro</em>.</p>
@@ -10310,7 +10310,7 @@ const Sections = (function(){
     if (!_cursosLoaded && !_cursosLoading) {
       container.innerHTML = `
         <div class="fade-up">
-          <div class="sec-hero">
+          <div class="sec-hero sec-hero--library">
             <span class="sec-hero__eyebrow">Descargables</span>
             <h1 class="sec-hero__title">PDFs y material</h1>
             <p class="sec-hero__sub">Cargando materiales seguros…</p>
@@ -15864,6 +15864,24 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:#F2D27A!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:#fff!important;text-shadow:0 2px 14px rgba(20,52,31,.16)}
 .sec-hero__title::after{display:none!important}.sec-hero__sub,.sec-hero--library .sec-hero__sub{color:rgba(255,255,255,.78)!important}.sec-hero__sub strong,.sec-hero__sub em,.sec-hero--library .sec-hero__sub strong{color:#F5E2A5!important}
 
+/* Variantes por apartado: el color también define la jerarquía del texto. */
+.sec-hero--library,.sec-hero.sec-hero--certificates{
+  background:linear-gradient(135deg,#356B86 0%,#6794A7 100%)!important;
+  border-color:rgba(47,109,141,.28)!important;box-shadow:0 17px 36px rgba(38,82,105,.17)!important;
+}
+.sec-hero--library .sec-hero__eyebrow,.sec-hero.sec-hero--certificates .sec-hero__eyebrow{color:#D7EDF5!important}
+.sec-hero--library .sec-hero__title,.sec-hero.sec-hero--certificates .sec-hero__title{color:#fff!important;text-shadow:0 2px 14px rgba(16,48,65,.2)!important}
+.sec-hero--library .sec-hero__sub,.sec-hero.sec-hero--certificates .sec-hero__sub{color:rgba(245,251,253,.82)!important}
+.sec-hero--library .sec-hero__sub strong,.sec-hero--library .sec-hero__sub em,.sec-hero.sec-hero--certificates .sec-hero__sub strong,.sec-hero.sec-hero--certificates .sec-hero__sub em{color:#E8F5FA!important}
+.sec-hero.sec-hero--achievements{
+  background:linear-gradient(135deg,#E1BF67 0%,#F0D997 100%)!important;
+  border-color:rgba(151,112,31,.22)!important;box-shadow:0 17px 36px rgba(127,96,30,.14)!important;color:#3B311B!important;
+}
+.sec-hero.sec-hero--achievements::before{border-color:rgba(83,63,22,.13)!important;box-shadow:0 0 0 36px rgba(83,63,22,.035),0 0 0 72px rgba(83,63,22,.02)!important}
+.sec-hero.sec-hero--achievements::after{background:repeating-linear-gradient(115deg,rgba(74,55,17,.035) 0 1px,transparent 1px 52px)!important}
+.sec-hero.sec-hero--achievements .sec-hero__eyebrow{color:#715617!important}.sec-hero.sec-hero--achievements .sec-hero__title{color:#352B17!important;text-shadow:none!important}
+.sec-hero.sec-hero--achievements .sec-hero__sub{color:#5B4B2A!important}.sec-hero.sec-hero--achievements .sec-hero__sub strong,.sec-hero.sec-hero--achievements .sec-hero__sub em{color:#4D3A12!important}
+
 /* Acciones de cursos: verde de marca, usado sólo como acento. */
 .cursos-grid .curso-card__body::after{background:#F3F8F2!important;color:#397655!important;border:1px solid rgba(111,175,123,.42)!important}
 .home-course-hero .continuar__ir{background:#EAF4EC!important;color:#397655!important}.home-course-hero .continuar__ir:hover{background:#DDEEDF!important}
@@ -15875,6 +15893,8 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] #continuar-widget .continuar__meta,:root[data-theme="night"] .home-kpis .banner__stat,:root[data-theme="night"] .section-header--home-news,:root[data-theme="night"] .rz-card,:root[data-theme="night"] .reto-ranking{background:#131F29!important}
 :root[data-theme="night"] .sec-hero,:root[data-theme="night"] .sec-hero:not(.sec-hero--library),:root[data-theme="night"] .sec-hero--library{background:linear-gradient(135deg,#263A30,#3D5B47)!important;border-color:#496654!important}
 :root[data-theme="night"] .home-greeting__date{background:#131F29}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
+:root[data-theme="night"] .sec-hero--library,:root[data-theme="night"] .sec-hero--certificates{background:linear-gradient(135deg,#244A60,#3B667A)!important;border-color:#4A7488!important}:root[data-theme="night"] .sec-hero--library .sec-hero__eyebrow,:root[data-theme="night"] .sec-hero--certificates .sec-hero__eyebrow{color:#CFE8F2!important}:root[data-theme="night"] .sec-hero--library .sec-hero__sub,:root[data-theme="night"] .sec-hero--certificates .sec-hero__sub{color:rgba(240,249,252,.8)!important}
+:root[data-theme="night"] .sec-hero--achievements{background:linear-gradient(135deg,#715A29,#92783F)!important;border-color:#A68B4D!important}:root[data-theme="night"] .sec-hero--achievements .sec-hero__eyebrow{color:#F7E5AE!important}:root[data-theme="night"] .sec-hero--achievements .sec-hero__title{color:#FFF9E7!important}:root[data-theme="night"] .sec-hero--achievements .sec-hero__sub{color:rgba(255,249,231,.78)!important}:root[data-theme="night"] .sec-hero--achievements .sec-hero__sub strong,:root[data-theme="night"] .sec-hero--achievements .sec-hero__sub em{color:#FFF0BE!important}
 
 @media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}}
 @media(max-width:680px){.home-greeting{align-items:flex-start;flex-direction:column}.home-greeting__date{display:none}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}}
