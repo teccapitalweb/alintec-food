@@ -3916,11 +3916,11 @@ window.__setDisplayName = async (nombre) => {
           <h1 class="banner__title" id="hero-title">Hola de nuevo</h1>
           <p class="banner__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
         </div>
-        <div class="banner__stats">
-          <div class="banner__stat" data-section="cursos" style="cursor:pointer"><div class="banner__stat-lbl">Cursos</div><div class="banner__stat-val">12</div></div>
-          <div class="banner__stat" data-section="webinars" style="cursor:pointer"><div class="banner__stat-lbl">Clases</div><div class="banner__stat-val">9</div></div>
-          <div class="banner__stat" data-section="pdfs" style="cursor:pointer"><div class="banner__stat-lbl">PDFs</div><div class="banner__stat-val">24</div></div>
-          <div class="banner__stat" style="cursor:default"><div class="banner__stat-lbl">Pro</div><div class="banner__stat-val">5</div></div>
+        <div class="banner__stats" aria-label="Accesos rápidos del panel">
+          <button type="button" class="banner__stat" data-section="cursos" aria-label="Abrir Mis cursos"><div class="banner__stat-lbl">Cursos</div><div class="banner__stat-val" id="banner-stat-cursos">0</div></button>
+          <button type="button" class="banner__stat" data-section="webinars" aria-label="Abrir Clases en vivo"><div class="banner__stat-lbl">Clases</div><div class="banner__stat-val" id="banner-stat-clases">0</div></button>
+          <button type="button" class="banner__stat" data-section="pdfs" aria-label="Abrir PDFs y materiales"><div class="banner__stat-lbl">PDFs</div><div class="banner__stat-val" id="banner-stat-pdfs">0</div></button>
+          <button type="button" class="banner__stat" data-section="herramientas" aria-label="Abrir Herramientas Pro"><div class="banner__stat-lbl">Pro</div><div class="banner__stat-val" id="banner-stat-pro">5</div></button>
         </div>
       </section>
 
@@ -3964,7 +3964,7 @@ window.__setDisplayName = async (nombre) => {
 
       <!-- Noticias diarias (reales desde Firestore) -->
       <section>
-        <div class="section-header">
+        <div class="section-header section-header--home-news">
           <h2 class="section-header__title">Noticias del sector<span class="section-header__badge">Hoy</span></h2>
         </div>
         <div class="news-grid" id="home-news-grid">
@@ -6148,7 +6148,7 @@ function navigateToSection(section, opts){
     try { window.__alintecCheckout.destroy(); } catch(e) {}
     window.__alintecCheckout = null;
   }
-  if(section==='inicio'){inicio.style.display='';dyn.style.display='none';if(typeof window.__cargarNoticiasHome==='function')window.__cargarNoticiasHome();if(typeof window.__actualizarWidgetsActividad==='function')window.__actualizarWidgetsActividad();return;}
+  if(section==='inicio'){inicio.style.display='';dyn.style.display='none';if(typeof window.__cargarNoticiasHome==='function')window.__cargarNoticiasHome();if(typeof window.__actualizarResumenInicio==='function')window.__actualizarResumenInicio();if(typeof window.__actualizarWidgetsActividad==='function')window.__actualizarWidgetsActividad();return;}
   inicio.style.display='none';dyn.style.display='';
   const renderer=Sections.renderers[section];
   if(renderer){dyn.innerHTML='';renderer(dyn);}
@@ -7804,6 +7804,7 @@ const Sections = (function(){
         .forEach((c, rank) => { c._unlockDay = rank * 8; });
       _cursosLoaded = true;
       _cursosLoadError = '';
+      try { window.__actualizarResumenInicio?.(); } catch (e) {}
       await hidratarProgresoBackend();
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
@@ -7910,6 +7911,7 @@ const Sections = (function(){
       _webinarsLoaded = true;
     } finally {
       _webinarsLoading = false;
+      try { window.__actualizarResumenInicio?.(); } catch (e) {}
     }
   }
   window.__cargarWebinarsFirestore = cargarWebinarsFirestore;
@@ -8548,6 +8550,34 @@ const Sections = (function(){
   window.__actualizarWidgetsActividad = actualizarWidgetsActividad;
 
   // ═══════════════════════════════════════════════════════════════
+  // 🏠 INICIO · accesos rápidos con cifras reales del catálogo.
+  // ═══════════════════════════════════════════════════════════════
+  async function actualizarResumenInicio() {
+    const setStat = (id, value, label) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(value);
+      const boton = el?.closest('.banner__stat');
+      if (boton && label) boton.setAttribute('aria-label', `${label}: ${value}. Abrir sección`);
+    };
+    const listaCursos = Array.isArray(cursos) ? cursos : [];
+    const totalMateriales = listaCursos.reduce((total, curso) => total + (Array.isArray(curso.materiales) ? curso.materiales.length : 0), 0);
+    setStat('banner-stat-cursos', listaCursos.length, 'Cursos disponibles');
+    setStat('banner-stat-clases', Array.isArray(webinars) ? webinars.length : 0, 'Clases en vivo y grabadas');
+    setStat('banner-stat-pdfs', totalMateriales, 'PDFs y materiales');
+    setStat('banner-stat-pro', 5, 'Herramientas Pro');
+
+    // No bloquea el Inicio mientras llegan Firestore y el catálogo seguro.
+    // Cada carga vuelve a pintar las cifras al terminar.
+    if (!_cursosLoaded && !_cursosLoading) {
+      try { cargarCursosBackend?.().then(() => actualizarResumenInicio()).catch(() => actualizarResumenInicio()); } catch (e) {}
+    }
+    if (!_webinarsLoaded && !_webinarsLoading) {
+      try { cargarWebinarsFirestore?.().then(() => actualizarResumenInicio()).catch(() => actualizarResumenInicio()); } catch (e) {}
+    }
+  }
+  window.__actualizarResumenInicio = actualizarResumenInicio;
+
+  // ═══════════════════════════════════════════════════════════════
   // 🏠 INICIO · "Continúa tu curso" (retoma donde te quedaste, con
   //     datos reales: mismo curso/progreso que usa Mis cursos).
   // ═══════════════════════════════════════════════════════════════
@@ -8555,7 +8585,7 @@ const Sections = (function(){
     const wrap = document.getElementById('continuar-widget');
     const spacer = document.getElementById('continuar-spacer');
     if (!wrap) return;
-    try { if (!_cursosLoaded) await cargarCursosBackend?.(); } catch (e) {}
+    try { await actualizarResumenInicio(); } catch (e) {}
 
     const esVipUser = window.UserState?.modo === 'vip' || (typeof esAdminReal === 'function' && esAdminReal()) || window.UserState?.isAdmin;
     const disponibles = (cursos || [])
@@ -9758,50 +9788,56 @@ const Sections = (function(){
     return 'pdf'; // default
   }
 
-  // Biblioteca visual: 7 portadas editoriales nuevas + fotografías existentes
-  // de cursos. El asignador prioriza coincidencia temática y evita repetir una
-  // imagen mientras queden portadas libres en la vista actual.
+  // Biblioteca visual: siete portadas editoriales propias. No reutiliza las
+  // imágenes promocionales de cursos para conservar una identidad consistente.
   const MATERIAL_COVER_LIBRARY = [
-    {src:'assets/img/materiales/microbiologia-v1.webp', temas:['microbiología','microbiologico','inocuidad','agua','bacter']},
-    {src:'assets/img/materiales/higiene-produccion-v1.webp', temas:['bpm','manufactura','higiene','limpieza','distintivo']},
-    {src:'assets/img/materiales/nutricion-formulacion-v1.webp', temas:['nutrición','nutrimental','formulación','suplement','funcional']},
-    {src:'assets/img/materiales/etiquetado-v1.webp', temas:['normativa','etiquetado','nom-051','empaque','regulación']},
-    {src:'assets/img/materiales/haccp-v1.webp', temas:['haccp','peligro','control','calidad','auditor']},
-    {src:'assets/img/materiales/agroindustria-v1.webp', temas:['agroindustria','residuo','huerto','materia prima','grano']},
-    {src:'assets/img/materiales/cadena-frio-v1.webp', temas:['conservación','cadena de frío','temperatura','almacén','vida de anaquel']},
-    {src:'assets/img/cursos/agua.jpg', temas:['agua','microbiología','inocuidad']},
-    {src:'assets/img/cursos/azucar.jpg', temas:['azúcar','formulación','nutrición']},
-    {src:'assets/img/cursos/bpm.jpg', temas:['bpm','manufactura','higiene']},
-    {src:'assets/img/cursos/distintivo-h.jpg', temas:['distintivo','higiene','servicio']},
-    {src:'assets/img/cursos/electroquimica.jpg', temas:['electroquímica','tecnología','innovación']},
-    {src:'assets/img/cursos/haccp.jpg', temas:['haccp','peligro','control']},
-    {src:'assets/img/cursos/huertos.jpg', temas:['huerto','agroindustria','vegetal']},
-    {src:'assets/img/cursos/microbiologia-alimentos.jpg', temas:['microbiología','alimentos','bacter']},
-    {src:'assets/img/cursos/microbiologico.jpg', temas:['control microbiológico','conservación','microbiología']},
-    {src:'assets/img/cursos/nom-051.jpg', temas:['nom-051','normativa','etiquetado']},
-    {src:'assets/img/cursos/nutraceuticos.jpg', temas:['nutracéutico','funcional','salud']},
-    {src:'assets/img/cursos/nutrimentales.jpg', temas:['nutrimental','nutrición','tabla']},
-    {src:'assets/img/cursos/plantas.jpg', temas:['planta','extracto','natural']},
-    {src:'assets/img/cursos/recubrimientos.jpg', temas:['recubrimiento','conservación','tecnología']},
-    {src:'assets/img/cursos/residuos.jpg', temas:['residuo','agroindustria','sostenibilidad']},
-    {src:'assets/img/cursos/suplementos.jpg', temas:['suplemento','formulación','nutrición']},
-    {src:'assets/img/cursos/tablas-nutricionales.jpg', temas:['tabla','nutricional','etiquetado']}
+    {src:'assets/img/materiales/microbiologia-v2.jpg', temas:['microbiología','microbiologico','inocuidad','agua','bacter']},
+    {src:'assets/img/materiales/higiene-produccion-v2.jpg', temas:['bpm','manufactura','higiene','limpieza','distintivo']},
+    {src:'assets/img/materiales/nutricion-formulacion-v2.jpg', temas:['nutrición','nutrimental','formulación','suplement','funcional']},
+    {src:'assets/img/materiales/etiquetado-v2.jpg', temas:['normativa','etiquetado','nom-051','empaque','regulación']},
+    {src:'assets/img/materiales/haccp-v2.jpg', temas:['haccp','peligro','control','calidad','auditor']},
+    {src:'assets/img/materiales/agroindustria-v2.jpg', temas:['agroindustria','residuo','huerto','materia prima','grano']},
+    {src:'assets/img/materiales/cadena-frio-v2.jpg', temas:['conservación','cadena de frío','temperatura','almacén','vida de anaquel']}
   ];
   function _textoTemaMaterial(m){
     return String([m.titulo,m.cursoTitulo,m.cursoArea].filter(Boolean).join(' ')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   }
   function _hashMaterial(texto){let h=0;for(let i=0;i<texto.length;i++)h=((h<<5)-h)+texto.charCodeAt(i),h|=0;return Math.abs(h);}
   function _asignarPortadasMaterial(lista){
-    const usadas=new Set();
-    return lista.map((m,posicion)=>{
-      const texto=_textoTemaMaterial(m);
-      const giro=_hashMaterial(texto+'|'+m.cursoId+'|'+m.materialIndex)%MATERIAL_COVER_LIBRARY.length;
-      const candidatas=MATERIAL_COVER_LIBRARY.map((p,i)=>({p,i,puntaje:p.temas.reduce((s,t)=>s+(texto.includes(t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())?10:0),0),orden:(i-giro+MATERIAL_COVER_LIBRARY.length)%MATERIAL_COVER_LIBRARY.length}))
-        .filter(x=>!usadas.has(x.i)).sort((a,b)=>(b.puntaje-a.puntaje)||(a.orden-b.orden));
-      const elegida=candidatas[0]||{p:MATERIAL_COVER_LIBRARY[(giro+posicion)%MATERIAL_COVER_LIBRARY.length],i:-1};
-      if(elegida.i>=0)usadas.add(elegida.i);
-      return Object.assign({},m,{_coverImage:elegida.p.src});
+    const resultado=lista.map(m=>Object.assign({},m));
+    const pendientes=new Set(lista.map((_,i)=>i));
+    const portadasUsadas=new Set();
+    const normalizar=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+    // Primero reserva cada portada para el material con la coincidencia temática
+    // más clara. Así una guía genérica no consume antes la portada de etiquetado.
+    MATERIAL_COVER_LIBRARY.forEach((portada,coverIndex)=>{
+      const candidatos=[...pendientes].map(i=>{
+        const texto=_textoTemaMaterial(lista[i]);
+        const titulo=normalizar(lista[i].titulo);
+        const puntaje=portada.temas.reduce((s,t)=>{
+          const tema=normalizar(t);
+          return s+(titulo.includes(tema)?30:(texto.includes(tema)?8:0));
+        },0);
+        return {i,puntaje,orden:_hashMaterial(texto+'|'+lista[i].cursoId+'|'+lista[i].materialIndex)};
+      }).filter(x=>x.puntaje>0).sort((a,b)=>(b.puntaje-a.puntaje)||(a.orden-b.orden));
+      if(!candidatos.length)return;
+      const elegido=candidatos[0].i;
+      resultado[elegido]._coverImage=portada.src;
+      pendientes.delete(elegido);portadasUsadas.add(coverIndex);
     });
+
+    // Los materiales restantes reciben una portada libre y distinta.
+    [...pendientes].forEach((i,posicion)=>{
+      const texto=_textoTemaMaterial(lista[i]);
+      const giro=_hashMaterial(texto+'|'+lista[i].cursoId+'|'+lista[i].materialIndex)%MATERIAL_COVER_LIBRARY.length;
+      const candidatas=MATERIAL_COVER_LIBRARY.map((p,coverIndex)=>({p,coverIndex,orden:(coverIndex-giro+MATERIAL_COVER_LIBRARY.length)%MATERIAL_COVER_LIBRARY.length}))
+        .filter(x=>!portadasUsadas.has(x.coverIndex)).sort((a,b)=>a.orden-b.orden);
+      const elegida=candidatas[0]||{p:MATERIAL_COVER_LIBRARY[(giro+posicion)%MATERIAL_COVER_LIBRARY.length],coverIndex:-1};
+      resultado[i]._coverImage=elegida.p.src;
+      if(elegida.coverIndex>=0)portadasUsadas.add(elegida.coverIndex);
+    });
+    return resultado;
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -10370,12 +10406,16 @@ const Sections = (function(){
 
   function _renderPdfCard(m) {
     const colorMap = {
-      'Seguridad':'#EF4444','Calidad':'#10B981','Logística':'#3B82F6',
-      'Mantenimiento':'#A855F7','Producción':'#F59E0B','Energía':'#9CCC65',
-      'Medio Ambiente':'#14B8A6','Operaciones':'#F97316','Gestión':'#8B5CF6',
-      'Finanzas':'#06B6D4','Administrativo':'#EC4899','General':'#43A047'
+      'Ciencia de Alimentos':'#2F6D8D','Inocuidad Alimentaria':'#D97757','Microbiología de Alimentos':'#4C7FA3',
+      'Tecnología de Alimentos':'#7567AE','Calidad Alimentaria':'#C58A36','Normativa y Etiquetado':'#D16F62',
+      'Buenas Prácticas de Manufactura':'#367B91','HACCP':'#B86B42','Nutrición y Formulación':'#8A69A8',
+      'Suplementos Alimenticios':'#C58A36','Agroindustria':'#B97935','Distintivo H':'#4C7FA3',
+      'Conservación de Alimentos':'#567AA5','Alimentos Funcionales':'#7567AE',
+      'Seguridad':'#D16F62','Calidad':'#C58A36','Logística':'#4C7FA3','Mantenimiento':'#7567AE',
+      'Producción':'#B97935','Energía':'#C58A36','Medio Ambiente':'#367B91','Operaciones':'#D97757',
+      'Gestión':'#7567AE','Finanzas':'#2F6D8D','Administrativo':'#8A69A8','General':'#2F6D8D'
     };
-    const c = colorMap[m.cursoArea] || '#43A047';
+    const c = colorMap[m.cursoArea] || '#2F6D8D';
     const tipo = _inferirTipoMaterial(m.url);
     const iconMap = { excel:'i-chart-bar', pdf:'i-news', ppt:'i-chart-bar', doc:'i-news' };
     const ic = iconMap[tipo] || 'i-news';
@@ -15638,6 +15678,30 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 :root[data-theme="night"] .sec-hero--library{background:linear-gradient(125deg,#1C2830,#17242C)!important;border-color:#30424C!important}:root[data-theme="night"] .libro-feature{border-color:#30424C;background:radial-gradient(circle at 90% 10%,rgba(197,138,54,.13),transparent 35%),linear-gradient(145deg,#1A2830,#132029)}:root[data-theme="night"] .bib-shelf-title{background:linear-gradient(90deg,#332824,#282432 58%,#1D2A32)}:root[data-theme="night"] .bib-shelf-title span{color:#E9EFF2}:root[data-theme="night"] .libro-progress{background:#31434E}:root[data-theme="night"] .libro-feature__pages{background:#243946;color:#AFC8D7}:root[data-theme="night"] .rz-daily{background:linear-gradient(90deg,#322C20,var(--surface))!important}:root[data-theme="night"] .reto-ranking{border-color:#31434E;background:linear-gradient(145deg,var(--surface),#182831)}:root[data-theme="night"] .rz-card__level,:root[data-theme="night"] .rz-card__go{background:rgba(237,242,244,.9);color:#203744}
 @media(max-width:760px){.sec-hero--library{grid-template-columns:1fr;padding:27px 22px!important}.bib-hero__visual{display:none}.libro-feature{grid-template-columns:158px minmax(0,1fr);gap:20px;padding:20px}.libro-feature h2{font-size:24px}.libro-feature__summary{font-size:11.5px}.libro-feature__actions{margin-top:16px}.bib-libros-grid{gap:19px!important;padding-bottom:14px}.libro-card{flex-basis:136px;max-width:136px}.rdr-view,.rdr-hint{display:none}.rdr-escenario{padding:12px;gap:8px}.rdr-libro,.rdr-libro.is-single{width:min(74vw,560px);height:76vh;grid-template-columns:1fr}.rdr-libro:not(.is-single){grid-template-columns:1fr}.rdr-libro .rdr-hoja--right,.rdr-libro .rdr-lomo{display:none}.rdr-hoja{padding:28px 23px;border-radius:7px}.rdr-flecha{width:36px;height:36px}.rz-head{padding:25px 22px}.rz-xp{margin-top:14px}.rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.rz-card{min-height:310px;padding:10px}.rz-card__tile{height:125px}.rz-card__title{font-size:15px}.rz-card__desc{font-size:10.5px}.rz-card__level{top:19px;left:19px}.rz-card__go{top:19px;right:19px}.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:30px 15px!important}.pdfs-grid .pdf-card__cover-copy{padding:12px!important}.pdfs-grid .pdf-card__cover-copy strong{font-size:13px!important}}
 @media(max-width:520px){.libro-feature{grid-template-columns:1fr;padding:18px}.libro-feature__cover{width:min(210px,72%);justify-self:center}.libro-feature h2{font-size:25px}.libro-feature__summary{font-size:12px}.libro-feature__pages{order:4}.bib-shelf-title{align-items:flex-start;flex-direction:column}.bib-shelf-title small{font-size:7.5px}.libro-card{flex-basis:124px;max-width:124px}.libro-card__edition{font-size:5.2px;left:11px}.rz-grid{grid-template-columns:1fr}.rz-card{min-height:345px}.rz-card__tile{height:170px}}
+
+/* Inicio y títulos · identidad Alintec azul/coral/lavanda, sin verde dominante */
+.banner{background:radial-gradient(circle at 88% 18%,rgba(217,119,87,.2),transparent 28%),radial-gradient(circle at 66% 110%,rgba(117,103,174,.15),transparent 38%),linear-gradient(135deg,#F8FBFD,#F4F0FA 56%,#FFF4EC)!important}
+:root[data-theme="day"] .banner{background:radial-gradient(circle at 88% 18%,rgba(217,119,87,.2),transparent 28%),radial-gradient(circle at 66% 110%,rgba(117,103,174,.15),transparent 38%),linear-gradient(135deg,#F8FBFD,#F4F0FA 56%,#FFF4EC)!important;box-shadow:0 20px 50px rgba(35,62,81,.1)}
+.banner::before{background:rgba(47,109,141,.08)!important;box-shadow:0 0 0 46px rgba(117,103,174,.035)!important}
+.banner__eyebrow{color:#5E7180!important}.banner__eyebrow__dot{background:#D97757!important;box-shadow:0 0 0 5px rgba(217,119,87,.13)!important}
+.banner__title{position:relative;color:#19384B!important;background:none!important;-webkit-text-fill-color:currentColor!important}.banner__title::after{content:'';display:block;width:66px;height:4px;margin-top:10px;border-radius:99px;background:linear-gradient(90deg,#2F6D8D,#D97757,#7567AE)}
+button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;border-width:1px;text-align:left}.banner__stat::after{content:'Abrir  →';display:block;margin-top:8px;color:var(--text-3);font:750 8px 'JetBrains Mono',monospace;letter-spacing:.45px;text-transform:uppercase;opacity:.72}.banner__stat:hover,.banner__stat:focus-visible{transform:translateY(-4px);outline:none;box-shadow:0 12px 24px rgba(35,62,81,.12)}
+.banner__stat:nth-child(1){background:#EAF3F8;border-color:#BFD5E2}.banner__stat:nth-child(2){background:#FFF0EA;border-color:#EDC8B9}.banner__stat:nth-child(3){background:#FFF5DE;border-color:#E8D19A}.banner__stat:nth-child(4){background:#F1EDFA;border-color:#D3C8E9}
+.banner__stat:nth-child(1) .banner__stat-val{color:#2F6D8D!important;-webkit-text-fill-color:#2F6D8D!important}.banner__stat:nth-child(2) .banner__stat-val{color:#C8614B!important;-webkit-text-fill-color:#C8614B!important}.banner__stat:nth-child(3) .banner__stat-val{color:#B77920!important;-webkit-text-fill-color:#B77920!important}.banner__stat:nth-child(4) .banner__stat-val{color:#7567AE!important;-webkit-text-fill-color:#7567AE!important}
+
+.continuar{margin-bottom:34px}.continuar__main{background:radial-gradient(circle at 92% 12%,rgba(217,119,87,.28),transparent 31%),linear-gradient(145deg,#18394F 0%,#285E78 58%,#3B4D78 100%);box-shadow:0 18px 44px rgba(25,57,78,.24)}.continuar__eyebrow,.continuar__clase-lbl{color:#F1C56F}.continuar__barra-fill{background:linear-gradient(90deg,#63A8C7,#F0B15A,#D97757)}.continuar__ir{color:#18394F}.continuar__meta-eyebrow{color:#2F6D8D}.continuar__paso-ic{background:#EAF3F8;color:#2F6D8D}
+.section-header--home-news{position:relative;margin:0 0 20px;padding:15px 18px;border:1px solid #DFD8EC;border-left:5px solid #7567AE;border-radius:6px 17px 17px 6px;background:linear-gradient(90deg,#F1EDFA,#FFF0EA 58%,#EDF5F8);box-shadow:0 10px 24px rgba(52,65,90,.07)}.section-header--home-news .section-header__title{color:#273B53}.section-header--home-news .section-header__badge{background:#FFF8E7;border-color:#E8D29C;color:#A26A1F}
+
+.sec-hero:not(.sec-hero--library){background:radial-gradient(circle at 92% 8%,rgba(217,119,87,.15),transparent 31%),linear-gradient(135deg,#F8FBFD,#F4F0FA 58%,#FFF5EE)!important}.sec-hero:not(.sec-hero--library)::before{width:5px;background:linear-gradient(180deg,#2F6D8D 0 32%,#D97757 32% 64%,#7567AE 64% 100%)!important}.sec-hero:not(.sec-hero--library)::after{background:radial-gradient(circle,rgba(117,103,174,.14),transparent 68%)!important}.sec-hero__eyebrow{color:#56738A!important}.sec-hero__title{color:#203B4B!important}.sec-hero__title::after{content:'';display:block;width:58px;height:3px;margin-top:10px;border-radius:99px;background:linear-gradient(90deg,#2F6D8D,#D97757,#7567AE)}
+
+/* PDFs · fotografía clara y título editorial flotante, sin bloque oscuro pegado */
+.pdfs-grid .pdf-card__top{background-position:center top!important;box-shadow:7px 18px 30px rgba(28,51,66,.2)!important}
+.pdfs-grid .pdf-card__top::after{left:10px!important;right:0!important;top:0!important;bottom:0!important;height:auto!important;background:linear-gradient(180deg,rgba(18,44,63,.02) 42%,rgba(18,44,63,.2) 100%)!important}
+.pdf-card__cover-brand{background:rgba(255,255,255,.92)!important;color:#24465B!important}.pdf-card__cover-brand b{color:#D16F62!important}
+.pdfs-grid .pdf-card__cover-copy{left:22px!important;right:12px!important;bottom:14px!important;min-height:0!important;padding:13px 14px 14px!important;border:1px solid rgba(255,255,255,.74)!important;border-top:4px solid var(--pdf-color)!important;border-left:1px solid rgba(255,255,255,.74)!important;border-radius:13px!important;background:rgba(250,251,252,.91)!important;color:#18374A!important;text-shadow:none!important;box-shadow:0 10px 26px rgba(19,43,58,.19)!important;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}
+.pdfs-grid .pdf-card__cover-copy small{color:color-mix(in srgb,var(--pdf-color) 80%,#243846)!important}.pdfs-grid .pdf-card__cover-copy strong{color:#18374A!important}.pdfs-grid .pdf-card__cover-copy em{color:#687984!important}.pdfs-grid .pdf-card__size{background:color-mix(in srgb,var(--pdf-color) 14%,#fff)!important;color:color-mix(in srgb,var(--pdf-color) 80%,#203746)!important}.pdf-card__save{background:#244E68!important}.pdfs-grid .pdf-card__meta span:first-child{color:color-mix(in srgb,var(--pdf-color) 78%,#2A4658)!important}
+:root[data-theme="night"] .banner{background:radial-gradient(circle at 88% 18%,rgba(217,119,87,.18),transparent 28%),radial-gradient(circle at 66% 110%,rgba(117,103,174,.16),transparent 38%),linear-gradient(135deg,#182832,#242536 56%,#30251F)!important}:root[data-theme="night"] .banner__title{color:#F1F5F6!important}:root[data-theme="night"] .banner__stat:nth-child(1){background:#203846;border-color:#36566A}:root[data-theme="night"] .banner__stat:nth-child(2){background:#382925;border-color:#654033}:root[data-theme="night"] .banner__stat:nth-child(3){background:#382F1F;border-color:#66522C}:root[data-theme="night"] .banner__stat:nth-child(4){background:#2D293B;border-color:#4D4568}:root[data-theme="night"] .section-header--home-news{background:linear-gradient(90deg,#2D293B,#382925 58%,#203846);border-color:#4D4568}:root[data-theme="night"] .section-header--home-news .section-header__title{color:#F1F5F6}:root[data-theme="night"] .sec-hero:not(.sec-hero--library){background:radial-gradient(circle at 92% 8%,rgba(217,119,87,.12),transparent 31%),linear-gradient(135deg,#172832,#272538 58%,#30251F)!important}:root[data-theme="night"] .sec-hero__title{color:#EFF4F6!important}:root[data-theme="night"] .sec-hero__eyebrow{color:#AFC7D5!important}
+@media(max-width:560px){.pdfs-grid .pdf-card__cover-copy{left:16px!important;right:9px!important;bottom:10px!important;padding:10px 10px 11px!important}.pdfs-grid .pdf-card__cover-copy small{font-size:6.5px}.pdfs-grid .pdf-card__cover-copy strong{font-size:13.5px!important}.continuar{margin-bottom:26px}}
 @media(prefers-reduced-motion:reduce){.rdr-turn-sheet{animation:none!important}.rdr-libro{transition:none}}
 </style>
 <script>
