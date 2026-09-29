@@ -9420,36 +9420,52 @@ const Sections = (function(){
           </div>
         </div>
 
-        <section class="nivel-path" style="--nivel-progress:${Math.max(7,Math.min(93,((nivelActual.id-1)/(niveles.length-1))*100+(pct/100)*(100/(niveles.length-1))))}%">
+        <section class="nivel-path">
           <div class="nivel-path__head">
             <div>
               <span class="nivel-path__eyebrow">Trayectoria profesional</span>
-              <h2 class="nivel-path__title">Tu ruta de crecimiento</h2>
-              <p>Visualiza lo que ya conquistaste y el siguiente nivel que puedes desbloquear.</p>
+              <h2 class="nivel-path__title">Tu pasaporte profesional</h2>
+              <p>Cada nivel reconoce una nueva etapa de tu formación en alimentos.</p>
             </div>
             <span class="nivel-path__balance"><b>${usuario.xp}</b> XP acumulados</span>
           </div>
-          <div class="nivel-path__track">
-            ${niveles.map((n,idx)=>{
-              const iconosNivel=[
-                '<svg class="ic"><use href="#i-book-2"/></svg>',
-                '<svg class="ic"><use href="#i-tools"/></svg>',
-                '<svg class="ic"><use href="#i-badge"/></svg>',
-                '<svg class="ic"><use href="#i-shield-check"/></svg>',
-                '<svg class="ic"><use href="#i-crown"/></svg>'
-              ];
-              const isCurrent=n.id===nivelActual.id;
-              const isDone=n.id<nivelActual.id;
-              const cls=isCurrent?'is-current':isDone?'is-done':'is-locked';
-              return `<div class="nivel-step ${cls}">
-                <span class="nivel-step__state">${isCurrent?'Nivel actual':isDone?'Completado':'Por desbloquear'}</span>
-                <div class="nivel-step__icon">${iconosNivel[idx]||'·'}</div>
-                <div class="nivel-step__copy">
-                  <div class="nivel-step__name">${n.nombre}</div>
-                  <div class="nivel-step__xp">${isCurrent?usuario.xp+' XP actuales':n.desde+' XP'}</div>
-                </div>
-              </div>`;
-            }).join('')}
+          <div class="nivel-path__layout">
+            <article class="nivel-path__spotlight">
+              <span class="nivel-path__current">Estás aquí</span>
+              <div class="nivel-path__rank">0${nivelActual.id}</div>
+              <div class="nivel-path__spot-copy">
+                <span>Nivel actual</span>
+                <h3>${nivelActual.nombre}</h3>
+                <p>${xpRest>0?`Te separan <strong>${xpRest} XP</strong> de ${proxNivel}.`:'Has alcanzado el rango más alto disponible.'}</p>
+              </div>
+              <div class="nivel-path__spot-meta">
+                <span><b>${usuario.xp}</b> XP actuales</span>
+                <span><b>${nivelActual.id}</b> de 5 niveles</span>
+              </div>
+            </article>
+            <div class="nivel-path__map">
+              <div class="nivel-path__map-head"><span>Mapa de niveles</span><small>Tu recorrido completo</small></div>
+              <div class="nivel-path__milestones">
+                ${niveles.map((n,idx)=>{
+                  const iconosNivel=[
+                    '<svg class="ic"><use href="#i-book-2"/></svg>',
+                    '<svg class="ic"><use href="#i-tools"/></svg>',
+                    '<svg class="ic"><use href="#i-badge"/></svg>',
+                    '<svg class="ic"><use href="#i-shield-check"/></svg>',
+                    '<svg class="ic"><use href="#i-crown"/></svg>'
+                  ];
+                  const isCurrent=n.id===nivelActual.id;
+                  const isDone=n.id<nivelActual.id;
+                  const cls=isCurrent?'is-current':isDone?'is-done':'is-locked';
+                  return `<div class="nivel-step ${cls}"${isCurrent?' aria-current="step"':''}>
+                    <span class="nivel-step__index">0${n.id}</span>
+                    <div class="nivel-step__icon">${iconosNivel[idx]||'·'}</div>
+                    <div class="nivel-step__copy"><div class="nivel-step__name">${n.nombre}</div><div class="nivel-step__xp">Desde ${n.desde} XP</div></div>
+                    <span class="nivel-step__state">${isCurrent?'Actual':isDone?'✓':'Bloqueado'}</span>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -15935,29 +15951,36 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
 :root[data-theme="night"] .home-greeting{background:#131F29!important}:root[data-theme="night"] .home-greeting__mark,:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
 
-/* Logros: ruta visual con estados legibles; sin línea de tiempo ni rombos antiguos. */
-.nivel-path{padding:26px!important;border:1px solid #DDE8E1!important;border-radius:26px!important;background:#F5F9F6!important;box-shadow:0 16px 38px rgba(29,52,66,.07)!important;overflow:hidden}
+/* Logros: pasaporte profesional, con un nivel protagonista y un mapa compacto. */
+.nivel-path{padding:27px!important;border:1px solid #DDE8E1!important;border-radius:28px!important;background:#F7FAF7!important;box-shadow:0 17px 40px rgba(29,52,66,.07)!important;overflow:hidden}
 .nivel-path::before,.nivel-path__track::before,.nivel-path__track::after{display:none!important;content:none!important}
-.nivel-path__head{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px}
+.nivel-path__head{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:21px}
 .nivel-path__eyebrow{display:block;margin-bottom:7px;color:var(--alintec-green-deep);font:800 8.5px 'JetBrains Mono',monospace;letter-spacing:1.35px;text-transform:uppercase}
-.nivel-path__title{display:block!important;margin:0 0 6px!important;color:var(--text)!important;font:800 clamp(20px,2.4vw,27px)/1.1 'Plus Jakarta Sans',sans-serif!important;letter-spacing:-.75px!important;text-transform:none!important}
+.nivel-path__title{display:block!important;margin:0 0 6px!important;color:var(--text)!important;font:800 clamp(21px,2.4vw,29px)/1.08 'Plus Jakarta Sans',sans-serif!important;letter-spacing:-.85px!important;text-transform:none!important}
 .nivel-path__head p{max-width:600px;margin:0;color:var(--text-2);font-size:12.5px;line-height:1.5}
-.nivel-path__balance{flex:0 0 auto;padding:10px 13px;border:1px solid rgba(111,175,123,.32);border-radius:13px;background:#fff;color:var(--alintec-green-deep);font:700 9px 'JetBrains Mono',monospace;letter-spacing:.25px;white-space:nowrap}.nivel-path__balance b{font-size:15px}
-.nivel-path__track{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch!important;gap:11px!important}
-.nivel-step{display:grid!important;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto 1fr;align-items:center!important;gap:13px 11px!important;min-height:142px;padding:14px!important;border:1px solid #E0E8E3;border-radius:18px;background:#fff;text-align:left!important;box-shadow:0 8px 20px rgba(29,52,66,.045)}
-.nivel-step__state{grid-column:1/-1;justify-self:start;padding:4px 7px;border-radius:999px;background:#F1F4F2;color:#78877E;font:800 7px 'JetBrains Mono',monospace;letter-spacing:.65px;text-transform:uppercase}
-.nivel-step__icon{grid-column:1;grid-row:2;width:44px!important;height:44px!important;border:1px solid #DCE6E0!important;border-radius:13px!important;background:#F5F8F6!important;color:#7B8B82!important;transform:none!important;box-shadow:none!important}.nivel-step__icon .ic{width:19px!important;height:19px!important;transform:none!important}
-.nivel-step__copy{grid-column:2;grid-row:2;min-width:0}.nivel-step__name{color:var(--text)!important;font-size:12.5px!important;line-height:1.25}.nivel-step__xp{margin-top:6px;padding:0!important;border:0!important;background:none!important;color:var(--text-3)!important;font-size:8.5px!important;line-height:1.25}
-.nivel-step.is-done{border-color:#CFE1D3;background:#EDF5EF}.nivel-step.is-done .nivel-step__state{background:#DDECE0;color:#397655}.nivel-step.is-done .nivel-step__icon{border-color:#BED7C4!important;background:#DDECE0!important;color:#397655!important}
-.nivel-step.is-current{border-color:#315B68;background:#315B68;box-shadow:0 14px 30px rgba(37,75,89,.2)}.nivel-step.is-current .nivel-step__state{background:#E8F3EA;color:#397655}.nivel-step.is-current .nivel-step__icon{border-color:rgba(255,255,255,.2)!important;background:rgba(255,255,255,.1)!important;color:#fff!important}.nivel-step.is-current .nivel-step__name{color:#fff!important}.nivel-step.is-current .nivel-step__xp{color:#D8E7EA!important}.nivel-step.is-locked .nivel-step__icon{opacity:1!important;filter:none!important}
+.nivel-path__balance{flex:0 0 auto;padding:10px 13px;border:1px solid rgba(111,175,123,.32);border-radius:999px;background:#fff;color:var(--alintec-green-deep);font:700 9px 'JetBrains Mono',monospace;letter-spacing:.25px;white-space:nowrap}.nivel-path__balance b{font-size:15px}
+.nivel-path__layout{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr);gap:14px;align-items:stretch}
+.nivel-path__spotlight{position:relative;overflow:hidden;display:flex;min-height:315px;flex-direction:column;justify-content:flex-end;padding:25px;border-radius:23px;background:#477B5A;color:#fff;box-shadow:0 16px 31px rgba(48,92,65,.18)}
+.nivel-path__spotlight::before{content:'';position:absolute;right:-58px;top:-54px;width:200px;height:200px;border:1px solid rgba(255,255,255,.11);border-radius:50%;box-shadow:0 0 0 31px rgba(255,255,255,.025),0 0 0 72px rgba(255,255,255,.015)}
+.nivel-path__current{position:absolute;left:23px;top:22px;padding:5px 9px;border-radius:999px;background:#EAF4EC;color:#397655;font:850 7px 'JetBrains Mono',monospace;letter-spacing:.9px;text-transform:uppercase}
+.nivel-path__rank{position:absolute;right:18px;top:10px;color:rgba(255,255,255,.09);font:900 94px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-7px}
+.nivel-path__spot-copy{position:relative;z-index:1}.nivel-path__spot-copy>span{display:block;margin-bottom:7px;color:#B7D9DD;font:750 8px 'JetBrains Mono',monospace;letter-spacing:1.15px;text-transform:uppercase}.nivel-path__spot-copy h3{margin:0;color:#fff;font:850 clamp(27px,3vw,38px)/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-1.4px}.nivel-path__spot-copy p{margin:11px 0 0;color:rgba(255,255,255,.7);font-size:11px;line-height:1.5}.nivel-path__spot-copy p strong{color:#fff}
+.nivel-path__spot-meta{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.13)}.nivel-path__spot-meta span{color:rgba(255,255,255,.6);font:650 8px 'JetBrains Mono',monospace}.nivel-path__spot-meta b{display:block;margin-bottom:4px;color:#fff;font-size:13px}
+.nivel-path__map{padding:18px 18px 16px;border:1px solid #E0E8E3;border-radius:23px;background:#fff}.nivel-path__map-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:0 2px}.nivel-path__map-head span{color:var(--text);font-size:12px;font-weight:800}.nivel-path__map-head small{color:var(--text-3);font:650 7.5px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.7px}
+.nivel-path__milestones{display:grid;gap:7px}
+.nivel-step{display:grid!important;grid-template-columns:29px 38px minmax(0,1fr) auto;align-items:center!important;gap:10px!important;min-height:47px;padding:8px 10px!important;border:1px solid transparent!important;border-radius:14px!important;background:#F7F9F7!important;text-align:left!important;box-shadow:none!important;transform:none!important}
+.nivel-step__index{color:#9AA79F;font:750 7.5px 'JetBrains Mono',monospace;letter-spacing:.5px}.nivel-step__icon{grid-column:auto!important;grid-row:auto!important;width:38px!important;height:38px!important;border:1px solid #DCE6E0!important;border-radius:11px!important;background:#fff!important;color:#7B8B82!important;transform:none!important;box-shadow:none!important}.nivel-step__icon .ic{width:17px!important;height:17px!important;transform:none!important}
+.nivel-step__copy{grid-column:auto!important;grid-row:auto!important;min-width:0}.nivel-step__name{color:var(--text)!important;font-size:11.5px!important;line-height:1.2}.nivel-step__xp{margin-top:4px!important;padding:0!important;border:0!important;background:none!important;color:var(--text-3)!important;font-size:7.5px!important;line-height:1.2}.nivel-step__state{grid-column:auto!important;justify-self:end;padding:4px 7px;border-radius:999px;background:#EEF1EF;color:#7E8C83;font:800 6.4px 'JetBrains Mono',monospace;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
+.nivel-step.is-done{background:#F0F6F1!important}.nivel-step.is-done .nivel-step__index{color:#397655}.nivel-step.is-done .nivel-step__state{background:#DDECE0;color:#397655}.nivel-step.is-done .nivel-step__icon{border-color:#C8DECD!important;background:#E5F0E7!important;color:#397655!important}
+.nivel-step.is-current{border-color:#9FC3A7!important;background:#ECF4EE!important;box-shadow:inset 3px 0 #477B5A!important}.nivel-step.is-current .nivel-step__index,.nivel-step.is-current .nivel-step__name{color:#397655!important}.nivel-step.is-current .nivel-step__state{background:#477B5A;color:#fff}.nivel-step.is-current .nivel-step__icon{border-color:#B5D0BA!important;background:#fff!important;color:#397655!important}.nivel-step.is-current .nivel-step__xp{color:#64806B!important}.nivel-step.is-locked .nivel-step__icon{opacity:1!important;filter:none!important}
 
 /* Noticias: más contenido visible y respaldo fotográfico real para fuentes incompatibles. */
 .hojas--tarjetas .hoja--tarjeta .hj-summary{font-size:11.5px!important;line-height:1.5!important}.hojas--tarjetas .hoja--tarjeta .hj-summary p{-webkit-line-clamp:8!important}.hj-img.news-image-fallback{background-color:#DDE8E1;background-position:center;background-size:cover}.hj-img.news-image-fallback img{object-position:center}
 
-:root[data-theme="night"] .nivel-path{border-color:#283A34!important;background:#121D1A!important;box-shadow:0 18px 42px rgba(0,0,0,.28)!important}:root[data-theme="night"] .nivel-path__balance{border-color:#355245;background:#192722;color:#A8D0AF}:root[data-theme="night"] .nivel-step{border-color:#293B35;background:#17231F}:root[data-theme="night"] .nivel-step.is-done{border-color:#355145;background:#1B2D25}:root[data-theme="night"] .nivel-step.is-done .nivel-step__state,:root[data-theme="night"] .nivel-step.is-done .nivel-step__icon{background:#243C30!important;color:#A8D0AF!important}:root[data-theme="night"] .nivel-step.is-current{border-color:#487486;background:#294E5B}:root[data-theme="night"] .nivel-step__state{background:#202D28;color:#9AABA1}:root[data-theme="night"] .nivel-step__icon{border-color:#31433D!important;background:#202D28!important}
+:root[data-theme="night"] .nivel-path{border-color:#283A34!important;background:#121D1A!important;box-shadow:0 18px 42px rgba(0,0,0,.28)!important}:root[data-theme="night"] .nivel-path__balance{border-color:#355245;background:#192722;color:#A8D0AF}:root[data-theme="night"] .nivel-path__map{border-color:#2A3C35;background:#17231F}:root[data-theme="night"] .nivel-step{background:#1B2823!important}:root[data-theme="night"] .nivel-step.is-done{background:#1D3027!important}:root[data-theme="night"] .nivel-step.is-done .nivel-step__state,:root[data-theme="night"] .nivel-step.is-done .nivel-step__icon{background:#243C30!important;color:#A8D0AF!important}:root[data-theme="night"] .nivel-step.is-current{border-color:#4D765B!important;background:#203329!important}:root[data-theme="night"] .nivel-step__state{background:#202D28;color:#9AABA1}:root[data-theme="night"] .nivel-step__icon{border-color:#31433D!important;background:#202D28!important}
 
-@media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}.nivel-path__track{grid-template-columns:repeat(3,minmax(0,1fr))}.nivel-step:nth-child(n+4){grid-column:span 1}}
-@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.nivel-path{padding:20px 17px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__track{display:grid!important;grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:165px;overflow-x:auto;scroll-snap-type:x mandatory;padding:1px 1px 9px}.nivel-step{scroll-snap-align:start}}
+@media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}.nivel-path__layout{grid-template-columns:1fr}.nivel-path__spotlight{min-height:255px}}
+@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
