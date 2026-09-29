@@ -26,7 +26,7 @@ if(m)m.setAttribute('content',t==='night'?'#09111A':'#F3F5F1');}catch(e){}})();
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Sora:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap">
 <style>
@@ -3964,6 +3964,7 @@ window.__setDisplayName = async (nombre) => {
       <section class="home-greeting fade-up">
         <div class="home-greeting__mark" aria-hidden="true"><svg class="ic"><use href="#i-sun"/></svg></div>
         <div class="home-greeting__copy">
+          <div class="home-greeting__eyebrow"><span class="home-greeting__dot"></span>Tu espacio de aprendizaje</div>
           <h1 class="home-greeting__title" id="hero-title">Hola de nuevo</h1>
           <p class="home-greeting__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
         </div>
@@ -4171,11 +4172,18 @@ const Theme={
   toggle(){this.apply(document.documentElement.getAttribute('data-theme')==='night'?'day':'night');}
 };
 
+function setGreetingTitle(greeting, name){
+  const title=document.getElementById('hero-title');
+  if(!title)return;
+  const highlight=document.createElement('span');
+  highlight.textContent=name;
+  title.replaceChildren(document.createTextNode(greeting+', '),highlight);
+}
 function applyGreeting(){
   const now=new Date();
   const h=now.getHours();
   const greet=h<12?'Buen día':h<19?'Buenas tardes':'Buenas noches';
-  const t=document.getElementById('hero-title');if(t)t.textContent=greet+', colega';
+  setGreetingTitle(greet,'colega');
   const d=document.getElementById('home-current-date');
   if(d){d.dateTime=now.toISOString().slice(0,10);d.textContent=now.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 }
@@ -8055,7 +8063,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Tu camino</span>
-          <h1 class="sec-hero__title">Mis cursos</h1>
+          <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">cursos.</span></h1>
           <p class="sec-hero__sub">Continúa donde lo dejaste, repasa lo que ya dominas o descubre nuevas áreas de especialización.</p>
         </div>
         <div class="tabs">
@@ -8735,7 +8743,7 @@ const Sections = (function(){
         <div class="fade-up">
           <div class="sec-hero sec-hero--certificates">
             <span class="sec-hero__eyebrow">Tu trayectoria</span>
-            <h1 class="sec-hero__title">Mis certificados</h1>
+            <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
             <p class="sec-hero__sub">Cada certificado Alintec Food incluye <strong style="color:var(--primary);">folio único, código QR verificable y firma del instructor</strong>. Se otorgan al completar el 100% de las clases de un curso VIP.</p>
           </div>
           <div class="kpi-grid">
@@ -8773,7 +8781,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero sec-hero--certificates">
           <span class="sec-hero__eyebrow">Tu trayectoria</span>
-          <h1 class="sec-hero__title">Mis certificados</h1>
+          <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
           <p class="sec-hero__sub">Cada certificado tiene un folio único <strong style="color:var(--primary);font-family:'JetBrains Mono',monospace;">ALINTEC-2026-XXXXXX</strong> y código QR verificable. Compártelos en LinkedIn o descárgalos en PDF.</p>
         </div>
         <div class="kpi-grid">
@@ -9074,7 +9082,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero sec-hero--certificates">
           <span class="sec-hero__eyebrow">Tu trayectoria</span>
-          <h1 class="sec-hero__title">Mis certificados</h1>
+          <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
           <p class="sec-hero__sub">Cada certificado tiene un folio único <strong style="color:var(--primary);font-family:'JetBrains Mono',monospace;">ALINTEC-2026-XXXXX</strong> y código QR verificable. Compártelos en LinkedIn o descárgalos en PDF.</p>
         </div>
         <div class="kpi-grid">
@@ -9506,7 +9514,7 @@ const Sections = (function(){
         <div class="fade-up">
           <div class="sec-hero">
             <span class="sec-hero__eyebrow">Aprende en directo</span>
-            <h1 class="sec-hero__title">Clases en vivo</h1>
+            <h1 class="sec-hero__title">Clases <span class="sec-hero__accent">en vivo.</span></h1>
             <p class="sec-hero__sub">Cargando próximas clases…</p>
           </div>
         </div>`;
@@ -9519,7 +9527,7 @@ const Sections = (function(){
         <div class="fade-up">
           <div class="sec-hero">
             <span class="sec-hero__eyebrow">Aprende en directo</span>
-            <h1 class="sec-hero__title">Clases en vivo</h1>
+            <h1 class="sec-hero__title">Clases <span class="sec-hero__accent">en vivo.</span></h1>
             <p class="sec-hero__sub">Sesiones en directo con profesionales y especialistas del sector alimentario. Pregunta en vivo, las grabaciones quedan disponibles.</p>
           </div>
           <div style="text-align:center;padding:60px 24px;background:var(--surface-2);border:1px dashed var(--border-2);border-radius:14px;margin-top:18px;">
@@ -9543,7 +9551,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Aprende en directo</span>
-          <h1 class="sec-hero__title">Clases en vivo</h1>
+          <h1 class="sec-hero__title">Clases <span class="sec-hero__accent">en vivo.</span></h1>
           <p class="sec-hero__sub">Sesiones en directo con profesionales y especialistas del sector alimentario. Pregunta en vivo, las grabaciones quedan disponibles.</p>
         </div>
         ${prox?renderProxHero(prox):''}
@@ -10297,7 +10305,7 @@ const Sections = (function(){
         <div class="fade-up">
           <div class="sec-hero sec-hero--library">
             <span class="sec-hero__eyebrow">Descargables</span>
-            <h1 class="sec-hero__title">PDFs y material</h1>
+            <h1 class="sec-hero__title">PDFs y <span class="sec-hero__accent">material.</span></h1>
             <p class="sec-hero__sub">Cargando materiales seguros…</p>
           </div>
         </div>`;
@@ -10335,7 +10343,7 @@ const Sections = (function(){
         <div class="sec-hero sec-hero--library">
           <div class="sec-hero__copy">
             <span class="sec-hero__eyebrow">Biblioteca profesional</span>
-            <h1 class="sec-hero__title">Libros, PDFs y materiales</h1>
+            <h1 class="sec-hero__title">Libros, PDFs y <span class="sec-hero__accent">materiales.</span></h1>
             <p class="sec-hero__sub">Consulta libros técnicos en el lector interactivo y abre tus plantillas, checklists y procedimientos desde una biblioteca visual más clara.</p>
           </div>
           <div class="bib-hero__visual" aria-hidden="true"><span></span><span></span><span></span><i>ALINTEC<br>LIBRARY</i></div>
@@ -10566,7 +10574,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Biblioteca</span>
-          <h1 class="sec-hero__title">Archivo de ${m.mes}</h1>
+          <h1 class="sec-hero__title">Archivo de <span class="sec-hero__accent">${m.mes}.</span></h1>
           <p class="sec-hero__sub">Todo el contenido publicado en ${m.mes} ${m.año} agrupado por fecha. Videos, PDFs y grabaciones de clases en vivo.</p>
         </div>
         <section class="mes-hero">
@@ -10831,7 +10839,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Networking profesional</span>
-          <h1 class="sec-hero__title">Directorio VIP</h1>
+          <h1 class="sec-hero__title">Directorio <span class="sec-hero__accent">VIP.</span></h1>
           <p class="sec-hero__sub">Conecta con la comunidad Alintec Food. Crea tu tarjeta profesional y descubre a otros profesionales y especialistas del sector alimentario.</p>
         </div>
 
@@ -11204,7 +11212,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Comunidad activa</span>
-          <h1 class="sec-hero__title">Foro VIP</h1>
+          <h1 class="sec-hero__title">Foro <span class="sec-hero__accent">VIP.</span></h1>
           <p class="sec-hero__sub">Comparte casos del sector, haz preguntas y conecta con la comunidad Alintec Food. Publica texto e imágenes, comenta y reacciona.</p>
         </div>
 
@@ -11546,7 +11554,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Comunidad WhatsApp</span>
-          <h1 class="sec-hero__title">Canal WhatsApp Alintec Food</h1>
+          <h1 class="sec-hero__title">Canal WhatsApp <span class="sec-hero__accent">Alintec Food.</span></h1>
           <p class="sec-hero__sub">Únete a nuestra comunidad de profesionales de alimentos. Recibe alertas de nuevos cursos, novedades del sector alimentario, casos técnicos y networking.</p>
         </div>
 
@@ -11622,7 +11630,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Tu cuenta</span>
-          <h1 class="sec-hero__title">Mi perfil</h1>
+          <h1 class="sec-hero__title">Mi <span class="sec-hero__accent">perfil.</span></h1>
           <p class="sec-hero__sub">Tus datos personales, configuración de la membresía y preferencias de notificaciones.</p>
         </div>
 
@@ -11706,7 +11714,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Activa tu acceso</span>
-          <h1 class="sec-hero__title">Suscripción</h1>
+          <h1 class="sec-hero__title">Tu <span class="sec-hero__accent">suscripción.</span></h1>
           <p class="sec-hero__sub">${isInvitado
             ? 'Crea tu cuenta y activa tu membresía para desbloquear cursos, clases en vivo y herramientas pro.'
             : 'Estás a un click de acceder a todo el contenido de Alintec Food VIP. Elige tu plan y completa tu suscripción.'}</p>
@@ -11869,7 +11877,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Cuenta administrativa</span>
-          <h1 class="sec-hero__title">Suscripción</h1>
+          <h1 class="sec-hero__title">Tu <span class="sec-hero__accent">suscripción.</span></h1>
           <p class="sec-hero__sub">Tu cuenta tiene acceso administrativo a Alintec Food. No requiere suscripción de pago.</p>
         </div>
         <div class="sub-empty">
@@ -11913,7 +11921,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Tu plan</span>
-          <h1 class="sec-hero__title">Suscripción</h1>
+          <h1 class="sec-hero__title">Tu <span class="sec-hero__accent">suscripción.</span></h1>
           <p class="sec-hero__sub">Detalles de tu membresía, historial de pagos y próxima renovación.</p>
         </div>
 
@@ -12240,7 +12248,7 @@ const Sections = (function(){
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Archivo histórico</span>
-          <h1 class="sec-hero__title">Videoteca</h1>
+          <h1 class="sec-hero__title">Nuestra <span class="sec-hero__accent">videoteca.</span></h1>
           <p class="sec-hero__sub">Todo el contenido publicado mes a mes. Videos, PDFs y grabaciones de clases en vivo organizadas cronológicamente.</p>
         </div>
 
@@ -13784,11 +13792,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const h = new Date().getHours();
       const part = h<12 ? 'Buenos días' : (h<19 ? 'Buenas tardes' : 'Buenas noches');
       if (S.modo === 'invitado') {
-        heroTitle.textContent = 'Estás explorando Alintec Food VIP';
+        setGreetingTitle('Estás explorando','Alintec Food VIP');
       } else if (S.modo === 'sin-membresia') {
-        heroTitle.textContent = `${part}, ${S.displayName?.split(' ')[0]||'colega'}`;
+        setGreetingTitle(part,S.displayName?.split(' ')[0]||'colega');
       } else {
-        heroTitle.textContent = `${part}, ${S.displayName?.split(' ')[0]||'colega'}`;
+        setGreetingTitle(part,S.displayName?.split(' ')[0]||'colega');
       }
     }
 
@@ -15883,8 +15891,17 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   display:none!important;content:none!important;background:none!important;box-shadow:none!important;
 }
 .sec-hero::after,.sec-hero:not(.sec-hero--library)::after,.sec-hero--library::after{display:none!important;content:none!important;background:none!important}
-.sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:#397655!important;font-weight:850!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:#173427!important;font-family:'Plus Jakarta Sans','Inter',sans-serif!important;font-size:clamp(31px,4vw,43px)!important;font-weight:850!important;line-height:1.06!important;letter-spacing:-1.65px!important;text-shadow:none!important}
+.sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:#397655!important;font-weight:850!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{max-width:850px;color:#173427!important;background:none!important;background-clip:border-box!important;-webkit-background-clip:border-box!important;-webkit-text-fill-color:#173427!important;font-family:'Sora','Plus Jakarta Sans','Inter',sans-serif!important;font-size:clamp(36px,4.7vw,52px)!important;font-weight:800!important;line-height:.99!important;letter-spacing:-2.35px!important;text-wrap:balance;text-shadow:none!important}.sec-hero__accent{color:#B56B2D!important;-webkit-text-fill-color:#B56B2D!important}
 .sec-hero__title::after{display:none!important}.sec-hero__sub,.sec-hero--library .sec-hero__sub{max-width:780px;color:#3F5B49!important;font-size:13.5px!important;font-weight:550!important;line-height:1.6!important}.sec-hero__sub strong,.sec-hero__sub em,.sec-hero--library .sec-hero__sub strong{color:#24593B!important}
+
+/* Inicio: saludo editorial con el nombre como protagonista. */
+.home-greeting{isolation:isolate;position:relative;min-height:156px;padding:25px 28px!important;overflow:hidden;border-color:rgba(87,139,99,.25)!important;background:#F1F6EF!important;box-shadow:0 18px 42px rgba(35,75,47,.1)!important}
+.home-greeting::before{content:'';position:absolute;right:-68px;top:-96px;width:250px;height:250px;border-radius:50%;background:rgba(111,175,123,.13);pointer-events:none}.home-greeting::after{content:'';position:absolute;right:142px;bottom:-54px;width:112px;height:112px;border-radius:50%;background:rgba(231,143,123,.12);pointer-events:none}.home-greeting>*{position:relative;z-index:1}
+.home-greeting__mark{width:58px!important;height:58px!important;border-color:rgba(244,197,105,.42)!important;border-radius:18px!important;background:#28563E!important;color:#FFD67B!important;box-shadow:0 12px 25px rgba(38,84,59,.18)}.home-greeting__mark .ic{width:25px!important;height:25px!important}
+.home-greeting__eyebrow{margin-bottom:7px!important;color:#397655!important;font-weight:850!important}.home-greeting__dot{background:#E68F78!important;box-shadow:0 0 0 5px rgba(230,143,120,.12)!important}
+.home-greeting__title{max-width:780px;color:#183A29!important;font-family:'Sora','Plus Jakarta Sans',sans-serif!important;font-size:clamp(31px,4.2vw,47px)!important;font-weight:800!important;line-height:1!important;letter-spacing:-2.1px!important;text-wrap:balance}.home-greeting__title span{color:#B56B2D}
+.home-greeting__sub{max-width:760px!important;margin-top:10px!important;color:#4C6656!important;font-size:13px!important}
+.home-greeting__date-wrap{min-width:205px!important;padding:12px 14px!important;border-color:rgba(126,187,207,.35)!important;background:rgba(255,255,255,.76)!important;box-shadow:0 8px 22px rgba(57,86,72,.07)}.home-greeting__date-wrap>span{color:#B56B2D!important}.home-greeting__date-wrap .ic{color:#397655!important}
 
 /* Materiales: filtro funcional por encima de la cuadrícula. */
 .toolbar:has(#pdf-area-trigger){position:relative;z-index:50;overflow:visible!important}
@@ -15906,8 +15923,8 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .home-course-hero.continuar__main{background-color:#15271F!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important}
 :root[data-theme="night"] .home-course-hero__shade{background:rgba(7,18,13,.58)!important}
 :root[data-theme="night"] .sec-hero,:root[data-theme="night"] .sec-hero:not(.sec-hero--library),:root[data-theme="night"] .sec-hero--library{background:rgba(73,116,83,.42)!important;border-color:rgba(145,201,155,.3)!important;box-shadow:inset 0 1px rgba(255,255,255,.09),0 20px 42px rgba(0,0,0,.22)!important;color:#F4FAF5!important}
-:root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
-:root[data-theme="night"] .home-greeting{background:#131F29!important}:root[data-theme="night"] .home-greeting__mark,:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
+:root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important;-webkit-text-fill-color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__accent{color:#FFD67B!important;-webkit-text-fill-color:#FFD67B!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
+:root[data-theme="night"] .home-greeting{background:#131F29!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] .home-greeting__title{color:#F4FAF5!important}:root[data-theme="night"] .home-greeting__title span{color:#FFD67B}:root[data-theme="night"] .home-greeting__sub{color:#B8C8BF!important}:root[data-theme="night"] .home-greeting__eyebrow{color:#91C99B!important}:root[data-theme="night"] .home-greeting__mark{background:#244936!important;border-color:rgba(255,214,123,.28)!important}:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(126,187,207,.22)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
 
 /* Logros: pasaporte profesional, con un nivel protagonista y un mapa compacto. */
 .nivel-path{padding:27px!important;border:1px solid #DDE8E1!important;border-radius:28px!important;background:#F7FAF7!important;box-shadow:0 17px 40px rgba(29,52,66,.07)!important;overflow:hidden}
@@ -15958,7 +15975,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .logro-hero{background:#294A39!important;border-color:rgba(189,226,197,.18)!important}:root[data-theme="night"] .logro-journey__node b{background:#294A39;box-shadow:0 0 0 4px rgba(41,74,57,.95)}:root[data-theme="night"] .logro-journey__node.is-current b{box-shadow:0 0 0 5px rgba(255,214,123,.15)}
 
 @media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}.nivel-path__layout{grid-template-columns:1fr}.nivel-path__spotlight{min-height:255px}}
-@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.logro-journey{margin-inline:-4px}.logro-journey__node{gap:5px}.logro-journey__node b{width:26px;height:26px}.logro-journey__rail{top:12px}.logro-journey__node small{font-size:6.3px;letter-spacing:0}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
+@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);min-height:0;padding:19px!important}.home-greeting__mark{width:48px!important;height:48px!important}.home-greeting__title{font-size:clamp(28px,9vw,38px)!important;letter-spacing:-1.6px!important}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0!important}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:148px!important;padding:24px 22px!important;border-radius:22px!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(33px,10vw,43px)!important;letter-spacing:-1.8px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.logro-journey{margin-inline:-4px}.logro-journey__node{gap:5px}.logro-journey__node b{width:26px;height:26px}.logro-journey__rail{top:12px}.logro-journey__node small{font-size:6.3px;letter-spacing:0}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
