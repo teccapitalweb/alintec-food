@@ -3962,11 +3962,12 @@ window.__setDisplayName = async (nombre) => {
     <div id="inicio-content">
       <!-- Saludo compacto: deja que el contenido útil sea el protagonista -->
       <section class="home-greeting fade-up">
-        <div>
+        <div class="home-greeting__mark" aria-hidden="true"><svg class="ic"><use href="#i-sun"/></svg></div>
+        <div class="home-greeting__copy">
           <h1 class="home-greeting__title" id="hero-title">Hola de nuevo</h1>
           <p class="home-greeting__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
         </div>
-        <time class="home-greeting__date" id="home-current-date" aria-label="Fecha actual"></time>
+        <div class="home-greeting__date-wrap"><span>HOY</span><div><svg class="ic"><use href="#i-calendar"/></svg><time class="home-greeting__date" id="home-current-date" aria-label="Fecha actual"></time></div></div>
       </section>
 
       <!-- Continúa tu curso: retoma justo donde te quedaste (datos reales) -->
@@ -3974,7 +3975,6 @@ window.__setDisplayName = async (nombre) => {
         <div class="continuar__main home-course-hero">
           <div class="home-course-hero__shade" aria-hidden="true"></div>
           <div class="home-course-hero__content">
-            <span class="continuar__eyebrow" id="continuar-eyebrow">TU PROGRESO</span>
             <h2 class="continuar__titulo" id="continuar-titulo">Continúa tu curso.</h2>
             <div class="continuar__card" id="continuar-card">
             <span class="continuar__card-lbl" id="continuar-card-lbl">CURSO ACTUAL</span>
@@ -7231,10 +7231,11 @@ const Sections = (function(){
   // 🎛️ Dropdown custom fancy · reemplaza select nativo (sin cuadro azul horrible)
   // Uso: bindFancyDropdown('cur-area', (value) => { ... })
   // ═══════════════════════════════════════════════════════════════
-  window.bindFancyDropdown = function(id, onChange) {
-    const trigger = document.getElementById(id + '-trigger');
-    const menu = document.getElementById(id + '-menu');
-    const label = document.getElementById(id + '-label');
+  window.bindFancyDropdown = function(id, onChange, root) {
+    const scope = root && typeof root.querySelector === 'function' ? root : document;
+    const trigger = scope.querySelector('#' + id + '-trigger');
+    const menu = scope.querySelector('#' + id + '-menu');
+    const label = scope.querySelector('#' + id + '-label');
     if (!trigger || !menu) return;
 
     // Toggle abrir/cerrar
@@ -8091,10 +8092,10 @@ const Sections = (function(){
     container.querySelectorAll('[data-curtab]').forEach(b=>b.addEventListener('click',()=>{cursosState.tab=b.dataset.curtab;renderCursos(container);}));
     container.querySelector('#cur-search').addEventListener('input',e=>{cursosState.search=e.target.value;renderCursosList();});
     // Dropdown custom de áreas
-    bindFancyDropdown('cur-area', (value) => {
+    window.bindFancyDropdown('cur-area', (value) => {
       cursosState.area = value;
       renderCursosList();
-    });
+    }, container);
 
     // ─── Cargar cursos de Firestore si aún no se cargaron ───
     if (!_cursosLoaded && !_cursosLoading) {
@@ -10406,8 +10407,8 @@ const Sections = (function(){
       </div>
     `;
 
-    // Bind búsqueda
-    setTimeout(() => {
+    // Bind inmediato: el filtro queda funcional en cuanto termina el render.
+    {
       const grid = container.querySelector('#pdfs-grid-container');
       const search = container.querySelector('#pdf-search-input');
       let currentArea = 'todas';
@@ -10429,10 +10430,10 @@ const Sections = (function(){
       if (search) search.addEventListener('input', aplicarFiltros);
 
       // Bind del dropdown custom de áreas
-      bindFancyDropdown('pdf-area', (value) => {
+      window.bindFancyDropdown('pdf-area', (value) => {
         currentArea = value;
         aplicarFiltros();
-      });
+      }, container);
 
       // Click en cards: si disponible → abrir visor enbebed (igual que clases) · si no → toast con días restantes
       container.querySelectorAll('.pdf-card[data-disponible="true"]').forEach(card => {
@@ -10472,7 +10473,7 @@ const Sections = (function(){
         btn.classList.toggle('is-on', on);
         if (typeof Toast !== 'undefined') Toast.info(on ? 'Guardado' : 'Quitado de guardados', on ? 'Lo verás en la pestaña Guardados' : '');
       }));
-    }, 50);
+    }
   }
 
   function _renderPdfCard(m) {
@@ -15802,18 +15803,22 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   --alintec-lilac:#8B7FBA;
 }
 
-/* Inicio: saludo ligero + curso visual + meta y accesos reales. */
-.home-greeting{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:4px 0 20px;padding:4px 2px 0}
+/* Inicio: bienvenida editorial compacta + curso visual + meta y accesos reales. */
+.home-greeting{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:17px;margin:4px 0 20px;padding:20px 22px;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:0 14px 34px rgba(29,52,66,.07)}
+.home-greeting__mark{display:grid;place-items:center;width:48px;height:48px;border:1px solid rgba(111,175,123,.3);border-radius:15px;background:var(--alintec-green-soft);color:var(--alintec-green-deep)}
+.home-greeting__mark .ic{width:22px;height:22px}.home-greeting__copy{min-width:0}
 .home-greeting__eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--text-3);font:750 9px 'JetBrains Mono',monospace;letter-spacing:1.35px;text-transform:uppercase}
 .home-greeting__dot{width:7px;height:7px;border-radius:50%;background:var(--alintec-green);box-shadow:0 0 0 5px rgba(111,175,123,.12)}
-.home-greeting__title{margin:0;color:var(--text);font:800 clamp(26px,3vw,38px)/1.08 'Plus Jakarta Sans',sans-serif;letter-spacing:-1.15px}
-.home-greeting__sub{max-width:720px;margin:8px 0 0;color:var(--text-2);font-size:13.5px;line-height:1.55}
-.home-greeting__date{flex:0 0 auto;padding:8px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-3);font:650 10px 'JetBrains Mono',monospace;text-transform:capitalize}
+.home-greeting__title{margin:0;color:var(--text);font:800 clamp(25px,3vw,34px)/1.08 'Plus Jakarta Sans',sans-serif;letter-spacing:-1.1px}
+.home-greeting__sub{max-width:720px;margin:6px 0 0;color:var(--text-2);font-size:12.5px;line-height:1.5}
+.home-greeting__date-wrap{min-width:190px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}
+.home-greeting__date-wrap>span{display:block;margin-bottom:5px;color:var(--alintec-green-deep);font:800 7.5px 'JetBrains Mono',monospace;letter-spacing:1.2px}.home-greeting__date-wrap>div{display:flex;align-items:center;gap:7px}.home-greeting__date-wrap .ic{width:14px;height:14px;color:var(--alintec-green-deep)}
+.home-greeting__date{color:var(--text-2);font:700 9.5px 'JetBrains Mono',monospace;text-transform:capitalize}
 #continuar-widget{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(290px,.82fr)!important;gap:16px!important;margin-bottom:30px!important;background:none!important;border:0!important;box-shadow:none!important}
 .home-course-hero.continuar__main{position:relative;isolation:isolate;min-height:440px;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:26px;background-color:#203746!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important;box-shadow:0 20px 46px rgba(29,52,66,.18)!important}
 .home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(20,48,33,.45)}
 .home-course-hero__content{display:flex;min-height:440px;flex-direction:column;justify-content:flex-end;width:min(64%,560px);padding:34px 34px 30px;color:#fff}
-.home-course-hero .continuar__eyebrow{color:#B8DBBE!important}
+.home-course-hero .continuar__eyebrow{display:none!important;color:#B8DBBE!important}
 .home-course-hero .continuar__titulo{color:#fff!important;text-shadow:0 2px 14px rgba(0,0,0,.25)}
 .home-course-hero .continuar__card{margin-top:17px;padding:18px;border:1px solid rgba(255,255,255,.22);border-radius:17px;background:rgba(35,68,47,.84)!important;box-shadow:none!important;backdrop-filter:blur(5px)}
 .home-course-hero .continuar__clase{background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.18)!important}
@@ -15863,19 +15868,11 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:#397655!important;font-weight:850!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:#173427!important;font-size:clamp(31px,4vw,43px)!important;font-weight:850!important;letter-spacing:-1.5px!important;text-shadow:none!important}
 .sec-hero__title::after{display:none!important}.sec-hero__sub,.sec-hero--library .sec-hero__sub{max-width:780px;color:#3F5B49!important;font-size:13.5px!important;font-weight:550!important;line-height:1.6!important}.sec-hero__sub strong,.sec-hero__sub em,.sec-hero--library .sec-hero__sub strong{color:#24593B!important}
 
-/* Materiales: formato compacto, claramente menor que los libros. */
+/* Materiales: filtro funcional por encima de la cuadrícula. */
 .toolbar:has(#pdf-area-trigger){position:relative;z-index:50;overflow:visible!important}
 .toolbar:has(#pdf-area-trigger) .dd-fancy{position:relative;z-index:60}
 .toolbar:has(#pdf-area-trigger) .dd-fancy__menu{z-index:1000}
-.pdfs-grid{
-  position:relative;z-index:1;grid-template-columns:repeat(auto-fill,minmax(132px,145px))!important;
-  justify-content:start!important;align-items:start!important;gap:28px 20px!important;
-}
-.pdfs-grid .pdf-card{width:100%!important;max-width:145px!important}
-.pdfs-grid .pdf-card__top{aspect-ratio:3/4.05!important}
-.pdfs-grid .pdf-card__cover-copy{min-height:86px!important;padding:12px 11px 13px!important}
-.pdfs-grid .pdf-card__cover-copy strong{font-size:12.5px!important}
-.pdfs-grid .pdf-card__body{padding-top:12px!important}
+.pdfs-grid{position:relative;z-index:1}
 .pdfs-grid .pdf-card__format{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:9.5px;font-weight:650}
 .pdfs-grid .pdf-card__format span{flex:0 0 auto;padding:3px 7px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);color:var(--text);font:800 7.5px 'JetBrains Mono',monospace;letter-spacing:.65px;text-transform:uppercase}
 
@@ -15890,10 +15887,10 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] #continuar-widget .continuar__meta,:root[data-theme="night"] .home-kpis .banner__stat,:root[data-theme="night"] .section-header--home-news,:root[data-theme="night"] .rz-card,:root[data-theme="night"] .reto-ranking{background:#131F29!important}
 :root[data-theme="night"] .sec-hero,:root[data-theme="night"] .sec-hero:not(.sec-hero--library),:root[data-theme="night"] .sec-hero--library{background:rgba(73,116,83,.42)!important;border-color:rgba(145,201,155,.3)!important;box-shadow:inset 0 1px rgba(255,255,255,.09),0 20px 42px rgba(0,0,0,.22)!important;color:#F4FAF5!important}
 :root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
-:root[data-theme="night"] .home-greeting__date{background:#131F29}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
+:root[data-theme="night"] .home-greeting{background:#131F29!important}:root[data-theme="night"] .home-greeting__mark,:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
 
 @media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}}
-@media(max-width:680px){.home-greeting{align-items:flex-start;flex-direction:column}.home-greeting__date{display:none}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.pdfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px 12px!important}.pdfs-grid .pdf-card{max-width:none!important}}
+@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
