@@ -9421,7 +9421,14 @@ const Sections = (function(){
         </div>
 
         <section class="nivel-path" style="--nivel-progress:${Math.max(7,Math.min(93,((nivelActual.id-1)/(niveles.length-1))*100+(pct/100)*(100/(niveles.length-1))))}%">
-          <div class="nivel-path__title">Tu camino de aprendiz a maestro</div>
+          <div class="nivel-path__head">
+            <div>
+              <span class="nivel-path__eyebrow">Trayectoria profesional</span>
+              <h2 class="nivel-path__title">Tu ruta de crecimiento</h2>
+              <p>Visualiza lo que ya conquistaste y el siguiente nivel que puedes desbloquear.</p>
+            </div>
+            <span class="nivel-path__balance"><b>${usuario.xp}</b> XP acumulados</span>
+          </div>
           <div class="nivel-path__track">
             ${niveles.map((n,idx)=>{
               const iconosNivel=[
@@ -9435,9 +9442,12 @@ const Sections = (function(){
               const isDone=n.id<nivelActual.id;
               const cls=isCurrent?'is-current':isDone?'is-done':'is-locked';
               return `<div class="nivel-step ${cls}">
+                <span class="nivel-step__state">${isCurrent?'Nivel actual':isDone?'Completado':'Por desbloquear'}</span>
                 <div class="nivel-step__icon">${iconosNivel[idx]||'·'}</div>
-                <div class="nivel-step__name">${n.nombre}</div>
-                <div class="nivel-step__xp">${isCurrent?'TÚ':n.desde+'+ XP'}</div>
+                <div class="nivel-step__copy">
+                  <div class="nivel-step__name">${n.nombre}</div>
+                  <div class="nivel-step__xp">${isCurrent?usuario.xp+' XP actuales':n.desde+' XP'}</div>
+                </div>
               </div>`;
             }).join('')}
           </div>
@@ -10712,7 +10722,11 @@ const Sections = (function(){
   }
   // Limpia y reparte el texto de la nota en párrafos cortos (las notas automáticas llegan en un solo bloque largo)
   function parrafosNoticia(n){
-    let bruto = String(n.resumen || n.extracto || n.descripcion || '');
+    const vistos = new Set();
+    const campos = [n.resumen,n.extracto,n.descripcion,n.contenido,n.texto,n.content,n.snippet]
+      .map(v => String(v || '').trim())
+      .filter(v => v && !vistos.has(v) && vistos.add(v));
+    let bruto = campos.join('\n\n');
     bruto = bruto.replace(/\s*[-–—]?\s*La noticia[\s\S]{0,300}?fue publicada originalmente en[\s\S]*$/i, '');
     let lineas = bruto.split('\n').map(x => x.trim()).filter(Boolean);
     if (lineas.length <= 1 && lineas[0] && lineas[0].length > 260) {
@@ -10728,12 +10742,36 @@ const Sections = (function(){
     }
     return salida;
   }
+  function resumenEditorialNoticia(n, parrafos){
+    const base = String((parrafos || []).join(' ')).trim();
+    if (base.length >= 285) return cortarTexto(base, 520);
+    const clave = String((n.titulo || '') + ' ' + (n.categoriaNombre || n.categoria || '')).toLowerCase();
+    let apoyo = 'La síntesis reúne el contexto central, su relevancia para el sector alimentario y los aspectos que conviene seguir de cerca.';
+    if (/ultraproces|cafeter|escolar/.test(clave)) apoyo = 'El panorama ayuda a entender el alcance del tema en las cafeterías escolares, los retos de aplicación y su relación con decisiones de alimentación infantil.';
+    else if (/ajo|cebolla|poro|microbiota|digesti/.test(clave)) apoyo = 'El contexto permite identificar por qué estos ingredientes despiertan interés, cómo se relacionan con la alimentación cotidiana y qué aspectos conviene valorar.';
+    else if (/bayer|agrotóx|agrotox|plaguic|pestic/.test(clave)) apoyo = 'La nota sitúa el debate sobre el uso de estos productos, sus implicaciones para la salud y el ambiente, y las preguntas que permanecen abiertas.';
+    else if (/tecnolog|innovaci|industr|proceso/.test(clave)) apoyo = 'El resumen pone el tema en contexto y señala sus posibles implicaciones para los procesos, la innovación y las decisiones dentro de la industria alimentaria.';
+    else if (/nutric|alimenta|salud/.test(clave)) apoyo = 'La información se presenta en contexto para comprender su relación con la alimentación cotidiana y tomar decisiones mejor informadas.';
+    return cortarTexto((base ? base + ' ' : '') + apoyo, 520);
+  }
   function plantillaNoticia(n, i){ return PLANTILLAS_HOJA.includes(n.plantilla) ? n.plantilla : PLANTILLAS_HOJA[i % 3]; }
+  function imagenRespaldoNoticia(n){
+    const clave = String((n.categoriaNombre || n.categoria || '') + ' ' + (n.titulo || '')).toLowerCase();
+    if (/nutric|alimenta|dieta|microbiota/.test(clave)) return 'assets/img/materiales/nutricion-formulacion-v2.jpg';
+    if (/microbi/.test(clave)) return 'assets/img/materiales/microbiologia-v2.jpg';
+    if (/haccp|inocui|seguridad/.test(clave)) return 'assets/img/materiales/haccp-v2.jpg';
+    if (/etiquet|norma|regul/.test(clave)) return 'assets/img/materiales/etiquetado-v2.jpg';
+    if (/frío|frio|cadena|logíst|logist/.test(clave)) return 'assets/img/materiales/cadena-frio-v2.jpg';
+    if (/agro|campo|cultiv/.test(clave)) return 'assets/img/materiales/agroindustria-v2.jpg';
+    if (/tecnolog|industr|proceso|bayer|plaguic|pestic/.test(clave)) return 'assets/img/materiales/higiene-produccion-v2.jpg';
+    return 'assets/img/hero-alintec-lab-v1.png';
+  }
   function fotoNoticia(n, cls){
     const u = urlSeguraNoticia(n.imagen);
-    if (u) return '<div class="' + cls + '" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"><img src="' + escapeHtml(u) + '" alt="" loading="eager" decoding="async" onerror="this.onerror=null;this.src=\'assets/img/hero-alintec-lab-v1.png\';this.parentElement.style.backgroundImage=\'url(assets/img/hero-alintec-lab-v1.png)\';this.parentElement.classList.add(\'news-image-fallback\')"></div>';
-    const marca = escapeHtml(String(n.categoriaNombre || n.categoria || 'A').trim().slice(0,1).toUpperCase());
-    return '<div class="' + cls + ' hj-noimg" aria-hidden="true"><span>' + marca + '</span></div>';
+    const respaldo = imagenRespaldoNoticia(n);
+    const fuenteIncompatible = /laarena/i.test(String(n.fuente || ''));
+    const src = (u && !fuenteIncompatible) ? u : respaldo;
+    return '<div class="' + cls + (src === respaldo ? ' news-image-fallback' : '') + '" style="background-image:url(\'' + src + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"><img src="' + escapeHtml(src) + '" alt="" loading="eager" decoding="async" onerror="this.onerror=null;this.src=\'' + respaldo + '\';this.parentElement.style.backgroundImage=\'url(' + respaldo + ')\';this.parentElement.classList.add(\'news-image-fallback\')"></div>';
   }
   function fechaNoticia(n){
     try { const d = (n.createdAt && n.createdAt.toDate) ? n.createdAt.toDate() : new Date(n.createdAt || n.fechaPublicacion || Date.now()); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return ''; }
@@ -10750,7 +10788,7 @@ const Sections = (function(){
       ? '<a class="hj-leer" href="' + escapeHtml(n.link) + '" target="_blank" rel="noopener noreferrer">Leer nota completa en ' + fuente + ' ↗</a>'
       : '<span class="hj-leer hj-leer--off">Fuente: ' + fuente + '</span>';
     const texto = parrafos.length ? parrafos.map(l => '<p>' + escapeHtml(l) + '</p>').join('') : '<p>No hay un resumen disponible. Puedes consultar la fuente original al final de la nota.</p>';
-    const resumenTarjeta = cortarTexto(parrafos.join(' '), 430);
+    const resumenTarjeta = resumenEditorialNoticia(n, parrafos);
     const cuerpo = grande
       ? '<div class="hj-txt" lang="es">' + texto + '</div><p class="hj-by">Por ' + fuente + '</p>'
       : '<div class="hj-summary" lang="es"><p>' + escapeHtml(resumenTarjeta || 'Consulta los puntos principales de esta noticia y abre la fuente original si deseas conocer todos los detalles.') + '</p></div>';
@@ -15897,8 +15935,29 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
 :root[data-theme="night"] .home-greeting{background:#131F29!important}:root[data-theme="night"] .home-greeting__mark,:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
 
-@media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}}
-@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}}
+/* Logros: ruta visual con estados legibles; sin línea de tiempo ni rombos antiguos. */
+.nivel-path{padding:26px!important;border:1px solid #DDE8E1!important;border-radius:26px!important;background:#F5F9F6!important;box-shadow:0 16px 38px rgba(29,52,66,.07)!important;overflow:hidden}
+.nivel-path::before,.nivel-path__track::before,.nivel-path__track::after{display:none!important;content:none!important}
+.nivel-path__head{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px}
+.nivel-path__eyebrow{display:block;margin-bottom:7px;color:var(--alintec-green-deep);font:800 8.5px 'JetBrains Mono',monospace;letter-spacing:1.35px;text-transform:uppercase}
+.nivel-path__title{display:block!important;margin:0 0 6px!important;color:var(--text)!important;font:800 clamp(20px,2.4vw,27px)/1.1 'Plus Jakarta Sans',sans-serif!important;letter-spacing:-.75px!important;text-transform:none!important}
+.nivel-path__head p{max-width:600px;margin:0;color:var(--text-2);font-size:12.5px;line-height:1.5}
+.nivel-path__balance{flex:0 0 auto;padding:10px 13px;border:1px solid rgba(111,175,123,.32);border-radius:13px;background:#fff;color:var(--alintec-green-deep);font:700 9px 'JetBrains Mono',monospace;letter-spacing:.25px;white-space:nowrap}.nivel-path__balance b{font-size:15px}
+.nivel-path__track{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch!important;gap:11px!important}
+.nivel-step{display:grid!important;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto 1fr;align-items:center!important;gap:13px 11px!important;min-height:142px;padding:14px!important;border:1px solid #E0E8E3;border-radius:18px;background:#fff;text-align:left!important;box-shadow:0 8px 20px rgba(29,52,66,.045)}
+.nivel-step__state{grid-column:1/-1;justify-self:start;padding:4px 7px;border-radius:999px;background:#F1F4F2;color:#78877E;font:800 7px 'JetBrains Mono',monospace;letter-spacing:.65px;text-transform:uppercase}
+.nivel-step__icon{grid-column:1;grid-row:2;width:44px!important;height:44px!important;border:1px solid #DCE6E0!important;border-radius:13px!important;background:#F5F8F6!important;color:#7B8B82!important;transform:none!important;box-shadow:none!important}.nivel-step__icon .ic{width:19px!important;height:19px!important;transform:none!important}
+.nivel-step__copy{grid-column:2;grid-row:2;min-width:0}.nivel-step__name{color:var(--text)!important;font-size:12.5px!important;line-height:1.25}.nivel-step__xp{margin-top:6px;padding:0!important;border:0!important;background:none!important;color:var(--text-3)!important;font-size:8.5px!important;line-height:1.25}
+.nivel-step.is-done{border-color:#CFE1D3;background:#EDF5EF}.nivel-step.is-done .nivel-step__state{background:#DDECE0;color:#397655}.nivel-step.is-done .nivel-step__icon{border-color:#BED7C4!important;background:#DDECE0!important;color:#397655!important}
+.nivel-step.is-current{border-color:#315B68;background:#315B68;box-shadow:0 14px 30px rgba(37,75,89,.2)}.nivel-step.is-current .nivel-step__state{background:#E8F3EA;color:#397655}.nivel-step.is-current .nivel-step__icon{border-color:rgba(255,255,255,.2)!important;background:rgba(255,255,255,.1)!important;color:#fff!important}.nivel-step.is-current .nivel-step__name{color:#fff!important}.nivel-step.is-current .nivel-step__xp{color:#D8E7EA!important}.nivel-step.is-locked .nivel-step__icon{opacity:1!important;filter:none!important}
+
+/* Noticias: más contenido visible y respaldo fotográfico real para fuentes incompatibles. */
+.hojas--tarjetas .hoja--tarjeta .hj-summary{font-size:11.5px!important;line-height:1.5!important}.hojas--tarjetas .hoja--tarjeta .hj-summary p{-webkit-line-clamp:8!important}.hj-img.news-image-fallback{background-color:#DDE8E1;background-position:center;background-size:cover}.hj-img.news-image-fallback img{object-position:center}
+
+:root[data-theme="night"] .nivel-path{border-color:#283A34!important;background:#121D1A!important;box-shadow:0 18px 42px rgba(0,0,0,.28)!important}:root[data-theme="night"] .nivel-path__balance{border-color:#355245;background:#192722;color:#A8D0AF}:root[data-theme="night"] .nivel-step{border-color:#293B35;background:#17231F}:root[data-theme="night"] .nivel-step.is-done{border-color:#355145;background:#1B2D25}:root[data-theme="night"] .nivel-step.is-done .nivel-step__state,:root[data-theme="night"] .nivel-step.is-done .nivel-step__icon{background:#243C30!important;color:#A8D0AF!important}:root[data-theme="night"] .nivel-step.is-current{border-color:#487486;background:#294E5B}:root[data-theme="night"] .nivel-step__state{background:#202D28;color:#9AABA1}:root[data-theme="night"] .nivel-step__icon{border-color:#31433D!important;background:#202D28!important}
+
+@media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}.nivel-path__track{grid-template-columns:repeat(3,minmax(0,1fr))}.nivel-step:nth-child(n+4){grid-column:span 1}}
+@media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);padding:17px}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:132px!important;padding:24px 22px!important;border-radius:22px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.nivel-path{padding:20px 17px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__track{display:grid!important;grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:165px;overflow-x:auto;scroll-snap-type:x mandatory;padding:1px 1px 9px}.nivel-step{scroll-snap-align:start}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
