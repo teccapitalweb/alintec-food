@@ -1661,3 +1661,41 @@ body { background: #F5F2EA; color: var(--text); }
   .stat-num,.stat:nth-child(2) .stat-num { font-size: 1.16rem; }
   .stat-label { font-size: .56rem; }
 }
+
+/* Paleta pública Alintec 2026: verde de marca suave, sin dominar la interfaz. */
+:root {
+  --primary: #6FAF7B;
+  --primary-dark: #397655;
+  --primary-light: #A8D3AF;
+  --primary-pale: #DDECDD;
+  --primary-ghost: #F2F6F1;
+  --accent: #D77A61;
+  --accent-dark: #B85F49;
+  --dark: #182A35;
+  --dark-mid: #233D49;
+  --off-white: #F4F1EC;
+}
+body { background: #F4F1EC; }
+.navbar .nav-inner { background: rgba(255,254,252,.96); }
+.nav-links a.active { color: var(--primary-dark); background: rgba(111,175,123,.1); }
+.nav-vip { background: var(--primary-dark) !important; box-shadow: 0 8px 20px rgba(57,118,85,.2) !important; }
+.hero { background: #182A35; }
+.hero::before { background: rgba(18,38,49,.72) !important; }
+.hero::after { background: rgba(111,175,123,.12) !important; }
+.hero h1 em { color: #B8DBBE; background: none; }
+.hero-kicker,.hero-badge { color: #C7E1CC; }
+.btn-primary { background: var(--primary-dark) !important; box-shadow: 0 10px 24px rgba(57,118,85,.22) !important; }
+.btn-primary:hover { background: #2F6548 !important; }
+.btn-vip { background: rgba(255,255,255,.08) !important; border-color: rgba(255,255,255,.34) !important; color: #fff !important; }
+.hero-stats { background: rgba(20,40,51,.78); border-color: rgba(255,255,255,.15); }
+.stat-num { color: #A8D3AF; }.stat:nth-child(2) .stat-num { color: #E5A188; }
+.section-tag { color: var(--primary-dark); }.tag-dot { background: var(--accent); }
+.section-divider { background: var(--accent); }
+.curso-card,.test-card,.contact-form,.concept-img-badge { background: #FFFEFC; }
+.areas-feature { background: #284838; }
+.testimonios-section { background: #21343D; }
+.contacto-section,.site-footer { background: #182A35; }
+.form-submit { background: var(--primary-dark); }
+@media (max-width:760px) {
+  .hero::before { background: rgba(18,38,49,.8) !important; }
+}

@@ -3960,27 +3960,24 @@ window.__setDisplayName = async (nombre) => {
     </header>
 
     <div id="inicio-content">
-      <!-- Banner -->
-      <section class="banner fade-up">
-        <div class="banner__info">
-          <span class="banner__eyebrow"><span class="banner__eyebrow__dot"></span><span id="greeting-label">En vivo</span><span class="banner__version">v.2026.05</span></span>
-          <h1 class="banner__title" id="hero-title">Hola de nuevo</h1>
-          <p class="banner__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
+      <!-- Saludo compacto: deja que el contenido útil sea el protagonista -->
+      <section class="home-greeting fade-up">
+        <div>
+          <span class="home-greeting__eyebrow"><span class="home-greeting__dot"></span><span id="greeting-label">En vivo</span><span class="banner__version">v.2026.05</span></span>
+          <h1 class="home-greeting__title" id="hero-title">Hola de nuevo</h1>
+          <p class="home-greeting__sub">Tu acceso a cursos premium, herramientas pro y la comunidad alimentaria más activa de México.</p>
         </div>
-        <div class="banner__stats" aria-label="Accesos rápidos del panel">
-          <button type="button" class="banner__stat" data-section="cursos" aria-label="Abrir Mis cursos"><div class="banner__stat-lbl">Cursos</div><div class="banner__stat-val" id="banner-stat-cursos">0</div></button>
-          <button type="button" class="banner__stat" data-section="webinars" aria-label="Abrir Clases en vivo"><div class="banner__stat-lbl">Clases</div><div class="banner__stat-val" id="banner-stat-clases">0</div></button>
-          <button type="button" class="banner__stat" data-section="pdfs" aria-label="Abrir PDFs y materiales"><div class="banner__stat-lbl">PDFs</div><div class="banner__stat-val" id="banner-stat-pdfs">0</div></button>
-          <button type="button" class="banner__stat" data-section="herramientas" aria-label="Abrir Herramientas Pro"><div class="banner__stat-lbl">Pro</div><div class="banner__stat-val" id="banner-stat-pro">5</div></button>
-        </div>
+        <time class="home-greeting__date" id="home-current-date" aria-label="Fecha actual"></time>
       </section>
 
       <!-- Continúa tu curso: retoma justo donde te quedaste (datos reales) -->
       <section class="continuar" id="continuar-widget" style="display:none;">
-        <div class="continuar__main">
-          <span class="continuar__eyebrow" id="continuar-eyebrow">TU PROGRESO</span>
-          <h2 class="continuar__titulo" id="continuar-titulo">Continúa tu curso.</h2>
-          <div class="continuar__card" id="continuar-card">
+        <div class="continuar__main home-course-hero">
+          <div class="home-course-hero__shade" aria-hidden="true"></div>
+          <div class="home-course-hero__content">
+            <span class="continuar__eyebrow" id="continuar-eyebrow">TU PROGRESO</span>
+            <h2 class="continuar__titulo" id="continuar-titulo">Continúa tu curso.</h2>
+            <div class="continuar__card" id="continuar-card">
             <span class="continuar__card-lbl" id="continuar-card-lbl">CURSO ACTUAL</span>
             <h3 class="continuar__card-curso" id="continuar-curso"></h3>
             <button type="button" class="continuar__clase" id="continuar-clase-btn">
@@ -3994,14 +3991,23 @@ window.__setDisplayName = async (nombre) => {
               <span id="continuar-barra-txt"></span><span id="continuar-barra-pct"></span>
             </div>
             <button type="button" class="continuar__ir" id="continuar-ir-btn"><svg class="ic"><use href="#i-play"/></svg><span id="continuar-ir-txt">Continuar</span></button>
+            </div>
+            <a href="#" class="continuar__link" data-section="cursos">Ver todos los cursos <svg class="ic"><use href="#i-arrow-right"/></svg></a>
           </div>
-          <a href="#" class="continuar__link" data-section="cursos">Ver todos los cursos <svg class="ic"><use href="#i-arrow-right"/></svg></a>
         </div>
-        <div class="continuar__meta">
-          <span class="continuar__meta-eyebrow"><svg class="ic"><use href="#i-bolt"/></svg>TU SIGUIENTE META</span>
-          <h3 class="continuar__meta-titulo" id="continuar-meta-titulo">Completa tu siguiente clase</h3>
-          <ul class="continuar__pasos" id="continuar-pasos"></ul>
-          <div class="continuar__kpis">
+        <div class="home-learning__side">
+          <div class="continuar__meta">
+            <span class="continuar__meta-eyebrow"><svg class="ic"><use href="#i-bolt"/></svg>TU SIGUIENTE META</span>
+            <h3 class="continuar__meta-titulo" id="continuar-meta-titulo">Completa tu siguiente clase</h3>
+            <ul class="continuar__pasos" id="continuar-pasos"></ul>
+          </div>
+          <div class="banner__stats home-kpis" aria-label="Accesos rápidos del panel">
+            <button type="button" class="banner__stat" data-section="cursos" aria-label="Abrir Mis cursos"><div class="banner__stat-lbl">Cursos</div><div class="banner__stat-val" id="banner-stat-cursos">0</div></button>
+            <button type="button" class="banner__stat" data-section="webinars" aria-label="Abrir Clases en vivo"><div class="banner__stat-lbl">Clases</div><div class="banner__stat-val" id="banner-stat-clases">0</div></button>
+            <button type="button" class="banner__stat" data-section="pdfs" aria-label="Abrir PDFs y materiales"><div class="banner__stat-lbl">PDFs</div><div class="banner__stat-val" id="banner-stat-pdfs">0</div></button>
+            <button type="button" class="banner__stat" data-section="herramientas" aria-label="Abrir Herramientas Pro"><div class="banner__stat-lbl">Pro</div><div class="banner__stat-val" id="banner-stat-pro">5</div></button>
+          </div>
+          <div class="continuar__kpis" hidden aria-hidden="true">
             <div class="continuar__kpi"><span id="continuar-kpi-cursos">0</span>Cursos</div>
             <div class="continuar__kpi"><span id="continuar-kpi-clases">0</span>Clases</div>
             <div class="continuar__kpi"><span id="continuar-kpi-pdfs">0</span>PDFs</div>
@@ -4167,11 +4173,14 @@ const Theme={
 };
 
 function applyGreeting(){
-  const h=new Date().getHours();
+  const now=new Date();
+  const h=now.getHours();
   const greet=h<12?'Buen día':h<19?'Buenas tardes':'Buenas noches';
   const eyebrow=h<12?'Modo enfoque · Mañana':h<19?'Modo enfoque · Tarde':'Modo enfoque · Noche';
   const t=document.getElementById('hero-title');if(t)t.textContent=greet+', colega';
   const l=document.getElementById('greeting-label');if(l)l.textContent=eyebrow;
+  const d=document.getElementById('home-current-date');
+  if(d){d.dateTime=now.toISOString().slice(0,10);d.textContent=now.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 }
 
 // Widget "Próxima clase en vivo" del aside · ahora dinámico desde Firestore
@@ -10710,7 +10719,7 @@ const Sections = (function(){
   function plantillaNoticia(n, i){ return PLANTILLAS_HOJA.includes(n.plantilla) ? n.plantilla : PLANTILLAS_HOJA[i % 3]; }
   function fotoNoticia(n, cls){
     const u = urlSeguraNoticia(n.imagen);
-    if (u) return '<div class="' + cls + '" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"></div>';
+    if (u) return '<div class="' + cls + '" style="background-image:url(\'' + u + '\')" role="img" aria-label="' + escapeHtml(n.titulo || '') + '"><img src="' + escapeHtml(u) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'assets/img/hero-alintec-lab-v1.png\';this.parentElement.style.backgroundImage=\'url(assets/img/hero-alintec-lab-v1.png)\';this.parentElement.classList.add(\'news-image-fallback\')"></div>';
     const marca = escapeHtml(String(n.categoriaNombre || n.categoria || 'A').trim().slice(0,1).toUpperCase());
     return '<div class="' + cls + ' hj-noimg" aria-hidden="true"><span>' + marca + '</span></div>';
   }
@@ -15769,6 +15778,69 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .continuar__meta{background:linear-gradient(155deg,#121E2A,#101923);border-color:var(--border);box-shadow:var(--shadow-card)}
 :root[data-theme="night"] .continuar__meta-eyebrow{color:#8FC2D8}:root[data-theme="night"] .continuar__paso-ic{background:rgba(112,175,204,.13);color:#8FC2D8}
 :root[data-theme="night"] *{scrollbar-color:#31495A transparent}
+</style>
+<style id="alintec-flat-brand-final">
+/* Identidad final: superficies planas, verde Alintec en dosis pequeñas. */
+:root{
+  --alintec-green:#6FAF7B;
+  --alintec-green-deep:#397655;
+  --alintec-green-soft:#EAF4EC;
+  --alintec-ink:#1D3442;
+  --alintec-blue-soft:#EAF1F5;
+  --alintec-coral:#D77A61;
+  --alintec-amber:#D3A44E;
+  --alintec-lilac:#8B7FBA;
+}
+
+/* Inicio: saludo ligero + curso visual + meta y accesos reales. */
+.home-greeting{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:4px 0 20px;padding:4px 2px 0}
+.home-greeting__eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--text-3);font:750 9px 'JetBrains Mono',monospace;letter-spacing:1.35px;text-transform:uppercase}
+.home-greeting__dot{width:7px;height:7px;border-radius:50%;background:var(--alintec-green);box-shadow:0 0 0 5px rgba(111,175,123,.12)}
+.home-greeting__title{margin:0;color:var(--text);font:800 clamp(26px,3vw,38px)/1.08 'Plus Jakarta Sans',sans-serif;letter-spacing:-1.15px}
+.home-greeting__sub{max-width:720px;margin:8px 0 0;color:var(--text-2);font-size:13.5px;line-height:1.55}
+.home-greeting__date{flex:0 0 auto;padding:8px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-3);font:650 10px 'JetBrains Mono',monospace;text-transform:capitalize}
+#continuar-widget{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(290px,.82fr)!important;gap:16px!important;margin-bottom:30px!important;background:none!important;border:0!important;box-shadow:none!important}
+.home-course-hero.continuar__main{position:relative;isolation:isolate;min-height:440px;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:26px;background-color:#203746!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important;box-shadow:0 20px 46px rgba(29,52,66,.18)!important}
+.home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(15,35,47,.48)}
+.home-course-hero__content{display:flex;min-height:440px;flex-direction:column;justify-content:flex-end;width:min(64%,560px);padding:34px 34px 30px;color:#fff}
+.home-course-hero .continuar__eyebrow{color:#B8DBBE!important}
+.home-course-hero .continuar__titulo{color:#fff!important;text-shadow:0 2px 14px rgba(0,0,0,.25)}
+.home-course-hero .continuar__card{margin-top:17px;padding:18px;border:1px solid rgba(255,255,255,.22);border-radius:17px;background:rgba(20,43,55,.84)!important;box-shadow:none!important;backdrop-filter:blur(5px)}
+.home-course-hero .continuar__clase{background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.18)!important}
+.home-course-hero .continuar__clase-lbl{color:#D9EADB!important}.home-course-hero .continuar__barra{background:rgba(255,255,255,.18)!important}.home-course-hero .continuar__barra-fill{background:var(--alintec-green)!important}
+.home-course-hero .continuar__ir{background:#F7FBF8!important;color:#274B39!important;border:0!important;box-shadow:none!important}.home-course-hero .continuar__ir:hover{background:#EAF4EC!important}
+.home-course-hero .continuar__link{color:#F3F8F5!important}
+.home-learning__side{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:14px;min-width:0}
+#continuar-widget .continuar__meta{padding:25px 24px!important;border:1px solid var(--border)!important;border-radius:24px!important;background:var(--surface)!important;box-shadow:0 15px 34px rgba(29,52,66,.08)!important}
+#continuar-widget .continuar__meta-eyebrow{color:var(--alintec-green-deep)!important}#continuar-widget .continuar__paso-ic{background:var(--alintec-green-soft)!important;color:var(--alintec-green-deep)!important}
+.home-kpis.banner__stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:9px!important;width:100%!important}
+.home-kpis .banner__stat{min-width:0!important;padding:14px 11px!important;border:1px solid var(--border)!important;border-radius:15px!important;background:var(--surface)!important;box-shadow:0 9px 22px rgba(29,52,66,.06)!important}
+.home-kpis .banner__stat::after{content:'Abrir →';margin-top:5px;font-size:6.8px}.home-kpis .banner__stat:hover{transform:translateY(-2px)!important;border-color:rgba(111,175,123,.42)!important}
+.home-kpis .banner__stat-val{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important}.home-kpis .banner__stat:nth-child(1){box-shadow:inset 0 3px var(--alintec-green),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(2){box-shadow:inset 0 3px var(--alintec-coral),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(3){box-shadow:inset 0 3px var(--alintec-amber),0 9px 22px rgba(29,52,66,.06)!important}.home-kpis .banner__stat:nth-child(4){box-shadow:inset 0 3px var(--alintec-lilac),0 9px 22px rgba(29,52,66,.06)!important}
+.section-header--home-news{margin:0 0 18px!important;padding:14px 17px!important;border:1px solid var(--border)!important;border-left:4px solid var(--alintec-coral)!important;border-radius:7px 16px 16px 7px!important;background:var(--surface)!important;box-shadow:0 9px 24px rgba(29,52,66,.06)!important}.section-header--home-news .section-header__title{color:var(--text)!important}.section-header--home-news .section-header__badge{background:#FFF5E4!important;border-color:#E9D4A5!important;color:#9B6A21!important}
+
+/* Encabezados de secciones: una sola familia visual, sin degradados. */
+.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{position:relative;background:var(--surface)!important;border:1px solid var(--border)!important;box-shadow:0 14px 34px rgba(29,52,66,.07)!important}
+.sec-hero::before,.sec-hero:not(.sec-hero--library)::before,.sec-hero--library::before{top:25px!important;bottom:25px!important;width:4px!important;background:var(--alintec-green)!important}
+.sec-hero::after,.sec-hero:not(.sec-hero--library)::after,.sec-hero--library::after{display:none!important;background:none!important}
+.sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:var(--alintec-green-deep)!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:var(--text)!important}.sec-hero__title::after{width:46px!important;background:var(--alintec-coral)!important}
+
+/* Retos y tarjetas: color por acento, no por fondos saturados. */
+.rz-head{background:#24465A!important}.rz-head::after{display:none!important}.rz-hero{background:#2B4E61!important}.rz-daily{background:var(--surface)!important}.rz-card{background:var(--surface)!important}.rz-card::before{display:none!important}.rz-card::after{background:var(--rz-accent)!important}.rz-card__title{background:color-mix(in srgb,var(--rz-accent) 9%,var(--surface))!important}.rz-card__tile::after{background:rgba(15,35,47,.12)!important}.reto-ranking{background:var(--surface)!important}.reto-podium__card[data-pos="1"]{background:#FFF9EA!important}
+
+/* Biblioteca/PDF: retirar velos verdosos y conservar fotografía natural. */
+.pdfs-grid .pdf-card__top::after{background:rgba(18,44,63,.08)!important}.pdfs-grid .pdf-card__cover-copy{background:rgba(255,255,255,.94)!important}.libro-feature,.bib-shelf-title{background:var(--surface)!important}
+.port__img img,.hj-img img{display:block;width:100%;height:100%;object-fit:cover}.news-image-fallback img{object-position:center 38%}.port--bicolor .port__img img{filter:grayscale(1) contrast(1.05)}
+
+/* Noche: carbón neutro; el verde aparece sólo como acento. */
+:root[data-theme="night"] body{background:#0D141B!important}:root[data-theme="night"] body::before{display:none!important}
+:root[data-theme="night"] .sidebar{background:#101922!important}:root[data-theme="night"] .nav-item.is-active{background:#192831!important;border-color:rgba(111,175,123,.28)!important;box-shadow:inset 3px 0 var(--alintec-green)!important;color:#EAF4EC!important}:root[data-theme="night"] .nav-item.is-active .ic{color:#91C99B!important}
+:root[data-theme="night"] .topbar{background:#121D26!important}
+:root[data-theme="night"] #continuar-widget .continuar__meta,:root[data-theme="night"] .home-kpis .banner__stat,:root[data-theme="night"] .section-header--home-news,:root[data-theme="night"] .sec-hero,:root[data-theme="night"] .sec-hero:not(.sec-hero--library),:root[data-theme="night"] .sec-hero--library,:root[data-theme="night"] .rz-card,:root[data-theme="night"] .reto-ranking{background:#131F29!important}
+:root[data-theme="night"] .home-greeting__date{background:#131F29}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
+
+@media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}}
+@media(max-width:680px){.home-greeting{align-items:flex-start;flex-direction:column}.home-greeting__date{display:none}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */

@@ -768,6 +768,34 @@ body::after{background-image:linear-gradient(to right,rgba(98,146,174,.055) 1px,
   .wrap{max-width:520px}.wrap .brand{display:block;margin-bottom:20px}.card{padding:24px 20px;border-radius:24px}.pane-head h2{font-size:24px}.theme-toggle{top:max(16px,env(safe-area-inset-top));right:16px}
 }
 @media(max-width:420px){.auth-main{padding-left:12px;padding-right:12px}.card{padding:20px 16px 22px;border-radius:20px}.tabs{margin-bottom:22px}.tab{padding:10px 8px;font-size:11.5px}}
+
+/* Acceso Alintec · composición editorial plana, sin degradados. */
+:root{--auth-green:#6FAF7B;--auth-green-deep:#397655;--auth-green-soft:#EAF4EC;--auth-ink:#1D3442;--auth-coral:#D77A61;--auth-paper:#F4F1EC}
+body{display:grid;min-height:100vh;min-height:100dvh;place-items:start center;padding:28px;background:var(--auth-paper)!important}
+body::before{display:none!important}
+.auth-shell{min-height:min(720px,calc(100dvh - 56px));width:min(1180px,100%);grid-template-columns:minmax(0,.98fr) minmax(430px,1.02fr);overflow:hidden;border:1px solid #DEDCD6;border-radius:30px;background:#FFFEFC!important;box-shadow:0 24px 62px rgba(29,52,66,.14)}
+.auth-hero{position:relative;padding:38px 42px;background-color:#1D3442!important;background-image:url('assets/img/hero-alintec-lab-v1.png')!important;background-position:center!important;background-size:cover!important;border:0!important;color:#fff}
+.auth-hero::before{position:absolute;inset:0;width:auto;height:auto;background:rgba(22,42,52,.72)!important;filter:none!important;pointer-events:none}
+.auth-hero::after{display:none!important;background:none!important}
+.auth-hero>div:nth-of-type(2){margin:auto 0}
+.brand--hero .brand__logo{background:rgba(255,255,255,.94)!important;border:0!important;box-shadow:0 8px 24px rgba(0,0,0,.16)!important}.brand--hero .brand__name{color:#fff!important}.brand--hero .brand__sub{color:rgba(255,255,255,.72)!important}
+.auth-hero__title{max-width:12ch!important;margin-top:0!important;color:#fff!important;font-size:clamp(38px,4vw,58px)!important;line-height:1.02!important}.auth-hero__title em{color:#B8DBBE!important;background:none!important;-webkit-text-fill-color:currentColor!important}
+.auth-hero__desc{max-width:43ch!important;color:rgba(255,255,255,.82)!important;font-size:14px!important}
+.auth-editorial,.auth-value-pills,.hero-marquee,.hero-hook,.hero-price,.hero-refs-title,.hero-refs,.hero-trust,.auth-hero__stats{display:none!important}
+.hero-benefits{display:grid!important;gap:9px!important;margin:23px 0 0!important;padding:0!important}.hero-benefits li{display:flex!important;align-items:center;gap:11px;padding:9px 12px!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:12px;background:rgba(18,44,55,.48)!important;color:#fff!important}.hero-benefits li:nth-child(5){display:none!important}.hero-benefits li svg{flex:0 0 auto;color:#B8DBBE!important}.hero-benefits li span{font-size:12.5px!important;line-height:1.35}.hero-benefits li b{color:#fff!important}
+.auth-main{min-height:0!important;padding:22px clamp(30px,4vw,58px)!important;background:#FFFEFC!important}
+.wrap{max-width:480px!important}.wrap>.brand{display:none!important}
+.card{padding:10px 0!important;border:0!important;border-radius:0!important;background:#FFFEFC!important;box-shadow:none!important}.card::before{display:none!important;background:none!important}
+.tabs{margin-bottom:16px!important;border:1px solid #E3E2DC!important;border-radius:13px!important;background:#F5F4F0!important}.tab.is-active{background:#fff!important;color:var(--auth-ink)!important;box-shadow:0 5px 14px rgba(29,52,66,.08)!important}
+.pane-head h2{color:var(--auth-ink)!important;font-size:30px!important}.pane-head p{color:#687782!important}
+.pane-head{margin-bottom:13px!important}.field{margin-bottom:10px!important}.input{height:48px!important;background:#F3F2EE!important;border-color:#E1DFD8!important}.input:hover{border-color:#BFCBC2!important}.input:focus{background:#fff!important;border-color:var(--auth-green)!important;box-shadow:0 0 0 4px rgba(111,175,123,.13)!important}.input-wrap .lead{color:var(--auth-green-deep)!important}.btn-google{min-height:46px!important}.auth-divider{margin:10px 0!important}.checkbox-row{margin-bottom:10px!important}
+.btn{background:var(--auth-green-deep)!important;color:#fff!important;box-shadow:0 10px 24px rgba(57,118,85,.18)!important}.btn:hover:not(:disabled){background:#2F6548!important;box-shadow:0 13px 27px rgba(57,118,85,.23)!important}
+.btn-google{background:#fff!important;color:var(--auth-ink)!important;border-color:#DCDAD3!important;box-shadow:none!important}.checkbox-row{background:#F7F6F2!important;border-color:#E4E2DC!important}.checkbox-row input{accent-color:var(--auth-green-deep)!important}.checkbox-row a,.switch-auth a,.forgot a,.foot a{color:var(--auth-green-deep)!important}
+.theme-toggle{background:#fff!important;border-color:#DDDCD6!important;box-shadow:0 8px 20px rgba(29,52,66,.1)!important}
+.auth-gate,:root[data-theme="day"] .auth-gate{background:#1D3442!important}.ag-spinner{border-top-color:#91C99B!important}
+
+:root[data-theme="night"] body{background:#0D141B!important}:root[data-theme="night"] .auth-shell{border-color:#283640;background:#131F29!important;box-shadow:0 26px 68px rgba(0,0,0,.42)}:root[data-theme="night"] .auth-hero::before{background:rgba(12,29,39,.78)!important}:root[data-theme="night"] .auth-main,:root[data-theme="night"] .card{background:#131F29!important}:root[data-theme="night"] .tabs{background:#101922!important;border-color:#2A3944!important}:root[data-theme="night"] .tab.is-active{background:#1D2B35!important;color:#F3F6F4!important}:root[data-theme="night"] .pane-head h2{color:#F3F6F4!important}:root[data-theme="night"] .input{background:#101922!important;border-color:#2B3B46!important}:root[data-theme="night"] .input:focus{background:#17242D!important;border-color:#6FAF7B!important}:root[data-theme="night"] .btn-google{background:#17242D!important;color:#F3F6F4!important;border-color:#31424E!important}:root[data-theme="night"] .checkbox-row{background:#101922!important;border-color:#2A3944!important}:root[data-theme="night"] .theme-toggle{background:#17242D!important;border-color:#31424E!important}
+@media(max-width:920px){body{display:block;padding:0}.auth-shell{width:100%;min-height:100dvh;grid-template-columns:minmax(0,1fr)!important;border:0;border-radius:0;box-shadow:none}.auth-hero{display:none !important}.auth-main{width:100%!important;min-height:100dvh!important;padding:max(72px,calc(env(safe-area-inset-top) + 56px)) 20px 30px!important}.wrap{width:100%!important}.wrap>.brand{display:flex!important}.card{padding:18px 0!important}}
 </style>
 </head>
 <body>
@@ -809,8 +837,8 @@ setTimeout(function(){
       </div>
     </div>
     <div>
-      <h1 class="auth-hero__title">Domina la ciencia y la calidad que la industria alimentaria <em>te está pidiendo</em>.</h1>
-      <p class="auth-hero__desc">Cursos de ciencia y tecnología de alimentos, clases en vivo con especialistas y certificados con folio oficial para crecer profesionalmente.</p>
+      <h1 class="auth-hero__title">Tu formación alimentaria <em>empieza aquí</em>.</h1>
+      <p class="auth-hero__desc">Aprende a tu ritmo con especialistas, casos reales y herramientas para aplicar desde el primer día.</p>
       <div class="auth-editorial" aria-label="Beneficios profesionales de Alintec Food">
         <div class="auth-editorial__signal">
           <span>Formación profesional continua</span>
