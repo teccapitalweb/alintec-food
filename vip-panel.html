@@ -3199,6 +3199,42 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
 :root[data-theme="night"] .empty-state,:root[data-theme="night"] .sub-empty,:root[data-theme="night"] .ats-empty,:root[data-theme="night"] .iper-empty,:root[data-theme="night"] .oee-empty,:root[data-theme="night"] .nom-empty,:root[data-theme="night"] .thx-empty{background:linear-gradient(145deg,#111C27,#172431)!important;border-color:var(--border-2)!important}
 :root[data-theme="night"] .empty-state__icon,:root[data-theme="night"] .sub-empty__ic,:root[data-theme="night"] .ats-empty__icon,:root[data-theme="night"] .iper-empty__icon,:root[data-theme="night"] .oee-empty__icon,:root[data-theme="night"] .nom-empty__icon{background:#213140!important;color:#8FC2D8!important;border-color:var(--border-2)!important}
 :root[data-theme="night"] *{scrollbar-color:#31495A transparent}
+
+/* ── Retos: camino (desbloqueo secuencial de quiz/detective/orden) ── */
+.camino-hero{position:relative;overflow:hidden;padding:22px 22px 20px;border-radius:18px;margin-bottom:20px;color:#fff;
+  background:linear-gradient(140deg,var(--primary-deep) 0%,color-mix(in srgb,var(--primary-deep) 70%,#0A120C) 100%)}
+.camino-hero__eyebrow{display:inline-flex;align-items:center;gap:6px;font:800 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:8px}
+.camino-hero__eyebrow .ic{width:13px;height:13px}
+.camino-hero h2{margin:0 0 5px;font:800 20px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em}
+.camino-hero p{margin:0 0 14px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.82);max-width:46ch}
+.camino-hero__bar{height:6px;border-radius:4px;background:rgba(255,255,255,.24);overflow:hidden}
+.camino-hero__bar-fill{height:100%;border-radius:4px;background:#fff;transition:width .4s ease}
+.camino-hero__note{margin-top:7px;font:700 11px 'Inter',sans-serif;color:rgba(255,255,255,.9)}
+.camino-path{display:flex;flex-direction:column}
+.camino-node{position:relative;display:grid;grid-template-columns:38px 1fr;gap:12px;padding:8px 0}
+.camino-node__rail{position:relative;display:flex;justify-content:center}
+.camino-node__rail::before{content:'';position:absolute;top:38px;bottom:-8px;width:2px;background:var(--border-2)}
+.camino-node:last-child .camino-node__rail::before{display:none}
+.camino-node.is-done .camino-node__rail::before{background:var(--primary)}
+.camino-node__dot{position:relative;z-index:1;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface-2);border:1.5px solid var(--border-2);color:var(--text-3);flex-shrink:0;font:800 12px 'Plus Jakarta Sans',sans-serif}
+.camino-node__dot .ic{width:16px;height:16px}
+.camino-node.is-done .camino-node__dot{background:var(--primary);border-color:var(--primary);color:#fff}
+.camino-node.is-next .camino-node__dot{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 5px var(--primary-glow)}
+.camino-node.is-locked .camino-node__dot{opacity:.55}
+.camino-card{min-width:0;padding:12px 14px;border-radius:12px;border:1px solid var(--border-2);background:var(--surface);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:.15s}
+.camino-node.is-locked .camino-card{cursor:not-allowed;opacity:.65}
+.camino-node.is-next .camino-card{border-color:color-mix(in srgb,var(--primary) 45%,var(--border-2))}
+.camino-card:hover{transform:translateX(2px)}
+.camino-node.is-locked .camino-card:hover{transform:none}
+.camino-card__title{margin:0;font:700 13px/1.35 'Inter',sans-serif;color:var(--text)}
+.camino-node.is-locked .camino-card__title{color:var(--text-3)}
+.camino-card__sub{margin:2px 0 0;font-size:11px;color:var(--text-3)}
+.camino-card__st{flex-shrink:0;font:700 10px 'JetBrains Mono',monospace;white-space:nowrap}
+.camino-card__st.is-done{color:var(--primary)}
+.camino-card__st.is-locked{color:var(--text-3)}
+.camino-card__st.is-next{color:var(--primary)}
 </style>
 <script src="assets/js/avatares.js"></script>
 </head>
@@ -9222,6 +9258,24 @@ const Sections = (function(){
       return r.ok ? await r.json() : null;
     } catch(e){ return null; }
   };
+  // Camino (quiz/detective/orden): el servidor decide si el índice recibido es el siguiente
+  // pendiente. Devuelve { aceptado:false } si ya estaba resuelto o si intentan saltarse uno.
+  window.__enviarCaminoReto = async function(modo, indice, puntaje, total){
+    try {
+      if (window.__isDemoMode === true || !window.__currentUser) return null;
+      const token = await window.__currentUser.getIdToken();
+      const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/retos/camino', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modo, indice, puntaje, total })
+      });
+      if (r.status === 403) {
+        const d = await r.json().catch(() => ({}));
+        if (d.codigo === 'membresia-requerida') window.__mostrarPaywallAlintec?.('Retos para miembros', 'Activa tu suscripción para resolver los retos y sumar XP.');
+        return null;
+      }
+      return r.ok ? await r.json() : null;
+    } catch(e){ return null; }
+  };
 
   /* ============================ PREMIOS POR NIVEL (servidor) ============================ */
   // El nivel y los premios los calcula el servidor con datos verificables: aquí solo se muestran.
@@ -12879,21 +12933,6 @@ const Sections = (function(){
     } catch(e){ if (rankingEl) rankingEl.hidden = true; }
 
     const stage=container.querySelector('#reto-stage');
-    const saveResult=(id,score,total)=>{try{const key='alintec:retos:resultados';const all=JSON.parse(localStorage.getItem(key)||'{}');const prev=all[id];if(!prev||score>prev.score)all[id]={score,total,updatedAt:Date.now()};localStorage.setItem(key,JSON.stringify(all));}catch(e){}};
-    const showResult=(id,title,score,total,restart)=>{
-      saveResult(id,score,total);
-      // El servidor decide el XP (una vez por reto y por día) y las insignias nuevas
-      window.__enviarResultadoReto?.(id,score,total).then(r=>{
-        if (!r || typeof Toast === 'undefined') return;
-        if (r.xpGanado > 0) Toast.success('+' + r.xpGanado + ' XP', 'Reto superado · ya suma a tu nivel');
-        else if (score/total >= 0.6) Toast.info('Reto superado', 'Hoy ya cobraste los XP de este reto. Vuelve mañana.');
-        (r.nuevas || []).forEach(n => Toast.success('🏅 Nueva insignia', n.nombre + ' · +' + n.xp + ' XP'));
-      });
-      const pct=Math.round((score/total)*100);
-      stage.innerHTML=`<div class="reto-result"><div class="reto-result__icon"><svg class="ic"><use href="#${pct>=80?'i-trophy':'i-check-circle'}"/></svg></div><div><div class="reto-stage__eyebrow">Práctica terminada</div><h2>${title}</h2><p>Obtuviste <strong>${score} de ${total}</strong> · ${pct}%. ${pct>=80?'Excelente dominio del tema.':'Puedes repetirlo cuando quieras para reforzar los conceptos.'}</p></div><button class="btn btn--primary" type="button" id="reto-restart">Repetir</button></div>`;
-      stage.querySelector('#reto-restart').addEventListener('click',restart);
-      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
-    };
     const shuffle=list=>[...list].sort(()=>Math.random()-.5);
     const quizPool=[
       {q:'¿Cuál es el rango de temperatura conocido como zona de peligro para muchos alimentos?',a:['0 a 4 °C','5 a 60 °C','65 a 90 °C'],ok:1,why:'Entre 5 y 60 °C muchos microorganismos pueden multiplicarse con rapidez.'},
@@ -12909,7 +12948,6 @@ const Sections = (function(){
       {q:'¿Cuándo debe verificarse un PCC?',a:['Sólo al final del año','Con la frecuencia definida en el plan HACCP','Únicamente cuando hay una queja'],ok:1,why:'El monitoreo debe realizarse con la frecuencia establecida para detectar desviaciones oportunamente.'},
       {q:'¿Qué documento describe cómo ejecutar una tarea de forma consistente?',a:['Procedimiento estandarizado','Factura de compra','Lista de asistencia'],ok:0,why:'Un procedimiento estandarizado establece responsables, pasos, criterios y registros.'}
     ];
-    function startQuiz(){const quiz=shuffle(quizPool).slice(0,5);let i=0,score=0,locked=false;const paint=()=>{const x=quiz[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Quiz relámpago · ${i+1}/${quiz.length}</div><h2>${x.q}</h2></div><span class="reto-score">${score} aciertos</span></div><div class="reto-options">${x.a.map((a,n)=>`<button type="button" data-answer="${n}"><span>${String.fromCharCode(65+n)}</span>${a}</button>`).join('')}</div><div class="reto-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{if(locked)return;locked=true;const n=+b.dataset.answer;const ok=n===x.ok;if(ok)score++;stage.querySelectorAll('[data-answer]').forEach((el,k)=>{el.disabled=true;el.classList.toggle('is-correct',k===x.ok);el.classList.toggle('is-wrong',k===n&&!ok);});const f=stage.querySelector('.reto-feedback');f.hidden=false;f.innerHTML=`<strong>${ok?'¡Correcto!':'Revisa esta idea'}</strong><span>${x.why}</span><button class="btn btn--primary" type="button">${i===quiz.length-1?'Ver resultado':'Siguiente'}</button>`;f.querySelector('button').addEventListener('click',()=>{i++;locked=false;i<quiz.length?paint():showResult('quiz','Quiz relámpago',score,quiz.length,startQuiz);});}));};paint();}
     const detectiveScenes=[
       {
         id:'preparacion', title:'Zona de preparación', image:'assets/img/retos/detective-inocuidad-realista-v1.webp',
@@ -12936,20 +12974,16 @@ const Sections = (function(){
         ]
       }
     ];
-    function startDetective(){
-      let last='';try{last=localStorage.getItem('alintec:retos:lastDetective')||'';}catch(e){}
-      const choices=detectiveScenes.filter(s=>s.id!==last);const scene=choices[Math.floor(Math.random()*choices.length)]||detectiveScenes[0];
-      try{localStorage.setItem('alintec:retos:lastDetective',scene.id);}catch(e){}
-      const hazards=scene.hazards,found=new Set();let wrongAttempts=0,finished=false;
-      stage.innerHTML=`<div class="reto-activity detective-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Detective de inocuidad · ${scene.title}</div><h2>Encuentra tres riesgos en la imagen</h2><p>Analiza la escena y toca directamente el objeto o la condición que representa un peligro.</p></div><span class="reto-score" id="hazard-count">0/${hazards.length}</span></div><div class="detective-scene" id="detective-scene" role="application" tabindex="0" aria-label="Escena interactiva: ${scene.title}" style="--detective-image:url('${scene.image}')"><div class="detective-scan" aria-hidden="true"></div><div class="detective-scene__legend"><svg class="ic"><use href="#i-search"/></svg>Haz clic para inspeccionar</div></div><div class="detective-feedback" id="detective-feedback"><svg class="ic"><use href="#i-info"/></svg><span>Los hallazgos aparecerán aquí después de identificarlos.</span></div><div class="hazard-list">${hazards.map((h,i)=>`<div data-hazard-info="${h.id}"><span class="hazard-list__num">${i+1}</span><span><strong>Hallazgo pendiente</strong><small>Busca una condición insegura en la escena</small></span></div>`).join('')}</div></div>`;
-      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
-      const sceneEl=stage.querySelector('#detective-scene'),feedback=stage.querySelector('#detective-feedback');
-      function markWrong(x,y){wrongAttempts++;const mark=document.createElement('span');mark.className='detective-mark is-wrong';mark.style.left=(x*100)+'%';mark.style.top=(y*100)+'%';mark.innerHTML='<svg class="ic"><use href="#i-close"/></svg>';sceneEl.appendChild(mark);sceneEl.classList.remove('is-error');void sceneEl.offsetWidth;sceneEl.classList.add('is-error');feedback.className='detective-feedback is-wrong';feedback.innerHTML='<svg class="ic"><use href="#i-alert-circle"/></svg><span><strong>Selección incorrecta.</strong> Observa alimentos crudos, químicos, higiene, superficies y objetos extraños.</span>';setTimeout(()=>mark.remove(),900);}
-      function markFound(h){found.add(h.id);const mark=document.createElement('span');mark.className='detective-mark is-correct';mark.style.left=((h.x+h.w/2)*100)+'%';mark.style.top=((h.y+h.h/2)*100)+'%';mark.innerHTML='<svg class="ic"><use href="#i-check"/></svg>';sceneEl.appendChild(mark);const info=stage.querySelector(`[data-hazard-info="${h.id}"]`);info.classList.add('is-found');info.innerHTML=`<span class="hazard-list__num"><svg class="ic"><use href="#i-check"/></svg></span><span><strong>${h.type}</strong><small>${h.why}</small></span>`;feedback.className='detective-feedback is-correct';feedback.innerHTML=`<svg class="ic"><use href="#i-check-circle"/></svg><span><strong>Hallazgo correcto.</strong> ${h.why}</span>`;stage.querySelector('#hazard-count').textContent=`${found.size}/${hazards.length}`;if(found.size===hazards.length){finished=true;const score=Math.max(1,hazards.length-Math.floor(wrongAttempts/3));setTimeout(()=>showResult('detective','Detective de inocuidad',score,hazards.length,startDetective),1400);}}
-      sceneEl.addEventListener('click',ev=>{if(finished)return;const rect=sceneEl.getBoundingClientRect(),x=(ev.clientX-rect.left)/rect.width,y=(ev.clientY-rect.top)/rect.height;const h=hazards.find(item=>!found.has(item.id)&&x>=item.x&&x<=item.x+item.w&&y>=item.y&&y<=item.y+item.h);h?markFound(h):markWrong(x,y);});
-    }
-    const processSteps=['Recibir materias primas','Inspeccionar y registrar','Almacenar según temperatura','Preparar con higiene','Verificar antes de liberar'];
-    function startOrder(){let order=[...processSteps].sort(()=>Math.random()-.5);const paint=()=>{stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Ordena el proceso</div><h2>Secuencia de manejo seguro</h2><p>Usa las flechas para colocar las etapas en el orden correcto.</p></div></div><div class="order-list">${order.map((s,i)=>`<div class="order-item"><span>${i+1}</span><strong>${s}</strong><div><button type="button" data-move="up" data-i="${i}" aria-label="Subir etapa" ${i===0?'disabled':''}>↑</button><button type="button" data-move="down" data-i="${i}" aria-label="Bajar etapa" ${i===order.length-1?'disabled':''}>↓</button></div></div>`).join('')}</div><button class="btn btn--primary reto-check" type="button">Comprobar orden</button><div class="reto-feedback" id="order-feedback" hidden></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i,j=b.dataset.move==='up'?i-1:i+1;[order[i],order[j]]=[order[j],order[i]];paint();}));stage.querySelector('.reto-check').addEventListener('click',()=>{const correct=order.reduce((n,s,i)=>n+(s===processSteps[i]?1:0),0);if(correct===processSteps.length)showResult('orden','Ordena el proceso',correct,processSteps.length,startOrder);else{const f=stage.querySelector('#order-feedback');f.hidden=false;f.innerHTML=`<strong>${correct} de ${processSteps.length} etapas están en su lugar.</strong><span>Piensa qué debe verificarse antes de almacenar y qué ocurre justo antes de liberar.</span>`;}});};paint();}
+    const ordenSecuencias=[
+      {titulo:'Secuencia de manejo seguro',pasos:['Recibir materias primas','Inspeccionar y registrar','Almacenar según temperatura','Preparar con higiene','Verificar antes de liberar']},
+      {titulo:'Recepción de mercancía refrigerada',pasos:['Verificar la temperatura del vehículo','Inspeccionar el producto y su empaque','Registrar la recepción','Trasladar de inmediato a refrigeración']},
+      {titulo:'Lavado de manos correcto',pasos:['Mojar las manos con agua','Aplicar jabón y tallar 20 segundos','Enjuagar completamente','Secar con toalla desechable']},
+      {titulo:'Ciclo de limpieza y desinfección',pasos:['Retirar residuos visibles','Lavar con detergente','Enjuagar la superficie','Aplicar desinfectante','Dejar secar al aire']},
+      {titulo:'Implementación de un punto crítico de control',pasos:['Identificar el peligro','Establecer el límite crítico','Definir el monitoreo','Establecer la acción correctiva','Documentar el registro']},
+      {titulo:'Control de plagas preventivo',pasos:['Inspeccionar el área','Identificar puntos de entrada','Sellar y corregir','Colocar trampas de monitoreo','Registrar los hallazgos']},
+      {titulo:'Rotación de inventario (PEPS)',pasos:['Recibir el producto nuevo','Etiquetar con fecha de recepción','Colocar al fondo del anaquel','Sacar primero el más antiguo']},
+      {titulo:'Enfriamiento seguro de un alimento caliente',pasos:['Dividir en porciones pequeñas','Enfriar de 60 °C a 21 °C en menos de 2 horas','Continuar de 21 °C a 4 °C en menos de 4 horas','Almacenar refrigerado']}
+    ];
     const cardPool=[
       {front:'Contaminación cruzada',back:'Transferencia de peligros entre alimentos, superficies, equipos o personas.'},
       {front:'Punto crítico de control',back:'Etapa donde un control es esencial para prevenir, eliminar o reducir un peligro.'},
@@ -12968,9 +13002,172 @@ const Sections = (function(){
       {front:'Calibración',back:'Comparación de un instrumento contra una referencia conocida para determinar su exactitud.'},
       {front:'Retiro de producto',back:'Acción para recuperar del mercado un alimento que representa un riesgo o incumplimiento.'},
       {front:'BPM',back:'Prácticas básicas que aseguran condiciones higiénicas durante la elaboración de alimentos.'},
-      {front:'Monitoreo',back:'Observación o medición planificada para evaluar si una medida de control está bajo dominio.'}
+      {front:'Monitoreo',back:'Observación o medición planificada para evaluar si una medida de control está bajo dominio.'},
+      {front:'Salmonella spp.',back:'Género de bacterias patógenas asociado a huevo, aves y alimentos contaminados por manejo inadecuado.'},
+      {front:'Escherichia coli (E. coli)',back:'Bacteria cuya presencia en un alimento indica posible contaminación fecal.'},
+      {front:'Coliformes fecales',back:'Grupo de bacterias usado como indicador de contaminación de origen fecal en alimentos y agua.'},
+      {front:'Zona de peligro',back:'Rango de temperatura (5 °C a 60 °C) donde los microorganismos se multiplican con mayor rapidez.'},
+      {front:'Inocuidad alimentaria',back:'Garantía de que un alimento no causará daño al consumidor cuando se prepara o consume según su uso previsto.'},
+      {front:'Peligro biológico',back:'Bacteria, virus, parásito u otro organismo que puede causar una enfermedad transmitida por alimentos.'},
+      {front:'Peligro químico',back:'Sustancia química que puede contaminar un alimento y causar daño a la salud, como residuos de limpieza mal enjuagados.'},
+      {front:'Peligro físico',back:'Objeto extraño en un alimento —vidrio, metal, plástico— que puede causar una lesión.'},
+      {front:'Sanitización',back:'Reducción de microorganismos a un nivel seguro mediante limpieza y desinfección combinadas.'},
+      {front:'Desinfección',back:'Aplicación de un agente químico o físico para destruir microorganismos en una superficie ya limpia.'},
+      {front:'No conformidad',back:'Incumplimiento de un requisito establecido que debe registrarse y corregirse.'},
+      {front:'Acción correctiva',back:'Medida que se toma para eliminar la causa de una no conformidad ya detectada.'},
+      {front:'Acción preventiva',back:'Medida que se toma para eliminar la causa de una no conformidad potencial, antes de que ocurra.'},
+      {front:'Aditivo alimentario',back:'Sustancia que se agrega intencionalmente a un alimento con un fin tecnológico específico.'},
+      {front:'Coadyuvante de elaboración',back:'Sustancia usada durante el proceso que no forma parte del alimento terminado como ingrediente.'},
+      {front:'Etiquetado frontal',back:'Sistema de sellos y leyendas que advierte sobre el exceso de nutrimentos críticos en el frente del envase.'},
+      {front:'Sello de advertencia',back:'Octágono negro que indica exceso de calorías, azúcares, grasas saturadas, grasas trans o sodio.'},
+      {front:'Declaración nutrimental',back:'Relación del contenido de nutrimentos de un alimento o bebida, presentada en la etiqueta.'},
+      {front:'Fecha de caducidad',back:'Fecha límite después de la cual un producto no debe consumirse ni comercializarse.'},
+      {front:'Fecha de consumo preferente',back:'Fecha hasta la cual un producto mantiene sus cualidades específicas, aunque puede consumirse después.'},
+      {front:'Manipulador de alimentos',back:'Persona que, por su actividad, tiene contacto directo con alimentos durante su preparación o servicio.'},
+      {front:'Codex Alimentarius',back:'Conjunto de normas y directrices internacionales sobre inocuidad y calidad de los alimentos.'},
+      {front:'Norma Oficial Mexicana (NOM)',back:'Regulación técnica de observancia obligatoria emitida por una dependencia del gobierno mexicano.'},
+      {front:'Cepa de referencia',back:'Microorganismo de identidad conocida y certificada que se usa para validar un método de laboratorio.'},
+      {front:'Medio de cultivo',back:'Sustancia nutritiva preparada en laboratorio para el crecimiento controlado de microorganismos.'},
+      {front:'Incubación',back:'Mantenimiento de una muestra a temperatura controlada durante un tiempo definido para permitir el crecimiento microbiano.'},
+      {front:'Muestra representativa',back:'Porción de un lote que refleja fielmente sus características para fines de análisis.'},
+      {front:'Cuarentena de producto',back:'Retención de un lote mientras se confirma que cumple con las especificaciones antes de liberarlo.'},
+      {front:'Higiene personal',back:'Conjunto de prácticas de limpieza y cuidado que debe seguir quien manipula alimentos.'},
+      {front:'Superficie de contacto',back:'Cualquier superficie que toca directamente el alimento y que debe mantenerse limpia y desinfectada.'},
+      {front:'Plan HACCP',back:'Documento que describe los peligros, los PCC y los controles de un proceso específico.'},
+      {front:'Vida de anaquel',back:'Periodo durante el cual un producto conserva sus características de calidad e inocuidad en condiciones definidas.'}
     ];
-    function startFlashcards(){let cards=shuffle(cardPool);try{const last=localStorage.getItem('alintec:retos:lastFlash');if(cards[0]?.front===last)cards.push(cards.shift());localStorage.setItem('alintec:retos:lastFlash',cards[0]?.front||'');}catch(e){}cards=cards.slice(0,6);let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length}</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard ${flipped?'is-flipped':''}" aria-label="Voltear tarjeta"><span class="flashcard__hint">${flipped?'Definición':'Concepto · toca para revelar'}</span><strong>${flipped?c.back:c.front}</strong><span class="flashcard__turn"><svg class="ic"><use href="#i-arrow-right"/></svg></span></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():showResult('flashcards','Flashcards',known,cards.length,startFlashcards);}));};paint();}
+
+    // ═══ Camino: dentro de quiz/detective/orden, los retos se resuelven en orden fijo. ═══
+    // El estado real (qué índice está desbloqueado) vive en el servidor; aquí solo se pinta.
+    let caminoActual = { quiz:0, detective:0, orden:0 };
+    async function caminoRefrescar(){
+      const e = await cargarEstadoRetos();
+      if (e && e.camino) caminoActual = e.camino;
+      return caminoActual;
+    }
+    function caminoBloqueadoToast(){
+      if (typeof Toast !== 'undefined') Toast.info('Reto bloqueado', 'Completa el reto anterior para desbloquear este.');
+    }
+    // titulo/subtitulo NO se muestran para retos bloqueados: solo se revela el contenido de lo ya
+    // desbloqueado. iconoSvg es opcional (por defecto un candado/numero).
+    function renderCaminoPath(modo, items, metaFn, abrirFn){
+      const hechos = caminoActual[modo] || 0;
+      const nombreModo = { quiz:'Quiz relámpago', detective:'Detective de inocuidad', orden:'Ordena el proceso' }[modo];
+      const pct = items.length ? Math.round(hechos / items.length * 100) : 0;
+      const nodos = items.map((item, i) => {
+        const meta = metaFn(item, i);
+        const st = i < hechos ? 'is-done' : i === hechos ? 'is-next' : 'is-locked';
+        const numero = st === 'is-locked' ? '<svg class="ic"><use href="#i-lock"/></svg>' : st === 'is-done' ? '<svg class="ic"><use href="#i-check"/></svg>' : (i + 1);
+        const titulo = st === 'is-locked' ? `Reto ${i + 1}` : meta.titulo;
+        const sub = st === 'is-locked' ? 'Se revela al desbloquearlo' : meta.sub;
+        const estado = st === 'is-done' ? '<span class="camino-card__st is-done">Resuelto</span>' : st === 'is-locked' ? '<span class="camino-card__st is-locked">Bloqueado</span>' : '<span class="camino-card__st is-next">Siguiente</span>';
+        return `<div class="camino-node ${st}" data-i="${i}">
+          <div class="camino-node__rail"><span class="camino-node__dot">${numero}</span></div>
+          <div class="camino-card" data-i="${i}"><div class="camino-card__body"><p class="camino-card__title">${escapeHtml(titulo)}</p><p class="camino-card__sub">${escapeHtml(sub)}</p></div>${estado}</div>
+        </div>`;
+      }).join('');
+      stage.innerHTML = `<div class="reto-activity camino">
+        <div class="camino-hero">
+          <div class="camino-hero__eyebrow"><svg class="ic"><use href="#i-bolt"/></svg>Tu camino</div>
+          <h2>${nombreModo}</h2>
+          <p>Resuelve cada reto para desbloquear el siguiente. Puedes repasar los que ya superaste.</p>
+          <div class="camino-hero__bar"><div class="camino-hero__bar-fill" style="width:${pct}%"></div></div>
+          <div class="camino-hero__note">${hechos} de ${items.length} completados</div>
+        </div>
+        <div class="camino-path">${nodos}</div>
+      </div>`;
+      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+      stage.querySelectorAll('.camino-card').forEach(el => el.addEventListener('click', () => {
+        const i = +el.dataset.i;
+        const hechosAhora = caminoActual[modo] || 0;
+        if (i > hechosAhora) { caminoBloqueadoToast(); return; }
+        abrirFn(i, i < hechosAhora);
+      }));
+    }
+    async function caminoEnviar(modo, indice, puntaje, total){
+      const r = await window.__enviarCaminoReto?.(modo, indice, puntaje, total);
+      if (r && r.camino) caminoActual = r.camino;
+      if (r && typeof Toast !== 'undefined') {
+        if (r.xpGanado > 0) Toast.success('+' + r.xpGanado + ' XP', 'Reto del camino superado');
+        (r.nuevas || []).forEach(n => Toast.success('🏅 Nueva insignia', n.nombre + ' · +' + n.xp + ' XP'));
+      }
+      return r;
+    }
+
+    async function startQuiz(){ await caminoRefrescar(); renderCaminoPath('quiz', quizPool, x => ({ titulo:x.q, sub:'Quiz relámpago' }), abrirQuizItem); }
+    function abrirQuizItem(indice, repaso){
+      const x = quizPool[indice]; let locked = false;
+      stage.innerHTML = `<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Quiz relámpago · reto ${indice+1}${repaso?' · repaso':''}</div><h2>${x.q}</h2></div></div><div class="reto-options">${x.a.map((a,n)=>`<button type="button" data-answer="${n}"><span>${String.fromCharCode(65+n)}</span>${a}</button>`).join('')}</div><div class="reto-feedback" hidden></div></div>`;
+      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+      stage.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{
+        if(locked)return;locked=true;
+        const n=+b.dataset.answer;const ok=n===x.ok;
+        stage.querySelectorAll('[data-answer]').forEach((el,k)=>{el.disabled=true;el.classList.toggle('is-correct',k===x.ok);el.classList.toggle('is-wrong',k===n&&!ok);});
+        const f=stage.querySelector('.reto-feedback');f.hidden=false;
+        f.innerHTML=`<strong>${ok?'¡Correcto!':'Revisa esta idea'}</strong><span>${x.why}</span><button class="btn btn--primary" type="button">${repaso?'Volver al camino':(ok?'Continuar':'Volver al camino')}</button>`;
+        f.querySelector('button').addEventListener('click', async ()=>{
+          if (ok && !repaso) await caminoEnviar('quiz', indice, 1, 1);
+          renderCaminoPath('quiz', quizPool, x2 => ({ titulo:x2.q, sub:'Quiz relámpago' }), abrirQuizItem);
+        });
+      }));
+    }
+
+    async function startDetective(){ await caminoRefrescar(); renderCaminoPath('detective', detectiveScenes, x => ({ titulo:x.title, sub:'Detective de inocuidad' }), abrirDetectiveItem); }
+    function abrirDetectiveItem(indice, repaso){
+      const scene=detectiveScenes[indice];
+      const hazards=scene.hazards,found=new Set();let wrongAttempts=0,finished=false;
+      stage.innerHTML=`<div class="reto-activity detective-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Detective de inocuidad · reto ${indice+1}${repaso?' · repaso':''} · ${scene.title}</div><h2>Encuentra tres riesgos en la imagen</h2><p>Analiza la escena y toca directamente el objeto o la condición que representa un peligro.</p></div><span class="reto-score" id="hazard-count">0/${hazards.length}</span></div><div class="detective-scene" id="detective-scene" role="application" tabindex="0" aria-label="Escena interactiva: ${scene.title}" style="--detective-image:url('${scene.image}')"><div class="detective-scan" aria-hidden="true"></div><div class="detective-scene__legend"><svg class="ic"><use href="#i-search"/></svg>Haz clic para inspeccionar</div></div><div class="detective-feedback" id="detective-feedback"><svg class="ic"><use href="#i-info"/></svg><span>Los hallazgos aparecerán aquí después de identificarlos.</span></div><div class="hazard-list">${hazards.map((h,i)=>`<div data-hazard-info="${h.id}"><span class="hazard-list__num">${i+1}</span><span><strong>Hallazgo pendiente</strong><small>Busca una condición insegura en la escena</small></span></div>`).join('')}</div></div>`;
+      stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+      const sceneEl=stage.querySelector('#detective-scene'),feedback=stage.querySelector('#detective-feedback');
+      function markWrong(x,y){wrongAttempts++;const mark=document.createElement('span');mark.className='detective-mark is-wrong';mark.style.left=(x*100)+'%';mark.style.top=(y*100)+'%';mark.innerHTML='<svg class="ic"><use href="#i-close"/></svg>';sceneEl.appendChild(mark);sceneEl.classList.remove('is-error');void sceneEl.offsetWidth;sceneEl.classList.add('is-error');feedback.className='detective-feedback is-wrong';feedback.innerHTML='<svg class="ic"><use href="#i-alert-circle"/></svg><span><strong>Selección incorrecta.</strong> Observa alimentos crudos, químicos, higiene, superficies y objetos extraños.</span>';setTimeout(()=>mark.remove(),900);}
+      function markFound(h){
+        found.add(h.id);const mark=document.createElement('span');mark.className='detective-mark is-correct';mark.style.left=((h.x+h.w/2)*100)+'%';mark.style.top=((h.y+h.h/2)*100)+'%';mark.innerHTML='<svg class="ic"><use href="#i-check"/></svg>';sceneEl.appendChild(mark);
+        const info=stage.querySelector(`[data-hazard-info="${h.id}"]`);info.classList.add('is-found');info.innerHTML=`<span class="hazard-list__num"><svg class="ic"><use href="#i-check"/></svg></span><span><strong>${h.type}</strong><small>${h.why}</small></span>`;
+        feedback.className='detective-feedback is-correct';feedback.innerHTML=`<svg class="ic"><use href="#i-check-circle"/></svg><span><strong>Hallazgo correcto.</strong> ${h.why}</span>`;
+        stage.querySelector('#hazard-count').textContent=`${found.size}/${hazards.length}`;
+        if(found.size===hazards.length){
+          finished=true;
+          const score=Math.max(1,hazards.length-Math.floor(wrongAttempts/3));
+          setTimeout(async ()=>{
+            if (score/hazards.length >= 0.6 && !repaso) await caminoEnviar('detective', indice, score, hazards.length);
+            renderCaminoPath('detective', detectiveScenes, x2 => ({ titulo:x2.title, sub:'Detective de inocuidad' }), abrirDetectiveItem);
+          },1400);
+        }
+      }
+      sceneEl.addEventListener('click',ev=>{if(finished)return;const rect=sceneEl.getBoundingClientRect(),x=(ev.clientX-rect.left)/rect.width,y=(ev.clientY-rect.top)/rect.height;const h=hazards.find(item=>!found.has(item.id)&&x>=item.x&&x<=item.x+item.w&&y>=item.y&&y<=item.y+item.h);h?markFound(h):markWrong(x,y);});
+    }
+
+    async function startOrder(){ await caminoRefrescar(); renderCaminoPath('orden', ordenSecuencias, x => ({ titulo:x.titulo, sub:x.pasos.length+' etapas' }), abrirOrdenItem); }
+    function abrirOrdenItem(indice, repaso){
+      const secuencia=ordenSecuencias[indice];
+      let order=[...secuencia.pasos].sort(()=>Math.random()-.5);
+      const paint=()=>{
+        stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Ordena el proceso · reto ${indice+1}${repaso?' · repaso':''}</div><h2>${secuencia.titulo}</h2><p>Usa las flechas para colocar las etapas en el orden correcto.</p></div></div><div class="order-list">${order.map((s,i)=>`<div class="order-item"><span>${i+1}</span><strong>${s}</strong><div><button type="button" data-move="up" data-i="${i}" aria-label="Subir etapa" ${i===0?'disabled':''}>↑</button><button type="button" data-move="down" data-i="${i}" aria-label="Bajar etapa" ${i===order.length-1?'disabled':''}>↓</button></div></div>`).join('')}</div><button class="btn btn--primary reto-check" type="button">Comprobar orden</button><div class="reto-feedback" id="order-feedback" hidden></div></div>`;
+        stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+        stage.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i,j=b.dataset.move==='up'?i-1:i+1;[order[i],order[j]]=[order[j],order[i]];paint();}));
+        stage.querySelector('.reto-check').addEventListener('click', async ()=>{
+          const correct=order.reduce((n,s,i)=>n+(s===secuencia.pasos[i]?1:0),0);
+          if(correct===secuencia.pasos.length){
+            if (!repaso) await caminoEnviar('orden', indice, correct, secuencia.pasos.length);
+            renderCaminoPath('orden', ordenSecuencias, x2 => ({ titulo:x2.titulo, sub:x2.pasos.length+' etapas' }), abrirOrdenItem);
+          } else {
+            const f=stage.querySelector('#order-feedback');f.hidden=false;
+            f.innerHTML=`<strong>${correct} de ${secuencia.pasos.length} etapas están en su lugar.</strong><span>Vuelve a intentarlo; puedes mover las etapas cuantas veces necesites.</span>`;
+          }
+        });
+      };
+      paint();
+    }
+
+    // ── Flashcards: solo repaso libre. No da XP ni tiene desbloqueo — se puede jugar sin límite. ──
+    function startFlashcards(){let cards=shuffle(cardPool);try{const last=localStorage.getItem('alintec:retos:lastFlash');if(cards[0]?.front===last)cards.push(cards.shift());localStorage.setItem('alintec:retos:lastFlash',cards[0]?.front||'');}catch(e){}cards=cards.slice(0,8);let i=0,known=0,flipped=false;const paint=()=>{const c=cards[i];stage.innerHTML=`<div class="reto-activity"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Flashcards · ${i+1}/${cards.length} · solo repaso, sin XP</div><h2>Repaso esencial</h2></div><span class="reto-score">${known} dominadas</span></div><button type="button" class="flashcard ${flipped?'is-flipped':''}" aria-label="Voltear tarjeta"><span class="flashcard__hint">${flipped?'Definición':'Concepto · toca para revelar'}</span><strong>${flipped?c.back:c.front}</strong><span class="flashcard__turn"><svg class="ic"><use href="#i-arrow-right"/></svg></span></button><div class="flash-actions" ${flipped?'':'hidden'}><button class="btn btn--ghost" type="button" data-known="0">Repasar después</button><button class="btn btn--primary" type="button" data-known="1">La sabía</button></div></div>`;stage.scrollIntoView({behavior:'smooth',block:'nearest'});stage.querySelector('.flashcard').addEventListener('click',()=>{flipped=!flipped;paint();});stage.querySelectorAll('[data-known]').forEach(b=>b.addEventListener('click',()=>{known+=+b.dataset.known;i++;flipped=false;i<cards.length?paint():terminarFlashcards();}));};
+      const terminarFlashcards=()=>{
+        stage.innerHTML=`<div class="reto-result"><div class="reto-result__icon"><svg class="ic"><use href="#i-book-2"/></svg></div><div><div class="reto-stage__eyebrow">Repaso terminado</div><h2>Flashcards</h2><p>Marcaste <strong>${known} de ${cards.length}</strong> como dominadas. Este modo es solo para reforzar — no otorga XP.</p></div><button class="btn btn--primary" type="button" id="reto-restart">Repasar otras</button></div>`;
+        stage.querySelector('#reto-restart').addEventListener('click',startFlashcards);
+        stage.scrollIntoView({behavior:'smooth',block:'nearest'});
+      };
+      paint();
+    }
     // ── Modo historia: "Aprende a leer la planta" ──
     // Tres mundos con cuatro decisiones cada uno. Para abrir el siguiente mundo hay que acertar al menos 3 de 4.
     // El progreso se guarda en este dispositivo; el XP lo decide el servidor (un capítulo da XP una vez al día).
