@@ -8098,10 +8098,14 @@ const Sections = (function(){
     container.innerHTML=`
       <div class="fade-up">
         <div class="sec-hero sec-hero--courses">
-          <span class="sec-hero__eyebrow">Tu camino</span>
-          <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">cursos.</span></h1>
-          <p class="sec-hero__sub">Continúa donde lo dejaste, repasa lo que ya dominas o descubre nuevas áreas de especialización.</p>
-          <img class="sec-hero__virtual-art" src="assets/img/ui/mis-cursos-plataforma-3d-v1.webp" alt="" aria-hidden="true" decoding="async">
+          <div class="sec-hero__courses-copy">
+            <span class="sec-hero__eyebrow">Tu camino</span>
+            <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">cursos.</span></h1>
+            <p class="sec-hero__sub">Continúa donde lo dejaste, repasa lo que ya dominas o descubre nuevas áreas de especialización.</p>
+          </div>
+          <div class="sec-hero__courses-visual" aria-hidden="true">
+            <img class="sec-hero__virtual-art" src="assets/img/ui/mis-cursos-plataforma-3d-v1.webp" alt="" decoding="async">
+          </div>
         </div>
         <div class="tabs">
           <button class="tab ${cursosState.tab==='progreso'?'is-active':''}" data-curtab="progreso">En progreso · ${c.progreso}</button>
@@ -16701,8 +16705,8 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .sec-hero__title::after{display:none!important}.sec-hero__sub,.sec-hero--library .sec-hero__sub{max-width:780px;color:#3F5B49!important;font-size:13.5px!important;font-weight:550!important;line-height:1.6!important}.sec-hero__sub strong,.sec-hero__sub em,.sec-hero--library .sec-hero__sub strong{color:#24593B!important}
 
 /* Mis cursos: aula virtual 3D con progreso y diploma, sin competir con el texto. */
-.sec-hero--courses{position:relative;min-height:205px!important;padding:35px min(43%,480px) 34px 34px!important;background:#DCEDE0!important;border-color:#A9CFB3!important}
-.sec-hero--courses>*:not(.sec-hero__virtual-art){position:relative;z-index:2}.sec-hero--courses .sec-hero__sub{max-width:590px}.sec-hero__virtual-art{position:absolute;z-index:1;right:10px;bottom:-35px;width:clamp(300px,42%,475px);height:auto;pointer-events:none;user-select:none;filter:drop-shadow(0 18px 20px rgba(28,73,46,.14));animation:coursesVirtualFloat 6s ease-in-out infinite;transform-origin:55% 70%}
+.sec-hero.sec-hero--courses{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,40%);align-items:center;gap:24px;min-height:220px!important;padding:28px 24px 28px 34px!important;background:#DCEDE0!important;border-color:#A9CFB3!important}
+.sec-hero__courses-copy{position:relative;z-index:2;min-width:0}.sec-hero--courses .sec-hero__sub{max-width:540px}.sec-hero__courses-visual{position:relative;z-index:1;display:flex;min-width:0;height:184px;align-items:center;justify-content:center;overflow:visible}.sec-hero__virtual-art{display:block;width:100%;max-width:420px;height:210px;object-fit:contain;pointer-events:none;user-select:none;filter:drop-shadow(0 16px 18px rgba(28,73,46,.14));animation:coursesVirtualFloat 6s ease-in-out infinite;transform-origin:55% 70%}
 @keyframes coursesVirtualFloat{0%,100%{transform:translateY(0) rotate(.15deg)}50%{transform:translateY(-6px) rotate(-.15deg)}}
 @media(prefers-reduced-motion:reduce){.sec-hero__virtual-art{animation:none}}
 
@@ -16809,7 +16813,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 @media(max-width:980px){#continuar-widget{grid-template-columns:1fr!important}.home-course-hero__content{width:min(70%,620px)}.home-learning__side{grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);grid-template-rows:auto}.nivel-path__layout{grid-template-columns:1fr}.nivel-path__spotlight{min-height:255px}}
 @media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);min-height:0;padding:19px!important}.home-greeting__mark{width:48px!important;height:48px!important}.home-greeting__title{font-size:clamp(28px,9vw,38px)!important;letter-spacing:-1.6px!important}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0!important}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:148px!important;padding:24px 22px!important;border-radius:22px!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(33px,10vw,43px)!important;letter-spacing:-1.8px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.logro-journey{margin-inline:-4px}.logro-journey__node{gap:5px}.logro-journey__node b{width:26px;height:26px}.logro-journey__rail{top:12px}.logro-journey__node small{font-size:6.3px;letter-spacing:0}.premios-card__hero{grid-template-columns:65px minmax(0,1fr);gap:14px;padding:20px}.premios-card__trophy{width:62px;height:62px;border-radius:19px}.premios-card__trophy .ic{width:29px;height:29px}.premios-card__count{grid-column:1/-1;justify-self:start}.premios-card__tiers{grid-template-columns:1fr}.premio-tier{min-height:104px}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
 @media(max-width:680px){.canal-view{padding:10px;border-radius:22px}.canal-view .wa-hero{min-height:300px;padding:27px 18px!important;border-radius:19px!important}.canal-view .wa-hero__icon{width:64px!important;height:64px!important;border-radius:18px!important}.canal-view .wa-hero__actions{display:grid;width:min(100%,310px);grid-template-columns:1fr}.canal-view .wa-hero__actions .btn{width:100%;justify-content:center}.canal-view .wa-rules{padding:17px!important}.canal-view .wa-rule__text{font-size:11.5px}}
-@media(max-width:760px){.sec-hero--courses{min-height:350px!important;padding:25px 22px 178px!important}.sec-hero--courses .sec-hero__sub{max-width:540px}.sec-hero--courses .sec-hero__virtual-art{right:50%;bottom:-43px;width:min(92%,410px);animation:none;transform:translateX(50%);filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
+@media(max-width:760px){.sec-hero.sec-hero--courses{grid-template-columns:1fr;gap:10px;min-height:370px!important;padding:25px 22px 12px!important}.sec-hero--courses .sec-hero__sub{max-width:none}.sec-hero__courses-visual{height:182px}.sec-hero--courses .sec-hero__virtual-art{width:min(100%,390px);height:205px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
