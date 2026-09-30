@@ -13279,7 +13279,7 @@ const Sections = (function(){
       paint();
     }
     // ── Modo historia: "Aprende a leer la planta" ──
-    // Tres mundos con cuatro decisiones cada uno. Para abrir el siguiente mundo hay que acertar al menos 3 de 4.
+    // Seis mundos con cuatro decisiones cada uno. Para abrir el siguiente mundo hay que acertar al menos 3 de 4.
     // El progreso se guarda en este dispositivo; el XP lo decide el servidor (un capítulo da XP una vez al día).
     const HISTORIA_KEY = 'alintec:historia:v1';
     const historiaMundos = [
@@ -13342,6 +13342,66 @@ const Sections = (function(){
             a:['Barrerlo discretamente y seguir','Esperar a la próxima auditoría','Notificar de inmediato, aislar la zona, limpiar y activar el control de plagas con una acción correctiva'],
             ok:2,
             why:'Los indicios de plagas se reportan al momento. Se aísla, se limpia y se corrige la causa con el programa de control de plagas.' }
+        ] },
+      { id:4, titulo:'Alérgenos y etiqueta correcta', sub:'Lo que no se declara también puede hacer daño', imagen:'assets/img/retos/detective-alergenos-v1.webp',
+        intro:'La planta cambia de producto y cada ingrediente, utensilio y etiqueta debe coincidir. Una proteína invisible puede ser un riesgo serio.',
+        casos:[
+          { escena:'Vas a producir una galleta sin cacahuate, pero encuentras residuos en el cucharón que se usó para la receta anterior.',
+            a:['Limpiarlo con una servilleta y continuar','Detener el arranque, retirar el utensilio y ejecutar la limpieza validada antes de liberar la línea','Usarlo solo para el primer lote'],
+            ok:1,
+            why:'Un residuo alergénico puede pasar al producto siguiente. La línea y los utensilios se limpian con el método validado y se verifican antes de liberar.' },
+          { escena:'Durante el envasado notas que el rollo de etiquetas no declara leche, aunque la fórmula sí la contiene.',
+            a:['Terminar el lote y avisar después','Agregar la palabra leche con marcador','Detener la línea y retener desde la última verificación correcta para colocar la etiqueta aprobada'],
+            ok:2,
+            why:'Una etiqueta incorrecta vuelve inseguro el producto para una persona alérgica. Se detiene, se retiene el producto afectado y se corrige antes de liberarlo.' },
+          { escena:'Queda reproceso de una barra con leche y quieren incorporarlo a una receta que normalmente no contiene ese alérgeno.',
+            a:['Identificarlo y usarlo únicamente en un producto compatible cuya fórmula y etiqueta declaren leche','Mezclar poco para que no se note','Usarlo si el reproceso todavía está dentro de fecha'],
+            ok:0,
+            why:'El reproceso con alérgenos se mantiene identificado y segregado, y solo entra en productos compatibles y correctamente etiquetados.' },
+          { escena:'Se rompe un saco de ajonjolí en el área donde se prepara un producto sin ese ingrediente.',
+            a:['Barrerlo al terminar el turno','Aislar el área, proteger el producto, limpiar con el procedimiento definido y evaluar lo que quedó expuesto','Mover el saco roto a otra mesa y continuar'],
+            ok:1,
+            why:'Un derrame de alérgenos requiere contención inmediata, limpieza controlada y evaluación del producto potencialmente expuesto.' }
+        ] },
+      { id:5, titulo:'Mantenimiento sin contaminar', sub:'Vidrio, metal y químicos bajo control', imagen:'assets/img/retos/detective-envasado-v1.webp',
+        intro:'Una reparación mal cerrada puede dejar peligros físicos o químicos en la línea. Hoy te toca decidir cuándo es seguro volver a producir.',
+        casos:[
+          { escena:'Después de reparar una banda, el técnico descubre que falta uno de los tornillos que retiró.',
+            a:['Retener el producto desde la última revisión, buscar la pieza e inspeccionar la línea antes de liberarla','Colocar otro tornillo y continuar','Esperar a que el detector de metales lo encuentre'],
+            ok:0,
+            why:'Las piezas deben quedar contabilizadas. Si falta una, se retiene el producto potencialmente afectado y se inspecciona antes de reiniciar.' },
+          { escena:'Un lubricante sin identificación gotea del motor sobre una zona próxima al alimento expuesto.',
+            a:['Limpiarlo al final del turno','Detener, aislar el producto expuesto, corregir la fuga y usar únicamente el lubricante autorizado','Cubrir el motor con cartón'],
+            ok:1,
+            why:'Una fuga puede producir contaminación química. Se detiene la operación, se controla el producto y se corrige con materiales autorizados.' },
+          { escena:'Se rompe una luminaria sin protección encima de la línea mientras hay envases abiertos.',
+            a:['Retirar los fragmentos visibles y seguir','Cerrar los envases y venderlos primero','Detener y delimitar, retener o desechar lo expuesto, limpiar e inspeccionar antes de reiniciar'],
+            ok:2,
+            why:'El vidrio puede dispersarse más allá de lo visible. El procedimiento de rotura exige aislar, controlar el producto e inspeccionar de forma documentada.' },
+          { escena:'Una guarda quedó sujeta temporalmente con cinta adhesiva junto al transportador de producto.',
+            a:['Dejarla así hasta la próxima auditoría','Cambiar la cinta cada turno','Realizar una reparación durable e higiénica y verificar la línea antes de liberarla'],
+            ok:2,
+            why:'Las reparaciones temporales pueden desprender materiales y dificultar la limpieza. Antes de producir debe quedar una solución durable y verificable.' }
+        ] },
+      { id:6, titulo:'Laboratorio y liberación', sub:'Los resultados deciden el destino del lote', imagen:'assets/img/retos/detective-laboratorio-v1.webp',
+        intro:'Llegaste al último punto de control. Aquí una muestra mal identificada o una liberación apresurada puede invalidar todo el trabajo anterior.',
+        casos:[
+          { escena:'El código del frasco no coincide con el formato de cadena de custodia que acompaña a la muestra.',
+            a:['Mantenerla sin analizar hasta aclarar y documentar la identidad con quien la entregó','Elegir el código que parece más probable','Analizarla y corregir el registro después'],
+            ok:0,
+            why:'La identidad de la muestra debe ser inequívoca. Si la cadena de custodia no coincide, se detiene el análisis hasta resolver la discrepancia.' },
+          { escena:'Un lote terminado está listo para embarque, pero aún falta el resultado microbiológico exigido por su plan de liberación.',
+            a:['Embarcarlo con la promesa de recuperarlo si falla','Mantenerlo identificado y retenido hasta confirmar que cumple','Liberar solo la mitad del lote'],
+            ok:1,
+            why:'El producto sujeto a liberación positiva permanece retenido hasta contar con todos los resultados y autorizaciones definidos.' },
+          { escena:'Un hisopo ambiental resulta positivo a Listeria spp. en una zona cercana a alimento listo para consumo.',
+            a:['Repetir el mismo hisopo hasta obtener un negativo','Archivar el resultado porque no fue tomado del alimento','Activar la investigación, intensificar saneamiento y muestreo, y evaluar el producto según el plan'],
+            ok:2,
+            why:'Un positivo ambiental exige una respuesta documentada: buscar la fuente, corregir, ampliar el muestreo y evaluar el producto potencialmente relacionado.' },
+          { escena:'El análisis del lote queda fuera de especificación, pero producción propone promediarlo con un resultado anterior conforme.',
+            a:['Mantener el lote no conforme, investigar la causa y decidir su disposición mediante el procedimiento autorizado','Promediar ambos resultados y liberarlo','Cambiar el número de muestra'],
+            ok:0,
+            why:'Un resultado fuera de especificación no desaparece al promediarlo. El lote se retiene, se investiga y solo se dispone mediante una decisión autorizada.' }
         ] }
     ];
     const historiaLeer = () => { try { return JSON.parse(localStorage.getItem(HISTORIA_KEY) || '{}') || {}; } catch(e){ return {}; } };
@@ -13360,7 +13420,7 @@ const Sections = (function(){
     function historiaMapa(){
       const prog = historiaLeer();
       stage.innerHTML = '<div class="reto-activity hs-mapa"><div class="reto-stage__head"><div><div class="reto-stage__eyebrow">Modo historia</div><h2>Aprende a leer la planta</h2>'
-        + '<p class="hs-lead">Acompaña a <strong>Lacto</strong> y <strong>Guardi</strong> por tres mundos. Elige la mejor decisión en cada situación; con 3 aciertos de 4 abres el siguiente mundo.</p></div></div>'
+        + '<p class="hs-lead">Acompaña a <strong>Lacto</strong> y <strong>Guardi</strong> por seis mundos. Elige la mejor decisión en cada situación; con 3 aciertos de 4 abres el siguiente mundo.</p></div></div>'
         + '<div class="hs-mundos">' + historiaMundos.map(m => {
           const abierto = historiaAbierto(m, prog);
           return '<article class="hs-mundo' + (abierto ? '' : ' is-locked') + '"><div class="hs-mundo__img" style="background-image:url(\'' + m.imagen + '\')"></div>'
