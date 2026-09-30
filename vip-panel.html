@@ -8783,9 +8783,12 @@ const Sections = (function(){
       container.innerHTML = `
         <div class="fade-up">
           <div class="sec-hero sec-hero--certificates">
-            <span class="sec-hero__eyebrow">Tu trayectoria</span>
-            <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
-            <p class="sec-hero__sub">Cada certificado Alintec Food incluye <strong style="color:var(--primary);">folio único, código QR verificable y firma del instructor</strong>. Se otorgan al completar el 100% de las clases de un curso VIP.</p>
+            <div class="sec-hero__copy">
+              <span class="sec-hero__eyebrow">Tu trayectoria</span>
+              <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
+              <p class="sec-hero__sub">Cada certificado Alintec Food incluye <strong style="color:var(--primary);">folio único, código QR verificable y firma del instructor</strong>. Se otorgan al completar el 100% de las clases de un curso VIP.</p>
+            </div>
+            <div class="sec-hero__media" aria-hidden="true"><img src="assets/img/ui/certificados-profesional-3d-v1.webp" alt="" decoding="async"></div>
           </div>
           <div class="kpi-grid">
             <div class="kpi-card"><div class="kpi-card__label">Certificados</div><div class="kpi-card__value">0</div></div>
@@ -8821,9 +8824,12 @@ const Sections = (function(){
     container.innerHTML = `
       <div class="fade-up">
         <div class="sec-hero sec-hero--certificates">
-          <span class="sec-hero__eyebrow">Tu trayectoria</span>
-          <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
-          <p class="sec-hero__sub">Cada certificado tiene un folio único <strong style="color:var(--primary);font-family:'JetBrains Mono',monospace;">ALINTEC-2026-XXXXXX</strong> y código QR verificable. Compártelos en LinkedIn o descárgalos en PDF.</p>
+          <div class="sec-hero__copy">
+            <span class="sec-hero__eyebrow">Tu trayectoria</span>
+            <h1 class="sec-hero__title">Mis <span class="sec-hero__accent">certificados.</span></h1>
+            <p class="sec-hero__sub">Cada certificado tiene un folio único <strong style="color:var(--primary);font-family:'JetBrains Mono',monospace;">ALINTEC-2026-XXXXXX</strong> y código QR verificable. Compártelos en LinkedIn o descárgalos en PDF.</p>
+          </div>
+          <div class="sec-hero__media" aria-hidden="true"><img src="assets/img/ui/certificados-profesional-3d-v1.webp" alt="" decoding="async"></div>
         </div>
         <div class="kpi-grid">
           <div class="kpi-card"><div class="kpi-card__label">Certificados</div><div class="kpi-card__value">${certs.length}</div></div>
@@ -10843,7 +10849,7 @@ const Sections = (function(){
             <h1 class="sec-hero__title">Libros, PDFs y <span class="sec-hero__accent">materiales.</span></h1>
             <p class="sec-hero__sub">Consulta libros técnicos en el lector interactivo y abre tus plantillas, checklists y procedimientos desde una biblioteca visual más clara.</p>
           </div>
-          <div class="bib-hero__visual" aria-hidden="true"><span></span><span></span><span></span><i>ALINTEC<br>LIBRARY</i></div>
+          <div class="sec-hero__media" aria-hidden="true"><img src="assets/img/ui/biblioteca-virtual-3d-v1.webp" alt="" decoding="async"></div>
         </div>
         ${_bibTabsHTML()}
         <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-book-2"/></svg>Libros</div>
@@ -16710,6 +16716,12 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 @keyframes coursesVirtualFloat{0%,100%{transform:translateY(0) rotate(.15deg)}50%{transform:translateY(-6px) rotate(-.15deg)}}
 @media(prefers-reduced-motion:reduce){.sec-hero__virtual-art{animation:none}}
 
+/* Biblioteca y certificados: texto e ilustración viven en columnas independientes. */
+.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(260px,42%);align-items:center;gap:26px;min-height:230px!important;padding:30px 28px 30px 34px!important;background:#DCEDE0!important;border-color:#A9CFB3!important}
+.sec-hero--library .sec-hero__copy,.sec-hero--certificates .sec-hero__copy{position:relative;z-index:2;min-width:0}.sec-hero--library .sec-hero__sub,.sec-hero--certificates .sec-hero__sub{max-width:560px}.sec-hero__media{position:relative;z-index:1;display:flex;min-width:0;height:190px;align-items:center;justify-content:center;overflow:visible}.sec-hero__media img{display:block;width:100%;max-width:460px;height:225px;object-fit:contain;pointer-events:none;user-select:none;filter:drop-shadow(0 16px 18px rgba(28,73,46,.13));animation:sectionMediaFloat 6.8s ease-in-out infinite;transform-origin:50% 70%}
+@keyframes sectionMediaFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:reduce){.sec-hero__media img{animation:none}}
+
 /* Inicio: saludo editorial con el nombre como protagonista. */
 .home-greeting{isolation:isolate;position:relative;min-height:156px;padding:25px 28px!important;overflow:hidden;border-color:rgba(87,139,99,.25)!important;background:#F1F6EF!important;box-shadow:0 18px 42px rgba(35,75,47,.1)!important}
 .home-greeting::before{content:'';position:absolute;right:-68px;top:-96px;width:250px;height:250px;border-radius:50%;background:rgba(111,175,123,.13);pointer-events:none}.home-greeting::after{content:'';position:absolute;right:142px;bottom:-54px;width:112px;height:112px;border-radius:50%;background:rgba(231,143,123,.12);pointer-events:none}.home-greeting>*{position:relative;z-index:1}
@@ -16751,6 +16763,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 :root[data-theme="night"] .sec-hero,:root[data-theme="night"] .sec-hero:not(.sec-hero--library),:root[data-theme="night"] .sec-hero--library{background:rgba(73,116,83,.42)!important;border-color:rgba(145,201,155,.3)!important;box-shadow:inset 0 1px rgba(255,255,255,.09),0 20px 42px rgba(0,0,0,.22)!important;color:#F4FAF5!important}
 :root[data-theme="night"] .sec-hero__title,:root[data-theme="night"] .sec-hero:not(.sec-hero--library) .sec-hero__title{color:#F4FAF5!important;-webkit-text-fill-color:#F4FAF5!important}:root[data-theme="night"] .sec-hero__accent{color:#FFD67B!important;-webkit-text-fill-color:#FFD67B!important}:root[data-theme="night"] .sec-hero__sub,:root[data-theme="night"] .sec-hero--library .sec-hero__sub{color:rgba(235,246,238,.78)!important}:root[data-theme="night"] .sec-hero__sub strong,:root[data-theme="night"] .sec-hero__sub em{color:#D5EBD9!important}
 :root[data-theme="night"] .sec-hero--courses{background:#1D392A!important;border-color:#426B50!important}:root[data-theme="night"] .sec-hero--courses .sec-hero__virtual-art{filter:drop-shadow(0 20px 24px rgba(0,0,0,.3)) brightness(.96)}
+:root[data-theme="night"] .sec-hero--library,:root[data-theme="night"] .sec-hero--certificates{background:#1D392A!important;border-color:#426B50!important}:root[data-theme="night"] .sec-hero__media img{filter:drop-shadow(0 20px 24px rgba(0,0,0,.3)) brightness(.96)}
 :root[data-theme="night"] .home-greeting{background:#131F29!important;border-color:rgba(145,201,155,.2)!important}:root[data-theme="night"] .home-greeting__title{color:#F4FAF5!important}:root[data-theme="night"] .home-greeting__title span{color:#FFD67B}:root[data-theme="night"] .home-greeting__sub{color:#B8C8BF!important}:root[data-theme="night"] .home-greeting__eyebrow{color:#91C99B!important}:root[data-theme="night"] .home-greeting__mark{background:#244936!important;border-color:rgba(255,214,123,.28)!important}:root[data-theme="night"] .home-greeting__date-wrap{background:#192831!important;border-color:rgba(126,187,207,.22)!important}:root[data-theme="night"] #continuar-widget .continuar__meta-eyebrow,:root[data-theme="night"] .sec-hero__eyebrow{color:#91C99B!important}:root[data-theme="night"] #continuar-widget .continuar__paso-ic{background:rgba(111,175,123,.12)!important;color:#91C99B!important}:root[data-theme="night"] .pdfs-grid .pdf-card__cover-copy{background:rgba(242,247,244,.94)!important}
 :root[data-theme="night"] .canal-view{background:#171A1B}:root[data-theme="night"] .canal-view .wa-hero{border-color:#315F48!important;background:#173C2A!important;color:#F5FAF6!important}:root[data-theme="night"] .canal-view .wa-hero__title{color:#F5FAF6!important;-webkit-text-fill-color:#F5FAF6!important}:root[data-theme="night"] .canal-view .wa-hero__sub{color:#B9C9BE!important}:root[data-theme="night"] .canal-view .wa-hero__actions .btn--ghost{border-color:#4F6C5B;background:rgba(255,255,255,.04);color:#D7E4DA}:root[data-theme="night"] .canal-view .wa-rules{border-color:#293832!important;background:#131F1A!important}:root[data-theme="night"] .canal-view .wa-rule{border-color:#27352F!important}:root[data-theme="night"] .canal-view .wa-rule__text{color:#B6C3BB}:root[data-theme="night"] .canal-view .wa-rule__text strong{color:#F0F5F1}
 
@@ -16814,6 +16827,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 @media(max-width:680px){.home-greeting{grid-template-columns:auto minmax(0,1fr);min-height:0;padding:19px!important}.home-greeting__mark{width:48px!important;height:48px!important}.home-greeting__title{font-size:clamp(28px,9vw,38px)!important;letter-spacing:-1.6px!important}.home-greeting__date-wrap{grid-column:1/-1;width:100%;min-width:0!important}.home-course-hero.continuar__main{min-height:470px;background-position:62% center!important}.home-course-hero__content{width:100%;min-height:470px;padding:25px 20px 22px}.home-learning__side{grid-template-columns:1fr}.home-kpis.banner__stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:148px!important;padding:24px 22px!important;border-radius:22px!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(33px,10vw,43px)!important;letter-spacing:-1.8px!important}.logro-orbit{grid-template-columns:1fr;text-align:center}.logro-orbit__gauge{margin:auto}.logro-orbit__numbers{justify-content:center}.logro-journey{margin-inline:-4px}.logro-journey__node{gap:5px}.logro-journey__node b{width:26px;height:26px}.logro-journey__rail{top:12px}.logro-journey__node small{font-size:6.3px;letter-spacing:0}.premios-card__hero{grid-template-columns:65px minmax(0,1fr);gap:14px;padding:20px}.premios-card__trophy{width:62px;height:62px;border-radius:19px}.premios-card__trophy .ic{width:29px;height:29px}.premios-card__count{grid-column:1/-1;justify-self:start}.premios-card__tiers{grid-template-columns:1fr}.premio-tier{min-height:104px}.nivel-path{padding:20px 16px!important}.nivel-path__head{display:block}.nivel-path__balance{display:inline-block;margin-top:13px}.nivel-path__spotlight{min-height:250px;padding:21px}.nivel-path__rank{font-size:76px}.nivel-path__map{padding:13px 11px}.nivel-step{grid-template-columns:24px 36px minmax(0,1fr) auto;gap:7px!important;padding:7px!important}.nivel-step__icon{width:36px!important;height:36px!important}.nivel-step__state{max-width:64px;overflow:hidden;text-overflow:ellipsis}.nivel-path__map-head small{display:none}}
 @media(max-width:680px){.canal-view{padding:10px;border-radius:22px}.canal-view .wa-hero{min-height:300px;padding:27px 18px!important;border-radius:19px!important}.canal-view .wa-hero__icon{width:64px!important;height:64px!important;border-radius:18px!important}.canal-view .wa-hero__actions{display:grid;width:min(100%,310px);grid-template-columns:1fr}.canal-view .wa-hero__actions .btn{width:100%;justify-content:center}.canal-view .wa-rules{padding:17px!important}.canal-view .wa-rule__text{font-size:11.5px}}
 @media(max-width:760px){.sec-hero.sec-hero--courses{width:100%;grid-template-columns:1fr;gap:10px;min-height:370px!important;padding:25px 22px 12px!important}.sec-hero--courses .sec-hero__sub{max-width:none}.sec-hero__courses-visual{height:182px}.sec-hero--courses .sec-hero__virtual-art{width:min(100%,390px);height:205px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
+@media(max-width:760px){.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{grid-template-columns:1fr;gap:10px;min-height:0!important;padding:25px 22px 12px!important}.sec-hero--library .sec-hero__sub,.sec-hero--certificates .sec-hero__sub{max-width:none}.sec-hero__media{height:188px}.sec-hero__media img{width:min(100%,410px);height:215px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
