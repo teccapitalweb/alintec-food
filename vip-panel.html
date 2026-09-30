@@ -14266,7 +14266,9 @@ function injectSupportFAB(){
     e.stopPropagation();
     // Sin membresía activa: ir directo a WhatsApp, igual que en el sitio público
     // (el menú de opciones — descuento, soporte VIP, dirección, canal — es solo para miembros).
-    if (!tieneAccesoVipCompleto()) {
+    // tieneAccesoVipCompleto vive dentro del closure de Sections; aquí solo existe su versión
+    // expuesta en window (window.__esMiembroVip), por eso no se llama directo.
+    if (!(window.__esMiembroVip && window.__esMiembroVip())) {
       window.open('https://wa.me/'+AlintecFood_CONTACT.whatsapp,'_blank');
       return;
     }
@@ -14297,7 +14299,7 @@ function injectSupportFAB(){
       opt.addEventListener('click',()=>{
         const action=opt.dataset.wa;
         // El canal de la comunidad es exclusivo de miembros VIP
-        if (action==='canal' && !tieneAccesoVipCompleto()) {
+        if (action==='canal' && !(window.__esMiembroVip && window.__esMiembroVip())) {
           menu.remove();
           navigateToSection('canal'); // la guardia paywall lo redirige a Suscripción
           return;
