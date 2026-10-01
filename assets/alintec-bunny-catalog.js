@@ -1,10 +1,114 @@
 // Catálogo Bunny.net para Alintec Food
-// Generado 2026-10-01 16:18
+// Generado 2026-10-01 17:52
 window.ALINTEC_BUNNY_CATALOG = [
+    {
+        "titulo": "MICROBIOLOGIA DE LOS ALIMENTOS Y SU IMPACTO EN LA INOCUIDAD ALIMENTARIA",
+        "collectionId": "e726d9a6-a83d-4324-9642-1004368e17e3",
+        "sesiones": [
+            {
+                "numero": 1,
+                "titulo": "Clase 1: Microbiología de Alimentos",
+                "videoId": "2bff7034-ce60-4c99-9570-fd6a452a2bd7"
+            },
+            {
+                "numero": 2,
+                "titulo": "Clase 2: Microorganismos patógenos en alimentos",
+                "videoId": "c9df747c-577b-4873-83b7-aa0d209cb5f8"
+            },
+            {
+                "numero": 3,
+                "titulo": "Clase 3: Microbiología de alimentos procesados y conservados",
+                "videoId": "8089d202-998d-4be4-a0b5-223aaa4b2dd9"
+            },
+            {
+                "numero": 4,
+                "titulo": "Clase 4: Técnicas de muestreo y preparación de muestras",
+                "videoId": "2ae142c1-7870-4fea-a281-6711b0d2160d"
+            },
+            {
+                "numero": 5,
+                "titulo": "Clase 5: Prevención y control Microbiológico en la industria Alimentaria",
+                "videoId": "2789e3ff-fc53-4c86-b67f-5d1a1ec648d7"
+            }
+        ]
+    },
+    {
+        "titulo": "MICROBIOLOGIA DE PATOGENOS ALIMENTARIOS Y TECNICAS  DE DETECCION",
+        "collectionId": "89ce1680-c8e8-4f6d-8b02-7c8d8441784d",
+        "sesiones": [
+            {
+                "numero": 1,
+                "titulo": "Clase 1: Microorganismos patógenos en alimentos y técnicas de detección en Microbiologia",
+                "videoId": "73725490-5a6d-45db-862e-f49884331839"
+            },
+            {
+                "numero": 2,
+                "titulo": "Clase 2: Principales patógenos en alimentos y su impacto en la salud publica",
+                "videoId": "cdbc2107-1a33-4e55-bb70-ca7f10cf1a5a"
+            },
+            {
+                "numero": 3,
+                "titulo": "Clase 3: Técnicas de detección en Microbiología en alimentos según las NOM",
+                "videoId": "e94f4858-393c-4073-b9a3-b8a96f696f44"
+            },
+            {
+                "numero": 4,
+                "titulo": "Clase 4: Indicadores, NOM, Tradicionales y Técnicas rapidas",
+                "videoId": "2f38b60d-9cc0-4f7c-b46c-647fce846d07"
+            },
+            {
+                "numero": 5,
+                "titulo": "Clase 5: Innovaciones en detección microbiológica y cumplimiento normativo",
+                "videoId": "69218d12-8156-43b7-b8f5-598f8acc5139"
+            }
+        ]
+    },
+    {
+        "titulo": "MICROBIOLOGIA DEL AGUA Y SALUBRIDAD ALIMENTARIA",
+        "collectionId": "8a154a53-c7eb-43a5-b9de-ab5e7f0d49a8",
+        "sesiones": [
+            {
+                "numero": 1,
+                "titulo": "Clase 1: Introducción a la Microbiología del Agua en la Industria Alimentaria",
+                "videoId": "2065d90b-b34e-4d1d-95a7-8aca1937364f"
+            },
+            {
+                "numero": 2,
+                "titulo": "Clase 2: Contaminación Microbiológica del Agua y Sus Efectos en la Salud",
+                "videoId": "8bbeca84-22ed-4a1e-adb0-0b948188bc44"
+            },
+            {
+                "numero": 3,
+                "titulo": "Clase 3: Normativas y regulaciones",
+                "videoId": "a778cae4-4df0-4221-b04d-b220448e5426"
+            },
+            {
+                "numero": 4,
+                "titulo": "Clase 4:Técnicas y Métodos de Análisis Microbiológico del Agua",
+                "videoId": "f0f731b9-bdcd-4ad5-8a4c-024df96ac416"
+            },
+            {
+                "numero": 5,
+                "titulo": "Clase 5: Buenas Prácticas de Manejo y Tratamiento del Agua en la Industria Alimentaria",
+                "videoId": "8001bd58-4c6c-416d-a116-0b68ca1077c5"
+            }
+        ]
+    },
     {
         "titulo": "NANOMATERIALES PARA ENVASES INTELIGENTES",
         "collectionId": "7153eb43-7fac-4ca2-b7de-2a50f4fa235e",
-        "sesiones": []
+        "sesiones": [
+            {
+                "numero": 1,
+                "titulo": "Clase 1 y 2: Nanomateriales para envases inteligentes",
+                "videoId": "79e34336-1ae5-4b8b-892d-9adf8478971a"
+            },
+            {
+                "numero": 3,
+                "titulo": "Clase 3, 4 y 5: Nanomateriales para envases inteligentes 2",
+                "videoId": "44c4a0af-ca2f-43dd-b989-50b0c005c82e"
+            }
+        ]
     },
     {
         "titulo": "NANOTECNOLOGIA EN LOS ALIMENTOS DEL FUTURO",
@@ -12,27 +116,27 @@ window.ALINTEC_BUNNY_CATALOG = [
         "sesiones": [
             {
                 "numero": 1,
-                "titulo": "Clase 1: Introducción a la Nanotecnología y su Aplicación en Alimentos.mp4",
+                "titulo": "Clase 1: Introducción a la Nanotecnología y su Aplicación en Alimentos",
                 "videoId": "30793dc7-32fa-4296-b65b-516b588ebacb"
             },
             {
                 "numero": 2,
-                "titulo": "Clase 2: Nanomateriales y sus Propiedades en Alimentos.mp4",
+                "titulo": "Clase 2: Nanomateriales y sus Propiedades en Alimentos",
                 "videoId": "911d241a-ccda-4aaf-b6a5-9f8f8e2ccfda"
             },
             {
                 "numero": 3,
-                "titulo": "Clase 3: Aplicaciones de la Nanotecnología en la Seguridad Alimentaria.mp4",
+                "titulo": "Clase 3: Aplicaciones de la Nanotecnología en la Seguridad Alimentaria",
                 "videoId": "eef3aa80-34c3-4fd1-99ac-6eec7d4ea2ed"
             },
             {
                 "numero": 4,
-                "titulo": "Clase 4: Nanotecnología en la Mejora de la Nutrición de los Alimentos.mp4",
+                "titulo": "Clase 4: Nanotecnología en la Mejora de la Nutrición de los Alimentos",
                 "videoId": "cf64081d-b23e-4099-a587-1a08ac976971"
             },
             {
                 "numero": 5,
-                "titulo": "Clase 5: Retos y Futuro de la Nanotecnología en la Industria Alimentaria.mp4",
+                "titulo": "Clase 5: Retos y Futuro de la Nanotecnología en la Industria Alimentaria",
                 "videoId": "ccdee188-a35c-4f68-afcf-f1e68c6b819c"
             }
         ]
@@ -43,17 +147,17 @@ window.ALINTEC_BUNNY_CATALOG = [
         "sesiones": [
             {
                 "numero": 1,
-                "titulo": "Clase 1: Recubrimientos comestibles como  herramienta innovadora para conservacion  de alimentos.mp4",
+                "titulo": "Clase 1: Recubrimientos comestibles como  herramienta innovadora para conservación  de alimentos",
                 "videoId": "97a59ea5-8e6e-4213-8015-9da96f8deb43"
             },
             {
                 "numero": 2,
-                "titulo": "Clase 2 y 3: Materiales avanzados para recubrimientos comestibles..mp4",
+                "titulo": "Clase 2 y 3: Materiales avanzados para recubrimientos comestibles",
                 "videoId": "b558e450-368c-4abc-a6c5-c7aae847e20e"
             },
             {
                 "numero": 4,
-                "titulo": "Clase 4 y 5: Recubrimientos funcionales: Antioxidantes, Antimicrobianos y Bioactivos.mp4",
+                "titulo": "Clase 4 y 5: Recubrimientos funcionales: Antioxidantes, Antimicrobianos y Bioactivos.",
                 "videoId": "47181b83-8911-4c36-b3f6-5f5b2630000d"
             }
         ]
