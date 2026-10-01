@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "alintec-food-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "-p", "8781", "-c-1"],
+      "port": 8781
+    }
+  ]
+}

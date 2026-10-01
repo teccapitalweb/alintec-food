@@ -89,7 +89,8 @@ service cloud.firestore {
       allow create: if isAdmin() || (own(uid)
         && request.resource.data.keys().hasOnly([
           'uid', 'email', 'nombre', 'displayName', 'activa', 'plan',
-          'fechaRegistro', 'createdAt', 'lastUpdatedAt', 'origen'
+          'fechaRegistro', 'createdAt', 'lastUpdatedAt', 'origen',
+          'encuestaSessionId'
         ])
         && request.resource.data.uid == request.auth.uid
         && request.auth.token.email is string
@@ -108,6 +109,24 @@ service cloud.firestore {
         allow read: if own(uid) || isAdmin();
         allow write: if isAdmin();
       }
+    }
+
+    // Encuesta anónima del landing (visitantes sin cuenta). Cualquiera puede
+    // crear su propia respuesta, pero nadie fuera del admin puede leer,
+    // editar o borrar — evita que un visitante lea o altere respuestas ajenas.
+    match /encuestasProspectos/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly([
+          'sessionId', 'respuestas', 'completada', 'creado', 'contacto'
+        ])
+        && request.resource.data.sessionId is string
+        && request.resource.data.sessionId.size() > 0
+        && request.resource.data.sessionId.size() < 100
+        && request.resource.data.respuestas is map
+        && request.resource.data.completada is bool
+        && (!('contacto' in request.resource.data)
+          || (request.resource.data.contacto is string
+            && request.resource.data.contacto.size() < 200));
     }
 
     // El backend crea este documento mínimo después de validar la membresía,

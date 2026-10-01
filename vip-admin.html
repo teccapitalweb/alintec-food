@@ -1043,6 +1043,7 @@ body::before{
 .nav-item[data-section="pdfs"] .ic{color:var(--warning)}
 .nav-item[data-section="certificados"] .ic{color:var(--accent)}
 .nav-item[data-section="notificaciones"] .ic,.nav-item[data-section="miembros"] .ic,.nav-item[data-section="foro"] .ic,.nav-item[data-section="directorio"] .ic{color:var(--info)}
+.nav-item[data-section="encuestas"] .ic{color:var(--primary)}
 .nav-item[data-section="noticias"] .ic{color:var(--warning)}
 .nav-item.is-active .ic{color:var(--primary)}
 /* Micro-transiciones premium */
@@ -1174,6 +1175,7 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 :root[data-theme="night"] .mobile-nav{background:rgba(12,23,33,.95)!important;border-color:var(--border)!important}
 :root[data-theme="night"] .news-template-picker{background:#101B27;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2A39;border-color:rgba(112,175,204,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body style="visibility:hidden">
 
@@ -1308,6 +1310,11 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Comunicación</div>
       <a class="nav-item" data-section="notificaciones"><svg class="ic"><use href="#i-bell"/></svg>Notificaciones<span class="nav-item__badge" id="badge-notif">0</span></a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Marketing</div>
+      <a class="nav-item" data-section="encuestas"><svg class="ic"><use href="#i-chart-bar"/></svg>Encuestas</a>
     </div>
 
     <div class="nav-section">
@@ -1479,6 +1486,162 @@ window.addEventListener('adminready', cargarPreciosClub);
    PAGES
    ========================================================= */
 const Pages={
+  encuestas(p){
+    p.innerHTML = `
+      <div class="fade-up">
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Marketing</span>
+          <h1 class="sec-hero__title">Encuestas</h1>
+          <p class="sec-hero__sub">Resultados de la encuesta flotante del landing · quién visita, qué urgencia tiene y quién ya pidió que le avisen.</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
+            <div class="kpi-card__label">Respuestas totales</div>
+            <div class="kpi-card__value" id="enc-kpi-total">—</div>
+            <div class="kpi-card__sub">Incluye completas e incompletas</div>
+          </div>
+          <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
+            <div class="kpi-card__label">Completaron la encuesta</div>
+            <div class="kpi-card__value" id="enc-kpi-completas">—</div>
+            <div class="kpi-card__sub" id="enc-kpi-completas-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
+            <div class="kpi-card__label">Leads calientes</div>
+            <div class="kpi-card__value" id="enc-kpi-calientes">—</div>
+            <div class="kpi-card__sub">Urgencia "Ya" + quiso ver curso gratis</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Perfil de quién responde</h3>
+            <canvas id="enc-chart-perfil" height="220"></canvas>
+          </div>
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Cómo nos conoció</h3>
+            <canvas id="enc-chart-origen" height="220"></canvas>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Urgencia declarada</h3>
+            <canvas id="enc-chart-urgencia" height="220"></canvas>
+          </div>
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Qué los detiene hoy</h3>
+            <canvas id="enc-chart-freno" height="220"></canvas>
+          </div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
+          <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Tema de interés · para saber qué más ofrecer</h3>
+          <canvas id="enc-chart-interes" height="160"></canvas>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Tamaño de empresa · solo perfiles de negocio</h3>
+            <canvas id="enc-chart-tamano" height="200"></canvas>
+          </div>
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Experiencia con cursos online</h3>
+            <canvas id="enc-chart-experiencia" height="200"></canvas>
+          </div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
+          <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Leads calientes pendientes de contacto</h3>
+          <div id="enc-leads" style="color:var(--text-2);font-size:13px;">Cargando…</div>
+        </div>
+      </div>
+    `;
+    Pages._cargarEncuestas();
+  },
+
+  async _cargarEncuestas(){
+    let docs = [];
+    try {
+      const snap = await getDocs(collection(db, 'encuestasProspectos'));
+      docs = snap.docs.map(d => d.data());
+    } catch (e) {
+      console.error('❌ No se pudo leer encuestasProspectos:', e.message);
+      const leadsEl = document.getElementById('enc-leads');
+      if (leadsEl) leadsEl.textContent = 'No se pudieron cargar los datos.';
+      return;
+    }
+    const total = docs.length;
+    const completas = docs.filter(d => d.completada === true);
+    const contar = (campo) => {
+      const conteo = {};
+      completas.forEach(d => {
+        const v = d.respuestas?.[campo];
+        if (!v) return; // los pasos condicionales (ej. "tamano") no existen para todos
+        conteo[v] = (conteo[v] || 0) + 1;
+      });
+      return conteo;
+    };
+    const porPerfil = contar('p1');
+    const porOrigen = contar('origen');
+    const porUrgencia = contar('urgencia');
+    const porFreno = contar('freno');
+    const porInteres = contar('interes');
+    const porTamano = contar('tamano');
+    const porExperiencia = contar('experiencia');
+    const calientes = completas.filter(d => d.respuestas?.urgencia === 'Ya' && d.respuestas?.cursoGratis === 'Sí');
+
+    const elTotal = document.getElementById('enc-kpi-total');
+    if (elTotal) elTotal.textContent = total;
+    const elCompletas = document.getElementById('enc-kpi-completas');
+    if (elCompletas) elCompletas.textContent = completas.length;
+    const elCompletasSub = document.getElementById('enc-kpi-completas-sub');
+    if (elCompletasSub) elCompletasSub.innerHTML = total > 0 ? `<strong>${Math.round(completas.length/total*100)}%</strong> de las visitas` : 'Sin respuestas aún';
+    const elCalientes = document.getElementById('enc-kpi-calientes');
+    if (elCalientes) elCalientes.textContent = calientes.length;
+
+    if (window.Chart) {
+      const colores = ['#58B71B','#3B82F6','#F7941D','#D4537E','#9CA3AF'];
+      const pie = (id, datos) => {
+        const cv = document.getElementById(id);
+        if (cv) new Chart(cv, {
+          type: 'pie',
+          data: { labels: Object.keys(datos), datasets: [{ data: Object.values(datos), backgroundColor: colores }] },
+          options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+        });
+      };
+      const barra = (id, datos, color, horizontal) => {
+        const cv = document.getElementById(id);
+        if (cv) new Chart(cv, {
+          type: 'bar',
+          data: { labels: Object.keys(datos), datasets: [{ data: Object.values(datos), backgroundColor: color }] },
+          options: {
+            indexAxis: horizontal ? 'y' : 'x',
+            plugins: { legend: { display: false } },
+            scales: horizontal
+              ? { x: { beginAtZero: true, ticks: { precision: 0 } } }
+              : { y: { beginAtZero: true, ticks: { precision: 0 } } }
+          }
+        });
+      };
+      pie('enc-chart-perfil', porPerfil);
+      pie('enc-chart-origen', porOrigen);
+      barra('enc-chart-urgencia', porUrgencia, '#3B82F6', false);
+      barra('enc-chart-freno', porFreno, '#D4537E', false);
+      barra('enc-chart-interes', porInteres, '#F7941D', true);
+      barra('enc-chart-tamano', porTamano, '#58B71B', false);
+      barra('enc-chart-experiencia', porExperiencia, '#9CA3AF', false);
+    }
+
+    const leadsEl = document.getElementById('enc-leads');
+    if (leadsEl) {
+      const conContacto = calientes.filter(d => d.contacto);
+      if (conContacto.length === 0) {
+        leadsEl.textContent = 'Nadie con urgencia alta ha dejado su contacto todavía.';
+      } else {
+        leadsEl.innerHTML = conContacto.map(d => {
+          const fecha = d.creado?.toDate ? d.creado.toDate().toLocaleDateString('es-MX') : '—';
+          const contactoSeguro = String(d.contacto).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+          return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>${contactoSeguro}</span><span style="color:var(--text-3);">${fecha}</span></div>`;
+        }).join('');
+      }
+    }
+  },
+
   dashboard(p){
     // Stats reales desde AdminStore (que lee Firestore)
     // Si AdminStore aún no carga, mostramos esqueleto · luego se re-renderea automáticamente
@@ -6100,7 +6263,7 @@ function dirAdminCargar(){
    refresh te deja donde estabas, los botones atrás/adelante del
    navegador funcionan y puedes compartir un link directo a la sección.
    ═══════════════════════════════════════════════════════════════════ */
-const SECCIONES_VALIDAS = ['dashboard','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio'];
+const SECCIONES_VALIDAS = ['dashboard','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();

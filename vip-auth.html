@@ -1251,7 +1251,7 @@ async function ensureMiembroDoc(user, displayName, origen) {
     }
     // No existe · crear doc inicial
     // ⚠️ Las reglas Firestore exigen activa:false y plan:null para crear desde cliente
-    await setDoc(ref, {
+    const docInicial = {
       uid: user.uid,
       email: (user.email || '').toLowerCase(),
       nombre: displayName || user.displayName || (user.email || '').split('@')[0] || 'Sin nombre',
@@ -1262,7 +1262,14 @@ async function ensureMiembroDoc(user, displayName, origen) {
       createdAt: serverTimestamp(),
       lastUpdatedAt: serverTimestamp(),
       origen: origen || 'login-web'
-    });
+    };
+    // Si esta persona respondió la encuesta del landing antes de registrarse,
+    // guardamos su sessionId para poder cruzar esa respuesta con su cuenta.
+    try {
+      const encuestaSessionId = localStorage.getItem('af_encuesta_sid');
+      if (encuestaSessionId) docInicial.encuestaSessionId = encuestaSessionId;
+    } catch (e) {}
+    await setDoc(ref, docInicial);
     console.log('[ensureMiembroDoc] ✅ doc creado en miembros/' + user.uid);
     return { ok: true, action: 'created', uid: user.uid };
   } catch (e) {
