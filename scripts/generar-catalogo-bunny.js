@@ -5,18 +5,28 @@
 // (no la clave de reproducción BUNNY_TOKEN_KEY — esta usa la "API Key" de la librería,
 // que se encuentra en el dashboard de Bunny: tu Video Library → pestaña "API").
 //
-// Uso:
+// Las credenciales se leen de .env.bunny en la raíz del proyecto (nunca se sube a git).
+// También se pueden pasar como variables de entorno si se prefiere:
 //   BUNNY_LIBRARY_ID=12345 BUNNY_API_KEY=xxxxxxxx node scripts/generar-catalogo-bunny.js
 
 const fs = require('fs');
 const path = require('path');
 
+// Carga .env.bunny (si existe) sin pisar variables ya puestas en el entorno.
+const envPath = path.join(__dirname, '..', '.env.bunny');
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath, 'utf8').split(/\r?\n/).forEach(linea => {
+    const m = linea.match(/^([A-Z_]+)=(.*)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim();
+  });
+}
+
 const LIBRARY_ID = process.env.BUNNY_LIBRARY_ID;
 const API_KEY = process.env.BUNNY_API_KEY;
 
 if (!LIBRARY_ID || !API_KEY) {
-  console.error('Faltan variables de entorno: BUNNY_LIBRARY_ID y BUNNY_API_KEY');
-  console.error('Uso: BUNNY_LIBRARY_ID=12345 BUNNY_API_KEY=xxxx node scripts/generar-catalogo-bunny.js');
+  console.error('Faltan credenciales: crea .env.bunny en la raíz del proyecto con BUNNY_LIBRARY_ID y BUNNY_API_KEY,');
+  console.error('o pásalas como variables de entorno: BUNNY_LIBRARY_ID=12345 BUNNY_API_KEY=xxxx node scripts/generar-catalogo-bunny.js');
   process.exit(1);
 }
 
