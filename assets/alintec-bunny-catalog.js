@@ -1,5 +1,5 @@
 // Catálogo Bunny.net para Alintec Food
-// Generado 2026-10-01 15:37
+// Generado 2026-10-01 16:18
 window.ALINTEC_BUNNY_CATALOG = [
     {
         "titulo": "NANOMATERIALES PARA ENVASES INTELIGENTES",
@@ -12,28 +12,33 @@ window.ALINTEC_BUNNY_CATALOG = [
         "sesiones": [
             {
                 "numero": 1,
-                "titulo": "Clase 1_Introducción a la Nanotecnología y su Aplicación en Alimentos.mp4",
+                "titulo": "Clase 1: Introducción a la Nanotecnología y su Aplicación en Alimentos.mp4",
                 "videoId": "30793dc7-32fa-4296-b65b-516b588ebacb"
             },
             {
                 "numero": 2,
-                "titulo": "Clase 2_Nanomateriales y sus Propiedades en Alimentos.mp4",
+                "titulo": "Clase 2: Nanomateriales y sus Propiedades en Alimentos.mp4",
                 "videoId": "911d241a-ccda-4aaf-b6a5-9f8f8e2ccfda"
             },
             {
+                "numero": 3,
+                "titulo": "Clase 3: Aplicaciones de la Nanotecnología en la Seguridad Alimentaria.mp4",
+                "videoId": "eef3aa80-34c3-4fd1-99ac-6eec7d4ea2ed"
+            },
+            {
                 "numero": 4,
-                "titulo": "Clase 4_Nanotecnología en la Mejora de la Nutrición de los Alimentos.mp4",
+                "titulo": "Clase 4: Nanotecnología en la Mejora de la Nutrición de los Alimentos.mp4",
                 "videoId": "cf64081d-b23e-4099-a587-1a08ac976971"
             },
             {
                 "numero": 5,
-                "titulo": "Clase 5_Retos y Futuro de la Nanotecnología en la Industria Alimentaria.mp4",
+                "titulo": "Clase 5: Retos y Futuro de la Nanotecnología en la Industria Alimentaria.mp4",
                 "videoId": "ccdee188-a35c-4f68-afcf-f1e68c6b819c"
             }
         ]
     },
     {
-        "titulo": "Recubrimientos comestibles",
+        "titulo": "RECUBRIMIENTOS COMESTIBLES",
         "collectionId": "10310961-b72c-4e99-9957-0f9a36b6dd73",
         "sesiones": [
             {
