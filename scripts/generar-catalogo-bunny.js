@@ -31,9 +31,12 @@ async function bunnyGet(ruta) {
   return r.json();
 }
 
-// Extrae el número de clase del nombre del archivo ("CLASE 3 Y 4.mp4" → 3, "Clase 5.mp4" → 5)
-function numeroDeClase(titulo) {
-  const m = String(titulo || '').match(/(\d+)/);
+// Extrae el número de clase del nombre del archivo ("CLASE 3 Y 4.mp4" → 3, "Clase 5.mp4" → 5).
+function numeroDeClase(tituloOriginal) {
+  // Se quita la extensión del archivo antes de buscar números, para no confundir
+  // el "4" de ".mp4" (o el "3" de ".mp3") con el número real de la clase.
+  const t = String(tituloOriginal || '').replace(/\.[a-z0-9]{2,5}$/i, '');
+  const m = t.match(/(\d+)/);
   return m ? parseInt(m[1], 10) : 0;
 }
 
