@@ -2129,9 +2129,6 @@ const Pages={
               <svg class="ic"><use href="#i-plus"/></svg>
               Nuevo curso
             </button>
-            <button class="btn btn--ghost" id="sync-alintec-bunny-btn">
-              Sincronizar con Bunny
-            </button>
           </div>
         </div>
 
@@ -2246,11 +2243,6 @@ const Pages={
     p.querySelector('#new-curso-btn')?.addEventListener('click', () => {
       Pages._abrirModalCurso(null);
     });
-
-    // ─── Botón Sincronizar Bunny ───
-    p.querySelector('#sync-alintec-bunny-btn')?.addEventListener('click', () => {
-      Pages._sincronizarAlintecBunny();
-    });
   },
 
   // ─── Comparación aproximada de títulos (curso de Firestore vs. colección de Bunny) ───
@@ -2300,90 +2292,6 @@ const Pages={
     this._modalCurso.sesiones.sort((a, b) => a.numero - b.numero);
     this._renderSesionesModal();
     Toast.success('Videos vinculados', `${actualizadas} clases actualizadas desde "${mejor.titulo}"`);
-  },
-
-  // ─── Sincronización de videos Bunny (auto-vincula por nombre de colección/curso) ───
-  async _sincronizarAlintecBunny() {
-    const catalogo = window.ALINTEC_BUNNY_CATALOG || [];
-    const fb = window._fb;
-    const cursos = window.AdminStore?.cursos || [];
-    if (!catalogo.length) {
-      Toast.error('Falta el catálogo Bunny', 'Verifica assets/alintec-bunny-catalog.js (genéralo con el script)');
-      return;
-    }
-    if (!fb?.db || !fb?.writeBatch || !fb?.doc) {
-      Toast.error('Firestore no está listo', 'Espera unos segundos y reintenta');
-      return;
-    }
-    if (!confirm('Se vincularán los videos de Bunny con los cursos existentes según el nombre de cada colección. Las preguntas, clases gratis y materiales se conservan. ¿Continuar?')) return;
-
-    const btn = document.getElementById('sync-alintec-bunny-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
-    try {
-      const usados = new Set();
-      const sinCoincidencia = [];
-      let vinculados = 0;
-      let videos = 0;
-      const batch = fb.writeBatch(fb.db);
-
-      for (const curso of cursos) {
-        let mejor = null;
-        let mejorIndice = -1;
-        let mejorPuntaje = 0;
-        catalogo.forEach((item, indice) => {
-          if (usados.has(indice)) return;
-          const puntaje = curso.bunnyCollectionId === item.collectionId
-            ? 2
-            : this._puntajeTituloBunny(curso.titulo, item.titulo);
-          if (puntaje > mejorPuntaje) {
-            mejor = item;
-            mejorIndice = indice;
-            mejorPuntaje = puntaje;
-          }
-        });
-        if (!mejor || mejorPuntaje < 0.52) {
-          sinCoincidencia.push(curso.titulo || curso.id);
-          continue;
-        }
-        usados.add(mejorIndice);
-
-        // Conservar gratis/preguntas ya capturadas a mano, solo actualizar el ID del video (url)
-        const anteriores = Array.isArray(curso.sesiones) ? curso.sesiones : [];
-        const sesiones = mejor.sesiones.map((sesion, indice) => {
-          const numero = sesion.numero || (indice + 1);
-          const anterior = anteriores.find(x => Number(x.numero) === Number(numero)) || {};
-          return {
-            numero,
-            titulo: anterior.titulo || sesion.titulo || `Clase ${numero}`,
-            url: sesion.videoId,
-            gratis: anterior.gratis === true,
-            preguntas: Array.isArray(anterior.preguntas) ? anterior.preguntas : [],
-            juego: (anterior.juego && anterior.juego.tipo) ? anterior.juego : null
-          };
-        });
-
-        batch.update(fb.doc(fb.db, 'cursos', curso.id), {
-          sesiones,
-          bunnyCollectionId: mejor.collectionId,
-          bunnySincronizadoEn: fb.serverTimestamp()
-        });
-        vinculados++;
-        videos += sesiones.length;
-      }
-
-      if (vinculados) await batch.commit();
-      console.log('[Bunny sync]', { vinculados, videos, sinCoincidencia });
-      if (sinCoincidencia.length) {
-        Toast.error(`Bunny: ${vinculados} cursos y ${videos} videos`, `Sin coincidencia: ${sinCoincidencia.join(', ')}`);
-      } else {
-        Toast.success('¡Bunny sincronizado!', `${vinculados} cursos · ${videos} videos · gratis/preguntas conservados`);
-      }
-    } catch (error) {
-      console.error('[Bunny sync]', error);
-      Toast.error('No se pudo sincronizar', error.message || 'Intenta nuevamente');
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Sincronizar con Bunny'; }
-    }
   },
 
   // ─── KPIs ───
