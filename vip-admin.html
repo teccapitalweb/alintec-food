@@ -1174,7 +1174,6 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 :root[data-theme="night"] .mobile-nav{background:rgba(12,23,33,.95)!important;border-color:var(--border)!important}
 :root[data-theme="night"] .news-template-picker{background:#101B27;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2A39;border-color:rgba(112,175,204,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 </style>
-<script src="assets/alintec-bunny-catalog.js"></script>
 </head>
 <body style="visibility:hidden">
 
@@ -2261,10 +2260,28 @@ const Pages={
   },
 
   // ─── Sincroniza solo el curso que está abierto en el modal ───
-  _sincronizarBunnyDeEsteCurso() {
-    const catalogo = window.ALINTEC_BUNNY_CATALOG || [];
+  // Consulta Bunny EN VIVO (vía el servidor, que es quien tiene la API Key) — no depende
+  // de ningún archivo ni script manual: siempre refleja el estado actual de tu librería.
+  async _sincronizarBunnyDeEsteCurso() {
+    const btn = document.getElementById('cf-sync-bunny');
+    if (btn) { btn.disabled = true; btn.textContent = 'Consultando Bunny…'; }
+    let catalogo;
+    try {
+      const token = await Pages._getAuthToken();
+      const r = await fetch(Pages._webhookUrl + '/api/admin/bunny-catalogo', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+      catalogo = data.catalogo || [];
+    } catch (e) {
+      Toast.error('No se pudo consultar Bunny', e.message || 'Intenta de nuevo');
+      if (btn) { btn.disabled = false; btn.textContent = 'Sincronizar con Bunny'; }
+      return;
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Sincronizar con Bunny'; }
     if (!catalogo.length) {
-      Toast.error('Falta el catálogo Bunny', 'Verifica assets/alintec-bunny-catalog.js');
+      Toast.error('Bunny no devolvió colecciones', 'Verifica que tu librería tenga colecciones creadas');
       return;
     }
     const tituloActual = document.getElementById('cf-titulo')?.value || this._modalCurso.titulo || '';
