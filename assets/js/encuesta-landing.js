@@ -114,22 +114,23 @@ function obtenerPasos() {
     mensaje: { titulo: '¡Hola! Te ayudo a empezar.', texto: 'Son preguntas rápidas: toma menos de un minuto.' }
   });
   pasos.push({ clave: 'p1', q: '¿Tú eres...?', opts: PERFILES, expr: 'neutral' });
+  pasos.push({ clave: 'origen', q: '¿Cómo nos conociste?', opts: ['Redes sociales', 'Recomendación', 'Buscador', 'Otro'], expr: 'neutral' });
   pasos.push({ clave: 'giro', q: '¿En qué sector trabajas o quieres trabajar?', opts: ['Lácteos y bebidas', 'Cárnicos y pescados', 'Panificación y botanas', 'Frutas y verduras', 'Otro sector'], expr: 'thinking' });
   if (respuestas.p1) pasos.push({ clave: 'p2', ...RETOS[respuestas.p1], expr: 'thinking' });
   if (respuestas.p1 && respuestas.p2) pasos.push({ clave: 'p2b', ...PROFUNDIZACION[respuestas.p1][respuestas.p2], expr: 'thinking' });
   if (PERFILES_EMPRESA.includes(respuestas.p1)) pasos.push({ clave: 'tamano', q: '¿Cuántas personas trabajan contigo?', opts: ['Solo yo', '2 a 10', '11 a 50', 'Más de 50'], expr: 'neutral' });
   pasos.push({ clave: 'interes', q: '¿Qué tema te interesa más?', opts: TEMAS_INTERES, expr: 'thinking' });
   pasos.push({ clave: 'experiencia', q: '¿Ya tomaste cursos online?', opts: ['Sí, me gusta', 'Prefiero presencial', 'Es mi primera vez'], expr: 'neutral' });
-  pasos.push({ clave: 'urgencia', q: '¿Qué tan urgente?', opts: ['Ya', 'Pronto', 'Solo viendo'], expr: 'surprised' });
+  pasos.push({ clave: 'urgencia', q: '¿Cuándo te gustaría empezar a capacitarte?', opts: [URGENTE, 'En el próximo mes', 'Solo estoy explorando'], expr: 'surprised' });
   pasos.push({ clave: 'freno', q: '¿Qué te detiene hoy?', opts: ['Precio', 'Tiempo', 'No estoy seguro', 'Nada, listo'], expr: 'thinking' });
-  pasos.push({ clave: 'cursoGratis', q: '¿Ver curso gratis?', opts: ['Sí', 'Después'], expr: 'happy' });
-  // Al final, cuando ya está enganchada: es un dato de marketing, no de interés del visitante.
-  pasos.push({ clave: 'origen', q: '¿Cómo nos conociste?', opts: ['Redes sociales', 'Recomendación', 'Buscador', 'Otro'], expr: 'neutral' });
   return pasos;
 }
 
+// Quien quiere empezar de inmediato es un "lead caliente": al final se le ofrece que un
+// asesor lo contacte por WhatsApp y el acceso a su curso gratis.
+const URGENTE = 'Lo antes posible';
 function esLeadCaliente() {
-  return respuestas.urgencia === 'Ya' && respuestas.cursoGratis === 'Sí';
+  return respuestas.urgencia === URGENTE;
 }
 
 // La encuesta vive como una sección fija justo debajo del hero (no flotante):
@@ -149,7 +150,10 @@ function construirUI() {
         <div id="af-enc-face" class="af-enc-face" aria-hidden="true"></div>
       </div>
       <div id="af-enc-card">
-        <p class="af-enc-step" id="af-enc-step"></p>
+        <div class="af-enc-top">
+          <p class="af-enc-step" id="af-enc-step"></p>
+          <button type="button" class="af-enc-atras" id="af-enc-atras" hidden>← Anterior</button>
+        </div>
         <p class="af-enc-q" id="af-enc-q"></p>
         <div id="af-enc-body"></div>
         <div class="af-enc-dots" id="af-enc-dots"></div>
@@ -158,6 +162,7 @@ function construirUI() {
   `;
   const hero = document.getElementById('inicio');
   if (hero) hero.after(sec); else document.body.prepend(sec);
+  sec.querySelector('#af-enc-atras').addEventListener('click', atras);
   return sec;
 }
 
@@ -209,19 +214,15 @@ const REACCIONES_RESPUESTA = {
     'Es mi primera vez': { expr: 'surprised', titulo: '¡Bienvenido a esta experiencia!', texto: 'Te guiaremos paso a paso para que comenzar sea sencillo.' }
   },
   urgencia: {
-    'Ya': { expr: 'surprised', titulo: 'Vamos a priorizarlo.', texto: 'Buscaré una opción que puedas comenzar cuanto antes.' },
-    'Pronto': { expr: 'thinking', titulo: 'Podemos planearlo bien.', texto: 'Te recomendaré una ruta que puedas organizar a tu ritmo.' },
-    'Solo viendo': { expr: 'neutral', titulo: 'Explora con calma.', texto: 'Te mostraré opciones útiles sin presionarte a decidir ahora.' }
+    'Lo antes posible': { expr: 'surprised', titulo: 'Vamos a priorizarlo.', texto: 'Buscaremos cómo puedas comenzar cuanto antes.' },
+    'En el próximo mes': { expr: 'thinking', titulo: 'Podemos planearlo bien.', texto: 'Tendrás tiempo de elegir con calma.' },
+    'Solo estoy explorando': { expr: 'neutral', titulo: 'Explora con calma.', texto: 'Sin presión: mira las opciones y decide cuando quieras.' }
   },
   freno: {
     'Precio': { expr: 'concerned', titulo: 'El presupuesto importa.', texto: 'Tomaré en cuenta opciones de alto valor y acceso flexible.' },
     'Tiempo': { expr: 'concerned', titulo: 'Sé que el tiempo es limitado.', texto: 'Buscaremos contenidos breves que puedas avanzar a tu ritmo.' },
     'No estoy seguro': { expr: 'confused', titulo: 'Es normal tener dudas.', texto: 'Con tus respuestas podré darte una recomendación más clara.' },
     'Nada, listo': { expr: 'happy', titulo: '¡Entonces avancemos!', texto: 'Ya casi tengo lista una ruta adecuada para ti.' }
-  },
-  cursoGratis: {
-    'Sí': { expr: 'excited', titulo: '¡Excelente!', texto: 'Prepararé tu acceso para que conozcas la experiencia.' },
-    'Después': { expr: 'neutral', titulo: 'Sin problema.', texto: 'Conservaremos tu recomendación para cuando quieras continuar.' }
   }
 };
 
@@ -280,11 +281,13 @@ function renderPaso() {
   document.getElementById('af-enc-step').textContent = `Pregunta ${paso + 1} de ${pasos.length}`;
   document.getElementById('af-enc-q').textContent = def.q;
   af_setExpr(def.expr, def.mensaje);
+  actualizarAtras();
   const body = document.getElementById('af-enc-body');
   body.innerHTML = '';
   def.opts.forEach(opt => {
     const b = document.createElement('button');
     b.className = 'af-enc-opt';
+    if (respuestas[def.clave] === opt) b.classList.add('is-selected'); // al volver, se ve lo que ya había elegido
     b.textContent = opt;
     b.addEventListener('click', () => elegir(def.clave, opt, b));
     body.appendChild(b);
@@ -293,18 +296,36 @@ function renderPaso() {
   fijarAlturaTarjeta();
 }
 
-// La tarjeta nunca se encoge entre preguntas: así no "salta" la página (ni el personaje,
-// que está alineado al borde inferior) cuando una pregunta tiene menos opciones que otra.
+// En escritorio la tarjeta nunca se encoge entre preguntas: así no "salta" la página (ni el
+// personaje, alineado al borde inferior). En celular no se fija: ahí un alto fijo deja mucho
+// espacio en blanco cuando una pregunta tiene pocas opciones.
 function fijarAlturaTarjeta() {
   const card = document.getElementById('af-enc-card');
   if (!card) return;
+  if (window.innerWidth <= 760) { card.style.minHeight = ''; return; }
   const previa = parseInt(card.style.minHeight, 10) || 0;
   card.style.minHeight = Math.max(previa, card.offsetHeight) + 'px';
 }
 
+function actualizarAtras(oculto) {
+  const btn = document.getElementById('af-enc-atras');
+  if (btn) btn.hidden = !!oculto || paso <= 0;
+}
+
+let ocupado = false; // evita clics (o "Anterior") mientras corre la transición
+
+// Preguntas cuyo contenido o existencia depende de otra respuesta (ver obtenerPasos).
+const DEPENDENCIAS = { p1: ['p2', 'p2b', 'tamano'], p2: ['p2b'] };
+
 // Línea de tiempo al elegir: la opción se marca y el personaje reacciona al instante,
 // la pregunta se desvanece y la siguiente aparece con un fundido corto.
 function elegir(clave, opt, boton) {
+  if (ocupado) return;
+  ocupado = true;
+  // Si al volver se cambia una respuesta, las que dependían de ella ya no aplican (el camino es otro).
+  if (respuestas[clave] !== undefined && respuestas[clave] !== opt) {
+    (DEPENDENCIAS[clave] || []).forEach(k => { delete respuestas[k]; });
+  }
   respuestas[clave] = opt;
   const body = document.getElementById('af-enc-body');
   if (body) body.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
@@ -312,15 +333,27 @@ function elegir(clave, opt, boton) {
   const reaccion = obtenerReaccionRespuesta(clave, opt);
   af_setExpr(reaccion.expr, reaccion);
   af_animarReaccion();
+  cambiarPaso(1, 380, 580);
+}
+
+function atras() {
+  if (ocupado || paso <= 0) return;
+  ocupado = true;
+  cambiarPaso(-1, 0, 160);
+}
+
+// Mueve el paso (+1 / -1) con el fundido: desvanece a los `iniciaFundido` ms y cambia a los `cambia` ms.
+function cambiarPaso(delta, iniciaFundido, cambia) {
   const card = document.getElementById('af-enc-card');
   const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reducido) setTimeout(() => { if (card) card.classList.add('is-swapping'); }, 380);
+  if (!reducido) setTimeout(() => { if (card) card.classList.add('is-swapping'); }, iniciaFundido);
   setTimeout(() => {
-    paso++;
+    paso = Math.max(0, paso + delta);
     guardarProgreso();
     renderPaso();
+    ocupado = false;
     if (card) requestAnimationFrame(() => card.classList.remove('is-swapping'));
-  }, reducido ? 250 : 580);
+  }, reducido ? 200 : cambia);
 }
 
 function renderContactoOFin() {
@@ -330,9 +363,10 @@ function renderContactoOFin() {
   const dots = document.getElementById('af-enc-dots');
   if (dots) dots.style.display = 'none';
   if (esLeadCaliente()) {
+    actualizarAtras();
     document.getElementById('af-enc-step').textContent = 'Último paso · opcional';
-    document.getElementById('af-enc-q').textContent = '¿Quieres que un asesor te contacte?';
-    af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y alguien del equipo te escribe. Es opcional.' });
+    document.getElementById('af-enc-q').textContent = '¿Quieres recibir más información de cursos?';
+    af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
     body.innerHTML = `
       <input class="af-enc-input" id="af-enc-contacto" type="text" placeholder="Tu WhatsApp (con lada) o correo" autocomplete="tel">
       <button class="af-enc-opt af-enc-cta" id="af-enc-contacto-ok" type="button">Que me contacten →</button>
@@ -348,17 +382,21 @@ function renderContactoOFin() {
   finalizarEncuesta(null);
 }
 
+// Quien tiene urgencia ve además el acceso a su curso gratis; el resto, el catálogo.
 function mostrarFinal() {
   const tarjeta = document.getElementById('af-enc-card');
   if (tarjeta) tarjeta.style.minHeight = '';
+  actualizarAtras(true);
   const dots = document.getElementById('af-enc-dots');
   if (dots) dots.style.display = 'none';
   const pasoEl = document.getElementById('af-enc-step');
   if (pasoEl) pasoEl.textContent = 'Encuesta completada';
   af_setExpr('excited', { titulo: '¡Gracias por contarme!', texto: 'Con tus respuestas ya sé cómo orientarte.' });
   document.getElementById('af-enc-q').textContent = '¡Listo! Ya tengo lo que necesito';
-  document.getElementById('af-enc-body').innerHTML = `
-    <a class="af-enc-opt af-enc-cta" href="vip-auth.html">Ver mi curso gratis →</a>
+  const cta = esLeadCaliente()
+    ? '<a class="af-enc-opt af-enc-cta" href="vip-auth.html">Ver mi curso gratis →</a>'
+    : '<a class="af-enc-opt af-enc-cta" href="#cursos">Explorar los cursos →</a>';
+  document.getElementById('af-enc-body').innerHTML = `${cta}
     <button type="button" class="af-enc-cerrar" id="af-enc-cerrar">Ahora no, gracias</button>`;
   document.getElementById('af-enc-cerrar').addEventListener('click', cerrarSeccion);
 }

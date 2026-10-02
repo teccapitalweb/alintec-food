@@ -1508,7 +1508,7 @@ const Pages={
           <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
             <div class="kpi-card__label">Leads calientes</div>
             <div class="kpi-card__value" id="enc-kpi-calientes">—</div>
-            <div class="kpi-card__sub">Urgencia "Ya" + quiso ver curso gratis</div>
+            <div class="kpi-card__sub">Quieren empezar lo antes posible</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
@@ -1606,7 +1606,7 @@ const Pages={
     const porExperiencia = contar('experiencia');
     const porMeta = contar('meta');
     const porGiro = contar('giro');
-    const calientes = completas.filter(d => d.respuestas?.urgencia === 'Ya' && d.respuestas?.cursoGratis === 'Sí');
+    const calientes = completas.filter(d => d.respuestas?.urgencia === 'Lo antes posible');
 
     const elTotal = document.getElementById('enc-kpi-total');
     if (elTotal) elTotal.textContent = total;
