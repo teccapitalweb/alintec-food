@@ -143,7 +143,8 @@ service cloud.firestore {
     match /encuestasProspectos/{id} {
       allow read, update, delete: if isAdmin();
       allow create: if request.resource.data.keys().hasOnly([
-          'sessionId', 'respuestas', 'completada', 'creado', 'contacto'
+          'sessionId', 'respuestas', 'completada', 'creado', 'contacto',
+          'avisoAceptado', 'avisoVersion'
         ])
         && request.resource.data.sessionId is string
         && request.resource.data.sessionId.size() > 0
@@ -154,7 +155,13 @@ service cloud.firestore {
         && request.resource.data.creado is timestamp
         && (!('contacto' in request.resource.data)
           || (request.resource.data.contacto is string
-            && request.resource.data.contacto.size() <= 20));
+            && request.resource.data.contacto.size() <= 20))
+        // Constancia de que aceptó el Aviso de privacidad al dejar su WhatsApp (opcionales).
+        && (!('avisoAceptado' in request.resource.data)
+          || request.resource.data.avisoAceptado is bool)
+        && (!('avisoVersion' in request.resource.data)
+          || (request.resource.data.avisoVersion is string
+            && request.resource.data.avisoVersion.size() <= 30));
     }
 
     // El backend crea este documento mínimo después de validar la membresía,
