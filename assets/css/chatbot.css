@@ -386,3 +386,45 @@
   .af-cb-wait i { animation: none; opacity: .6; }
   .af-cb-bd { scroll-behavior: auto; }
 }
+
+/* Nota del asistente (confirmación antes de ir a crear la cuenta) */
+.af-cb-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 13px 14px;
+  background: #fffaf0;
+  border: 1.5px solid #f3d9a4;
+  border-left: 5px solid #F7941D;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(20, 60, 40, .08);
+  font-size: 13.5px;
+  line-height: 1.45;
+  animation: af-cb-pop .22s ease both;
+}
+.af-cb-nota-av {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #FFF3E0 url(../img/encuesta/busto-pensando.webp) 50% 6% / 230% no-repeat;
+  border: 2px solid #f3d9a4;
+}
+.af-cb-nota-tx { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.af-cb-nota-tx small {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #b36b00;
+}
+.af-cb-nota-tx p { margin: 0; }
+.af-cb-nota-tx p + p { margin-top: 6px; color: #47604f; }
+.af-cb-nota-tx b { color: #174a37; }
+.af-cb-chip.is-main { background: #2B9D5B; border-color: #2B9D5B; color: #fff; }
+.af-cb-chip.is-main:hover { background: #238a4f; border-color: #238a4f; }
+@media (prefers-reduced-motion: reduce) { .af-cb-nota { animation: none; } }

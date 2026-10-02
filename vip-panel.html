@@ -8010,7 +8010,8 @@ const Sections = (function(){
       .prueba-elegir[disabled]{background:var(--surface-3);color:var(--text-3);cursor:not-allowed;transform:none;filter:none}
       .prueba-aviso{font-size:14px;line-height:1.6;color:var(--text-2)}
       .prueba-aviso strong{color:var(--text)}
-      .prueba-curso{margin:14px 0 4px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border-2);font-weight:700;color:var(--text);font-size:14px;line-height:1.4}
+      .prueba-portada{height:170px;border-radius:14px;background-size:cover;background-position:center;background-color:var(--surface-3)}
+      .prueba-curso{margin:12px 0 2px;font-weight:800;color:var(--text);font-size:16px;line-height:1.35;letter-spacing:-.2px}
       @media (max-width:560px){.prueba-card{flex-direction:column;align-items:flex-start;gap:10px}}
     `;
     document.head.appendChild(st);
@@ -8023,7 +8024,7 @@ const Sections = (function(){
       <div class="prueba-card__ic"><svg class="ic"><use href="#i-play"/></svg></div>
       <div>
         <h3>Selecciona el curso de tu preferencia para obtener tu prueba gratuita</h3>
-        <p>Podrás ver todas sus clases sin costo, excepto la última, que se desbloquea con la membresía. Solo puedes elegir <strong>un</strong> curso y después no se puede cambiar.</p>
+        <p>Solo puedes elegir <strong>un</strong> curso y después no se puede cambiar.</p>
       </div>
     </div>`;
   }
@@ -8107,8 +8108,9 @@ const Sections = (function(){
     });
     Modal.open({
       id: 'prueba-confirmar', title: '¿Seguro que deseas este curso?', subtitle: 'Tu prueba gratuita', icon: 'i-play', size: 'sm', closeOnBackdrop: false,
-      body: `<p class="prueba-aviso">${opts.desdeGuia ? 'Elegiste este curso desde nuestra guía virtual. ' : ''}Será tu <strong>prueba gratuita</strong>: verás todas sus clases sin costo, excepto la última, que se desbloquea con la membresía.</p>
+      body: `<div class="prueba-portada" style="background-image:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35)),url('${c.portada || PORTADA_DEFAULT}');"></div>
         <div class="prueba-curso">${escapeHtml(c.titulo)}</div>
+        <p class="prueba-aviso" style="margin-top:10px;">${opts.desdeGuia ? 'Elegiste este curso desde nuestra guía virtual. ' : ''}Será tu <strong>prueba gratuita</strong>.</p>
         <p class="prueba-aviso" style="margin-top:10px;"><strong>Solo puedes elegir uno y después no se puede cambiar.</strong></p>`,
       footer: pie
     });
@@ -8130,10 +8132,13 @@ const Sections = (function(){
   // que la tarjeta aparezca después de ellos y no los interrumpa.
   function esperarPanelLibre(cb) {
     const inicio = Date.now();
-    let libreDesde = 0;
+    let libreDesde = 0, tourVisto = false;
     const iv = setInterval(() => {
       const tour = window.AlintecOnboarding;
-      const tourPendiente = tour && typeof tour.wasSeen === 'function' && !tour.wasSeen() && Date.now() - inicio < 25000;
+      const abierto = document.body.classList.contains('membership-tour-open');
+      if (abierto) tourVisto = true;
+      // El recorrido todavía no se ha mostrado (ni terminado): se espera hasta 5 minutos a que lo haga
+      const tourPendiente = tour && typeof tour.wasSeen === 'function' && !tour.wasSeen() && !tourVisto && Date.now() - inicio < 300000;
       const ocupado = tourPendiente
         || document.getElementById('name-modal') || document.getElementById('splash-bienvenida')
         || document.body.classList.contains('membership-tour-open')
@@ -8152,7 +8157,8 @@ const Sections = (function(){
     const cursoGuia = pref ? cursos.find(c => c.id === pref.id) : null;
     if (pruebaPendiente()) {
       if (cursoGuia && cursoSePuedeElegir(cursoGuia) && !cursosRechazados().includes(cursoGuia.id)) {
-        confirmarPrueba(cursoGuia.id, { desdeGuia: true });
+        try { navigateToSection('cursos'); } catch (e) {}
+        setTimeout(() => confirmarPrueba(cursoGuia.id, { desdeGuia: true }), 700);
         return;
       }
       if (pref) borrarPrefGuia();

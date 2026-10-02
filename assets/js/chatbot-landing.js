@@ -303,7 +303,7 @@
         grupo.appendChild(a);
         return;
       }
-      const b = el('button', 'af-cb-chip', o.t);
+      const b = el('button', 'af-cb-chip' + (o.main ? ' is-main' : ''), o.t);
       b.type = 'button';
       b.addEventListener('click', () => {
         grupo.classList.add('is-used');
@@ -356,13 +356,51 @@
   }
 
   // ── acciones ──────────────────────────────────────────────
-  function elegirCurso(c) {
-    ls.set(PREF_KEY, JSON.stringify({ id: c.id, titulo: c.titulo, t: Date.now() }));
+  // Nota del asistente: no se redirige hasta que la persona acepta.
+  async function notaAsistente(...partes) {
+    const tk = sesion;
+    const espera = el('div', 'af-cb-wait');
+    espera.append(el('i'), el('i'), el('i'));
+    cuerpo.appendChild(espera);
+    abajo();
+    await esperar(380);
+    espera.remove();
+    if (tk !== sesion) return false;
+    const nota = el('div', 'af-cb-nota');
+    nota.appendChild(el('span', 'af-cb-nota-av'));
+    const txt = el('div', 'af-cb-nota-tx');
+    txt.appendChild(el('small', null, 'Nota de tu asistente'));
+    partes.forEach(p => txt.appendChild(typeof p === 'string' ? el('p', null, p) : p));
+    nota.appendChild(txt);
+    cuerpo.appendChild(nota);
+    abajo();
+    return true;
+  }
+
+  async function elegirCurso(c) {
     yo(c.titulo);
-    di(negritas('¡Buena elección! Te llevo a crear tu cuenta gratis; ahí confirmas **' + c.titulo + '** como tu prueba gratuita. Si ya tienes cuenta, solo inicia sesión.')).then(ok => {
+    const ok = await notaAsistente(
+      negritas('Elegiste **' + c.titulo + '**.'),
+      'Si aceptas, te llevo a crear tu cuenta gratis y ahí confirmas este curso como tu prueba gratuita. Si ya tienes cuenta, solo inicia sesión.'
+    );
+    if (!ok) return;
+    opciones([
+      { t: 'Aceptar', main: true, dice: 'Aceptar', fn: () => aceptarCurso(c) },
+      { t: 'Rechazar', dice: 'Rechazar', fn: () => rechazarCurso(c) }
+    ]);
+  }
+
+  function aceptarCurso(c) {
+    ls.set(PREF_KEY, JSON.stringify({ id: c.id, titulo: c.titulo, t: Date.now() }));
+    di('¡Perfecto! Te llevo a crear tu cuenta…').then(ok => {
       if (!ok) return;
-      setTimeout(() => { window.location.href = AUTH_URL + '?curso=' + encodeURIComponent(c.id); }, 900);
+      setTimeout(() => { window.location.href = AUTH_URL + '?curso=' + encodeURIComponent(c.id); }, 700);
     });
+  }
+
+  async function rechazarCurso() {
+    const ok = await di('Sin problema, no te llevo a ningún lado. ¿Quieres ver otro curso?');
+    if (ok) opciones([{ t: 'Elegir por área', fn: buscarCurso }, { t: 'Menú principal', fn: menuDeNuevo() }]);
   }
 
   const MENU = () => [
