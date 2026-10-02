@@ -205,14 +205,32 @@
 .af-enc-sub,
 .af-enc-cerrar { grid-column: 1 / -1; }
 
-.af-enc-aviso {
+.af-enc-consent {
   grid-column: 1 / -1;
-  margin: 0;
-  font-size: 11.5px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px 16px;
+  background: #fafcfa;
+  border: 1.5px solid #dfe6df;
+  border-radius: 14px;
+  font-size: 13px;
   line-height: 1.45;
-  color: #7a887f;
+  color: #3f5a4a;
+  cursor: pointer;
 }
-.af-enc-aviso a { color: #2B9D5B; font-weight: 600; }
+.af-enc-consent input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: #2B9D5B;
+  cursor: pointer;
+}
+.af-enc-consent a { color: #2B9D5B; font-weight: 700; }
+.af-enc-consent.is-error { border-color: #b3261e; background: #fdf4f3; }
 
 .af-enc-sub {
   margin: -10px 0 2px;

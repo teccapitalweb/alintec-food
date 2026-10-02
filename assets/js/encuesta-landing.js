@@ -28,6 +28,9 @@ const db = getFirestore(app);
 const ESTADO_KEY = 'af_encuesta_estado'; // 'completada' (la sección ya no vuelve a mostrarse)
 const PROG_KEY = 'af_encuesta_prog'; // { respuestas, paso, parcialN } para retomar donde se quedó
 const SID_KEY = 'af_encuesta_sid';
+// Fecha de la última actualización del texto de aviso-de-privacidad.html: queda guardada junto con
+// el WhatsApp como constancia de qué versión aceptó la persona.
+const AVISO_VERSION = 'aviso-2026-10-02';
 
 function getSessionId() {
   try {
@@ -357,30 +360,45 @@ function renderContactoOFin() {
     <p class="af-enc-sub">Opcional</p>
     <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (con lada, 10 dígitos)" autocomplete="tel">
     <p class="af-enc-error" id="af-enc-error" role="alert" hidden></p>
-    <p class="af-enc-aviso">Al dejar tu WhatsApp aceptas que un asesor te contacte y el <a href="aviso-de-privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a>.</p>
+    <label class="af-enc-consent" id="af-enc-consent">
+      <input type="checkbox" id="af-enc-acepto">
+      <span>Acepto el <a href="aviso-de-privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a> y que un asesor me escriba por WhatsApp con información de cursos.</span>
+    </label>
     <a class="af-enc-opt af-enc-cta" id="af-enc-prueba" href="vip-auth.html">Ver prueba gratuita →</a>
     <button type="button" class="af-enc-opt af-enc-sec" id="af-enc-seguir">Seguir viendo</button>
   `;
   const input = document.getElementById('af-enc-contacto');
   const error = document.getElementById('af-enc-error');
+  const acepto = document.getElementById('af-enc-acepto');
+  const consent = document.getElementById('af-enc-consent');
   const prueba = document.getElementById('af-enc-prueba');
   const seguir = document.getElementById('af-enc-seguir');
-  // Vacío = sin WhatsApp (es opcional). Si escribió algo, debe tener al menos 10 dígitos.
+  const avisar = (texto, marcarCasilla) => {
+    error.textContent = texto;
+    error.hidden = false;
+    consent.classList.toggle('is-error', !!marcarCasilla);
+  };
+  // Vacío = sin WhatsApp (es opcional). Si escribió un número debe ser válido (10 a 15 dígitos)
+  // y tener marcada la casilla del Aviso de privacidad: sin eso no se guarda ni se usa el número.
   const leerContacto = () => {
     const crudo = input.value.trim();
     if (!crudo) return { ok: true, valor: null };
     const digitos = crudo.replace(/\D/g, '');
-    return digitos.length >= 10 && digitos.length <= 15 ? { ok: true, valor: digitos } : { ok: false, valor: null };
+    if (digitos.length < 10 || digitos.length > 15) {
+      avisar('Revisa tu número: debe tener 10 dígitos con lada (hasta 15 si incluye el país). O déjalo vacío para continuar sin él.', false);
+      input.focus();
+      return { ok: false };
+    }
+    if (!acepto.checked) {
+      avisar('Marca la casilla para que un asesor pueda escribirte, o deja el número vacío.', true);
+      return { ok: false };
+    }
+    return { ok: true, valor: digitos };
   };
   const irAPrueba = async (ev) => {
     if (ev) ev.preventDefault();
     const c = leerContacto();
-    if (!c.ok) {
-      error.textContent = 'Revisa tu número: debe tener 10 dígitos con lada (hasta 15 si incluye el país). O déjalo vacío para continuar sin él.';
-      error.hidden = false;
-      input.focus();
-      return;
-    }
+    if (!c.ok) return;
     prueba.textContent = 'Un momento…';
     prueba.style.pointerEvents = 'none';
     seguir.disabled = true;
@@ -389,10 +407,13 @@ function renderContactoOFin() {
   };
   prueba.addEventListener('click', irAPrueba);
   input.addEventListener('keydown', e => { if (e.key === 'Enter') irAPrueba(e); });
-  input.addEventListener('input', () => { error.hidden = true; });
+  const limpiarError = () => { error.hidden = true; consent.classList.remove('is-error'); };
+  input.addEventListener('input', limpiarError);
+  acepto.addEventListener('change', limpiarError);
   seguir.addEventListener('click', () => {
     const c = leerContacto();
-    guardarRespuesta(c.ok ? c.valor : null); // si el número quedó a medias, simplemente no se guarda
+    if (!c.ok) return;
+    guardarRespuesta(c.valor);
     cerrarSeccion();
   });
 }
@@ -401,7 +422,11 @@ function renderContactoOFin() {
 async function guardarRespuesta(contacto) {
   marcarEstado('completada');
   const doc = { sessionId: getSessionId(), respuestas, completada: true, creado: serverTimestamp() };
-  if (contacto) doc.contacto = contacto;
+  if (contacto) {
+    doc.contacto = contacto;
+    doc.avisoAceptado = true;
+    doc.avisoVersion = AVISO_VERSION;
+  }
   const guardado = addDoc(collection(db, 'encuestasProspectos'), doc)
     .catch(e => console.warn('[encuesta] no se pudo guardar:', e.message));
   await Promise.race([guardado, new Promise(r => setTimeout(r, 3000))]);
