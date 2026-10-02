@@ -347,20 +347,67 @@ function animarAltura(card, desde) {
   setTimeout(() => { card.style.height = ''; }, 320);
 }
 
-// Valida un WhatsApp de México y lo devuelve a 10 dígitos, o null si no parece real. No puede
-// comprobar que el número exista (eso solo se logra mandando un código), pero descarta lo obvio:
-// lada que no existe (empieza en 0 o 1), todos iguales, patrones repetidos (1212121212) y secuencias.
-function normalizarWhatsappMx(crudo) {
-  let d = String(crudo).replace(/\D/g, '');
-  if (d.length === 13 && d.startsWith('521')) d = d.slice(3);
-  else if (d.length === 12 && d.startsWith('52')) d = d.slice(2);
-  if (d.length !== 10 || !/^[2-9]/.test(d)) return null;
+// Países para el WhatsApp. "pref" es el código telefónico. Para "Otro país" la persona escribe el
+// número completo con su código.
+const PAISES = [
+  { cod: 'MX', nombre: 'México', pref: '52' },
+  { cod: 'CO', nombre: 'Colombia', pref: '57' },
+  { cod: 'AR', nombre: 'Argentina', pref: '54' },
+  { cod: 'CL', nombre: 'Chile', pref: '56' },
+  { cod: 'PE', nombre: 'Perú', pref: '51' },
+  { cod: 'EC', nombre: 'Ecuador', pref: '593' },
+  { cod: 'GT', nombre: 'Guatemala', pref: '502' },
+  { cod: 'CR', nombre: 'Costa Rica', pref: '506' },
+  { cod: 'PA', nombre: 'Panamá', pref: '507' },
+  { cod: 'DO', nombre: 'Rep. Dominicana', pref: '1' },
+  { cod: 'US', nombre: 'Estados Unidos', pref: '1' },
+  { cod: 'ES', nombre: 'España', pref: '34' },
+  { cod: 'OT', nombre: 'Otro país', pref: '' }
+];
+
+// País que se preselecciona según el idioma del navegador (es-CO → Colombia). Solo se usa si el
+// idioma es español: un navegador en inglés no indica de dónde es la persona. Si no se sabe, México.
+function paisPorDefecto() {
+  try {
+    const idioma = navigator.language || '';
+    const region = new Intl.Locale(idioma).region;
+    if (/^es/i.test(idioma) && region && PAISES.some(p => p.cod === region)) return region;
+  } catch (e) {}
+  return 'MX';
+}
+
+// Números que casi seguro son inventados: todos iguales, patrones repetidos (1212121212) o
+// secuencias (1234567890). No puede comprobar que el número exista (eso solo se logra mandando
+// un código), pero descarta lo obvio.
+function esNumeroFalso(d) {
+  if (d.length < 6) return true;
   for (let p = 1; p <= 5; p++) {
-    if (d.length % p === 0 && d === d.slice(0, p).repeat(d.length / p)) return null;
+    if (d.length % p === 0 && d === d.slice(0, p).repeat(d.length / p)) return true;
   }
   const dif = [...d].slice(1).map((c, i) => (Number(c) - Number(d[i]) + 10) % 10);
-  if (dif.every(x => x === 1) || dif.every(x => x === 9)) return null;
-  return d;
+  return dif.every(x => x === 1) || dif.every(x => x === 9);
+}
+
+// Devuelve el número listo para guardar (código de país + número, solo dígitos) o null si no es válido.
+function normalizarWhatsapp(codPais, crudo) {
+  let d = String(crudo).replace(/\D/g, '');
+  const pais = PAISES.find(p => p.cod === codPais) || PAISES[0];
+  if (pais.cod === 'MX') {
+    // México: 10 dígitos; acepta que escriban +52 o 521. La lada no puede empezar en 0 ni en 1.
+    if (d.length === 13 && d.startsWith('521')) d = d.slice(3);
+    else if (d.length === 12 && d.startsWith('52')) d = d.slice(2);
+    if (d.length !== 10 || !/^[2-9]/.test(d) || esNumeroFalso(d)) return null;
+    return '52' + d;
+  }
+  if (pais.cod === 'OT') {
+    // Otro país: número completo con su código, de 8 a 15 dígitos (estándar internacional).
+    if (d.length < 8 || d.length > 15 || d.startsWith('0') || esNumeroFalso(d)) return null;
+    return d;
+  }
+  // Resto: si escribieron también el código del país, se quita; el número nacional tiene 7 a 11 dígitos.
+  if (d.startsWith(pais.pref) && d.length >= pais.pref.length + 8) d = d.slice(pais.pref.length);
+  if (d.length < 7 || d.length > 11 || d.startsWith('0') || esNumeroFalso(d)) return null;
+  return pais.pref + d;
 }
 
 // Último paso (todos pasan por aquí, sea cual sea su urgencia): WhatsApp opcional y salida.
@@ -374,7 +421,12 @@ function renderContactoOFin() {
   af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
   body.innerHTML = `
     <p class="af-enc-sub">Opcional</p>
-    <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (10 dígitos con lada)" autocomplete="tel">
+    <div class="af-enc-telrow">
+      <select class="af-enc-pais" id="af-enc-pais" aria-label="País de tu WhatsApp">
+        ${PAISES.map(p => `<option value="${p.cod}">${p.nombre}${p.pref ? ' +' + p.pref : ''}</option>`).join('')}
+      </select>
+      <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" autocomplete="tel">
+    </div>
     <p class="af-enc-error" id="af-enc-error" role="alert" hidden></p>
     <label class="af-enc-consent" id="af-enc-consent">
       <input type="checkbox" id="af-enc-acepto">
@@ -399,9 +451,9 @@ function renderContactoOFin() {
   const leerContacto = () => {
     const crudo = input.value.trim();
     if (!crudo) return { ok: true, valor: null };
-    const numero = normalizarWhatsappMx(crudo);
+    const numero = normalizarWhatsapp(pais.value, crudo);
     if (!numero) {
-      avisar('Ese número no parece válido. Escribe tu WhatsApp de México con 10 dígitos y lada (por ejemplo 55 1234 5678), o déjalo vacío para continuar sin él.', false);
+      avisar(`Ese número no parece válido. ${AYUDA_NUMERO[pais.value] || AYUDA_NUMERO.otro} O déjalo vacío para continuar sin él.`, false);
       input.focus();
       return { ok: false };
     }
@@ -409,8 +461,20 @@ function renderContactoOFin() {
       avisar('Marca la casilla para que un asesor pueda escribirte, o deja el número vacío.', true);
       return { ok: false };
     }
-    return { ok: true, valor: '52' + numero };
+    return { ok: true, valor: numero };
   };
+  // El texto de ayuda del campo cambia con el país elegido.
+  const AYUDA_NUMERO = {
+    MX: 'Escribe tu WhatsApp de México con 10 dígitos y lada (por ejemplo 55 1234 5678).',
+    OT: 'Escríbelo completo con el código de tu país (por ejemplo +49 151 2345 6789).',
+    otro: 'Escríbelo completo, sin el código del país.'
+  };
+  const PLACEHOLDER = { MX: '10 dígitos con lada', OT: 'Con código de país (+…)' };
+  const pais = document.getElementById('af-enc-pais');
+  pais.value = paisPorDefecto();
+  const actualizarPais = () => { input.placeholder = PLACEHOLDER[pais.value] || 'Tu número'; };
+  actualizarPais();
+  pais.addEventListener('change', () => { actualizarPais(); limpiarError(); });
   const irAPrueba = async (ev) => {
     if (ev) ev.preventDefault();
     const c = leerContacto();

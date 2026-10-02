@@ -1710,14 +1710,22 @@ const Pages={
       // urgentes primero y un enlace para escribirles directo.
       const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
       // Misma regla que la encuesta: detecta números que no parecen reales (para revisarlos antes de escribir).
-      const numeroDudoso = crudo => {
-        let n = String(crudo).replace(/\D/g, '');
-        if (n.length === 13 && n.startsWith('521')) n = n.slice(3);
-        else if (n.length === 12 && n.startsWith('52')) n = n.slice(2);
-        if (n.length !== 10 || !/^[2-9]/.test(n)) return true;
+      const patronFalso = n => {
+        if (n.length < 6) return true;
         for (let p = 1; p <= 5; p++) if (n.length % p === 0 && n === n.slice(0, p).repeat(n.length / p)) return true;
         const dif = [...n].slice(1).map((c, i) => (Number(c) - Number(n[i]) + 10) % 10);
         return dif.every(x => x === 1) || dif.every(x => x === 9);
+      };
+      const numeroDudoso = crudo => {
+        let n = String(crudo).replace(/\D/g, '');
+        if (n.length < 8 || n.length > 15) return true;
+        if (n.length === 10 || n.startsWith('52')) {
+          // México (lo guardado antes de los demás países llegaba a 10 dígitos): lada válida y 10 dígitos.
+          if (n.length === 13 && n.startsWith('521')) n = n.slice(3);
+          else if (n.length === 12 && n.startsWith('52')) n = n.slice(2);
+          if (n.length !== 10 || !/^[2-9]/.test(n)) return true;
+        }
+        return patronFalso(n) || /^(\d)\1{7}$/.test(n.slice(-8)); // los últimos 8 dígitos no pueden ser todos iguales
       };
       const conContacto = completas.filter(d => d.contacto).sort((a, b) =>
         (b.respuestas?.urgencia === 'Lo antes posible') - (a.respuestas?.urgencia === 'Lo antes posible'));
