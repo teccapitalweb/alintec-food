@@ -8189,6 +8189,33 @@ const Sections = (function(){
     });
   }
 
+  // Tarjeta de explicación para cuentas nuevas que entran de forma tradicional (sin curso previo)
+  function introPruebaGratuita() {
+    inyectarEstilosPrueba();
+    let yaLlevado = false;
+    const irACursos = () => {
+      if (yaLlevado) return;
+      yaLlevado = true;
+      try { navigateToSection('cursos'); } catch (e) {}
+      refrescarPruebaUI();
+      mostrarTarjetaPrueba();
+    };
+    const pie = document.createElement('div');
+    pie.style.cssText = 'display:flex;justify-content:flex-end;';
+    const boton = document.createElement('button');
+    boton.className = 'btn btn--accent';
+    boton.textContent = 'Elegir mi curso';
+    boton.addEventListener('click', () => { Modal.close('prueba-intro'); });
+    pie.appendChild(boton);
+    Modal.open({
+      id: 'prueba-intro', title: 'Tu prueba gratuita', subtitle: 'Una función para usuarios nuevos', icon: 'i-play', size: 'sm', closeOnBackdrop: false,
+      onClose: irACursos,
+      body: `<p class="prueba-aviso">Al ser un usuario nuevo, <strong>te damos a elegir un curso de tu interés como prueba gratuita</strong>.</p>
+        <p class="prueba-aviso" style="margin-top:10px;">Lo eliges en <strong>Mis cursos</strong>: podrás ver sus clases sin costo, excepto la última, que se desbloquea con la membresía. Solo puedes elegir un curso y después no se puede cambiar.</p>`,
+      footer: pie
+    });
+  }
+
   // Deja a la vista la tarjeta "Selecciona el curso de tu preferencia" (debajo del título de Mis cursos)
   function mostrarTarjetaPrueba() {
     setTimeout(() => { try { document.getElementById('prueba-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 700);
@@ -8235,10 +8262,10 @@ const Sections = (function(){
         return;
       }
       if (pref) borrarPrefGuia();
-      // Sin curso de la guía: se le lleva a Mis cursos, donde está la tarjeta (una vez por visita)
+      // Sin curso de la guía: una tarjeta explica la función y de ahí se le lleva a Mis cursos (una vez por visita)
       let visto = false;
       try { visto = sessionStorage.getItem('af_prueba_guiada') === '1'; sessionStorage.setItem('af_prueba_guiada', '1'); } catch (e) {}
-      if (!visto) { try { navigateToSection('cursos'); } catch (e) {} mostrarTarjetaPrueba(); }
+      if (!visto) introPruebaGratuita();
       return;
     }
     // Ya eligió (o no puede elegir): el curso que vio en la guía se abre en su estado normal
