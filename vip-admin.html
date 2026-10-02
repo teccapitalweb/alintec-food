@@ -1175,7 +1175,7 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 :root[data-theme="night"] .mobile-nav{background:rgba(12,23,33,.95)!important;border-color:var(--border)!important}
 :root[data-theme="night"] .news-template-picker{background:#101B27;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2A39;border-color:rgba(112,175,204,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body style="visibility:hidden">
 
@@ -1633,10 +1633,25 @@ const Pages={
     const elCalientes = document.getElementById('enc-kpi-calientes');
     if (elCalientes) elCalientes.textContent = calientes.length;
 
+    // Si una pregunta aún no tiene respuestas, en vez de una tarjeta en blanco se avisa.
+    const sinDatos = (cv, datos) => {
+      if (Object.keys(datos).length) return false;
+      cv.insertAdjacentHTML('afterend', '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">Aún no hay respuestas para esta pregunta.</p>');
+      cv.style.display = 'none';
+      return true;
+    };
+    if (!window.Chart) {
+      document.querySelectorAll('canvas[id^="enc-chart-"]').forEach(cv => {
+        cv.insertAdjacentHTML('afterend', '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">No se pudo cargar la librería de gráficas. Recarga la página.</p>');
+        cv.style.display = 'none';
+      });
+    }
     if (window.Chart) {
+      Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
       const colores = ['#58B71B','#3B82F6','#F7941D','#D4537E','#9CA3AF'];
       const pie = (id, datos) => {
         const cv = document.getElementById(id);
+        if (cv && sinDatos(cv, datos)) return;
         if (cv) new Chart(cv, {
           type: 'pie',
           data: { labels: Object.keys(datos), datasets: [{ data: Object.values(datos), backgroundColor: colores }] },
@@ -1645,6 +1660,7 @@ const Pages={
       };
       const barra = (id, datos, color, horizontal) => {
         const cv = document.getElementById(id);
+        if (cv && sinDatos(cv, datos)) return;
         if (cv) new Chart(cv, {
           type: 'bar',
           data: { labels: Object.keys(datos), datasets: [{ data: Object.values(datos), backgroundColor: color }] },
