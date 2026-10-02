@@ -3664,6 +3664,25 @@ if (window.__isDemoMode) {
     // ─── Popup: confirmar/editar nombre (1ª vez) · evita certificados con el email ───
     setTimeout(() => { try { window.__maybeAskName && window.__maybeAskName(); } catch(e){} }, 900);
 
+    // ─── Bienvenida con confeti para cuentas GRATIS nuevas (una sola vez) ───
+    // Va después de confirmar el nombre y antes del recorrido de herramientas.
+    if (window.UserState.modo === 'sin-membresia' && !window.UserState.isAdmin) {
+      let intentos = 0;
+      const claveBienvenida = 'af_bienvenida_gratis_' + window.UserState.uid;
+      const esperar = setInterval(() => {
+        intentos++;
+        let yaVista = false;
+        try { yaVista = localStorage.getItem(claveBienvenida) === '1'; } catch(e){}
+        const tour = window.AlintecOnboarding;
+        const recorridoYaVisto = tour && typeof tour.wasSeen === 'function' && tour.wasSeen();
+        // Cuentas que ya conocen el panel (recorrido visto) no la necesitan; si el recorrido ya arrancó, tampoco
+        if (yaVista || recorridoYaVisto || document.body.classList.contains('membership-tour-open') || intentos > 200) { clearInterval(esperar); return; }
+        if (document.getElementById('name-modal') || document.getElementById('splash-bienvenida')) return;
+        clearInterval(esperar);
+        window.__showWelcomeSplash && window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
+      }, 300);
+    }
+
     // Arrancar listener de notificaciones de Firestore (tiempo real)
     setTimeout(() => { if (typeof setupNotificacionesListener === 'function') setupNotificacionesListener(); }, 100);
   });
@@ -3686,6 +3705,7 @@ window.__showWelcomeSplash = function(opts) {
   const nombre = (S.displayName || 'Ingeniero').split(' ')[0];
   const plan = opts.plan || S.plan || 'mensual';
   const esRegalo = opts.tipo === 'bienvenida_regalo' || plan === 'regalo';
+  const esGratis = opts.tipo === 'bienvenida_gratis';
   const dias = opts.dias || null;
 
   // ── Íconos SVG line-art (sin emojis · regla de diseño Alintec Food) ──
@@ -3712,7 +3732,12 @@ window.__showWelcomeSplash = function(opts) {
 
   // ── Textos de la portada según el caso ──
   let icono, kicker, titulo, desc;
-  if (esRegalo) {
+  if (esGratis) {
+    icono = ICON_DIENTE_VIP;
+    kicker = '¡CUENTA CREADA!';
+    titulo = `Bienvenido a <em>Alintec Food</em>`;
+    desc = `${nombre}, ya eres parte de la comunidad de ciencia y tecnología de alimentos. Esto es lo que puedes hacer desde hoy:`;
+  } else if (esRegalo) {
     icono = ICON_DIENTE_REGALO;
     kicker = 'ACCESO DE CORTESÍA';
     titulo = dias ? `Alintec Food te regaló <em>${dias} días VIP</em>` : `Alintec Food te regaló <em>acceso VIP</em>`;
@@ -3730,7 +3755,12 @@ window.__showWelcomeSplash = function(opts) {
   }
 
   // ── Recorrido "película" · los beneficios del panel ──
-  const beneficios = [
+  const beneficios = esGratis ? [
+    { ic:SVG_FEAT.cursos, t:'Tu prueba gratuita',      d:'Elige un curso de tu preferencia y empieza a aprender sin costo.' },
+    { ic:SVG_FEAT.clases, t:'Cursos de especialistas', d:'Más de 20 cursos de inocuidad, microbiología, normativa y tecnología de alimentos.' },
+    { ic:SVG_FEAT.tools,  t:'Herramientas pro',        d:'Conoce las herramientas para tu planta o laboratorio: NOM-051, HACCP, BPM y más.' },
+    { ic:SVG_FEAT.cert,   t:'Certificados',            d:'Al terminar un curso obtienes un certificado con folio verificable.' }
+  ] : [
     { ic:SVG_FEAT.cursos, t:'Cursos premium',   d:'Catálogo completo con clases reales que se desbloquean a tu ritmo.' },
     { ic:SVG_FEAT.clases, t:'Clases en vivo',   d:'Webinars con expertos y acceso a las grabaciones cuando quieras.' },
     { ic:SVG_FEAT.pdfs,   t:'PDFs y material',  d:'Plantillas, formatos y recursos descargables listos para usar.' },
@@ -3746,8 +3776,10 @@ window.__showWelcomeSplash = function(opts) {
     tipo:'cierre',
     icono: esRegalo ? ICON_DIENTE_REGALO : ICON_DIENTE_VIP,
     kicker: 'TODO LISTO',
-    titulo: esRegalo ? `Aprovecha tu <em>acceso de cortesía</em>` : `Todo esto <em>ya es tuyo</em>`,
-    desc: esRegalo
+    titulo: esGratis ? `Tu aprendizaje <em>empieza ahora</em>` : esRegalo ? `Aprovecha tu <em>acceso de cortesía</em>` : `Todo esto <em>ya es tuyo</em>`,
+    desc: esGratis
+      ? 'Te mostraremos dónde está cada cosa y después elegirás tu prueba gratuita.'
+      : esRegalo
       ? 'Cuando termine tu cortesía podrás volverte miembro VIP para no perder el acceso.'
       : 'Explora a tu ritmo. Tu panel completo te está esperando.',
     confetti:true
@@ -3853,6 +3885,7 @@ window.__showWelcomeSplash = function(opts) {
   function close(){
     if (timer) clearInterval(timer);
     marcarMostrada();
+    if (esGratis) { try { localStorage.setItem('af_bienvenida_gratis_' + (S.uid || ''), '1'); } catch(e){} }
     splash.style.animation = 'bnvFadeOut .3s ease forwards';
     setTimeout(() => splash.remove(), 300);
   }
@@ -16087,120 +16120,7 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
     });
   }
 </script>
-<!-- ═══ POPUP PROFESIONAL: Instalar Alintec Food como app ═══ -->
-<style>
-  #alintec-install-pop{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif}
-  #alintec-install-pop.show{display:flex;animation:iipFade .25s ease}
-  #alintec-install-pop .iip-overlay{position:absolute;inset:0;background:rgba(7,11,18,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-  #alintec-install-pop .iip-card{position:relative;width:100%;max-width:380px;background:#14231A;border:1px solid #2C4434;border-radius:24px;padding:28px 24px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.55);animation:iipPop .35s cubic-bezier(.16,1,.3,1)}
-  #alintec-install-pop .iip-glow{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:120px;background:radial-gradient(ellipse,rgba(111,175,123,.32),transparent 70%);pointer-events:none}
-  #alintec-install-pop .iip-icon{width:84px;height:84px;border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6FAF7B,#397655);box-shadow:0 10px 28px rgba(57,118,85,.32);position:relative}
-  #alintec-install-pop .iip-icon img{width:54px;height:54px;object-fit:contain}
-  #alintec-install-pop .iip-badge{position:absolute;top:-8px;right:-8px;background:#B8DBBE;color:#183724;font-size:10px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:20px;text-transform:uppercase}
-  #alintec-install-pop h3{margin:0 0 8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:21px;font-weight:800;color:#EDF1F8;letter-spacing:-.3px}
-  #alintec-install-pop p{margin:0 0 18px;font-size:13.5px;line-height:1.55;color:#9AA6BC}
-  #alintec-install-pop .iip-feats{display:flex;flex-direction:column;gap:9px;text-align:left;margin:0 0 22px;padding:0}
-  #alintec-install-pop .iip-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:#EDF1F8}
-  #alintec-install-pop .iip-feat svg{width:18px;height:18px;flex-shrink:0;color:#6FAF7B}
-  #alintec-install-pop .iip-btn{display:block;width:100%;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;background:linear-gradient(135deg,#6FAF7B,#397655);color:#fff;box-shadow:0 8px 20px rgba(57,118,85,.28);transition:transform .15s,box-shadow .15s}
-  #alintec-install-pop .iip-btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(57,118,85,.38)}
-  #alintec-install-pop .iip-later{display:block;width:100%;margin-top:10px;background:none;border:none;color:#69748A;font-size:13px;font-family:inherit;cursor:pointer;padding:8px}
-  #alintec-install-pop .iip-later:hover{color:#9AA6BC}
-  #alintec-install-pop .iip-ios{display:none;margin:0 0 14px;padding:12px 14px;background:#1C2638;border:1px solid #2A3850;border-radius:12px;font-size:12.5px;line-height:1.6;color:#9AA6BC;text-align:left}
-  #alintec-install-pop .iip-ios b{color:#B8DBBE}
-  @keyframes iipFade{from{opacity:0}to{opacity:1}}
-  @keyframes iipPop{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
-  html[data-theme="day"] #alintec-install-pop .iip-card{background:#FFFFFF;border-color:#D8E5DA}
-  html[data-theme="day"] #alintec-install-pop h3{color:#14301C}
-  html[data-theme="day"] #alintec-install-pop p{color:#5A6478}
-  html[data-theme="day"] #alintec-install-pop .iip-feat{color:#14301C}
-  html[data-theme="day"] #alintec-install-pop .iip-ios{background:#EEF7EE;border-color:#D8E5DA}
-</style>
-<div id="alintec-install-pop" role="dialog" aria-modal="true" aria-labelledby="iip-title">
-  <div class="iip-overlay" id="iip-overlay"></div>
-  <div class="iip-card">
-    <div class="iip-glow"></div>
-    <div class="iip-icon">
-      <span class="iip-badge">App</span>
-      <img src="assets/img/alintec-isotipo.png" alt="Alintec Food" onerror="this.style.display='none'">
-    </div>
-    <h3 id="iip-title">Instala Alintec Food como app</h3>
-    <p>Accede más rápido, sin la barra del navegador, y vive una mejor experiencia desde tu pantalla de inicio.</p>
-    <div class="iip-ios" id="iip-ios-help">
-      En iPhone/iPad: toca el botón <b>Compartir</b> en Safari y luego <b>“Agregar a inicio”</b>.
-    </div>
-    <div class="iip-feats">
-      <div class="iip-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Acceso directo desde tu pantalla de inicio</div>
-      <div class="iip-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Carga más rápida, como una app nativa</div>
-      <div class="iip-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Pantalla completa, sin distracciones</div>
-    </div>
-    <button class="iip-btn" id="iip-install-btn">Instalar ahora</button>
-    <button class="iip-later" id="iip-later-btn">Ahora no</button>
-  </div>
-</div>
-<script>
-(function(){
-  var STORAGE_KEY = 'alintec_install_dismissed';
-  var deferredPrompt = null;
-  var pop = document.getElementById('alintec-install-pop');
-  var installBtn = document.getElementById('iip-install-btn');
-  var laterBtn = document.getElementById('iip-later-btn');
-  var overlay = document.getElementById('iip-overlay');
-  var iosHelp = document.getElementById('iip-ios-help');
-
-  if (!pop) return;
-
-  // ¿Ya está instalada (corriendo en modo app)? No mostrar nada.
-  function yaInstalada(){
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  }
-  // ¿El usuario ya la cerró antes? Respetamos su decisión por 14 días.
-  function fueDescartada(){
-    try {
-      var v = localStorage.getItem(STORAGE_KEY);
-      if (!v) return false;
-      var dias = (Date.now() - parseInt(v,10)) / 86400000;
-      return dias < 14;
-    } catch(e){ return false; }
-  }
-  function esIOS(){
-    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-  }
-  function mostrar(){
-    if (yaInstalada() || fueDescartada()) return;
-    pop.classList.add('show');
-  }
-  function ocultar(recordar){
-    pop.classList.remove('show');
-    if (recordar){ try { localStorage.setItem(STORAGE_KEY, String(Date.now())); } catch(e){} }
-  }
-
-  // Android/Chrome/Edge: capturamos el evento y mostramos NUESTRO popup
-  window.addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault();
-    deferredPrompt = e;
-    setTimeout(mostrar, 1200); // pequeño delay para no ser intrusivo al cargar
-  });
-
-  // iOS (Safari) no dispara beforeinstallprompt: mostramos instrucciones manuales
-  if (esIOS() && !yaInstalada()){
-    if (iosHelp) iosHelp.style.display = 'block';
-    if (installBtn) installBtn.style.display = 'none'; // en iOS no hay botón automático
-    setTimeout(mostrar, 1500);
-  }
-
-  // Si ya se instaló, ocultar y recordar
-  window.addEventListener('appinstalled', function(){ ocultar(true); deferredPrompt = null; });
-
-  if (installBtn) installBtn.addEventListener('click', function(){
-    if (!deferredPrompt){ ocultar(true); return; }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(){ ocultar(true); deferredPrompt = null; });
-  });
-  if (laterBtn) laterBtn.addEventListener('click', function(){ ocultar(true); });
-  if (overlay) overlay.addEventListener('click', function(){ ocultar(false); });
-})();
-</script>
+<!-- (Se quitó la tarjeta emergente para instalar la app: el panel ya no la muestra al entrar.) -->
 
 <!-- ===== HERRAMIENTAS PRO ALIMENTOS · inyectadas ===== -->
 <!-- ═══════════════════════════════════════════════════════════════════
