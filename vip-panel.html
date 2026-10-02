@@ -3431,23 +3431,20 @@ function mostrarPantallaVerificacion(user) {
 
   // Si el correo se confirma en OTRA pestaña (la que abre el enlace del correo), esta no abre un
   // segundo panel: avisa y deja que la persona continúe en la pestaña nueva.
-  let otraPestana = false, terminado = false;
-  try { const bc = new BroadcastChannel('af_verificacion'); bc.onmessage = () => { otraPestana = true; }; } catch (e) {}
+  let terminado = false;
+  let canalVerif = null;
+  try {
+    canalVerif = new BroadcastChannel('af_verificacion');
+    // La otra pestaña (la del enlace del correo) avisa que ya confirmó: esta responde y sigue sola al panel
+    canalVerif.onmessage = (ev) => { if (ev.data === 'ok') { try { canalVerif.postMessage('ack'); } catch (e) {} revisar(false); } };
+  } catch (e) {}
   const revisar = async (manual) => {
     if (terminado) return;
     try {
       await user.reload();
       if (user.emailVerified) {
         await user.getIdToken(true); // el servidor debe ver email_verified=true
-        if (otraPestana) {
-          terminado = true;
-          h.textContent = '¡Correo verificado!';
-          p1.textContent = 'Continúa en la pestaña que se abrió con tu panel. Puedes cerrar esta.';
-          p2.remove(); reenviar.remove(); salir.remove(); aviso.remove();
-          listo.textContent = 'Continuar aquí'; listo.disabled = false;
-          listo.onclick = () => window.location.reload();
-          return;
-        }
+        terminado = true;
         window.location.reload();
         return;
       }
@@ -3666,21 +3663,29 @@ if (window.__isDemoMode) {
 
     // ─── Bienvenida con confeti para cuentas GRATIS nuevas (una sola vez) ───
     // Va después de confirmar el nombre y antes del recorrido de herramientas.
-    if (window.UserState.modo === 'sin-membresia' && !window.UserState.isAdmin) {
-      let intentos = 0;
-      const claveBienvenida = 'af_bienvenida_gratis_' + window.UserState.uid;
-      const esperar = setInterval(() => {
-        intentos++;
-        let yaVista = false;
-        try { yaVista = localStorage.getItem(claveBienvenida) === '1'; } catch(e){}
-        const tour = window.AlintecOnboarding;
-        const recorridoYaVisto = tour && typeof tour.wasSeen === 'function' && tour.wasSeen();
-        // Cuentas que ya conocen el panel (recorrido visto) no la necesitan; si el recorrido ya arrancó, tampoco
-        if (yaVista || recorridoYaVisto || document.body.classList.contains('membership-tour-open') || intentos > 200) { clearInterval(esperar); return; }
-        if (document.getElementById('name-modal') || document.getElementById('splash-bienvenida')) return;
-        clearInterval(esperar);
-        window.__showWelcomeSplash && window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
-      }, 300);
+    // El recorrido de herramientas NO arranca hasta que esta decisión esté tomada y, si la
+    // bienvenida corresponde, hasta que termine (ver "ready" del recorrido más abajo).
+    {
+      let yaVista = false;
+      try { yaVista = localStorage.getItem('af_bienvenida_gratis_' + window.UserState.uid) === '1'; } catch(e){}
+      const tour = window.AlintecOnboarding;
+      const recorridoYaVisto = !!(tour && typeof tour.wasSeen === 'function' && tour.wasSeen());
+      // Solo cuentas gratis nuevas: quien ya vio el recorrido (cuentas antiguas) no la necesita
+      const mostrarBienvenida = window.UserState.modo === 'sin-membresia' && !window.UserState.isAdmin && !yaVista && !recorridoYaVisto;
+      window.__bienvenidaPendiente = mostrarBienvenida;
+      window.__bienvenidaDecidida = true;
+      if (mostrarBienvenida) {
+        let intentos = 0;
+        const esperar = setInterval(() => {
+          intentos++;
+          if (intentos > 1200) { clearInterval(esperar); window.__bienvenidaPendiente = false; return; } // 6 min: no bloquear el recorrido para siempre
+          // Espera a que se confirme el nombre del certificado (u otro aviso abierto)
+          if (document.getElementById('name-modal') || document.getElementById('splash-bienvenida')) return;
+          clearInterval(esperar);
+          if (window.__showWelcomeSplash) window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
+          else window.__bienvenidaPendiente = false;
+        }, 300);
+      }
     }
 
     // Arrancar listener de notificaciones de Firestore (tiempo real)
@@ -3885,7 +3890,7 @@ window.__showWelcomeSplash = function(opts) {
   function close(){
     if (timer) clearInterval(timer);
     marcarMostrada();
-    if (esGratis) { try { localStorage.setItem('af_bienvenida_gratis_' + (S.uid || ''), '1'); } catch(e){} }
+    if (esGratis) { try { localStorage.setItem('af_bienvenida_gratis_' + (S.uid || ''), '1'); } catch(e){} window.__bienvenidaPendiente = false; }
     splash.style.animation = 'bnvFadeOut .3s ease forwards';
     setTimeout(() => splash.remove(), 300);
   }
@@ -8065,7 +8070,7 @@ const Sections = (function(){
       @keyframes pruebaIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
       .curso-card--prueba{cursor:pointer}
       .curso-card--prueba .curso-card__cover{min-height:120px}
-      .prueba-elegir{margin-top:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:0;border-radius:11px;background:var(--primary);color:#0A120C;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:filter .15s,transform .15s}
+      .prueba-elegir{margin:10px 0 0 auto;width:auto;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;border:0;border-radius:9px;background:var(--primary);color:#0A120C;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;transition:filter .15s,transform .15s}
       .prueba-elegir:hover{filter:brightness(1.08);transform:translateY(-1px)}
       .prueba-elegir[disabled]{background:var(--surface-3);color:var(--text-3);cursor:not-allowed;transform:none;filter:none}
       .prueba-aviso{font-size:14px;line-height:1.6;color:var(--text-2)}
@@ -8106,8 +8111,8 @@ const Sections = (function(){
       pie.appendChild(elegir);
     }
     Modal.open({
-      id: 'prueba-aviso', title: 'Selecciona tu prueba gratuita', subtitle: 'Antes de ver el contenido de un curso', icon: 'i-play', size: 'sm',
-      body: `<p class="prueba-aviso">Para ver de qué trata un curso y cuántas clases tiene, primero <strong>elige el curso de tu preferencia</strong> como prueba gratuita. Después podrás explorar el contenido de todos.</p>`,
+      id: 'prueba-aviso', title: 'Selecciona tu prueba gratuita', icon: 'i-play', size: 'sm',
+      body: `<p class="prueba-aviso">Elige el curso de tu preferencia para poder ver el contenido de los cursos.</p>`,
       footer: pie
     });
   }
@@ -18129,13 +18134,15 @@ window.AlintecOnboarding = new window.MembershipTour({
   version: 'v1',
   brand: 'Guía Alintec Food',
   autoDelay: 1600,
+  autoWait: 600000, // el recorrido espera (nombre, bienvenida…) hasta 10 min en vez de rendirse al minuto
   identity: function(){
     var state = window.UserState || {};
     return state.uid || state.email || '';
   },
   ready: function(){
     var state = window.UserState || {};
-    return state.modo && state.modo !== 'cargando' && !!(state.uid || state.email) && getComputedStyle(document.body).visibility !== 'hidden';
+    var decidida = window.__isDemoMode === true || window.__bienvenidaDecidida === true;
+    return decidida && !window.__bienvenidaPendiente && state.modo && state.modo !== 'cargando' && !!(state.uid || state.email) && getComputedStyle(document.body).visibility !== 'hidden';
   },
   steps: [
     {
