@@ -138,7 +138,7 @@ function construirUI() {
   const sec = document.createElement('section');
   sec.id = 'encuentra';
   sec.className = 'af-enc-section';
-  sec.setAttribute('aria-label', 'Encuentra tu curso ideal');
+  sec.setAttribute('aria-label', 'Cuéntanos de ti');
   sec.innerHTML = `
     <div id="af-enc-wrap" class="af-enc-inner">
       <div id="af-enc-companion" class="af-enc-companion">
@@ -265,7 +265,7 @@ function renderPaso() {
   const pasos = obtenerPasos();
   const def = pasos[paso];
   if (!def) { renderContactoOFin(); return; }
-  document.getElementById('af-enc-step').textContent = 'Encuentra tu curso ideal';
+  document.getElementById('af-enc-step').textContent = 'Cuéntanos de ti';
   document.getElementById('af-enc-q').textContent = def.q;
   af_setExpr(def.expr, def.mensaje);
   actualizarAtras();
