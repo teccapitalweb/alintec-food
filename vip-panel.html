@@ -3429,11 +3429,25 @@ function mostrarPantallaVerificacion(user) {
   gate.append(card);
   document.body.append(gate);
 
+  // Si el correo se confirma en OTRA pestaña (la que abre el enlace del correo), esta no abre un
+  // segundo panel: avisa y deja que la persona continúe en la pestaña nueva.
+  let otraPestana = false, terminado = false;
+  try { const bc = new BroadcastChannel('af_verificacion'); bc.onmessage = () => { otraPestana = true; }; } catch (e) {}
   const revisar = async (manual) => {
+    if (terminado) return;
     try {
       await user.reload();
       if (user.emailVerified) {
         await user.getIdToken(true); // el servidor debe ver email_verified=true
+        if (otraPestana) {
+          terminado = true;
+          h.textContent = '¡Correo verificado!';
+          p1.textContent = 'Continúa en la pestaña que se abrió con tu panel. Puedes cerrar esta.';
+          p2.remove(); reenviar.remove(); salir.remove(); aviso.remove();
+          listo.textContent = 'Continuar aquí'; listo.disabled = false;
+          listo.onclick = () => window.location.reload();
+          return;
+        }
         window.location.reload();
         return;
       }
@@ -8091,6 +8105,7 @@ const Sections = (function(){
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(data.error || 'No se pudo guardar tu elección');
         borrarPrefGuia();
+        avisarPruebaElegida();
         Modal.closeAll();
         // El servidor ya personalizó el catálogo: se vuelve a pedir para ver sus clases abiertas
         _cursosLoaded = false; _cursosLoadError = '';
@@ -8103,7 +8118,7 @@ const Sections = (function(){
         enviando = false; si.disabled = false; no.disabled = false; si.textContent = 'Sí, es mi prueba gratuita';
         if (typeof Toast !== 'undefined') Toast.error('No se pudo elegir el curso', e.message || 'Intenta nuevamente');
         // Si el servidor dice que ya no puede elegir, se refresca el estado para no dejarlo a medias
-        await cargarEstadoPrueba(); refrescarPruebaUI();
+        await sincronizarPrueba(true);
       }
     });
     Modal.open({
@@ -8181,8 +8196,47 @@ const Sections = (function(){
   function programarFlujoPrueba() {
     if (_pruebaFlujoProgramado || window.__isDemoMode === true) return;
     _pruebaFlujoProgramado = true;
-    esperarPanelLibre(ejecutarFlujoPrueba);
+    esperarPanelLibre(() => {
+      // Con varias pestañas abiertas, solo la primera lleva la confirmación y la redirección guiada
+      const clave = 'af_prueba_flujo_' + (window.UserState?.uid || '');
+      let otra = false;
+      try {
+        const t = Number(localStorage.getItem(clave) || 0);
+        if (t && Date.now() - t < 120000 && sessionStorage.getItem(clave) !== '1') otra = true;
+        else { localStorage.setItem(clave, String(Date.now())); sessionStorage.setItem(clave, '1'); }
+      } catch (e) {}
+      if (otra) return;
+      ejecutarFlujoPrueba();
+    });
   }
+
+  // Si la prueba se eligió en otra pestaña, esta se actualiza sola (y ya no deja elegir otra)
+  const _canalPrueba = (() => { try { return new BroadcastChannel('af_prueba'); } catch (e) { return null; } })();
+  function avisarPruebaElegida() {
+    try { _canalPrueba && _canalPrueba.postMessage('elegida'); } catch (e) {}
+    try { localStorage.setItem('af_prueba_evento', String(Date.now())); } catch (e) {}
+  }
+  let _sincronizando = false;
+  async function sincronizarPrueba(forzar) {
+    if (_sincronizando || window.__isDemoMode === true || !window.__currentUser || esAdminReal()) return;
+    if (!forzar && !pruebaPendiente()) return;
+    _sincronizando = true;
+    try {
+      const estabaPendiente = pruebaPendiente();
+      await cargarEstadoPrueba();
+      if (estabaPendiente && !pruebaPendiente()) {
+        Modal.closeAll();
+        _cursosLoaded = false; _cursosLoadError = '';
+        await cargarCursosBackend();
+        if (typeof Toast !== 'undefined') Toast.info('Ya elegiste tu prueba gratuita', 'La elegiste en otra pestaña; ya quedó guardada.');
+      }
+      refrescarPruebaUI();
+    } finally { _sincronizando = false; }
+  }
+  if (_canalPrueba) _canalPrueba.onmessage = () => { sincronizarPrueba(); };
+  window.addEventListener('storage', e => { if (e.key === 'af_prueba_evento') sincronizarPrueba(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizarPrueba(); });
+  window.addEventListener('focus', () => { sincronizarPrueba(); });
 
   // ── Cursos bloqueados por el calendario (miembros): lista de clases con candado ──
   window.__avisoDesbloqueo = function(cursoId) {
