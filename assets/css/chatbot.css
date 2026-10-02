@@ -45,7 +45,12 @@
   background: url(../img/encuesta/busto-bienvenida.webp) center bottom / contain no-repeat;
   transition: transform .25s cubic-bezier(.2, .8, .25, 1);
 }
-.af-cb-bubble:hover .af-cb-pj { transform: translateY(-3px); }
+.af-cb-pj { animation: af-cb-bob 3.2s ease-in-out infinite; }
+.af-cb-bubble:hover .af-cb-pj { animation-play-state: paused; transform: translateY(-3px); }
+@keyframes af-cb-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
 .af-cb-dot {
   position: absolute;
   top: 18px;
@@ -59,35 +64,40 @@
 .af-cb-dot[hidden] { display: none; }
 .af-cb-bubble:focus-visible { outline: 3px solid #9be07f; outline-offset: 2px; border-radius: 22px; }
 
+/* Notita "Tu asistente virtual": flota suavemente arriba del personaje */
 .af-cb-tip {
   position: absolute;
-  right: 4px;
-  bottom: calc(100% + 6px);
+  right: 0;
+  bottom: calc(100% - 4px);
   width: max-content;
-  max-width: 190px;
   box-sizing: border-box;
-  padding: 10px 28px 10px 13px;
+  padding: 7px 12px;
   background: #fff;
   color: #174a37;
-  font: 700 12.5px/1.3 'Montserrat', sans-serif;
-  text-align: left;
-  border-radius: 14px 14px 4px 14px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, .2);
-  animation: af-cb-pop .35s ease both;
+  font: 800 11.5px/1.2 'Montserrat', sans-serif;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1.5px solid #cfe5d6;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .22);
+  animation: af-cb-float 3.2s ease-in-out infinite;
 }
-.af-cb-tip[hidden] { display: none; }
-.af-cb-tip-x {
+.af-cb-tip::after {
+  content: '';
   position: absolute;
-  top: 3px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
-  border: 0;
-  background: none;
-  font-size: 15px;
-  line-height: 1;
-  color: #7a887f;
-  cursor: pointer;
+  right: 38px;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-right: 1.5px solid #cfe5d6;
+  border-bottom: 1.5px solid #cfe5d6;
+  transform: rotate(45deg);
+}
+@keyframes af-cb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 @keyframes af-cb-pop {
@@ -366,6 +376,7 @@
 /* ── Celular: el panel casi a pantalla completa ── */
 @media (max-width: 560px) {
   .af-cb-wrap { width: 92px; height: 88px; }
+  .af-cb-tip { font-size: 11px; padding: 6px 10px; }
   .af-cb-pj { width: 96px; height: 80px; }
   .af-cb-base { height: 42px; border-radius: 21px; }
   .af-cb-panel {
@@ -381,7 +392,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .af-cb-bubble, .af-cb-tip, .af-cb-panel, .af-cb-bot, .af-cb-me, .af-cb-wait,
+  .af-cb-pj, .af-cb-bubble, .af-cb-tip, .af-cb-panel, .af-cb-bot, .af-cb-me, .af-cb-wait,
   .af-cb-chips, .af-cb-cur { animation: none; }
   .af-cb-wait i { animation: none; opacity: .6; }
   .af-cb-bd { scroll-behavior: auto; }

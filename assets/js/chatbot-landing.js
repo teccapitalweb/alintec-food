@@ -14,7 +14,6 @@
   const AUTH_URL = 'vip-auth.html';
   const PREF_KEY = 'af_curso_pref';
   const VISTO_KEY = 'af_cb_visto';
-  const TIP_KEY = 'af_cb_tip';
   const CAT_KEY = 'af_cb_catalogo_v1';
   const LOTE = 3; // cursos que se muestran de a poco
 
@@ -149,13 +148,9 @@
     dot.hidden = !!ls.get(VISTO_KEY);
     burbuja.appendChild(dot);
 
-    tip = el('div', 'af-cb-tip', '¿Te ayudo a encontrar tu curso?');
-    tip.hidden = true;
-    const x = el('button', 'af-cb-tip-x', '×');
-    x.type = 'button';
-    x.setAttribute('aria-label', 'Cerrar aviso');
-    x.addEventListener('click', e => { e.stopPropagation(); ocultarTip(true); });
-    tip.appendChild(x);
+    // Notita flotando sobre el personaje (siempre visible mientras la guía está minimizada)
+    tip = el('div', 'af-cb-tip', 'Tu asistente virtual');
+    tip.setAttribute('aria-hidden', 'true');
     envoltura.append(burbuja, tip);
     burbuja.addEventListener('click', abrir);
     pila.insertBefore(envoltura, pila.firstChild);
@@ -222,13 +217,7 @@
     });
   }
 
-  function ocultarTip(recordar) {
-    tip.hidden = true;
-    if (recordar) ss.set(TIP_KEY, '1');
-  }
-
   function abrir() {
-    ocultarTip(true);
     panel.hidden = false;
     envoltura.hidden = true;
     burbuja.setAttribute('aria-expanded', 'true');
@@ -568,14 +557,6 @@
   // ── arranque ──────────────────────────────────────────────
   function iniciar() {
     construir();
-    // Aviso breve para quien aún no ha abierto la guía (una vez por visita).
-    if (!ls.get(VISTO_KEY) && !ss.get(TIP_KEY)) {
-      setTimeout(() => {
-        if (!panel.hidden || ss.get(TIP_KEY)) return;
-        tip.hidden = false;
-        setTimeout(() => ocultarTip(true), 11000);
-      }, 7000);
-    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

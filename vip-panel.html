@@ -3483,6 +3483,19 @@ function mostrarPantallaVerificacion(user) {
   });
 }
 
+// Al cerrar sesión: quien usa la app instalada vuelve al login; quien entra desde el navegador
+// regresa a la página principal.
+function appInstalada() {
+  try {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.matchMedia('(display-mode: fullscreen)').matches
+      || window.matchMedia('(display-mode: minimal-ui)').matches
+      || window.navigator.standalone === true
+      || (document.referrer || '').startsWith('android-app://');
+  } catch (e) { return false; }
+}
+function destinoTrasCerrarSesion() { return appInstalada() ? 'vip-auth.html' : 'index.html'; }
+
 // Si ya estamos en modo demo (configurado en script anterior), aplicar UserState y salir
 if (window.__isDemoMode) {
   setTimeout(() => {
@@ -3493,7 +3506,7 @@ if (window.__isDemoMode) {
 } else {
   // ─── Auth normal · puede ser sin-membresia o vip ───
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = 'vip-auth.html'; return; }
+    if (!user) { window.location.href = window.__saliendo ? destinoTrasCerrarSesion() : 'vip-auth.html'; return; }
 
     window.__currentUser = user;
     window.UserState.emailVerified = user.emailVerified === true;
@@ -3657,7 +3670,7 @@ if (window.__isDemoMode) {
 }
 
 window.__signOut = async () => {
-  try { await signOut(auth); window.location.href = 'vip-auth.html'; }
+  try { window.__saliendo = true; await signOut(auth); window.location.href = destinoTrasCerrarSesion(); }
   catch(e){ alert('No pudimos cerrar sesión.'); }
 };
 
