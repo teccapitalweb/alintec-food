@@ -1,4 +1,4 @@
-/* Encuesta flotante del landing · perfila visitantes nuevos y los conecta
+/* Encuesta del landing · perfila visitantes nuevos y los conecta
    con su curso de prueba gratuita. Anónima: no pide correo salvo que el
    propio visitante decida dejarlo en el paso final de "lead caliente".
 
@@ -7,8 +7,9 @@
    "Estudiante" nunca ve las preguntas de "Dueño de negocio" y viceversa.
    La pregunta "tamano" solo aparece para perfiles de empresa.
 
-   Personaje: #af-enc-face usa ilustraciones PNG y la nota inferior cambia
-   de emoción y mensaje tanto por la pregunta como por la respuesta elegida. */
+   Personaje: #af-enc-face usa recortes WebP sin fondo y la nota junto al personaje cambia
+   de emoción y mensaje tanto por la pregunta como por la respuesta elegida.
+   Vive como una sección fija debajo del hero (#encuentra), no como tarjeta flotante. */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -24,7 +25,8 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const ESTADO_KEY = 'af_encuesta_estado'; // 'completada' | 'omitida'
+const ESTADO_KEY = 'af_encuesta_estado'; // 'completada' (la sección ya no vuelve a mostrarse)
+const PROG_KEY = 'af_encuesta_prog'; // { respuestas, paso, parcialN } para retomar donde se quedó
 const SID_KEY = 'af_encuesta_sid';
 
 function getSessionId() {
@@ -38,12 +40,20 @@ function getSessionId() {
   } catch (e) { return 'sid-' + Date.now(); }
 }
 
-function yaRespondioOCerro() {
-  try { return !!localStorage.getItem(ESTADO_KEY); } catch (e) { return false; }
+function leerEstado() {
+  try { return localStorage.getItem(ESTADO_KEY); } catch (e) { return null; }
 }
 
 function marcarEstado(valor) {
   try { localStorage.setItem(ESTADO_KEY, valor); } catch (e) {}
+}
+
+function leerProgreso() {
+  try { return JSON.parse(localStorage.getItem(PROG_KEY) || 'null') || {}; } catch (e) { return {}; }
+}
+
+function guardarProgreso(extra) {
+  try { localStorage.setItem(PROG_KEY, JSON.stringify({ ...leerProgreso(), respuestas, paso, ...extra })); } catch (e) {}
 }
 
 const PERFILES = ['Dueño de negocio', 'Área de calidad', 'Estudiante', 'Consultor'];
@@ -96,8 +106,15 @@ let paso = 0;
 // tamaño de empresa) solo existen una vez que esa respuesta ya se dio.
 function obtenerPasos() {
   const pasos = [];
-  pasos.push({ clave: 'origen', q: '¿Cómo nos conociste?', opts: ['Redes sociales', 'Recomendación', 'Buscador', 'Otro'], expr: 'neutral' });
+  // Pregunta de arranque: amplia, aspiracional y fácil de contestar para cualquier perfil.
+  pasos.push({
+    clave: 'meta', q: '¿Qué quieres lograr este año?',
+    opts: ['Crecer en mi carrera', 'Mejorar la calidad de mi empresa', 'Cumplir normas y auditorías', 'Certificarme y destacar'],
+    expr: 'neutral',
+    mensaje: { titulo: '¡Hola! Te ayudo a empezar.', texto: 'Son preguntas rápidas: toma menos de un minuto.' }
+  });
   pasos.push({ clave: 'p1', q: '¿Tú eres...?', opts: PERFILES, expr: 'neutral' });
+  pasos.push({ clave: 'giro', q: '¿En qué sector trabajas o quieres trabajar?', opts: ['Lácteos y bebidas', 'Cárnicos y pescados', 'Panificación y botanas', 'Frutas y verduras', 'Otro sector'], expr: 'thinking' });
   if (respuestas.p1) pasos.push({ clave: 'p2', ...RETOS[respuestas.p1], expr: 'thinking' });
   if (respuestas.p1 && respuestas.p2) pasos.push({ clave: 'p2b', ...PROFUNDIZACION[respuestas.p1][respuestas.p2], expr: 'thinking' });
   if (PERFILES_EMPRESA.includes(respuestas.p1)) pasos.push({ clave: 'tamano', q: '¿Cuántas personas trabajan contigo?', opts: ['Solo yo', '2 a 10', '11 a 50', 'Más de 50'], expr: 'neutral' });
@@ -106,6 +123,8 @@ function obtenerPasos() {
   pasos.push({ clave: 'urgencia', q: '¿Qué tan urgente?', opts: ['Ya', 'Pronto', 'Solo viendo'], expr: 'surprised' });
   pasos.push({ clave: 'freno', q: '¿Qué te detiene hoy?', opts: ['Precio', 'Tiempo', 'No estoy seguro', 'Nada, listo'], expr: 'thinking' });
   pasos.push({ clave: 'cursoGratis', q: '¿Ver curso gratis?', opts: ['Sí', 'Después'], expr: 'happy' });
+  // Al final, cuando ya está enganchada: es un dato de marketing, no de interés del visitante.
+  pasos.push({ clave: 'origen', q: '¿Cómo nos conociste?', opts: ['Redes sociales', 'Recomendación', 'Buscador', 'Otro'], expr: 'neutral' });
   return pasos;
 }
 
@@ -113,42 +132,51 @@ function esLeadCaliente() {
   return respuestas.urgencia === 'Ya' && respuestas.cursoGratis === 'Sí';
 }
 
+// La encuesta vive como una sección fija justo debajo del hero (no flotante):
+// el personaje a la izquierda, la pregunta y sus opciones a la derecha.
 function construirUI() {
-  const wrap = document.createElement('div');
-  wrap.id = 'af-enc-wrap';
-  wrap.innerHTML = `
-    <div id="af-enc-card">
-      <button id="af-enc-close" aria-label="Cerrar">&times;</button>
-      <p class="af-enc-q" id="af-enc-q"></p>
-      <div id="af-enc-body"></div>
-      <div class="af-enc-dots" id="af-enc-dots"></div>
-    </div>
-    <div id="af-enc-companion" class="af-enc-companion">
-      <div id="af-enc-face" class="af-enc-face" aria-hidden="true"></div>
-      <div id="af-enc-note" class="af-enc-note" role="status" aria-live="polite">
-        <strong id="af-enc-note-title"></strong>
-        <span id="af-enc-note-copy"></span>
+  const sec = document.createElement('section');
+  sec.id = 'encuentra';
+  sec.className = 'af-enc-section';
+  sec.setAttribute('aria-label', 'Encuentra tu curso ideal');
+  sec.innerHTML = `
+    <div id="af-enc-wrap" class="af-enc-inner">
+      <div id="af-enc-companion" class="af-enc-companion">
+        <div id="af-enc-note" class="af-enc-note" role="status" aria-live="polite">
+          <strong id="af-enc-note-title"></strong>
+          <span id="af-enc-note-copy"></span>
+        </div>
+        <div id="af-enc-face" class="af-enc-face" aria-hidden="true"></div>
+      </div>
+      <div id="af-enc-card">
+        <p class="af-enc-step" id="af-enc-step"></p>
+        <p class="af-enc-q" id="af-enc-q"></p>
+        <div id="af-enc-body"></div>
+        <div class="af-enc-dots" id="af-enc-dots"></div>
       </div>
     </div>
   `;
-  document.body.appendChild(wrap);
-  wrap.querySelector('#af-enc-close').addEventListener('click', cerrarEncuesta);
-  return wrap;
+  const hero = document.getElementById('inicio');
+  if (hero) hero.after(sec); else document.body.prepend(sec);
+  return sec;
 }
 
-// Imágenes reales del personaje (diseñadas en ChatGPT). Son de cuerpo
-// completo con fondo oscuro, así que el recuadro del personaje usa una
-// máscara radial en CSS para que ese fondo se desvanezca en vez de verse
-// como un rectángulo negro — no hay que recortar los archivos originales.
+// Recortes del personaje (de la cabeza a la cintura, sin fondo, ~40 KB c/u),
+// generados a partir de las ilustraciones originales especialista-encuesta-*-v3.png
+// (cuerpo completo con fondo negro y halo, 1.4 MB c/u — esas NO se cargan en el sitio).
 const IMAGENES_EXPR = {
-  neutral: 'assets/img/encuesta/especialista-encuesta-bienvenida-v3.png',
-  thinking: 'assets/img/encuesta/especialista-encuesta-pensando-v3.png',
-  confused: 'assets/img/encuesta/especialista-encuesta-confundida-v3.png',
-  concerned: 'assets/img/encuesta/especialista-encuesta-preocupada-v3.png',
-  surprised: 'assets/img/encuesta/especialista-encuesta-sorprendida-v3.png',
-  happy: 'assets/img/encuesta/especialista-encuesta-feliz-v3.png',
-  excited: 'assets/img/encuesta/especialista-encuesta-feliz-v3.png'
+  neutral: 'assets/img/encuesta/busto-bienvenida.webp',
+  thinking: 'assets/img/encuesta/busto-pensando.webp',
+  confused: 'assets/img/encuesta/busto-confundida.webp',
+  concerned: 'assets/img/encuesta/busto-preocupada.webp',
+  surprised: 'assets/img/encuesta/busto-sorprendida.webp',
+  happy: 'assets/img/encuesta/busto-feliz.webp',
+  excited: 'assets/img/encuesta/busto-feliz.webp'
 };
+
+function precargarImagenes() {
+  [...new Set(Object.values(IMAGENES_EXPR))].forEach(src => { new Image().src = src; });
+}
 
 const MENSAJES_EXPR = {
   neutral: { titulo: 'Estoy aquí para ayudarte.', texto: 'Elige la opción que mejor te represente. No hay respuestas incorrectas.' },
@@ -192,6 +220,8 @@ const REACCIONES_RESPUESTA = {
 function obtenerReaccionRespuesta(clave, opt) {
   const especifica = REACCIONES_RESPUESTA[clave] && REACCIONES_RESPUESTA[clave][opt];
   if (especifica) return especifica;
+  if (clave === 'meta') return { expr: 'happy', titulo: '¡Buen objetivo!', texto: 'Vamos a ver cómo ayudarte a lograrlo.' };
+  if (clave === 'giro') return { expr: 'thinking', titulo: 'Gracias, ya tengo tu contexto.', texto: opt === 'Otro sector' ? 'Cada sector tiene sus retos; seguimos conociéndote.' : `${opt} es un sector con muchas oportunidades.` };
   if (clave === 'p1') return { expr: 'happy', titulo: 'Perfecto, ya te ubico.', texto: `Adaptaré las siguientes preguntas a tu perfil: ${opt}.` };
   if (clave === 'tamano') {
     const expr = opt === 'Más de 50' ? 'surprised' : 'thinking';
@@ -235,11 +265,13 @@ function pintarDots(total, activo) {
 }
 
 function renderPaso() {
+  if (!document.getElementById('af-enc-card')) return; // se cerró la sección mientras esperaba la reacción
   const pasos = obtenerPasos();
   const def = pasos[paso];
   if (!def) { renderContactoOFin(); return; }
+  document.getElementById('af-enc-step').textContent = `Pregunta ${paso + 1} de ${pasos.length}`;
   document.getElementById('af-enc-q').textContent = def.q;
-  af_setExpr(def.expr);
+  af_setExpr(def.expr, def.mensaje);
   const body = document.getElementById('af-enc-body');
   body.innerHTML = '';
   def.opts.forEach(opt => {
@@ -260,7 +292,7 @@ function elegir(clave, opt) {
   af_setExpr(reaccion.expr, reaccion);
   af_animarReaccion();
   const espera = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 760;
-  setTimeout(() => { paso++; renderPaso(); }, espera);
+  setTimeout(() => { paso++; guardarProgreso(); renderPaso(); }, espera);
 }
 
 function renderContactoOFin() {
@@ -285,10 +317,21 @@ function renderContactoOFin() {
   finalizarEncuesta(null);
 }
 
+function mostrarFinal() {
+  const dots = document.getElementById('af-enc-dots');
+  if (dots) dots.style.display = 'none';
+  const pasoEl = document.getElementById('af-enc-step');
+  if (pasoEl) pasoEl.textContent = 'Encuesta completada';
+  af_setExpr('excited', { titulo: '¡Gracias por contarme!', texto: 'Con tus respuestas ya sé cómo orientarte.' });
+  document.getElementById('af-enc-q').textContent = '¡Listo! Ya tengo lo que necesito';
+  document.getElementById('af-enc-body').innerHTML = `
+    <a class="af-enc-opt af-enc-cta" href="vip-auth.html">Ver mi curso gratis →</a>
+    <button type="button" class="af-enc-cerrar" id="af-enc-cerrar">Ahora no, gracias</button>`;
+  document.getElementById('af-enc-cerrar').addEventListener('click', cerrarSeccion);
+}
+
 async function finalizarEncuesta(contacto) {
-  af_setExpr('excited', { titulo: '¡Todo listo!', texto: 'Ya puedo mostrarte una opción basada en tus respuestas.' });
-  document.getElementById('af-enc-q').textContent = '¡Listo! Buscando tu curso ideal';
-  document.getElementById('af-enc-body').innerHTML = `<a class="af-enc-opt" style="text-align:center;font-weight:600;display:block;" href="vip-auth.html">Ver mi curso gratis →</a>`;
+  mostrarFinal();
   marcarEstado('completada');
   try {
     const doc = { sessionId: getSessionId(), respuestas, completada: true, creado: serverTimestamp() };
@@ -297,33 +340,36 @@ async function finalizarEncuesta(contacto) {
   } catch (e) { console.warn('[encuesta] no se pudo guardar:', e.message); }
 }
 
-async function cerrarEncuesta() {
-  const wrap = document.getElementById('af-enc-wrap');
-  if (wrap) wrap.remove();
-  marcarEstado('omitida');
-  if (Object.keys(respuestas).length > 0) {
-    try {
-      await addDoc(collection(db, 'encuestasProspectos'), {
-        sessionId: getSessionId(), respuestas, completada: false, creado: serverTimestamp()
-      });
-    } catch (e) { console.warn('[encuesta] no se pudo guardar parcial:', e.message); }
-  }
+// Una vez completada, la sección se puede cerrar y no vuelve a aparecer en ese navegador.
+function cerrarSeccion() {
+  const sec = document.getElementById('encuentra');
+  if (sec) sec.remove();
 }
 
-function abrirEncuesta() {
-  if (yaRespondioOCerro() || document.getElementById('af-enc-wrap')) return;
-  construirUI();
-  paso = 0;
-  renderPaso();
+// Si el visitante se va a media encuesta se guarda una copia parcial (el panel de
+// admin la reemplaza por la completa si luego termina). Mejor esfuerzo: al salir
+// de la página el navegador puede cortar la petición.
+function guardarParcialSiHaceFalta() {
+  if (leerEstado() === 'completada') return;
+  const n = Object.keys(respuestas).length;
+  if (n === 0 || n === (leerProgreso().parcialN || 0)) return;
+  guardarProgreso({ parcialN: n });
+  addDoc(collection(db, 'encuestasProspectos'), {
+    sessionId: getSessionId(), respuestas: { ...respuestas }, completada: false, creado: serverTimestamp()
+  }).catch(e => console.warn('[encuesta] no se pudo guardar parcial:', e.message));
 }
 
-// El aviso de cookies (assets/js/cookie-consent.js) se monta con un z-index
-// altísimo y cubre la misma franja inferior — si todavía no se decide,
-// esperamos a que el visitante lo cierre para no tapar sus botones.
 function iniciar() {
-  const cookiesPendientes = window.alintecCookies && !window.alintecCookies.get() && document.getElementById('alintec-cookies');
-  if (cookiesPendientes) document.addEventListener('alintec-cookies', abrirEncuesta, { once: true });
-  else abrirEncuesta();
+  if (leerEstado() === 'completada') return; // ya la respondió: la sección no vuelve a aparecer
+  precargarImagenes();
+  const prog = leerProgreso();
+  Object.assign(respuestas, prog.respuestas || {});
+  paso = prog.paso || 0;
+  construirUI();
+  renderPaso();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') guardarParcialSiHaceFalta();
+  });
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') iniciar();

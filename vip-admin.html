@@ -1531,6 +1531,16 @@ const Pages={
             <canvas id="enc-chart-freno" height="220"></canvas>
           </div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Qué quieren lograr este año</h3>
+            <canvas id="enc-chart-meta" height="200"></canvas>
+          </div>
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Sector donde trabajan</h3>
+            <canvas id="enc-chart-giro" height="200"></canvas>
+          </div>
+        </div>
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
           <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Tema de interés · para saber qué más ofrecer</h3>
           <canvas id="enc-chart-interes" height="160"></canvas>
@@ -1565,6 +1575,17 @@ const Pages={
       if (leadsEl) leadsEl.textContent = 'No se pudieron cargar los datos.';
       return;
     }
+    // Una misma persona puede tener una copia parcial (minimizó la encuesta) y luego
+    // la completa: nos quedamos con una sola por sesión, prefiriendo la completa.
+    const porSesion = new Map();
+    docs.forEach((d, i) => {
+      const clave = d.sessionId || ('sin-sesion-' + i);
+      const previa = porSesion.get(clave);
+      const n = Object.keys(d.respuestas || {}).length;
+      const nPrevia = previa ? Object.keys(previa.respuestas || {}).length : -1;
+      if (!previa || (d.completada && !previa.completada) || (d.completada === previa.completada && n > nPrevia)) porSesion.set(clave, d);
+    });
+    docs = [...porSesion.values()];
     const total = docs.length;
     const completas = docs.filter(d => d.completada === true);
     const contar = (campo) => {
@@ -1583,6 +1604,8 @@ const Pages={
     const porInteres = contar('interes');
     const porTamano = contar('tamano');
     const porExperiencia = contar('experiencia');
+    const porMeta = contar('meta');
+    const porGiro = contar('giro');
     const calientes = completas.filter(d => d.respuestas?.urgencia === 'Ya' && d.respuestas?.cursoGratis === 'Sí');
 
     const elTotal = document.getElementById('enc-kpi-total');
@@ -1623,6 +1646,8 @@ const Pages={
       barra('enc-chart-urgencia', porUrgencia, '#3B82F6', false);
       barra('enc-chart-freno', porFreno, '#D4537E', false);
       barra('enc-chart-interes', porInteres, '#F7941D', true);
+      barra('enc-chart-meta', porMeta, '#3B82F6', true);
+      pie('enc-chart-giro', porGiro);
       barra('enc-chart-tamano', porTamano, '#58B71B', false);
       barra('enc-chart-experiencia', porExperiencia, '#9CA3AF', false);
     }

@@ -1,99 +1,64 @@
-/* Encuesta flotante del landing — tarjeta de preguntas para visitantes nuevos.
-   No bloquea la página: vive fija en una esquina y el usuario decide si
-   responde. Ver assets/js/encuesta-landing.js para la lógica. */
+/* Encuesta del landing — sección fija justo debajo del hero (no flotante).
+   Personaje a la izquierda que reacciona a cada respuesta y, a la derecha,
+   la tarjeta con la pregunta y sus opciones. Ver assets/js/encuesta-landing.js. */
 
-#af-enc-wrap {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 300px;
-  max-width: calc(100vw - 40px);
-  z-index: 9999;
+.af-enc-section {
+  background: #F5F2EA;
+  padding: 44px 20px 12px;
   font-family: 'Montserrat', sans-serif;
+}
+
+.af-enc-inner {
+  max-width: 940px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+/* ── Personaje + nota ─────────────────────────────────────── */
+.af-enc-companion {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
 }
-
-#af-enc-card {
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
-  z-index: 1;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
-  padding: 16px;
-  animation: af-enc-in .35s ease-out;
-}
-
-@keyframes af-enc-in {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-#af-enc-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
-  border: none;
-  background: transparent;
-  color: #9aa0a6;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  border-radius: 50%;
-}
-#af-enc-close:hover { background: #f1f1f1; color: #555; }
-
-.af-enc-q { font-size: 14px; font-weight: 600; color: #222; margin: 0 0 12px; line-height: 1.3; }
 
 .af-enc-face {
-  flex: 0 0 auto;
-  width: 92px;
-  height: 98px;
-  z-index: 0;
+  width: 100%;
+  max-width: 330px;
+  aspect-ratio: 841 / 706;
   background-repeat: no-repeat;
-  background-size: 205% auto;
-  background-position: 50% 0%;
-  -webkit-mask-image: radial-gradient(ellipse 85% 92% at 50% 30%, #000 85%, transparent 100%);
-  mask-image: radial-gradient(ellipse 85% 92% at 50% 30%, #000 85%, transparent 100%);
-  animation: af-enc-in .35s ease-out;
-}
-
-.af-enc-companion {
-  width: calc(100% - 16px);
-  min-height: 98px;
-  margin-top: -2px;
-  display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
+  background-size: contain;
+  background-position: center bottom;
+  animation: af-enc-in .4s ease-out;
 }
 
 .af-enc-note {
   position: relative;
-  padding: 10px 12px;
+  align-self: stretch;
+  margin: 0 8px 14px;
+  padding: 11px 14px;
   background: #eef8f1;
   border: 1px solid #b9ddc5;
-  border-radius: 7px 14px 14px 14px;
+  border-radius: 14px;
   color: #315a44;
-  font-size: 10px;
-  line-height: 1.35;
+  font-size: 12px;
+  line-height: 1.4;
   box-shadow: 0 7px 16px rgba(20, 74, 55, .10);
 }
 
-.af-enc-note::before {
+.af-enc-note::after {
   content: '';
   position: absolute;
-  top: 16px;
-  left: -7px;
+  bottom: -7px;
+  left: 56px;
   width: 12px;
   height: 12px;
   background: #eef8f1;
-  border-left: 1px solid #b9ddc5;
+  border-right: 1px solid #b9ddc5;
   border-bottom: 1px solid #b9ddc5;
   transform: rotate(45deg);
 }
@@ -108,7 +73,7 @@
 .af-enc-note strong {
   margin-bottom: 2px;
   color: #174a37;
-  font-size: 10px;
+  font-size: 12.5px;
   font-weight: 700;
 }
 
@@ -116,53 +81,122 @@
   animation: af-enc-react .42s ease-out;
 }
 
+@keyframes af-enc-in {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes af-enc-react {
-  0% { transform: translateY(4px) scale(.96); opacity: .45; }
-  65% { transform: translateY(-3px) scale(1.03); opacity: 1; }
+  0% { transform: translateY(5px) scale(.97); opacity: .5; }
+  65% { transform: translateY(-4px) scale(1.02); opacity: 1; }
   100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── Tarjeta de pregunta ──────────────────────────────────── */
+#af-enc-card {
+  background: #fff;
+  border: 1px solid #e7eee7;
+  border-radius: 24px;
+  box-shadow: 0 18px 50px rgba(21, 51, 33, .12);
+  padding: 30px 32px 24px;
+  min-width: 0;
+}
+
+.af-enc-step {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #2B9D5B;
+}
+
+.af-enc-q {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #16301f;
+}
+
+#af-enc-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .af-enc-opt {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   text-align: left;
-  background: #fafafa;
-  border: 1px solid #ececec;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  font-size: 13px;
+  background: #fafcfa;
+  border: 1.5px solid #dfe6df;
+  border-radius: 14px;
+  padding: 16px 18px;
+  font-size: 14px;
+  font-weight: 600;
   font-family: inherit;
-  color: #333;
+  line-height: 1.3;
+  color: #26402f;
   cursor: pointer;
-  transition: background .15s, border-color .15s;
+  text-decoration: none;
+  transition: background .15s, border-color .15s, transform .15s;
 }
-.af-enc-opt:hover { background: color-mix(in srgb, var(--primary, #58B71B) 10%, #fff); border-color: var(--primary, #58B71B); }
-.af-enc-opt:last-child { margin-bottom: 0; }
+.af-enc-opt:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary, #58B71B) 10%, #fff);
+  border-color: var(--primary, #58B71B);
+  transform: translateY(-1px);
+}
+.af-enc-opt:disabled { cursor: default; opacity: .75; }
+.af-enc-opt:focus-visible { outline: 3px solid #9be07f; outline-offset: 2px; }
+.af-enc-opt:last-child:nth-child(odd),
+.af-enc-input,
+.af-enc-cta,
+.af-enc-cerrar { grid-column: 1 / -1; }
 
-.af-enc-dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
-.af-enc-dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e2e2; }
-.af-enc-dot.is-active { background: var(--primary, #58B71B); }
+.af-enc-cta { text-align: center; font-weight: 700; background: #2B9D5B; border-color: #2B9D5B; color: #fff; }
+.af-enc-cta:hover:not(:disabled) { background: #238a4f; border-color: #238a4f; }
+
+.af-enc-cerrar {
+  background: none;
+  border: 0;
+  padding: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  color: #7a887f;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 .af-enc-input {
-  width: 100%;
   box-sizing: border-box;
-  border: 1px solid #ececec;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 13px;
+  width: 100%;
+  border: 1.5px solid #dfe6df;
+  border-radius: 14px;
+  padding: 15px 16px;
+  font-size: 14px;
   font-family: inherit;
-  margin-bottom: 8px;
 }
 
-@media (max-width: 480px) {
-  #af-enc-wrap { right: 12px; bottom: 12px; }
-  .af-enc-companion { grid-template-columns: 82px minmax(0, 1fr); }
-  .af-enc-face { width: 82px; height: 92px; }
+.af-enc-dots { display: flex; gap: 6px; justify-content: center; margin-top: 20px; }
+.af-enc-dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8e2; }
+.af-enc-dot.is-active { background: var(--primary, #58B71B); }
+
+/* ── Celular: la pregunta va primero y el personaje debajo ── */
+@media (max-width: 760px) {
+  .af-enc-section { padding: 28px 16px 8px; }
+  .af-enc-inner { grid-template-columns: 1fr; gap: 6px; }
+  #af-enc-card { order: 1; padding: 24px 20px 20px; border-radius: 20px; }
+  .af-enc-companion { order: 2; flex-direction: row-reverse; align-items: flex-end; gap: 4px; }
+  .af-enc-face { flex: 0 0 120px; width: 120px; }
+  .af-enc-note { flex: 1; align-self: center; margin: 0 0 14px; }
+  .af-enc-note::after { bottom: auto; top: 18px; left: auto; right: auto; left: -7px; border: 0; border-left: 1px solid #b9ddc5; border-bottom: 1px solid #b9ddc5; transform: rotate(45deg); }
+  .af-enc-q { font-size: 20px; }
+  #af-enc-body { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #af-enc-card,
   .af-enc-face,
   .af-enc-companion.is-reacting .af-enc-face { animation: none; }
 }

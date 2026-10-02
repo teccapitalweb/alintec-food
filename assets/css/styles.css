@@ -1504,6 +1504,11 @@ body { background: #F5F2EA; color: var(--text); }
 .concept-text p { color: #667069; line-height: 1.75; }
 .concept-img-frame { border-radius: 48% 48% 22px 22px; border: 8px solid rgba(255,255,255,.72); box-shadow: 0 24px 54px rgba(28, 59, 39, .16); }
 .concept-img-badge { border: 1px solid var(--border); border-radius: 999px; box-shadow: 0 14px 34px rgba(18,45,29,.13); }
+/* Esta sección redefine arriba el grid de 2 columnas y pisaba la regla móvil: en celular debe ir en 1 columna. */
+@media (max-width: 900px) {
+  .concept-section { padding-top: 78px; }
+  .concept-grid { grid-template-columns: 1fr; gap: 38px; }
+}
 
 .trusted-logos-section { background: #173928; }
 .trusted-logos-section::before { opacity: .025; }
