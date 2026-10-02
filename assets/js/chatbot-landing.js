@@ -320,7 +320,7 @@
     img.addEventListener('error', () => img.remove());
     th.appendChild(img);
     const ct = el('span', 'af-cb-ct');
-    ct.append(el('b', null, c.titulo), el('small', null, c.clases + (c.clases === 1 ? ' clase · ' : ' clases · ') + c.area));
+    ct.append(el('b', null, c.titulo), el('small', null, c.area));
     b.append(th, ct, el('span', 'af-cb-go' + (c.pronto ? ' is-soon' : ''), c.pronto ? 'Próximamente' : 'Ver →'));
     if (c.pronto) b.disabled = true;
     else b.addEventListener('click', () => elegirCurso(c));
