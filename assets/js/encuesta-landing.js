@@ -7,10 +7,8 @@
    "Estudiante" nunca ve las preguntas de "Dueño de negocio" y viceversa.
    La pregunta "tamano" solo aparece para perfiles de empresa.
 
-   Personaje: la carita SVG de #af-enc-face es un placeholder funcional
-   (cambia de gesto con af_setExpr). Se puede sustituir por el diseño
-   definitivo sin tocar el resto de este archivo — solo hay que mantener
-   el id del contenedor y la función af_setExpr(nombre). */
+   Personaje: #af-enc-face usa ilustraciones PNG y la nota inferior cambia
+   de emoción y mensaje tanto por la pregunta como por la respuesta elegida. */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -121,20 +119,16 @@ function construirUI() {
   wrap.innerHTML = `
     <div id="af-enc-card">
       <button id="af-enc-close" aria-label="Cerrar">&times;</button>
-      <div class="af-enc-head">
-        <svg id="af-enc-face" width="40" height="40" viewBox="0 0 64 64" aria-hidden="true">
-          <circle cx="32" cy="32" r="28" fill="#FFF3E0"/>
-          <circle id="af-enc-blush1" cx="16" cy="36" r="4" fill="#F7941D" opacity="0"/>
-          <circle id="af-enc-blush2" cx="48" cy="36" r="4" fill="#F7941D" opacity="0"/>
-          <circle cx="22" cy="28" r="4" fill="#58B71B"/>
-          <circle cx="42" cy="28" r="4" fill="#58B71B"/>
-          <ellipse id="af-enc-mouthO" cx="32" cy="40" rx="4" ry="5" fill="#58B71B" style="display:none"/>
-          <path id="af-enc-mouth" d="M22 38 Q32 40 42 38" stroke="#58B71B" stroke-width="3" fill="none" stroke-linecap="round"/>
-        </svg>
-        <p class="af-enc-q" id="af-enc-q"></p>
-      </div>
+      <p class="af-enc-q" id="af-enc-q"></p>
       <div id="af-enc-body"></div>
       <div class="af-enc-dots" id="af-enc-dots"></div>
+    </div>
+    <div id="af-enc-companion" class="af-enc-companion">
+      <div id="af-enc-face" class="af-enc-face" aria-hidden="true"></div>
+      <div id="af-enc-note" class="af-enc-note" role="status" aria-live="polite">
+        <strong id="af-enc-note-title"></strong>
+        <span id="af-enc-note-copy"></span>
+      </div>
     </div>
   `;
   document.body.appendChild(wrap);
@@ -142,17 +136,91 @@ function construirUI() {
   return wrap;
 }
 
-function af_setExpr(nombre) {
-  const curva = { neutral: 2, thinking: -3, happy: 8, excited: 10 }[nombre];
-  const mouth = document.getElementById('af-enc-mouth');
-  const mouthO = document.getElementById('af-enc-mouthO');
-  if (!mouth || !mouthO) return;
-  if (nombre === 'surprised') { mouth.style.display = 'none'; mouthO.style.display = 'block'; }
-  else { mouthO.style.display = 'none'; mouth.style.display = 'block'; mouth.setAttribute('d', `M22 38 Q32 ${38 + curva} 42 38`); }
-  const on = (nombre === 'happy' || nombre === 'excited') ? 1 : 0;
-  const b1 = document.getElementById('af-enc-blush1'), b2 = document.getElementById('af-enc-blush2');
-  if (b1) b1.setAttribute('opacity', on);
-  if (b2) b2.setAttribute('opacity', on);
+// Imágenes reales del personaje (diseñadas en ChatGPT). Son de cuerpo
+// completo con fondo oscuro, así que el recuadro del personaje usa una
+// máscara radial en CSS para que ese fondo se desvanezca en vez de verse
+// como un rectángulo negro — no hay que recortar los archivos originales.
+const IMAGENES_EXPR = {
+  neutral: 'assets/img/encuesta/especialista-encuesta-bienvenida-v3.png',
+  thinking: 'assets/img/encuesta/especialista-encuesta-pensando-v3.png',
+  confused: 'assets/img/encuesta/especialista-encuesta-confundida-v3.png',
+  concerned: 'assets/img/encuesta/especialista-encuesta-preocupada-v3.png',
+  surprised: 'assets/img/encuesta/especialista-encuesta-sorprendida-v3.png',
+  happy: 'assets/img/encuesta/especialista-encuesta-feliz-v3.png',
+  excited: 'assets/img/encuesta/especialista-encuesta-feliz-v3.png'
+};
+
+const MENSAJES_EXPR = {
+  neutral: { titulo: 'Estoy aquí para ayudarte.', texto: 'Elige la opción que mejor te represente. No hay respuestas incorrectas.' },
+  thinking: { titulo: 'Pensemos juntos.', texto: 'Esta respuesta me ayudará a entender mejor lo que necesitas.' },
+  confused: { titulo: 'No pasa nada si aún dudas.', texto: 'Elige la opción más cercana; podremos afinarla después.' },
+  concerned: { titulo: 'Entiendo esa dificultad.', texto: 'Buscaremos una alternativa práctica para ayudarte a avanzar.' },
+  surprised: { titulo: '¡Esto es importante!', texto: 'Tu respuesta cambia la prioridad de la recomendación.' },
+  happy: { titulo: '¡Excelente elección!', texto: 'Ya puedo personalizar mejor tu experiencia.' },
+  excited: { titulo: '¡Estamos listos!', texto: 'Tengo una recomendación preparada para ti.' }
+};
+
+const REACCIONES_RESPUESTA = {
+  origen: {
+    'Redes sociales': { expr: 'happy', titulo: '¡Qué gusto encontrarte!', texto: 'Seguiremos compartiendo contenido útil también por aquí.' },
+    'Recomendación': { expr: 'happy', titulo: '¡Gracias por la confianza!', texto: 'Nos alegra que alguien te haya recomendado Alintec Food.' },
+    'Buscador': { expr: 'thinking', titulo: 'Llegaste al lugar indicado.', texto: 'Te ayudaré a encontrar una ruta acorde con lo que buscabas.' },
+    'Otro': { expr: 'neutral', titulo: 'Gracias por contármelo.', texto: 'Continuemos para conocer mejor lo que necesitas.' }
+  },
+  experiencia: {
+    'Sí, me gusta': { expr: 'happy', titulo: '¡Perfecto!', texto: 'Podremos llevarte directamente a contenidos más especializados.' },
+    'Prefiero presencial': { expr: 'concerned', titulo: 'Entiendo tu preferencia.', texto: 'Te mostraremos una experiencia digital clara, práctica y acompañada.' },
+    'Es mi primera vez': { expr: 'surprised', titulo: '¡Bienvenido a esta experiencia!', texto: 'Te guiaremos paso a paso para que comenzar sea sencillo.' }
+  },
+  urgencia: {
+    'Ya': { expr: 'surprised', titulo: 'Vamos a priorizarlo.', texto: 'Buscaré una opción que puedas comenzar cuanto antes.' },
+    'Pronto': { expr: 'thinking', titulo: 'Podemos planearlo bien.', texto: 'Te recomendaré una ruta que puedas organizar a tu ritmo.' },
+    'Solo viendo': { expr: 'neutral', titulo: 'Explora con calma.', texto: 'Te mostraré opciones útiles sin presionarte a decidir ahora.' }
+  },
+  freno: {
+    'Precio': { expr: 'concerned', titulo: 'El presupuesto importa.', texto: 'Tomaré en cuenta opciones de alto valor y acceso flexible.' },
+    'Tiempo': { expr: 'concerned', titulo: 'Sé que el tiempo es limitado.', texto: 'Buscaremos contenidos breves que puedas avanzar a tu ritmo.' },
+    'No estoy seguro': { expr: 'confused', titulo: 'Es normal tener dudas.', texto: 'Con tus respuestas podré darte una recomendación más clara.' },
+    'Nada, listo': { expr: 'happy', titulo: '¡Entonces avancemos!', texto: 'Ya casi tengo lista una ruta adecuada para ti.' }
+  },
+  cursoGratis: {
+    'Sí': { expr: 'excited', titulo: '¡Excelente!', texto: 'Prepararé tu acceso para que conozcas la experiencia.' },
+    'Después': { expr: 'neutral', titulo: 'Sin problema.', texto: 'Conservaremos tu recomendación para cuando quieras continuar.' }
+  }
+};
+
+function obtenerReaccionRespuesta(clave, opt) {
+  const especifica = REACCIONES_RESPUESTA[clave] && REACCIONES_RESPUESTA[clave][opt];
+  if (especifica) return especifica;
+  if (clave === 'p1') return { expr: 'happy', titulo: 'Perfecto, ya te ubico.', texto: `Adaptaré las siguientes preguntas a tu perfil: ${opt}.` };
+  if (clave === 'tamano') {
+    const expr = opt === 'Más de 50' ? 'surprised' : 'thinking';
+    return { expr, titulo: 'Gracias, esto cambia la escala.', texto: `Consideraré un equipo de ${opt.toLowerCase()} en la recomendación.` };
+  }
+  if (clave === 'interes') return { expr: 'happy', titulo: 'Tema seleccionado.', texto: `${opt} tendrá prioridad en tu ruta personalizada.` };
+  if (clave === 'p2' || clave === 'p2b') return { expr: 'thinking', titulo: 'Ya entiendo mejor tu reto.', texto: `Tomaré en cuenta “${opt}” para afinar la siguiente pregunta.` };
+  return { expr: 'happy', titulo: 'Respuesta guardada.', texto: 'Continuemos para completar tu recomendación.' };
+}
+
+function af_setExpr(nombre, mensaje) {
+  const cara = document.getElementById('af-enc-face');
+  if (!cara) return;
+  const src = IMAGENES_EXPR[nombre] || IMAGENES_EXPR.neutral;
+  cara.style.backgroundImage = `url('${src}')`;
+  const contenido = mensaje || MENSAJES_EXPR[nombre] || MENSAJES_EXPR.neutral;
+  const titulo = document.getElementById('af-enc-note-title');
+  const copia = document.getElementById('af-enc-note-copy');
+  if (titulo) titulo.textContent = contenido.titulo;
+  if (copia) copia.textContent = contenido.texto;
+}
+
+function af_animarReaccion() {
+  const companion = document.getElementById('af-enc-companion');
+  if (!companion) return;
+  companion.classList.remove('is-reacting');
+  void companion.offsetWidth;
+  companion.classList.add('is-reacting');
+  window.setTimeout(() => companion.classList.remove('is-reacting'), 450);
 }
 
 function pintarDots(total, activo) {
@@ -186,8 +254,13 @@ function renderPaso() {
 
 function elegir(clave, opt) {
   respuestas[clave] = opt;
-  af_setExpr('happy');
-  setTimeout(() => { paso++; renderPaso(); }, 350);
+  const body = document.getElementById('af-enc-body');
+  if (body) body.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
+  const reaccion = obtenerReaccionRespuesta(clave, opt);
+  af_setExpr(reaccion.expr, reaccion);
+  af_animarReaccion();
+  const espera = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 760;
+  setTimeout(() => { paso++; renderPaso(); }, espera);
 }
 
 function renderContactoOFin() {
@@ -196,7 +269,7 @@ function renderContactoOFin() {
   if (dots) dots.style.display = 'none';
   if (esLeadCaliente()) {
     document.getElementById('af-enc-q').textContent = 'Déjanos tu correo o WhatsApp y te avisamos';
-    af_setExpr('excited');
+    af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos un medio de contacto solo si quieres recibir el aviso.' });
     body.innerHTML = `
       <input class="af-enc-input" id="af-enc-contacto" type="text" placeholder="correo o WhatsApp">
       <button class="af-enc-opt" id="af-enc-contacto-ok" style="text-align:center;font-weight:600;">Avísenme →</button>
@@ -213,7 +286,7 @@ function renderContactoOFin() {
 }
 
 async function finalizarEncuesta(contacto) {
-  af_setExpr('excited');
+  af_setExpr('excited', { titulo: '¡Todo listo!', texto: 'Ya puedo mostrarte una opción basada en tus respuestas.' });
   document.getElementById('af-enc-q').textContent = '¡Listo! Buscando tu curso ideal';
   document.getElementById('af-enc-body').innerHTML = `<a class="af-enc-opt" style="text-align:center;font-weight:600;display:block;" href="vip-auth.html">Ver mi curso gratis →</a>`;
   marcarEstado('completada');
