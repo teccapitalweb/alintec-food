@@ -205,6 +205,15 @@
 .af-enc-sub,
 .af-enc-cerrar { grid-column: 1 / -1; }
 
+.af-enc-aviso {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #7a887f;
+}
+.af-enc-aviso a { color: #2B9D5B; font-weight: 600; }
+
 .af-enc-sub {
   margin: -10px 0 2px;
   font-size: 13px;

@@ -357,6 +357,7 @@ function renderContactoOFin() {
     <p class="af-enc-sub">Opcional</p>
     <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (con lada, 10 dígitos)" autocomplete="tel">
     <p class="af-enc-error" id="af-enc-error" role="alert" hidden></p>
+    <p class="af-enc-aviso">Al dejar tu WhatsApp aceptas que un asesor te contacte y el <a href="aviso-de-privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a>.</p>
     <a class="af-enc-opt af-enc-cta" id="af-enc-prueba" href="vip-auth.html">Ver prueba gratuita →</a>
     <button type="button" class="af-enc-opt af-enc-sec" id="af-enc-seguir">Seguir viendo</button>
   `;
@@ -369,13 +370,13 @@ function renderContactoOFin() {
     const crudo = input.value.trim();
     if (!crudo) return { ok: true, valor: null };
     const digitos = crudo.replace(/\D/g, '');
-    return digitos.length >= 10 ? { ok: true, valor: digitos } : { ok: false, valor: null };
+    return digitos.length >= 10 && digitos.length <= 15 ? { ok: true, valor: digitos } : { ok: false, valor: null };
   };
   const irAPrueba = async (ev) => {
     if (ev) ev.preventDefault();
     const c = leerContacto();
     if (!c.ok) {
-      error.textContent = 'Revisa tu número: debe tener 10 dígitos con lada. O déjalo vacío para continuar sin él.';
+      error.textContent = 'Revisa tu número: debe tener 10 dígitos con lada (hasta 15 si incluye el país). O déjalo vacío para continuar sin él.';
       error.hidden = false;
       input.focus();
       return;

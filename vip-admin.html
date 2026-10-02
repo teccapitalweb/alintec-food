@@ -1542,6 +1542,11 @@ const Pages={
           </div>
         </div>
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
+          <h3 style="margin:0 0 4px;font-size:14px;color:var(--text);">Dónde se quedan los que no terminan</h3>
+          <p style="margin:0 0 12px;font-size:12px;color:var(--text-3);">Última pregunta que alcanzaron a contestar antes de irse. Solo cuenta a quienes contestaron al menos una; quien no contestó ninguna no deja registro.</p>
+          <canvas id="enc-chart-abandono" height="170"></canvas>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
           <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Tema de interés · para saber qué más ofrecer</h3>
           <canvas id="enc-chart-interes" height="160"></canvas>
         </div>
@@ -1622,6 +1627,20 @@ const Pages={
     const porExperiencia = contar('experiencia');
     const porMeta = contar('meta');
     const porGiro = contar('giro');
+    // Abandono: para cada persona que no terminó, la última pregunta que contestó según el
+    // orden del flujo (las barras salen en ese mismo orden).
+    const ORDEN_PREGUNTAS = [
+      ['meta', 'Qué quieren lograr'], ['p1', 'Perfil'], ['origen', 'Cómo nos conoció'], ['giro', 'Sector'],
+      ['p2', 'Reto principal'], ['p2b', 'Profundización del reto'], ['tamano', 'Tamaño de empresa'],
+      ['interes', 'Tema de interés'], ['experiencia', 'Cursos online'], ['urgencia', 'Cuándo empezar'], ['freno', 'Qué los detiene']
+    ];
+    const porAbandono = {};
+    ORDEN_PREGUNTAS.forEach(([, nombre]) => { porAbandono[nombre] = 0; });
+    docs.filter(d => d.completada !== true).forEach(d => {
+      const ultima = [...ORDEN_PREGUNTAS].reverse().find(([k]) => d.respuestas && d.respuestas[k]);
+      if (ultima) porAbandono[ultima[1]]++;
+    });
+    Object.keys(porAbandono).forEach(k => { if (!porAbandono[k]) delete porAbandono[k]; });
     const calientes = completas.filter(d => d.respuestas?.urgencia === 'Lo antes posible');
 
     const elTotal = document.getElementById('enc-kpi-total');
@@ -1680,6 +1699,7 @@ const Pages={
       barra('enc-chart-interes', porInteres, '#F7941D', true);
       barra('enc-chart-meta', porMeta, '#3B82F6', true);
       pie('enc-chart-giro', porGiro);
+      barra('enc-chart-abandono', porAbandono, '#D4537E', true);
       barra('enc-chart-tamano', porTamano, '#58B71B', false);
       barra('enc-chart-experiencia', porExperiencia, '#9CA3AF', false);
     }

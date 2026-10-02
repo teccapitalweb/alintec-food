@@ -114,6 +114,32 @@ service cloud.firestore {
     // Encuesta anónima del landing (visitantes sin cuenta). Cualquiera puede
     // crear su propia respuesta, pero nadie fuera del admin puede leer,
     // editar o borrar — evita que un visitante lea o altere respuestas ajenas.
+    // Límites contra basura: solo las 11 preguntas conocidas, cada respuesta es un texto corto,
+    // y el WhatsApp (solo dígitos) cabe en 20 caracteres. Evita documentos enormes o con campos inventados.
+    function respuestaEncuestaOk(r, k) {
+      return !(k in r) || (r[k] is string && r[k].size() <= 60);
+    }
+
+    function respuestasEncuestaOk(r) {
+      return r is map
+        && r.size() <= 11
+        && r.keys().hasOnly([
+          'meta', 'p1', 'origen', 'giro', 'p2', 'p2b', 'tamano',
+          'interes', 'experiencia', 'urgencia', 'freno'
+        ])
+        && respuestaEncuestaOk(r, 'meta')
+        && respuestaEncuestaOk(r, 'p1')
+        && respuestaEncuestaOk(r, 'origen')
+        && respuestaEncuestaOk(r, 'giro')
+        && respuestaEncuestaOk(r, 'p2')
+        && respuestaEncuestaOk(r, 'p2b')
+        && respuestaEncuestaOk(r, 'tamano')
+        && respuestaEncuestaOk(r, 'interes')
+        && respuestaEncuestaOk(r, 'experiencia')
+        && respuestaEncuestaOk(r, 'urgencia')
+        && respuestaEncuestaOk(r, 'freno');
+    }
+
     match /encuestasProspectos/{id} {
       allow read, update, delete: if isAdmin();
       allow create: if request.resource.data.keys().hasOnly([
@@ -121,12 +147,14 @@ service cloud.firestore {
         ])
         && request.resource.data.sessionId is string
         && request.resource.data.sessionId.size() > 0
-        && request.resource.data.sessionId.size() < 100
+        && request.resource.data.sessionId.size() <= 100
         && request.resource.data.respuestas is map
+        && respuestasEncuestaOk(request.resource.data.respuestas)
         && request.resource.data.completada is bool
+        && request.resource.data.creado is timestamp
         && (!('contacto' in request.resource.data)
           || (request.resource.data.contacto is string
-            && request.resource.data.contacto.size() < 200));
+            && request.resource.data.contacto.size() <= 20));
     }
 
     // El backend crea este documento mínimo después de validar la membresía,
