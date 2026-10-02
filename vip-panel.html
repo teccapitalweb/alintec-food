@@ -3431,19 +3431,24 @@ function mostrarPantallaVerificacion(user) {
 
   // Si el correo se confirma en OTRA pestaña (la que abre el enlace del correo), esta no abre un
   // segundo panel: avisa y deja que la persona continúe en la pestaña nueva.
-  let terminado = false;
-  let canalVerif = null;
-  try {
-    canalVerif = new BroadcastChannel('af_verificacion');
-    // La otra pestaña (la del enlace del correo) avisa que ya confirmó: esta responde y sigue sola al panel
-    canalVerif.onmessage = (ev) => { if (ev.data === 'ok') { try { canalVerif.postMessage('ack'); } catch (e) {} revisar(false); } };
-  } catch (e) {}
+  let terminado = false, otraPestana = false;
+  try { const bc = new BroadcastChannel('af_verificacion'); bc.onmessage = (ev) => { if (ev.data === 'ok' || ev.data === 'abierta') otraPestana = true; else if (ev.data === 'fallo') otraPestana = false; }; } catch (e) {}
   const revisar = async (manual) => {
     if (terminado) return;
     try {
       await user.reload();
       if (user.emailVerified) {
         await user.getIdToken(true); // el servidor debe ver email_verified=true
+        if (otraPestana) {
+          // La cuenta se activó desde el enlace del correo, que ya abrió su panel en la otra pestaña
+          terminado = true;
+          h.textContent = '¡Correo verificado!';
+          p1.textContent = 'Tu cuenta ya está activa. Sigue en la pestaña que se abrió con tu panel. Si prefieres seguir aquí, toca el botón.';
+          p2.remove(); reenviar.remove(); salir.remove(); aviso.remove();
+          listo.textContent = 'Continuar aquí'; listo.disabled = false;
+          listo.onclick = () => window.location.reload();
+          return;
+        }
         terminado = true;
         window.location.reload();
         return;
