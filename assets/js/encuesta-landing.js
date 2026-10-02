@@ -344,58 +344,66 @@ function animarAltura(card, desde) {
   setTimeout(() => { card.style.height = ''; }, 320);
 }
 
-// Todos terminan en este paso (opcional), sea cual sea su urgencia: dejar su WhatsApp
-// para que un asesor les envíe más información de cursos.
+// Último paso (todos pasan por aquí, sea cual sea su urgencia): WhatsApp opcional y salida.
+// "Ver prueba gratuita" lleva a crear la cuenta; "Seguir viendo" cierra la encuesta y deja
+// seguir en la página. En ambos casos se guarda lo respondido (y el WhatsApp si lo dejó).
 function renderContactoOFin() {
   const body = document.getElementById('af-enc-body');
   actualizarAtras();
-  document.getElementById('af-enc-step').textContent = 'Un último detalle · opcional';
+  document.getElementById('af-enc-step').textContent = 'Un último detalle';
   document.getElementById('af-enc-q').textContent = '¿Quieres recibir más información de cursos?';
   af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
   body.innerHTML = `
+    <p class="af-enc-sub">Opcional</p>
     <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (con lada, 10 dígitos)" autocomplete="tel">
     <p class="af-enc-error" id="af-enc-error" role="alert" hidden></p>
-    <button class="af-enc-opt af-enc-cta" id="af-enc-contacto-ok" type="button">Que me contacten →</button>
-    <button class="af-enc-cerrar" id="af-enc-contacto-skip" type="button">No, gracias</button>
+    <a class="af-enc-opt af-enc-cta" id="af-enc-prueba" href="vip-auth.html">Ver prueba gratuita →</a>
+    <button type="button" class="af-enc-opt af-enc-sec" id="af-enc-seguir">Seguir viendo</button>
   `;
   const input = document.getElementById('af-enc-contacto');
   const error = document.getElementById('af-enc-error');
-  const enviar = () => {
-    const digitos = input.value.replace(/\D/g, '');
-    if (digitos.length < 10) {
-      error.textContent = 'Escribe tu WhatsApp con lada (10 dígitos) o elige "No, gracias".';
+  const prueba = document.getElementById('af-enc-prueba');
+  const seguir = document.getElementById('af-enc-seguir');
+  // Vacío = sin WhatsApp (es opcional). Si escribió algo, debe tener al menos 10 dígitos.
+  const leerContacto = () => {
+    const crudo = input.value.trim();
+    if (!crudo) return { ok: true, valor: null };
+    const digitos = crudo.replace(/\D/g, '');
+    return digitos.length >= 10 ? { ok: true, valor: digitos } : { ok: false, valor: null };
+  };
+  const irAPrueba = async (ev) => {
+    if (ev) ev.preventDefault();
+    const c = leerContacto();
+    if (!c.ok) {
+      error.textContent = 'Revisa tu número: debe tener 10 dígitos con lada. O déjalo vacío para continuar sin él.';
       error.hidden = false;
       input.focus();
       return;
     }
-    finalizarEncuesta(digitos);
+    prueba.textContent = 'Un momento…';
+    prueba.style.pointerEvents = 'none';
+    seguir.disabled = true;
+    await guardarRespuesta(c.valor); // se espera el guardado: si no, el cambio de página lo cancelaría
+    window.location.href = 'vip-auth.html';
   };
-  document.getElementById('af-enc-contacto-ok').addEventListener('click', enviar);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') enviar(); });
+  prueba.addEventListener('click', irAPrueba);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') irAPrueba(e); });
   input.addEventListener('input', () => { error.hidden = true; });
-  document.getElementById('af-enc-contacto-skip').addEventListener('click', () => finalizarEncuesta(null));
+  seguir.addEventListener('click', () => {
+    const c = leerContacto();
+    guardarRespuesta(c.ok ? c.valor : null); // si el número quedó a medias, simplemente no se guarda
+    cerrarSeccion();
+  });
 }
 
-// Todos ven al final el acceso a su prueba gratuita (no es un curso completo gratis).
-function mostrarFinal() {
-  actualizarAtras(true);
-  const pasoEl = document.getElementById('af-enc-step');
-  if (pasoEl) pasoEl.textContent = 'Gracias';
-  af_setExpr('excited', { titulo: '¡Gracias por contarme!', texto: 'Con tus respuestas ya sé cómo orientarte.' });
-  document.getElementById('af-enc-q').textContent = '¡Listo! Ya tengo lo que necesito';
-  document.getElementById('af-enc-body').innerHTML = `<a class="af-enc-opt af-enc-cta" href="vip-auth.html">Ver tu prueba gratuita →</a>
-    <button type="button" class="af-enc-cerrar" id="af-enc-cerrar">Ahora no, gracias</button>`;
-  document.getElementById('af-enc-cerrar').addEventListener('click', cerrarSeccion);
-}
-
-async function finalizarEncuesta(contacto) {
-  mostrarFinal();
+// Guarda la encuesta completa. Espera como máximo 3 s para no dejar colgada a la persona.
+async function guardarRespuesta(contacto) {
   marcarEstado('completada');
-  try {
-    const doc = { sessionId: getSessionId(), respuestas, completada: true, creado: serverTimestamp() };
-    if (contacto) doc.contacto = contacto;
-    await addDoc(collection(db, 'encuestasProspectos'), doc);
-  } catch (e) { console.warn('[encuesta] no se pudo guardar:', e.message); }
+  const doc = { sessionId: getSessionId(), respuestas, completada: true, creado: serverTimestamp() };
+  if (contacto) doc.contacto = contacto;
+  const guardado = addDoc(collection(db, 'encuestasProspectos'), doc)
+    .catch(e => console.warn('[encuesta] no se pudo guardar:', e.message));
+  await Promise.race([guardado, new Promise(r => setTimeout(r, 3000))]);
 }
 
 // Una vez completada, la sección se puede cerrar y no vuelve a aparecer en ese navegador.

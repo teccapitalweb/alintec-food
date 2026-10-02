@@ -201,7 +201,18 @@
 .af-enc-opt:last-child:nth-child(odd),
 .af-enc-input,
 .af-enc-cta,
+.af-enc-sec,
+.af-enc-sub,
 .af-enc-cerrar { grid-column: 1 / -1; }
+
+.af-enc-sub {
+  margin: -10px 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a887f;
+}
+
+.af-enc-sec { text-align: center; color: #26402f; }
 
 .af-enc-cta { text-align: center; font-weight: 700; background: #2B9D5B; border-color: #2B9D5B; color: #fff; }
 .af-enc-cta:hover:not(:disabled) { background: #238a4f; border-color: #238a4f; }
