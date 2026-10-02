@@ -347,6 +347,22 @@ function animarAltura(card, desde) {
   setTimeout(() => { card.style.height = ''; }, 320);
 }
 
+// Valida un WhatsApp de México y lo devuelve a 10 dígitos, o null si no parece real. No puede
+// comprobar que el número exista (eso solo se logra mandando un código), pero descarta lo obvio:
+// lada que no existe (empieza en 0 o 1), todos iguales, patrones repetidos (1212121212) y secuencias.
+function normalizarWhatsappMx(crudo) {
+  let d = String(crudo).replace(/\D/g, '');
+  if (d.length === 13 && d.startsWith('521')) d = d.slice(3);
+  else if (d.length === 12 && d.startsWith('52')) d = d.slice(2);
+  if (d.length !== 10 || !/^[2-9]/.test(d)) return null;
+  for (let p = 1; p <= 5; p++) {
+    if (d.length % p === 0 && d === d.slice(0, p).repeat(d.length / p)) return null;
+  }
+  const dif = [...d].slice(1).map((c, i) => (Number(c) - Number(d[i]) + 10) % 10);
+  if (dif.every(x => x === 1) || dif.every(x => x === 9)) return null;
+  return d;
+}
+
 // Último paso (todos pasan por aquí, sea cual sea su urgencia): WhatsApp opcional y salida.
 // "Ver prueba gratuita" lleva a crear la cuenta; "Seguir viendo" cierra la encuesta y deja
 // seguir en la página. En ambos casos se guarda lo respondido (y el WhatsApp si lo dejó).
@@ -358,7 +374,7 @@ function renderContactoOFin() {
   af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
   body.innerHTML = `
     <p class="af-enc-sub">Opcional</p>
-    <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (con lada, 10 dígitos)" autocomplete="tel">
+    <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (10 dígitos con lada)" autocomplete="tel">
     <p class="af-enc-error" id="af-enc-error" role="alert" hidden></p>
     <label class="af-enc-consent" id="af-enc-consent">
       <input type="checkbox" id="af-enc-acepto">
@@ -378,14 +394,14 @@ function renderContactoOFin() {
     error.hidden = false;
     consent.classList.toggle('is-error', !!marcarCasilla);
   };
-  // Vacío = sin WhatsApp (es opcional). Si escribió un número debe ser válido (10 a 15 dígitos)
+  // Vacío = sin WhatsApp (es opcional). Si escribió un número debe ser válido (WhatsApp de México)
   // y tener marcada la casilla del Aviso de privacidad: sin eso no se guarda ni se usa el número.
   const leerContacto = () => {
     const crudo = input.value.trim();
     if (!crudo) return { ok: true, valor: null };
-    const digitos = crudo.replace(/\D/g, '');
-    if (digitos.length < 10 || digitos.length > 15) {
-      avisar('Revisa tu número: debe tener 10 dígitos con lada (hasta 15 si incluye el país). O déjalo vacío para continuar sin él.', false);
+    const numero = normalizarWhatsappMx(crudo);
+    if (!numero) {
+      avisar('Ese número no parece válido. Escribe tu WhatsApp de México con 10 dígitos y lada (por ejemplo 55 1234 5678), o déjalo vacío para continuar sin él.', false);
       input.focus();
       return { ok: false };
     }
@@ -393,7 +409,7 @@ function renderContactoOFin() {
       avisar('Marca la casilla para que un asesor pueda escribirte, o deja el número vacío.', true);
       return { ok: false };
     }
-    return { ok: true, valor: digitos };
+    return { ok: true, valor: '52' + numero };
   };
   const irAPrueba = async (ev) => {
     if (ev) ev.preventDefault();

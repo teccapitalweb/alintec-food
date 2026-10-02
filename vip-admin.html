@@ -1709,6 +1709,16 @@ const Pages={
       // Todos pasan por el paso de WhatsApp (opcional): aquí salen quienes lo dejaron, con los
       // urgentes primero y un enlace para escribirles directo.
       const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+      // Misma regla que la encuesta: detecta números que no parecen reales (para revisarlos antes de escribir).
+      const numeroDudoso = crudo => {
+        let n = String(crudo).replace(/\D/g, '');
+        if (n.length === 13 && n.startsWith('521')) n = n.slice(3);
+        else if (n.length === 12 && n.startsWith('52')) n = n.slice(2);
+        if (n.length !== 10 || !/^[2-9]/.test(n)) return true;
+        for (let p = 1; p <= 5; p++) if (n.length % p === 0 && n === n.slice(0, p).repeat(n.length / p)) return true;
+        const dif = [...n].slice(1).map((c, i) => (Number(c) - Number(n[i]) + 10) % 10);
+        return dif.every(x => x === 1) || dif.every(x => x === 9);
+      };
       const conContacto = completas.filter(d => d.contacto).sort((a, b) =>
         (b.respuestas?.urgencia === 'Lo antes posible') - (a.respuestas?.urgencia === 'Lo antes posible'));
       if (conContacto.length === 0) {
@@ -1722,7 +1732,8 @@ const Pages={
           const urgente = urgencia === 'Lo antes posible';
           const etiqueta = `<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:${urgente ? 'rgba(247,148,29,.18)' : 'var(--surface-3)'};color:${urgente ? '#C9740A' : 'var(--text-2)'};">${esc(urgencia)}</span>`;
           const enlace = digitos ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;text-decoration:none;">${esc(d.contacto)}</a>` : esc(d.contacto);
-          const constancia = d.avisoAceptado ? `<span title="Aceptó el Aviso de privacidad (${esc(d.avisoVersion || 'sin versión')})" style="font-size:11px;color:var(--text-3);">✓ Aviso aceptado</span>` : '';
+          const dudoso = numeroDudoso(d.contacto) ? '<span title="No parece un WhatsApp válido de México: revísalo antes de escribir" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(179,38,30,.14);color:#B3261E;">Número dudoso</span>' : '';
+          const constancia = dudoso + (d.avisoAceptado ? `<span title="Aceptó el Aviso de privacidad (${esc(d.avisoVersion || 'sin versión')})" style="font-size:11px;color:var(--text-3);">✓ Aviso aceptado</span>` : '');
           return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;"><span>${enlace}</span>${etiqueta}${constancia}<span style="color:var(--text-3);">${fecha}</span></div>`;
         }).join('');
       }
