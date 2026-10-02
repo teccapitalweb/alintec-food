@@ -33,13 +33,14 @@
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center bottom;
-  animation: af-enc-in .4s ease-out;
 }
 
 .af-enc-note {
   position: relative;
   align-self: stretch;
   margin: 0 8px 14px;
+  min-height: 66px;
+  box-sizing: border-box;
   padding: 11px 14px;
   background: #eef8f1;
   border: 1px solid #b9ddc5;
@@ -102,6 +103,18 @@
   min-width: 0;
 }
 
+.af-enc-step,
+.af-enc-q,
+#af-enc-body {
+  transition: opacity .18s ease, transform .18s ease;
+}
+#af-enc-card.is-swapping .af-enc-step,
+#af-enc-card.is-swapping .af-enc-q,
+#af-enc-card.is-swapping #af-enc-body {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
 .af-enc-step {
   margin: 0 0 8px;
   font-size: 11px;
@@ -148,7 +161,13 @@
   border-color: var(--primary, #58B71B);
   transform: translateY(-1px);
 }
-.af-enc-opt:disabled { cursor: default; opacity: .75; }
+.af-enc-opt:disabled { cursor: default; }
+.af-enc-opt.is-selected:disabled {
+  background: color-mix(in srgb, var(--primary, #58B71B) 14%, #fff);
+  border-color: var(--primary, #58B71B);
+  color: #174a37;
+}
+.af-enc-opt:disabled:not(.is-selected) { opacity: .55; }
 .af-enc-opt:focus-visible { outline: 3px solid #9be07f; outline-offset: 2px; }
 .af-enc-opt:last-child:nth-child(odd),
 .af-enc-input,

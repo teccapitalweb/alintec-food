@@ -174,8 +174,16 @@ const IMAGENES_EXPR = {
   excited: 'assets/img/encuesta/busto-feliz.webp'
 };
 
+// Se guardan las imágenes y se decodifican de antemano para que el cambio de pose
+// del personaje sea instantáneo y no parpadee la primera vez que aparece cada una.
+const imagenesPrecargadas = [];
 function precargarImagenes() {
-  [...new Set(Object.values(IMAGENES_EXPR))].forEach(src => { new Image().src = src; });
+  [...new Set(Object.values(IMAGENES_EXPR))].forEach(src => {
+    const img = new Image();
+    img.src = src;
+    if (img.decode) img.decode().catch(() => {});
+    imagenesPrecargadas.push(img);
+  });
 }
 
 const MENSAJES_EXPR = {
@@ -278,34 +286,57 @@ function renderPaso() {
     const b = document.createElement('button');
     b.className = 'af-enc-opt';
     b.textContent = opt;
-    b.addEventListener('click', () => elegir(def.clave, opt));
+    b.addEventListener('click', () => elegir(def.clave, opt, b));
     body.appendChild(b);
   });
   pintarDots(pasos.length, paso);
+  fijarAlturaTarjeta();
 }
 
-function elegir(clave, opt) {
+// La tarjeta nunca se encoge entre preguntas: así no "salta" la página (ni el personaje,
+// que está alineado al borde inferior) cuando una pregunta tiene menos opciones que otra.
+function fijarAlturaTarjeta() {
+  const card = document.getElementById('af-enc-card');
+  if (!card) return;
+  const previa = parseInt(card.style.minHeight, 10) || 0;
+  card.style.minHeight = Math.max(previa, card.offsetHeight) + 'px';
+}
+
+// Línea de tiempo al elegir: la opción se marca y el personaje reacciona al instante,
+// la pregunta se desvanece y la siguiente aparece con un fundido corto.
+function elegir(clave, opt, boton) {
   respuestas[clave] = opt;
   const body = document.getElementById('af-enc-body');
   if (body) body.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
+  if (boton) boton.classList.add('is-selected');
   const reaccion = obtenerReaccionRespuesta(clave, opt);
   af_setExpr(reaccion.expr, reaccion);
   af_animarReaccion();
-  const espera = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 760;
-  setTimeout(() => { paso++; guardarProgreso(); renderPaso(); }, espera);
+  const card = document.getElementById('af-enc-card');
+  const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reducido) setTimeout(() => { if (card) card.classList.add('is-swapping'); }, 380);
+  setTimeout(() => {
+    paso++;
+    guardarProgreso();
+    renderPaso();
+    if (card) requestAnimationFrame(() => card.classList.remove('is-swapping'));
+  }, reducido ? 250 : 580);
 }
 
 function renderContactoOFin() {
   const body = document.getElementById('af-enc-body');
+  const tarjeta = document.getElementById('af-enc-card');
+  if (tarjeta) tarjeta.style.minHeight = ''; // estas pantallas son cortas: se libera la altura fija
   const dots = document.getElementById('af-enc-dots');
   if (dots) dots.style.display = 'none';
   if (esLeadCaliente()) {
-    document.getElementById('af-enc-q').textContent = 'Déjanos tu correo o WhatsApp y te avisamos';
-    af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos un medio de contacto solo si quieres recibir el aviso.' });
+    document.getElementById('af-enc-step').textContent = 'Último paso · opcional';
+    document.getElementById('af-enc-q').textContent = '¿Quieres que un asesor te contacte?';
+    af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y alguien del equipo te escribe. Es opcional.' });
     body.innerHTML = `
-      <input class="af-enc-input" id="af-enc-contacto" type="text" placeholder="correo o WhatsApp">
-      <button class="af-enc-opt" id="af-enc-contacto-ok" style="text-align:center;font-weight:600;">Avísenme →</button>
-      <button class="af-enc-opt" id="af-enc-contacto-skip" style="text-align:center;color:#999;">Omitir</button>
+      <input class="af-enc-input" id="af-enc-contacto" type="text" placeholder="Tu WhatsApp (con lada) o correo" autocomplete="tel">
+      <button class="af-enc-opt af-enc-cta" id="af-enc-contacto-ok" type="button">Que me contacten →</button>
+      <button class="af-enc-cerrar" id="af-enc-contacto-skip" type="button">No, gracias</button>
     `;
     document.getElementById('af-enc-contacto-ok').addEventListener('click', () => {
       const v = document.getElementById('af-enc-contacto').value.trim();
@@ -318,6 +349,8 @@ function renderContactoOFin() {
 }
 
 function mostrarFinal() {
+  const tarjeta = document.getElementById('af-enc-card');
+  if (tarjeta) tarjeta.style.minHeight = '';
   const dots = document.getElementById('af-enc-dots');
   if (dots) dots.style.display = 'none';
   const pasoEl = document.getElementById('af-enc-step');
