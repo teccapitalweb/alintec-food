@@ -42,7 +42,7 @@
   bottom: 6px;
   width: 104px;
   height: 88px;
-  background: url(../img/encuesta/busto-bienvenida.webp) center bottom / contain no-repeat;
+  background: url(../img/encuesta/busto-pensando.webp) center bottom / contain no-repeat;
   transition: transform .25s cubic-bezier(.2, .8, .25, 1);
 }
 .af-cb-pj { animation: af-cb-bob 3.2s ease-in-out infinite; }
@@ -138,7 +138,7 @@
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: #FFF3E0 url(../img/encuesta/busto-bienvenida.webp) 50% 6% / 230% no-repeat;
+  background: #FFF3E0 url(../img/encuesta/busto-pensando.webp) 50% 6% / 230% no-repeat;
   border: 2px solid #cfe5d6;
 }
 .af-cb-tt { flex: 1; min-width: 0; }
