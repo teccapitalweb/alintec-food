@@ -1556,7 +1556,7 @@ const Pages={
           </div>
         </div>
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
-          <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Leads calientes pendientes de contacto</h3>
+          <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Personas que pidieron que las contacten</h3>
           <div id="enc-leads" style="color:var(--text-2);font-size:13px;">Cargando…</div>
         </div>
       </div>
@@ -1670,14 +1670,23 @@ const Pages={
 
     const leadsEl = document.getElementById('enc-leads');
     if (leadsEl) {
-      const conContacto = calientes.filter(d => d.contacto);
+      // Todos pasan por el paso de WhatsApp (opcional): aquí salen quienes lo dejaron, con los
+      // urgentes primero y un enlace para escribirles directo.
+      const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+      const conContacto = completas.filter(d => d.contacto).sort((a, b) =>
+        (b.respuestas?.urgencia === 'Lo antes posible') - (a.respuestas?.urgencia === 'Lo antes posible'));
       if (conContacto.length === 0) {
-        leadsEl.textContent = 'Nadie con urgencia alta ha dejado su contacto todavía.';
+        leadsEl.textContent = 'Nadie ha dejado su WhatsApp todavía.';
       } else {
         leadsEl.innerHTML = conContacto.map(d => {
           const fecha = d.creado?.toDate ? d.creado.toDate().toLocaleDateString('es-MX') : '—';
-          const contactoSeguro = String(d.contacto).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-          return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>${contactoSeguro}</span><span style="color:var(--text-3);">${fecha}</span></div>`;
+          const digitos = String(d.contacto).replace(/\D/g, '');
+          const wa = digitos.length === 10 ? '52' + digitos : digitos;
+          const urgencia = d.respuestas?.urgencia || '—';
+          const urgente = urgencia === 'Lo antes posible';
+          const etiqueta = `<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:${urgente ? 'rgba(247,148,29,.18)' : 'var(--surface-3)'};color:${urgente ? '#C9740A' : 'var(--text-2)'};">${esc(urgencia)}</span>`;
+          const enlace = digitos ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;text-decoration:none;">${esc(d.contacto)}</a>` : esc(d.contacto);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;"><span>${enlace}</span>${etiqueta}<span style="color:var(--text-3);">${fecha}</span></div>`;
         }).join('');
       }
     }

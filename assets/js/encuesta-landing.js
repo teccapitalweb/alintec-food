@@ -1,6 +1,6 @@
 /* Encuesta del landing · perfila visitantes nuevos y los conecta
-   con su curso de prueba gratuita. Anónima: no pide correo salvo que el
-   propio visitante decida dejarlo en el paso final de "lead caliente".
+   con su prueba gratuita. Anónima: solo pide el WhatsApp, de forma opcional,
+   en el último paso.
 
    Árbol real (no es un formulario lineal tipo Google Forms): cada perfil
    (p1) sigue su propio camino de preguntas en obtenerPasos() — un
@@ -126,12 +126,8 @@ function obtenerPasos() {
   return pasos;
 }
 
-// Quien quiere empezar de inmediato es un "lead caliente": al final se le ofrece que un
-// asesor lo contacte por WhatsApp y el acceso a su curso gratis.
+// Respuesta de urgencia que el panel de admin cuenta como "lead caliente".
 const URGENTE = 'Lo antes posible';
-function esLeadCaliente() {
-  return respuestas.urgencia === URGENTE;
-}
 
 // La encuesta vive como una sección fija justo debajo del hero (no flotante):
 // el personaje a la izquierda, la pregunta y sus opciones a la derecha.
@@ -348,39 +344,46 @@ function animarAltura(card, desde) {
   setTimeout(() => { card.style.height = ''; }, 320);
 }
 
+// Todos terminan en este paso (opcional), sea cual sea su urgencia: dejar su WhatsApp
+// para que un asesor les envíe más información de cursos.
 function renderContactoOFin() {
   const body = document.getElementById('af-enc-body');
-  if (esLeadCaliente()) {
-    actualizarAtras();
-    document.getElementById('af-enc-step').textContent = 'Un último detalle · opcional';
-    document.getElementById('af-enc-q').textContent = '¿Quieres recibir más información de cursos?';
-    af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
-    body.innerHTML = `
-      <input class="af-enc-input" id="af-enc-contacto" type="text" placeholder="Tu WhatsApp (con lada) o correo" autocomplete="tel">
-      <button class="af-enc-opt af-enc-cta" id="af-enc-contacto-ok" type="button">Que me contacten →</button>
-      <button class="af-enc-cerrar" id="af-enc-contacto-skip" type="button">No, gracias</button>
-    `;
-    document.getElementById('af-enc-contacto-ok').addEventListener('click', () => {
-      const v = document.getElementById('af-enc-contacto').value.trim();
-      finalizarEncuesta(v || null);
-    });
-    document.getElementById('af-enc-contacto-skip').addEventListener('click', () => finalizarEncuesta(null));
-    return;
-  }
-  finalizarEncuesta(null);
+  actualizarAtras();
+  document.getElementById('af-enc-step').textContent = 'Un último detalle · opcional';
+  document.getElementById('af-enc-q').textContent = '¿Quieres recibir más información de cursos?';
+  af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
+  body.innerHTML = `
+    <input class="af-enc-input" id="af-enc-contacto" type="tel" inputmode="tel" placeholder="Tu WhatsApp (con lada, 10 dígitos)" autocomplete="tel">
+    <p class="af-enc-error" id="af-enc-error" role="alert" hidden></p>
+    <button class="af-enc-opt af-enc-cta" id="af-enc-contacto-ok" type="button">Que me contacten →</button>
+    <button class="af-enc-cerrar" id="af-enc-contacto-skip" type="button">No, gracias</button>
+  `;
+  const input = document.getElementById('af-enc-contacto');
+  const error = document.getElementById('af-enc-error');
+  const enviar = () => {
+    const digitos = input.value.replace(/\D/g, '');
+    if (digitos.length < 10) {
+      error.textContent = 'Escribe tu WhatsApp con lada (10 dígitos) o elige "No, gracias".';
+      error.hidden = false;
+      input.focus();
+      return;
+    }
+    finalizarEncuesta(digitos);
+  };
+  document.getElementById('af-enc-contacto-ok').addEventListener('click', enviar);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') enviar(); });
+  input.addEventListener('input', () => { error.hidden = true; });
+  document.getElementById('af-enc-contacto-skip').addEventListener('click', () => finalizarEncuesta(null));
 }
 
-// Quien tiene urgencia ve además el acceso a su curso gratis; el resto, el catálogo.
+// Todos ven al final el acceso a su prueba gratuita (no es un curso completo gratis).
 function mostrarFinal() {
   actualizarAtras(true);
   const pasoEl = document.getElementById('af-enc-step');
   if (pasoEl) pasoEl.textContent = 'Gracias';
   af_setExpr('excited', { titulo: '¡Gracias por contarme!', texto: 'Con tus respuestas ya sé cómo orientarte.' });
   document.getElementById('af-enc-q').textContent = '¡Listo! Ya tengo lo que necesito';
-  const cta = esLeadCaliente()
-    ? '<a class="af-enc-opt af-enc-cta" href="vip-auth.html">Ver mi curso gratis →</a>'
-    : '<a class="af-enc-opt af-enc-cta" href="#cursos">Explorar los cursos →</a>';
-  document.getElementById('af-enc-body').innerHTML = `${cta}
+  document.getElementById('af-enc-body').innerHTML = `<a class="af-enc-opt af-enc-cta" href="vip-auth.html">Ver tu prueba gratuita →</a>
     <button type="button" class="af-enc-cerrar" id="af-enc-cerrar">Ahora no, gracias</button>`;
   document.getElementById('af-enc-cerrar').addEventListener('click', cerrarSeccion);
 }
