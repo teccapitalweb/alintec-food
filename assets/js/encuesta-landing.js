@@ -156,7 +156,6 @@ function construirUI() {
         </div>
         <p class="af-enc-q" id="af-enc-q"></p>
         <div id="af-enc-body"></div>
-        <div class="af-enc-dots" id="af-enc-dots"></div>
       </div>
     </div>
   `;
@@ -262,23 +261,12 @@ function af_animarReaccion() {
   window.setTimeout(() => companion.classList.remove('is-reacting'), 450);
 }
 
-function pintarDots(total, activo) {
-  const el = document.getElementById('af-enc-dots');
-  if (!el) return;
-  el.innerHTML = '';
-  for (let i = 0; i < total; i++) {
-    const d = document.createElement('div');
-    d.className = 'af-enc-dot' + (i <= activo ? ' is-active' : '');
-    el.appendChild(d);
-  }
-}
-
 function renderPaso() {
   if (!document.getElementById('af-enc-card')) return; // se cerró la sección mientras esperaba la reacción
   const pasos = obtenerPasos();
   const def = pasos[paso];
   if (!def) { renderContactoOFin(); return; }
-  document.getElementById('af-enc-step').textContent = `Pregunta ${paso + 1} de ${pasos.length}`;
+  document.getElementById('af-enc-step').textContent = 'Encuentra tu curso ideal';
   document.getElementById('af-enc-q').textContent = def.q;
   af_setExpr(def.expr, def.mensaje);
   actualizarAtras();
@@ -292,19 +280,6 @@ function renderPaso() {
     b.addEventListener('click', () => elegir(def.clave, opt, b));
     body.appendChild(b);
   });
-  pintarDots(pasos.length, paso);
-  fijarAlturaTarjeta();
-}
-
-// En escritorio la tarjeta nunca se encoge entre preguntas: así no "salta" la página (ni el
-// personaje, alineado al borde inferior). En celular no se fija: ahí un alto fijo deja mucho
-// espacio en blanco cuando una pregunta tiene pocas opciones.
-function fijarAlturaTarjeta() {
-  const card = document.getElementById('af-enc-card');
-  if (!card) return;
-  if (window.innerWidth <= 760) { card.style.minHeight = ''; return; }
-  const previa = parseInt(card.style.minHeight, 10) || 0;
-  card.style.minHeight = Math.max(previa, card.offsetHeight) + 'px';
 }
 
 function actualizarAtras(oculto) {
@@ -348,23 +323,36 @@ function cambiarPaso(delta, iniciaFundido, cambia) {
   const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reducido) setTimeout(() => { if (card) card.classList.add('is-swapping'); }, iniciaFundido);
   setTimeout(() => {
+    const alturaAnterior = card ? card.offsetHeight : 0;
     paso = Math.max(0, paso + delta);
     guardarProgreso();
     renderPaso();
     ocupado = false;
-    if (card) requestAnimationFrame(() => card.classList.remove('is-swapping'));
+    if (card) {
+      if (!reducido) animarAltura(card, alturaAnterior);
+      requestAnimationFrame(() => card.classList.remove('is-swapping'));
+    }
   }, reducido ? 200 : cambia);
+}
+
+// La tarjeta se ajusta al contenido de cada pregunta (sin espacios en blanco) y lo hace
+// con una transición de altura, para que ni la página ni el personaje den un salto.
+function animarAltura(card, desde) {
+  if (!desde) return;
+  card.style.height = 'auto';
+  const hasta = card.offsetHeight;
+  if (Math.abs(hasta - desde) < 2) { card.style.height = ''; return; }
+  card.style.height = desde + 'px';
+  void card.offsetHeight;
+  card.style.height = hasta + 'px';
+  setTimeout(() => { card.style.height = ''; }, 320);
 }
 
 function renderContactoOFin() {
   const body = document.getElementById('af-enc-body');
-  const tarjeta = document.getElementById('af-enc-card');
-  if (tarjeta) tarjeta.style.minHeight = ''; // estas pantallas son cortas: se libera la altura fija
-  const dots = document.getElementById('af-enc-dots');
-  if (dots) dots.style.display = 'none';
   if (esLeadCaliente()) {
     actualizarAtras();
-    document.getElementById('af-enc-step').textContent = 'Último paso · opcional';
+    document.getElementById('af-enc-step').textContent = 'Un último detalle · opcional';
     document.getElementById('af-enc-q').textContent = '¿Quieres recibir más información de cursos?';
     af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
     body.innerHTML = `
@@ -384,13 +372,9 @@ function renderContactoOFin() {
 
 // Quien tiene urgencia ve además el acceso a su curso gratis; el resto, el catálogo.
 function mostrarFinal() {
-  const tarjeta = document.getElementById('af-enc-card');
-  if (tarjeta) tarjeta.style.minHeight = '';
   actualizarAtras(true);
-  const dots = document.getElementById('af-enc-dots');
-  if (dots) dots.style.display = 'none';
   const pasoEl = document.getElementById('af-enc-step');
-  if (pasoEl) pasoEl.textContent = 'Encuesta completada';
+  if (pasoEl) pasoEl.textContent = 'Gracias';
   af_setExpr('excited', { titulo: '¡Gracias por contarme!', texto: 'Con tus respuestas ya sé cómo orientarte.' });
   document.getElementById('af-enc-q').textContent = '¡Listo! Ya tengo lo que necesito';
   const cta = esLeadCaliente()
