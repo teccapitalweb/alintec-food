@@ -25,8 +25,11 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const ESTADO_KEY = 'af_encuesta_estado'; // 'completada' (la sección ya no vuelve a mostrarse)
-const PROG_KEY = 'af_encuesta_prog'; // { respuestas, paso, parcialN } para retomar donde se quedó
+// EDICION identifica la "vuelta" de la encuesta. Para que TODOS vuelvan a verla (por ejemplo después de borrar
+// los datos de prueba) basta con subir este número: el estado guardado en cada navegador deja de aplicar.
+const EDICION = 2;
+const ESTADO_KEY = 'af_encuesta_estado_e' + EDICION; // 'completada' (la sección ya no vuelve a mostrarse)
+const PROG_KEY = 'af_encuesta_prog_e' + EDICION; // { respuestas, paso, parcialN } para retomar donde se quedó
 const SID_KEY = 'af_encuesta_sid';
 // Fecha de la última actualización del texto de aviso-de-privacidad.html: queda guardada junto con
 // el WhatsApp como constancia de qué versión aceptó la persona.
@@ -542,6 +545,8 @@ function guardarParcialSiHaceFalta() {
 }
 
 function iniciar() {
+  // Limpia el estado de ediciones anteriores para no dejar basura en el navegador.
+  try { Object.keys(localStorage).filter(k => /^af_encuesta_(estado|prog)(_ed+)?$/.test(k) && k !== ESTADO_KEY && k !== PROG_KEY).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   if (leerEstado() === 'completada') return; // ya la respondió: la sección no vuelve a aparecer
   precargarImagenes();
   const prog = leerProgreso();
