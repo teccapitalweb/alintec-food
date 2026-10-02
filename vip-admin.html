@@ -1492,7 +1492,7 @@ const Pages={
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Marketing</span>
           <h1 class="sec-hero__title">Encuestas</h1>
-          <p class="sec-hero__sub">Resultados de la encuesta flotante del landing · quién visita, qué urgencia tiene y quién ya pidió que le avisen.</p>
+          <p class="sec-hero__sub">Resultados de la encuesta del landing · quién visita, qué busca, qué urgencia tiene y quién pidió que lo contacten.</p>
         </div>
         <div class="kpi-grid">
           <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
@@ -1564,15 +1564,30 @@ const Pages={
     Pages._cargarEncuestas();
   },
 
+  // Al abrir el panel se restaura la última sección ANTES de que Firebase confirme la sesión de
+  // administrador; leer Firestore en ese momento da permission-denied. Se espera al evento 'adminready'.
+  _esperarAdmin(){
+    if (window.__currentAdmin) return Promise.resolve();
+    return new Promise(resolver => {
+      window.addEventListener('adminready', () => resolver(), { once: true });
+      setTimeout(resolver, 10000);
+    });
+  },
+
   async _cargarEncuestas(){
     let docs = [];
     try {
+      await Pages._esperarAdmin();
       const snap = await getDocs(collection(db, 'encuestasProspectos'));
       docs = snap.docs.map(d => d.data());
     } catch (e) {
-      console.error('❌ No se pudo leer encuestasProspectos:', e.message);
+      console.error('❌ No se pudo leer encuestasProspectos:', e.code || '', e.message);
       const leadsEl = document.getElementById('enc-leads');
-      if (leadsEl) leadsEl.textContent = 'No se pudieron cargar los datos.';
+      if (leadsEl) {
+        leadsEl.innerHTML = 'No se pudieron cargar los datos (' + (e.code || e.message || 'error') + '). <a href="#" id="enc-reintentar" style="color:var(--primary);font-weight:700;">Reintentar</a>';
+        const re = document.getElementById('enc-reintentar');
+        if (re) re.addEventListener('click', ev => { ev.preventDefault(); Pages._cargarEncuestas(); });
+      }
       return;
     }
     // Una misma persona puede tener una copia parcial (minimizó la encuesta) y luego
