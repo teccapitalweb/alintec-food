@@ -1578,6 +1578,7 @@ const Pages={
     let docs = [];
     try {
       await Pages._esperarAdmin();
+      const { db, collection, getDocs } = window._fb; // este script no es módulo: Firestore se toma de window._fb como en las demás secciones
       const snap = await getDocs(collection(db, 'encuestasProspectos'));
       docs = snap.docs.map(d => d.data());
     } catch (e) {
