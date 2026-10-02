@@ -7147,6 +7147,7 @@ const Sections = (function(){
     const curso = cursos.find(c => c.id === cursoId);
     const sesion = curso?.sesiones?.[Number(indexClase)];
     if (!curso || !sesion) return;
+    if (pruebaPendiente()) { avisoSeleccionaPrueba(cursoId); return; }
     if (!tieneAccesoVipCompleto()) {
       if (!esClaseGratis(curso, Number(indexClase))) { mostrarPaywallCurso(); return; }
       if (!claseDesbloqueada(cursoId, Number(indexClase), curso.sesiones)) return;
@@ -7159,6 +7160,7 @@ const Sections = (function(){
     const curso = cursos.find(c => c.id === cursoId);
     const material = curso?.materiales?.[Number(indexMaterial)];
     if (!curso || !material) return;
+    if (pruebaPendiente()) { avisoSeleccionaPrueba(cursoId); return; }
     if (!tieneAccesoVipCompleto() && !esMaterialGratis(curso, indexMaterial)) {
       mostrarPaywallCurso();
       return;
@@ -7908,6 +7910,8 @@ const Sections = (function(){
       _cursosLoadError = '';
       try { window.__actualizarResumenInicio?.(); } catch (e) {}
       await hidratarProgresoBackend();
+      await cargarEstadoPrueba();
+      programarFlujoPrueba();
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
       console.warn('No se pudo cargar el catálogo seguro:', e.message);
@@ -7919,6 +7923,283 @@ const Sections = (function(){
     }
   }
   window.__cargarCursosBackend = cargarCursosBackend;
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🎁 PRUEBA GRATUITA ELEGIDA POR LA PERSONA
+  // Quien se registra elige UN curso como su prueba (todas sus clases menos la última)
+  // y ya no puede cambiarlo. Mientras no elige, ve solo los TÍTULOS de los cursos con el
+  // botón "Elegir como prueba gratuita". El servidor decide quién puede elegir y guarda la
+  // elección (/api/v2/prueba-gratuita); aquí solo se muestra y se pide la confirmación.
+  // Si la persona llegó desde la guía virtual de la página, ese curso se le propone primero.
+  // ═══════════════════════════════════════════════════════════════
+  const PRUEBA_PREF_KEY = 'af_curso_pref';
+  const PRUEBA_RECH_KEY = 'af_curso_rechazados';
+  let pruebaEstado = null; // { elegible, elegida, motivo } tal como lo responde el servidor
+  let _pruebaFlujoProgramado = false;
+
+  function pruebaPendiente() {
+    return window.__isDemoMode !== true && !esAdminReal() && !!pruebaEstado && pruebaEstado.elegible === true;
+  }
+  function prefGuiaVirtual() {
+    try {
+      const p = JSON.parse(localStorage.getItem(PRUEBA_PREF_KEY) || 'null');
+      if (!p || !p.id || !(Date.now() - Number(p.t || 0) < 7 * 86400000)) return null;
+      return p;
+    } catch (e) { return null; }
+  }
+  function borrarPrefGuia() { try { localStorage.removeItem(PRUEBA_PREF_KEY); } catch (e) {} }
+  function cursosRechazados() {
+    try { const r = JSON.parse(localStorage.getItem(PRUEBA_RECH_KEY + '_' + (window.UserState?.uid || '')) || '[]'); return Array.isArray(r) ? r : []; }
+    catch (e) { return []; }
+  }
+  function rechazarCurso(id) {
+    try { localStorage.setItem(PRUEBA_RECH_KEY + '_' + (window.UserState?.uid || ''), JSON.stringify([...new Set([...cursosRechazados(), id])])); } catch (e) {}
+  }
+  function cursoSePuedeElegir(c) {
+    return !!c && c.marcarProximamente !== true && Array.isArray(c.sesiones) && c.sesiones.length >= 2;
+  }
+
+  // Tarjeta "solo título": mientras no elige no se ve de qué trata ni cuántas clases tiene
+  function tarjetaPrueba(c) {
+    const portada = c.portada || PORTADA_DEFAULT;
+    let boton;
+    if (c.marcarProximamente === true) boton = '<button type="button" class="prueba-elegir" disabled>Próximamente</button>';
+    else if (!cursoSePuedeElegir(c)) boton = '<button type="button" class="prueba-elegir" disabled>No disponible como prueba</button>';
+    else if (cursosRechazados().includes(c.id)) boton = '<button type="button" class="prueba-elegir" disabled>Descartado</button>';
+    else boton = `<button type="button" class="prueba-elegir" data-elegir="${escapeHtml(c.id)}">Elegir como prueba gratuita</button>`;
+    return `
+      <article class="curso-card curso-card--prueba" data-cid="${escapeHtml(c.id)}" tabindex="0" style="--area-color:${COLOR_AREA[c.area]||'#43A047'};">
+        <div class="curso-card__cover" style="background-image:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55)),url('${portada}');background-size:cover;background-position:center;">
+          <svg class="ic" style="opacity:.85;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));"><use href="#${ICON_AREA[c.area]||'i-book'}"/></svg>
+        </div>
+        <div class="curso-card__body">
+          <h3 class="curso-card__title">${escapeHtml(c.titulo)}</h3>
+          ${boton}
+        </div>
+      </article>`;
+  }
+
+  async function cargarEstadoPrueba() {
+    pruebaEstado = null;
+    if (window.__isDemoMode === true || !window.__currentUser || esAdminReal()) return;
+    try {
+      const token = await window.__currentUser.getIdToken();
+      const resp = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/prueba-gratuita', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (resp.ok && data && data.ok) pruebaEstado = data;
+    } catch (e) { console.warn('Prueba gratuita:', e.message); }
+  }
+
+  function inyectarEstilosPrueba() {
+    if (document.getElementById('prueba-css')) return;
+    const st = document.createElement('style');
+    st.id = 'prueba-css';
+    st.textContent = `
+      .prueba-card{display:flex;align-items:center;gap:16px;margin:0 0 18px;padding:18px 20px;border-radius:16px;border:1.5px solid color-mix(in srgb,var(--primary) 55%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 14%,var(--surface-2)),var(--surface-2));animation:pruebaIn .35s ease}
+      .prueba-card__ic{flex:0 0 46px;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:var(--primary);color:#0A120C}
+      .prueba-card__ic .ic{width:24px;height:24px}
+      .prueba-card h3{margin:0 0 4px;font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+      .prueba-card p{margin:0;font-size:13px;line-height:1.55;color:var(--text-2)}
+      @keyframes pruebaIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+      .curso-card--prueba{cursor:pointer}
+      .curso-card--prueba .curso-card__cover{min-height:120px}
+      .prueba-elegir{margin-top:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:0;border-radius:11px;background:var(--primary);color:#0A120C;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:filter .15s,transform .15s}
+      .prueba-elegir:hover{filter:brightness(1.08);transform:translateY(-1px)}
+      .prueba-elegir[disabled]{background:var(--surface-3);color:var(--text-3);cursor:not-allowed;transform:none;filter:none}
+      .prueba-aviso{font-size:14px;line-height:1.6;color:var(--text-2)}
+      .prueba-aviso strong{color:var(--text)}
+      .prueba-curso{margin:14px 0 4px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border-2);font-weight:700;color:var(--text);font-size:14px;line-height:1.4}
+      @media (max-width:560px){.prueba-card{flex-direction:column;align-items:flex-start;gap:10px}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  function pruebaBannerHtml() {
+    if (!pruebaPendiente()) return '';
+    inyectarEstilosPrueba();
+    return `<div class="prueba-card" id="prueba-card">
+      <div class="prueba-card__ic"><svg class="ic"><use href="#i-play"/></svg></div>
+      <div>
+        <h3>Selecciona el curso de tu preferencia para obtener tu prueba gratuita</h3>
+        <p>Podrás ver todas sus clases sin costo, excepto la última, que se desbloquea con la membresía. Solo puedes elegir <strong>un</strong> curso y después no se puede cambiar.</p>
+      </div>
+    </div>`;
+  }
+
+  // Aviso cuando alguien toca un curso sin haber elegido todavía su prueba
+  function avisoSeleccionaPrueba(cursoId) {
+    inyectarEstilosPrueba();
+    const c = cursos.find(x => x.id === cursoId);
+    const pie = document.createElement('div');
+    pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;';
+    const cerrar = document.createElement('button');
+    cerrar.className = 'btn btn--ghost'; cerrar.textContent = 'Cerrar';
+    cerrar.addEventListener('click', () => Modal.close('prueba-aviso'));
+    pie.appendChild(cerrar);
+    if (c && cursoSePuedeElegir(c) && !cursosRechazados().includes(c.id)) {
+      const elegir = document.createElement('button');
+      elegir.className = 'btn btn--accent'; elegir.textContent = 'Elegir este curso';
+      elegir.addEventListener('click', () => { Modal.close('prueba-aviso'); setTimeout(() => confirmarPrueba(c.id), 280); });
+      pie.appendChild(elegir);
+    }
+    Modal.open({
+      id: 'prueba-aviso', title: 'Selecciona tu prueba gratuita', subtitle: 'Antes de ver el contenido de un curso', icon: 'i-play', size: 'sm',
+      body: `<p class="prueba-aviso">Para ver de qué trata un curso y cuántas clases tiene, primero <strong>elige el curso de tu preferencia</strong> como prueba gratuita. Después podrás explorar el contenido de todos.</p>`,
+      footer: pie
+    });
+  }
+  window.__avisoSeleccionaPrueba = avisoSeleccionaPrueba;
+
+  // Confirmación "¿Seguro?" · Sí → queda fijo para siempre · No → puede elegir otro
+  function confirmarPrueba(cursoId, opts) {
+    opts = opts || {};
+    const c = cursos.find(x => x.id === cursoId);
+    if (!c) return;
+    inyectarEstilosPrueba();
+    const pie = document.createElement('div');
+    pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;';
+    const no = document.createElement('button');
+    no.className = 'btn btn--ghost'; no.textContent = 'No, ver otros cursos';
+    const si = document.createElement('button');
+    si.className = 'btn btn--accent'; si.textContent = 'Sí, es mi prueba gratuita';
+    pie.append(no, si);
+    let enviando = false;
+    no.addEventListener('click', () => {
+      if (enviando) return;
+      Modal.close('prueba-confirmar');
+      if (opts.desdeGuia) {
+        // El curso que traía de la guía virtual se descarta y ya no se le vuelve a ofrecer
+        rechazarCurso(cursoId); borrarPrefGuia();
+        setTimeout(() => { try { navigateToSection('cursos'); } catch (e) {} refrescarPruebaUI(); mostrarTarjetaPrueba(); }, 300);
+      } else {
+        refrescarPruebaUI();
+      }
+    });
+    si.addEventListener('click', async () => {
+      if (enviando) return;
+      enviando = true; si.disabled = true; no.disabled = true; si.textContent = 'Guardando…';
+      try {
+        const token = await window.__currentUser.getIdToken();
+        const resp = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/prueba-gratuita', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cursoId })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.error || 'No se pudo guardar tu elección');
+        borrarPrefGuia();
+        Modal.closeAll();
+        // El servidor ya personalizó el catálogo: se vuelve a pedir para ver sus clases abiertas
+        _cursosLoaded = false; _cursosLoadError = '';
+        await cargarCursosBackend();
+        refrescarPruebaUI();
+        if (typeof Toast !== 'undefined') Toast.success('¡Listo! Tu prueba gratuita está activa', 'Ya puedes ver las clases de «' + c.titulo + '».');
+        try { navigateToSection('cursos'); } catch (e) {}
+        setTimeout(() => openCursoDetalle(cursoId), 420);
+      } catch (e) {
+        enviando = false; si.disabled = false; no.disabled = false; si.textContent = 'Sí, es mi prueba gratuita';
+        if (typeof Toast !== 'undefined') Toast.error('No se pudo elegir el curso', e.message || 'Intenta nuevamente');
+        // Si el servidor dice que ya no puede elegir, se refresca el estado para no dejarlo a medias
+        await cargarEstadoPrueba(); refrescarPruebaUI();
+      }
+    });
+    Modal.open({
+      id: 'prueba-confirmar', title: '¿Seguro que deseas este curso?', subtitle: 'Tu prueba gratuita', icon: 'i-play', size: 'sm', closeOnBackdrop: false,
+      body: `<p class="prueba-aviso">${opts.desdeGuia ? 'Elegiste este curso desde nuestra guía virtual. ' : ''}Será tu <strong>prueba gratuita</strong>: verás todas sus clases sin costo, excepto la última, que se desbloquea con la membresía.</p>
+        <div class="prueba-curso">${escapeHtml(c.titulo)}</div>
+        <p class="prueba-aviso" style="margin-top:10px;"><strong>Solo puedes elegir uno y después no se puede cambiar.</strong></p>`,
+      footer: pie
+    });
+  }
+
+  // Deja a la vista la tarjeta "Selecciona el curso de tu preferencia" (debajo del título de Mis cursos)
+  function mostrarTarjetaPrueba() {
+    setTimeout(() => { try { document.getElementById('prueba-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 700);
+  }
+
+  // Redibuja lo que depende de si la prueba ya se eligió (tarjeta y lista de cursos)
+  function refrescarPruebaUI() {
+    const slot = document.getElementById('prueba-slot');
+    if (slot) slot.innerHTML = pruebaBannerHtml();
+    if (document.getElementById('cur-list')) renderCursosList();
+  }
+
+  // Espera a que terminen los avisos de bienvenida (nombre, recorrido guiado, confeti) para
+  // que la tarjeta aparezca después de ellos y no los interrumpa.
+  function esperarPanelLibre(cb) {
+    const inicio = Date.now();
+    let libreDesde = 0;
+    const iv = setInterval(() => {
+      const tour = window.AlintecOnboarding;
+      const tourPendiente = tour && typeof tour.wasSeen === 'function' && !tour.wasSeen() && Date.now() - inicio < 25000;
+      const ocupado = tourPendiente
+        || document.getElementById('name-modal') || document.getElementById('splash-bienvenida')
+        || document.body.classList.contains('membership-tour-open')
+        || document.querySelector('.modal-backdrop');
+      if (ocupado) { libreDesde = 0; }
+      else if (!libreDesde) { libreDesde = Date.now(); }
+      if ((libreDesde && Date.now() - libreDesde > 1500 && Date.now() - inicio > 3500) || Date.now() - inicio > 600000) {
+        clearInterval(iv);
+        cb();
+      }
+    }, 600);
+  }
+
+  function ejecutarFlujoPrueba() {
+    const pref = prefGuiaVirtual();
+    const cursoGuia = pref ? cursos.find(c => c.id === pref.id) : null;
+    if (pruebaPendiente()) {
+      if (cursoGuia && cursoSePuedeElegir(cursoGuia) && !cursosRechazados().includes(cursoGuia.id)) {
+        confirmarPrueba(cursoGuia.id, { desdeGuia: true });
+        return;
+      }
+      if (pref) borrarPrefGuia();
+      // Sin curso de la guía: se le lleva a Mis cursos, donde está la tarjeta (una vez por visita)
+      let visto = false;
+      try { visto = sessionStorage.getItem('af_prueba_guiada') === '1'; sessionStorage.setItem('af_prueba_guiada', '1'); } catch (e) {}
+      if (!visto) { try { navigateToSection('cursos'); } catch (e) {} mostrarTarjetaPrueba(); }
+      return;
+    }
+    // Ya eligió (o no puede elegir): el curso que vio en la guía se abre en su estado normal
+    if (cursoGuia) {
+      borrarPrefGuia();
+      try { navigateToSection('cursos'); } catch (e) {}
+      setTimeout(() => openCursoDetalle(cursoGuia.id), 450);
+    } else if (pref) {
+      borrarPrefGuia();
+    }
+  }
+
+  function programarFlujoPrueba() {
+    if (_pruebaFlujoProgramado || window.__isDemoMode === true) return;
+    _pruebaFlujoProgramado = true;
+    esperarPanelLibre(ejecutarFlujoPrueba);
+  }
+
+  // ── Cursos bloqueados por el calendario (miembros): lista de clases con candado ──
+  window.__avisoDesbloqueo = function(cursoId) {
+    const c = cursos.find(x => x.id === cursoId);
+    if (!c) return;
+    const idx = cursos.findIndex(x => x.id === cursoId);
+    const dias = diasParaDesbloquear(idx, c);
+    let titulo, texto;
+    if (dias === null) {
+      titulo = 'Termina primero tu curso de prueba';
+      texto = 'Cuando completes tu curso de prueba y obtengas su certificado empieza tu <strong>día 0</strong> y los demás cursos se van desbloqueando.';
+    } else {
+      const cr = cuentaRegresivaCurso(c, dias);
+      titulo = (cr.singular ? 'Falta ' : 'Faltan ') + cr.corto + ' para su desbloqueo';
+      texto = `Este curso se abre${cr.fecha ? ' el <strong>' + escapeHtml(cr.fecha) + '</strong>' : ' pronto'}. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.`;
+    }
+    Modal.open({
+      id: 'curso-desbloqueo', title: titulo, subtitle: c.titulo.length > 46 ? c.titulo.slice(0, 46) + '…' : c.titulo, icon: 'i-lock', size: 'sm',
+      body: `<p class="prueba-aviso" style="font-size:14px;line-height:1.6;color:var(--text-2);">${texto}</p>
+        <p style="font-size:12.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">🎁 ¿Ya tienes un <strong>premio por tu nivel</strong>? Puedes abrir este curso antes desde <a href="#" onclick="Modal.closeAll();window.navigateToSection('logros');return false;" style="color:var(--primary);font-weight:700;">Mis logros</a>.</p>`,
+      footer: '<button class="btn btn--ghost" onclick="Modal.close(\'curso-desbloqueo\')">Entendido</button>'
+    });
+  };
 
   const certificados = []; // legado · los certificados reales salen de getCertificadosReales()
 
@@ -8107,6 +8388,7 @@ const Sections = (function(){
             <img class="sec-hero__virtual-art" src="assets/img/ui/mis-cursos-plataforma-3d-v1.webp" alt="" decoding="async">
           </div>
         </div>
+        <div id="prueba-slot">${pruebaBannerHtml()}</div>
         <div class="tabs">
           <button class="tab ${cursosState.tab==='progreso'?'is-active':''}" data-curtab="progreso">En progreso · ${c.progreso}</button>
           <button class="tab ${cursosState.tab==='completado'?'is-active':''}" data-curtab="completado">Completados · ${c.completado}</button>
@@ -8210,6 +8492,7 @@ const Sections = (function(){
       return;
     }
     list.innerHTML=`<div class="cursos-grid">${items.map((c, idx)=>{
+      if (pruebaPendiente()) return tarjetaPrueba(c);
       const cursoIdx = cursos.findIndex(x => x.id === c.id);
       const desbloqueado = cursoDesbloqueado(cursoIdx, c);
       const diasFalta = diasParaDesbloquear(cursoIdx, c);
@@ -8244,10 +8527,12 @@ const Sections = (function(){
       card.addEventListener('click',()=>openCursoDetalle(card.dataset.cid));
       card.addEventListener('keydown',e=>{if(e.key==='Enter')openCursoDetalle(card.dataset.cid);});
     });
+    list.querySelectorAll('[data-elegir]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();confirmarPrueba(b.dataset.elegir);}));
   }
 
   function openCursoDetalle(id){
     const c=cursos.find(x=>x.id===id);if(!c)return;
+    if (pruebaPendiente()) { avisoSeleccionaPrueba(id); return; }
     const cursoIdx = cursos.findIndex(x => x.id === id);
     const desbloqueado = cursoDesbloqueado(cursoIdx, c);
     const diasFalta = diasParaDesbloquear(cursoIdx, c);
@@ -8289,21 +8574,21 @@ const Sections = (function(){
 
     // El goteo cada 8 días es solo para miembros. Quien no ha pagado
     // siempre ve la lista de clases y materiales con su candadito.
-    if (tieneAccesoVipCompleto() && !desbloqueado) {
+    // Miembro cuyo curso todavía no le toca: ve el contenido real (clases y materiales con
+    // candado) y, en cada uno, cuánto falta para su desbloqueo.
+    const bloqueoCalendario = tieneAccesoVipCompleto() && !desbloqueado;
+    const textoFalta = diasFalta === null
+      ? 'Termina primero tu curso de prueba'
+      : (() => { const cr = cuentaRegresivaCurso(c, diasFalta); return (cr.singular ? 'Falta ' : 'Faltan ') + cr.corto + ' para su desbloqueo'; })();
+    if (bloqueoCalendario) {
       bodyContent += `
-        <div class="empty-state" style="background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;padding:32px 24px;">
-          <div class="empty-state__icon">
-            <svg class="ic ic--xl" style="color:var(--primary);"><use href="#i-shield-check"/></svg>
-          </div>
-          <h3 style="color:var(--primary);">${diasFalta === null ? 'Completa primero el curso inicial' : 'Este curso se desbloquea pronto'}</h3>
-          <p>${diasFalta === null
-            ? 'Termina el curso de muestra y obtén su certificado. En ese momento comenzará tu <strong style="color:var(--primary);">día 0 VIP</strong>.'
-            : (() => { const cr = cuentaRegresivaCurso(c, diasFalta); return `${cr.singular ? 'Queda' : 'Quedan'} <strong style="color:var(--primary);">${cr.corto}</strong> para que se desbloquee${cr.fecha ? ' (se abre el <strong>' + cr.fecha + '</strong>)' : ''}. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.`; })()}</p>
-          <p style="font-size:12.5px;color:var(--text-2);margin-top:12px;line-height:1.5;">🎁 ¿Ya tienes un <strong>premio por tu nivel</strong>? Puedes abrir este curso antes desde <a href="#" onclick="Modal.closeAll();window.navigateToSection('logros');return false;" style="color:var(--primary);font-weight:700;">Mis logros</a>.</p>
-          <p style="font-size:12px;color:var(--text-3);margin-top:8px;">Si quieres acceso anticipado, contáctanos.</p>
+        <div style="display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--primary) 10%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 40%,transparent);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+          <svg class="ic" style="color:var(--primary);flex-shrink:0;width:20px;height:20px;"><use href="#i-lock"/></svg>
+          <div style="font-size:13px;line-height:1.45;color:var(--text-2);"><strong style="color:var(--primary);">${textoFalta}</strong>. Mientras tanto puedes ver de qué trata y qué clases incluye.</div>
         </div>
       `;
-    } else {
+    }
+    {
       // Sesiones (clases) reales — con progreso por clase
       const cursoId = c.id;
       const progCurso = getProgresoCurso(cursoId);
@@ -8328,6 +8613,19 @@ const Sections = (function(){
               const esMuestraGratis = !accesoCompleto && esClaseGratis(c, i);
               const accion = `window.abrirClaseAlintec('${cursoId}', ${i})`;
               const flecha = (color) => `<svg class="ic" style="color:${color};"><use href="#i-arrow-right"/></svg>`;
+
+              if (bloqueoCalendario) {
+                return `
+                <div class="modulo" onclick="window.__avisoDesbloqueo('${cursoId}')" style="cursor:pointer;opacity:.78;" data-bypass-paywall="true">
+                  <div class="modulo__num" style="background:var(--surface-3);color:var(--text-3);"><svg class="ic" style="width:12px;height:12px;"><use href="#i-lock"/></svg></div>
+                  <span class="modulo__thumb" style="--module-cover:url('${portada}')"></span>
+                  <div style="flex:1;min-width:0;">
+                    <div class="modulo__title" style="color:var(--text-2);">${s.titulo}</div>
+                    <div class="modulo__meta">${textoFalta}</div>
+                  </div>
+                  ${flecha('var(--text-3)')}
+                </div>`;
+              }
 
               if (vista && desblok) {
                 return `
@@ -8414,11 +8712,13 @@ const Sections = (function(){
           const t = tipoMat(m.url);
           const muestraGratis = !tieneAccesoVipCompleto() && esMaterialGratis(c, materialIndex);
           const accesoMaterial = tieneAccesoVipCompleto() || muestraGratis;
-          const estadoMaterial = tieneAccesoVipCompleto()
+          const estadoMaterial = bloqueoCalendario
+            ? textoFalta
+            : tieneAccesoVipCompleto()
             ? 'Click para ver'
             : (muestraGratis ? 'MATERIAL GRATIS · Click para ver' : 'Activa tu membresía para abrir');
           return `
-            <div class="mat-card" onclick="window.abrirMaterialAlintec('${id}', ${materialIndex})" data-bypass-paywall="true" style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;color:inherit;transition:all .18s cubic-bezier(.2,.8,.25,1);position:relative;overflow:hidden;${accesoMaterial?'':'opacity:.72;'}" onmouseover="this.style.borderColor='${t.color}';this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none';this.style.boxShadow='none'">
+            <div class="mat-card" onclick="${bloqueoCalendario ? `window.__avisoDesbloqueo('${id}')` : `window.abrirMaterialAlintec('${id}', ${materialIndex})`}" data-bypass-paywall="true" style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;color:inherit;transition:all .18s cubic-bezier(.2,.8,.25,1);position:relative;overflow:hidden;${accesoMaterial && !bloqueoCalendario?'':'opacity:.72;'}" onmouseover="this.style.borderColor='${t.color}';this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none';this.style.boxShadow='none'">
               <div style="width:38px;height:38px;border-radius:9px;background:color-mix(in srgb,${t.color} 16%,transparent);color:${t.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:18px;height:18px;display:block;">${t.ic}</span></div>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:13.5px;font-weight:600;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.titulo || 'Material del curso'}</div>
