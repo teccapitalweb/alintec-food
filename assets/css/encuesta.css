@@ -271,19 +271,25 @@
 }
 .af-enc-telrow .af-enc-input { flex: 1 1 auto; width: auto; min-width: 0; }
 .af-enc-pais {
-  flex: 0 0 40%;
+  flex: 0 0 auto;
   min-width: 0;
-  max-width: 40%;
-  text-overflow: ellipsis;
+  max-width: 48%;
   box-sizing: border-box;
   border: 1.5px solid #dfe6df;
   border-radius: 14px;
-  padding: 15px 10px;
-  background: #fafcfa;
+  padding: 15px 30px 15px 14px;
+  background-color: #fafcfa;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2326402f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 12px 8px;
+  -webkit-appearance: none;
+  appearance: none;
   font-size: 14px;
   font-family: inherit;
   color: #26402f;
   cursor: pointer;
+  text-overflow: ellipsis;
 }
 .af-enc-pais:focus-visible { outline: 3px solid #9be07f; outline-offset: 2px; }
 

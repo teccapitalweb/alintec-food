@@ -472,7 +472,17 @@ function renderContactoOFin() {
   const PLACEHOLDER = { MX: '10 dígitos con lada', OT: 'Con código de país (+…)' };
   const pais = document.getElementById('af-enc-pais');
   pais.value = paisPorDefecto();
-  const actualizarPais = () => { input.placeholder = PLACEHOLDER[pais.value] || 'Tu número'; };
+  // El selector se ajusta al texto del país elegido para que la flecha quede junto a él, no al fondo.
+  const ajustarAnchoPais = () => {
+    const medidor = document.createElement('span');
+    const estilo = getComputedStyle(pais);
+    medidor.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:' + estilo.font;
+    medidor.textContent = pais.options[pais.selectedIndex].text;
+    document.body.appendChild(medidor);
+    pais.style.width = Math.ceil(medidor.getBoundingClientRect().width) + 14 + 30 + 4 + 'px';
+    medidor.remove();
+  };
+  const actualizarPais = () => { input.placeholder = PLACEHOLDER[pais.value] || 'Tu número'; ajustarAnchoPais(); };
   actualizarPais();
   pais.addEventListener('change', () => { actualizarPais(); limpiarError(); });
   const irAPrueba = async (ev) => {
