@@ -3659,7 +3659,7 @@ if (window.__isDemoMode) {
     }, 50);
 
     // ─── Popup: confirmar/editar nombre (1ª vez) · evita certificados con el email ───
-    setTimeout(() => { try { window.__maybeAskName && window.__maybeAskName(); } catch(e){} }, 900);
+    // El orden de los avisos lo lleva el bloque siguiente: bienvenida → nombre del certificado → recorrido.
 
     // ─── Bienvenida con confeti para cuentas GRATIS nuevas (una sola vez) ───
     // Va después de confirmar el nombre y antes del recorrido de herramientas.
@@ -3674,17 +3674,24 @@ if (window.__isDemoMode) {
       const mostrarBienvenida = window.UserState.modo === 'sin-membresia' && !window.UserState.isAdmin && !yaVista && !recorridoYaVisto;
       window.__bienvenidaPendiente = mostrarBienvenida;
       window.__bienvenidaDecidida = true;
+      const pausa = ms => new Promise(r => setTimeout(r, ms));
+      const esperarSin = async (id, maxVueltas) => { for (let i = 0; i < maxVueltas && document.getElementById(id); i++) await pausa(300); };
       if (mostrarBienvenida) {
-        let intentos = 0;
-        const esperar = setInterval(() => {
-          intentos++;
-          if (intentos > 1200) { clearInterval(esperar); window.__bienvenidaPendiente = false; return; } // 6 min: no bloquear el recorrido para siempre
-          // Espera a que se confirme el nombre del certificado (u otro aviso abierto)
-          if (document.getElementById('name-modal') || document.getElementById('splash-bienvenida')) return;
-          clearInterval(esperar);
-          if (window.__showWelcomeSplash) window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
-          else window.__bienvenidaPendiente = false;
-        }, 300);
+        // 1) bienvenida con confeti  2) nombre del certificado  3) (el recorrido arranca al terminar)
+        (async () => {
+          try {
+            await pausa(700);
+            if (window.__showWelcomeSplash) window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
+            await pausa(500);
+            await esperarSin('splash-bienvenida', 1200);
+            try { window.__maybeAskName && window.__maybeAskName(); } catch(e){}
+            await pausa(400);
+            await esperarSin('name-modal', 2400);
+          } finally { window.__bienvenidaPendiente = false; }
+        })();
+      } else {
+        // Cuentas que no reciben bienvenida: el nombre se pide como siempre
+        setTimeout(() => { try { window.__maybeAskName && window.__maybeAskName(); } catch(e){} }, 900);
       }
     }
 
@@ -3890,7 +3897,7 @@ window.__showWelcomeSplash = function(opts) {
   function close(){
     if (timer) clearInterval(timer);
     marcarMostrada();
-    if (esGratis) { try { localStorage.setItem('af_bienvenida_gratis_' + (S.uid || ''), '1'); } catch(e){} window.__bienvenidaPendiente = false; }
+    if (esGratis) { try { localStorage.setItem('af_bienvenida_gratis_' + (S.uid || ''), '1'); } catch(e){} }
     splash.style.animation = 'bnvFadeOut .3s ease forwards';
     setTimeout(() => splash.remove(), 300);
   }
