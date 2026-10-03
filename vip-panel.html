@@ -3517,6 +3517,14 @@ if (window.__isDemoMode) {
       mostrarPantallaVerificacion(user);
       return;
     }
+    // El correo ya está verificado en este navegador, pero la sesión guardada puede ser de ANTES de verificarlo:
+    // el servidor la rechazaría con "Verifica tu correo" y no cargarían los cursos. Se renueva una vez.
+    try {
+      if (user.emailVerified) {
+        const info = await user.getIdTokenResult();
+        if (info.claims.email_verified !== true) await user.getIdToken(true);
+      }
+    } catch (e) { console.warn('No se pudo renovar la sesión:', e.message); }
     window.UserState.uid = user.uid;
     window.UserState.email = (user.email||'').toLowerCase();
     window.UserState.displayName = user.displayName || user.email?.split('@')[0] || 'Ingeniero';
@@ -7928,8 +7936,17 @@ const Sections = (function(){
         headers.Authorization = 'Bearer ' + await window.__currentUser.getIdToken();
       }
       const rutaCatalogo = esDemo ? '/api/cursos/demo' : '/api/cursos/catalogo';
-      const resp = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + rutaCatalogo, { headers });
-      const payload = await resp.json().catch(() => ({}));
+      const urlCatalogo = (window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + rutaCatalogo;
+      let resp = await fetch(urlCatalogo, { headers });
+      let payload = await resp.json().catch(() => ({}));
+      if (!esDemo && resp.status === 403 && payload.codigo === 'email-no-verificado' && window.__currentUser) {
+        try { await window.__currentUser.reload(); } catch (e) {}
+        if (window.__currentUser.emailVerified) {
+          headers.Authorization = 'Bearer ' + await window.__currentUser.getIdToken(true);
+          resp = await fetch(urlCatalogo, { headers });
+          payload = await resp.json().catch(() => ({}));
+        }
+      }
       if (!resp.ok || !Array.isArray(payload.cursos)) {
         throw new Error(payload.error || 'El catálogo seguro no está disponible');
       }
