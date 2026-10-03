@@ -1485,6 +1485,10 @@ window.addEventListener('adminready', cargarPreciosClub);
 /* =========================================================
    PAGES
    ========================================================= */
+// Texto escrito por visitantes/miembros (nombre, empresa, bio…) NUNCA debe llegar como HTML al panel de administrador.
+const AdminEsc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const AdminUrlSegura = u => /^(https:\/\/|data:image\/(png|jpe?g|webp|gif);base64,)/i.test(String(u || '')) ? AdminEsc(u) : '';
+const AdminColor = c => /^#[0-9a-f]{3,8}$/i.test(String(c || '')) ? c : '#43A047';
 const Pages={
   encuestas(p){
     p.innerHTML = `
@@ -1848,8 +1852,8 @@ const Pages={
                     <div class="mini-row" style="--c1:${c1};">
                       <div class="mini-row__dot"><svg class="ic"><use href="#i-user"/></svg></div>
                       <div class="mini-row__body">
-                        <div class="mini-row__title">${m.nombre || m.displayName || m.email?.split('@')[0] || 'Miembro'}</div>
-                        <div class="mini-row__meta">${m.email || '—'} · Plan ${planLabel}</div>
+                        <div class="mini-row__title">${AdminEsc(m.nombre || m.displayName || m.email?.split('@')[0] || 'Miembro')}</div>
+                        <div class="mini-row__meta">${AdminEsc(m.email || '—')} · Plan ${planLabel}</div>
                       </div>
                       <span class="tag ${activo?'tag--success':'tag--danger'}">${activo?'Activo':'Inactivo'}</span>
                     </div>
@@ -4656,7 +4660,7 @@ const Pages={
         <div class="adm-row" style="--c1:#43A047;">
           <div class="adm-row__thumb"><svg class="ic"><use href="#i-certificate"/></svg></div>
           <div class="adm-row__body">
-            <div class="adm-row__title">${c.nombre||'—'} · ${c.curso||'—'}</div>
+            <div class="adm-row__title">${AdminEsc(c.nombre||'—')} · ${AdminEsc(c.curso||'—')}</div>
             <div class="adm-row__meta">
               <span><svg class="ic"><use href="#i-calendar"/></svg>${fmtFechaCert(c.emitido)}</span>
               <span><svg class="ic"><use href="#i-clock"/></svg>${c.horas||0}h · ${c.sesiones||0} sesiones</span>
@@ -4693,8 +4697,8 @@ const Pages={
       const miembros=(window.AdminStore?.miembros||[]);
       if(!cursos.length){Toast.error('Sin cursos','Primero crea cursos para poder certificar.');return;}
       if(!miembros.length){Toast.error('Sin miembros','El alumno debe ser miembro para que el certificado le aparezca en su panel.');return;}
-      const cursosOpts=cursos.map(c=>`<option value="${c.id}">${c.titulo}</option>`).join('');
-      const miembrosOpts=miembros.map(m=>`<option value="${m.uid||m.id}">${m.email||m.uid||m.id}</option>`).join('');
+      const cursosOpts=cursos.map(c=>`<option value="${AdminEsc(c.id)}">${AdminEsc(c.titulo)}</option>`).join('');
+      const miembrosOpts=miembros.map(m=>`<option value="${AdminEsc(m.uid||m.id)}">${AdminEsc(m.email||m.uid||m.id)}</option>`).join('');
       const body=`
         <div class="form-grid">
           <div class="form-field form-field--full"><label class="label">Miembro</label><select class="select" id="ce-uid">${miembrosOpts}</select></div>
@@ -5204,10 +5208,10 @@ const Pages={
       result.innerHTML = matches.map(m => {
         const activo = Pages._mbEstaActivo(m);
         const colorBadge = activo ? '#34D399' : '#94A3B8';
-        const nombre = (m.nombre || m.displayName || m.email?.split('@')[0] || 'Sin nombre').replace(/</g,'&lt;');
-        const email = (m.email || '').replace(/</g,'&lt;');
+        const nombre = AdminEsc(m.nombre || m.displayName || m.email?.split('@')[0] || 'Sin nombre');
+        const email = AdminEsc(m.email || '');
         return `
-          <button type="button" data-pick-uid="${m.uid || m.id}" style="display:flex;width:100%;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-3);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:6px;transition:all .15s;text-align:left;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='color-mix(in srgb, var(--primary) 8%, var(--surface-3))'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface-3)'">
+          <button type="button" data-pick-uid="${AdminEsc(m.uid || m.id)}" style="display:flex;width:100%;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-3);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:6px;transition:all .15s;text-align:left;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='color-mix(in srgb, var(--primary) 8%, var(--surface-3))'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface-3)'">
             <div style="width:8px;height:8px;border-radius:50%;background:${colorBadge};flex-shrink:0;"></div>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;font-size:13px;color:var(--text);">${nombre}</div>
@@ -6232,12 +6236,12 @@ function foroAdminCargar(){
         <div class="foro-admin-card__av" style="background:linear-gradient(135deg,${x.color||'#43A047'},${(x.color||'#43A047')}aa);">${(x.iniciales||'?')}</div>
         <div class="foro-admin-card__main">
           <div class="foro-admin-card__head">
-            <span class="foro-admin-card__name">${(x.nombre||'Miembro')}</span>
+            <span class="foro-admin-card__name">${AdminEsc(x.nombre||'Miembro')}</span>
             ${x.esAdmin?'<span class="tag-mini tag-mini--admin">Alintec Food</span>':'<span class="tag-mini">VIP</span>'}
             <span class="foro-admin-card__time">${foroAdminTiempo(x.createdAt)}</span>
           </div>
-          ${x.texto?`<div class="foro-admin-card__text">${(x.texto||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
-          ${x.imagen?`<img class="foro-admin-card__img" src="${x.imagen}" alt="adjunto">`:''}
+          ${x.texto?`<div class="foro-admin-card__text">${AdminEsc(x.texto||'').replace(/\n/g,'<br>')}</div>`:''}
+          ${AdminUrlSegura(x.imagen)?`<img class="foro-admin-card__img" src="${AdminUrlSegura(x.imagen)}" alt="adjunto">`:''}
           <div class="foro-admin-card__meta">❤ ${x.likes||0} · 💬 ${x.comentariosCount||0} respuestas</div>
           <button class="foro-admin-card__vercom" data-vercom="${x.id}">${(x.comentariosCount||0)>0?'Ver respuestas y responder':'Responder como Alintec Food'}</button>
           <div class="foro-admin-coms" id="adm-coms-${x.id}" style="display:none;"></div>
@@ -6287,7 +6291,7 @@ function foroAdminVerComentarios(postId){
       <div class="adm-com">
         <div class="adm-com__av" style="background:linear-gradient(135deg,${c.color||'#888'},${(c.color||'#888')}aa);">${(c.iniciales||'?')}</div>
         <div class="adm-com__body">
-          <div class="adm-com__head"><span class="adm-com__name">${(c.nombre||'Miembro')}</span>${c.esAdmin?'<span class="tag-mini tag-mini--admin" style="font-size:8px;padding:1px 6px;">Alintec Food</span>':''}<span class="adm-com__time">${foroAdminTiempo(c.createdAt)}</span></div>
+          <div class="adm-com__head"><span class="adm-com__name">${AdminEsc(c.nombre||'Miembro')}</span>${c.esAdmin?'<span class="tag-mini tag-mini--admin" style="font-size:8px;padding:1px 6px;">Alintec Food</span>':''}<span class="adm-com__time">${foroAdminTiempo(c.createdAt)}</span></div>
           <div class="adm-com__text">${(c.texto||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
         </div>
         <button class="adm-com__del" data-comdel="${postId}|${c.id}" title="Eliminar respuesta"><svg class="ic"><use href="#i-trash"/></svg></button>
@@ -6326,9 +6330,11 @@ function dirAdminCargar(){
     const cont=document.getElementById('dir-admin-list'); if(!cont) return;
     if(!cards.length){ cont.innerHTML='<div class="empty-state">Aún no hay tarjetas en el directorio.</div>'; return; }
     cont.innerHTML = cards.map(x=>{
-      const ini=(x.nombre||'?').trim().slice(0,2).toUpperCase();
-      const foto = x.foto ? `<img class="dir-adm-card__av" src="${x.foto}" alt="">`
-        : `<div class="dir-adm-card__av dir-adm-card__av--ini" style="background:linear-gradient(135deg,${x.color||'#43A047'},${(x.color||'#43A047')}aa);">${ini}</div>`;
+      const ini=AdminEsc((x.nombre||'?').trim().slice(0,2).toUpperCase());
+      const fotoUrl = AdminUrlSegura(x.foto);
+      const colorTarjeta = AdminColor(x.color);
+      const foto = fotoUrl ? `<img class="dir-adm-card__av" src="${fotoUrl}" alt="">`
+        : `<div class="dir-adm-card__av dir-adm-card__av--ini" style="background:linear-gradient(135deg,${colorTarjeta},${colorTarjeta}aa);">${ini}</div>`;
       const contactos=[];
       if(x.whatsapp) contactos.push('WhatsApp');
       if(x.email) contactos.push('Correo');
@@ -6339,15 +6345,15 @@ function dirAdminCargar(){
         ${foto}
         <div class="dir-adm-card__main">
           <div class="dir-adm-card__head">
-            <span class="dir-adm-card__name">${(x.nombre||'Miembro')}</span>
+            <span class="dir-adm-card__name">${AdminEsc(x.nombre||'Miembro')}</span>
             ${x.visible===false?'<span class="tag-mini" style="background:rgba(150,150,150,.18);color:#999;">Oculta</span>':'<span class="tag-mini tag-mini--admin">Visible</span>'}
           </div>
-          ${x.puesto?`<div class="dir-adm-card__sub">${(x.puesto||'')}${x.empresa?' · '+x.empresa:''}</div>`:''}
-          ${x.sector?`<div class="dir-adm-card__sector">${x.sector}</div>`:''}
-          ${x.bio?`<div class="dir-adm-card__bio">${(x.bio||'').replace(/</g,'&lt;')}</div>`:''}
+          ${x.puesto?`<div class="dir-adm-card__sub">${AdminEsc(x.puesto||'')}${x.empresa?' · '+AdminEsc(x.empresa):''}</div>`:''}
+          ${x.sector?`<div class="dir-adm-card__sector">${AdminEsc(x.sector)}</div>`:''}
+          ${x.bio?`<div class="dir-adm-card__bio">${AdminEsc(x.bio||'')}</div>`:''}
           <div class="dir-adm-card__meta">${contactos.length?'Contacto: '+contactos.join(' · '):'Sin contacto'}</div>
         </div>
-        <button class="foro-admin-card__del" data-dirdel="${x.id}" data-dirname="${(x.nombre||'Miembro').replace(/"/g,'&quot;')}" title="Eliminar tarjeta"><svg class="ic"><use href="#i-trash"/></svg></button>
+        <button class="foro-admin-card__del" data-dirdel="${AdminEsc(x.id)}" data-dirname="${AdminEsc(x.nombre||'Miembro')}" title="Eliminar tarjeta"><svg class="ic"><use href="#i-trash"/></svg></button>
       </div>`;
     }).join('');
     cont.querySelectorAll('[data-dirdel]').forEach(b=>b.addEventListener('click', async ()=>{

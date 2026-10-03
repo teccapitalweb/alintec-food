@@ -4402,6 +4402,9 @@ async function initCountdown(){
   setInterval(tick, 1000);
 }
 
+// Datos que escribe otro miembro y van DENTRO de un atributo HTML (color, imagen): se validan, no solo se escapan.
+const colorSeguro = c => /^#[0-9a-f]{3,8}$/i.test(String(c || '')) ? c : '#43A047';
+const srcSeguro = u => /^(https:\/\/|data:image\/(png|jpe?g|webp|gif);base64,)/i.test(String(u || '')) ? String(u).replace(/["'<>\s]/g, '') : '';
 const Toast=(function(){
   let c=null;function ensure(){if(!c){c=document.createElement('div');c.className='toast-container';document.body.appendChild(c);}return c;}
   function show(type,t,m,d=3200){
@@ -11878,8 +11881,8 @@ const Sections = (function(){
     grid.innerHTML = cards.map(c=>{
       const inicial = (c.nombre||'?').trim().slice(0,2).toUpperCase();
       const foto = c.foto
-        ? `<img src="${c.foto}" alt="${escapeHtml(c.nombre||'')}" class="dir-card__foto">`
-        : `<div class="dir-card__foto dir-card__foto--ini" style="background:linear-gradient(135deg,${c.color||'#43A047'},${(c.color||'#43A047')}aa);">${escapeHtml(inicial)}</div>`;
+        ? `<img src="${srcSeguro(c.foto)}" alt="${escapeHtml(c.nombre||'')}" class="dir-card__foto">`
+        : `<div class="dir-card__foto dir-card__foto--ini" style="background:linear-gradient(135deg,${colorSeguro(c.color)},${colorSeguro(c.color)}aa);">${escapeHtml(inicial)}</div>`;
       const contactos = [];
       if (c.whatsapp) contactos.push(`<a class="dir-cta dir-cta--wa" href="https://wa.me/${(c.whatsapp||'').replace(/[^0-9]/g,'')}" target="_blank" rel="noopener" title="WhatsApp"><svg class="ic"><use href="#i-whatsapp"/></svg></a>`);
       if (c.email) contactos.push(`<button class="dir-cta dir-cta--mail" data-email="${escapeHtml(c.email)}" title="Copiar correo: ${escapeHtml(c.email)}"><svg class="ic"><use href="#i-mail"/></svg></button>`);
@@ -11927,8 +11930,8 @@ const Sections = (function(){
     const esMia = c.id===uid;
     const inicial = (c.nombre||'?').trim().slice(0,2).toUpperCase();
     const foto = c.foto
-      ? `<img src="${c.foto}" alt="" class="dir-det__foto">`
-      : `<div class="dir-det__foto dir-det__foto--ini" style="background:linear-gradient(135deg,${c.color||'#43A047'},${(c.color||'#43A047')}aa);">${escapeHtml(inicial)}</div>`;
+      ? `<img src="${srcSeguro(c.foto)}" alt="" class="dir-det__foto">`
+      : `<div class="dir-det__foto dir-det__foto--ini" style="background:linear-gradient(135deg,${colorSeguro(c.color)},${colorSeguro(c.color)}aa);">${escapeHtml(inicial)}</div>`;
     const row = (icon,label,val,href,extraClass='') => val
       ? `<a class="dir-det__row ${extraClass}" ${href?`href="${href}" target="_blank" rel="noopener"`:''}>
            <span class="dir-det__row-ic"><svg class="ic"><use href="#${icon}"/></svg></span>
@@ -12313,7 +12316,7 @@ const Sections = (function(){
       const dias = foroDiasRestantes(p.createdAt);
       return `
       <article class="post" data-post="${p.id}">
-        <div class="post__avatar" style="background:linear-gradient(135deg,${p.color||'#43A047'},${(p.color||'#43A047')}aa);">${escapeHtml(p.iniciales||'?')}</div>
+        <div class="post__avatar" style="background:linear-gradient(135deg,${colorSeguro(p.color)},${colorSeguro(p.color)}aa);">${escapeHtml(p.iniciales||'?')}</div>
         <div class="post__main">
           <div class="post__header">
             <span class="post__author">${escapeHtml(p.nombre||'Miembro')}</span>
@@ -12322,7 +12325,7 @@ const Sections = (function(){
             ${puedeBorrar?`<button class="post__del" data-del="${p.id}" title="Eliminar">&times;</button>`:''}
           </div>
           ${p.texto?`<div class="post__content">${escapeHtml(p.texto).replace(/\n/g,'<br>')}</div>`:''}
-          ${p.imagen?`<div class="post__img"><img src="${p.imagen}" alt="imagen" loading="lazy" data-lightbox="${p.id}"></div>`:''}
+          ${srcSeguro(p.imagen)?`<div class="post__img"><img src="${srcSeguro(p.imagen)}" alt="imagen" loading="lazy" data-lightbox="${escapeHtml(p.id)}"></div>`:''}
           <div class="post__footer">
             <button class="post__btn ${liked?'is-liked':''}" data-like="${p.id}"><svg class="ic"><use href="#i-heart"/></svg><span>${p.likes||0}</span></button>
             <button class="post__btn" data-toggle-com="${p.id}"><svg class="ic"><use href="#i-messages"/></svg><span>${p.comentariosCount||0}</span> respuestas</button>
