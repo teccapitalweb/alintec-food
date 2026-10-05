@@ -963,7 +963,7 @@ body {
 /* ══════ ICONOS FLOTANTES: Facebook / Instagram / WhatsApp ══════ */
 .social-float-stack {
   position: fixed; bottom: 24px; right: 24px; z-index: 999;
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
 }
 .social-float {
   width: 52px; height: 52px; border-radius: 50%;

@@ -4,11 +4,11 @@
 /* ── Burbuja: vive arriba de los íconos flotantes (Facebook / Instagram / WhatsApp) ── */
 .af-cb-wrap {
   position: relative;
-  align-self: flex-end;
+  align-self: center;
   flex: 0 0 auto;
   width: 100px;
   height: 96px;
-  margin: 0 -4px 2px 0;
+  margin: 0 0 2px;
 }
 .af-cb-wrap[hidden] { display: none; }
 .af-cb-bubble {
