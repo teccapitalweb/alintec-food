@@ -1892,6 +1892,13 @@ body::after{
 .dir-chip:hover{border-color:color-mix(in srgb,var(--primary) 40%,transparent)}
 .dir-chip.is-active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px}
+.dir-preview{position:relative;cursor:pointer}
+.dir-preview__grid{filter:blur(6px);opacity:.75;pointer-events:none;user-select:none;max-height:520px;overflow:hidden}
+.dir-preview__cta{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:60px}
+.dir-preview__box{max-width:380px;text-align:center;background:var(--surface);border:1px solid var(--border-2);border-radius:20px;padding:26px 24px;box-shadow:0 18px 50px rgba(0,0,0,.14)}
+.dir-preview__box .foro-paywall__ic{margin:0 auto 12px}
+.dir-preview__t{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--text);margin-bottom:6px}
+.dir-preview__d{font-size:13px;line-height:1.55;color:var(--text-3);margin-bottom:16px}
 .dir-card{position:relative;background:linear-gradient(165deg,var(--surface),var(--surface-2));border:1px solid var(--border);border-radius:20px;padding:26px 20px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:transform .25s cubic-bezier(.2,.8,.25,1),border-color .25s,box-shadow .3s;overflow:hidden;cursor:pointer}
 .dir-card::before{content:"";position:absolute;top:0;left:0;right:0;height:64px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 22%,transparent),color-mix(in srgb,var(--highlight) 14%,transparent));z-index:0}
 .dir-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--primary) 45%,transparent);box-shadow:0 20px 45px color-mix(in srgb,var(--primary) 15%,rgba(0,0,0,.12))}
@@ -4549,6 +4556,16 @@ function toolRequiereVIP(nombreHerramienta){
   return false;
 }
 
+// Igual que toolRequiereVIP, para la comunidad: aviso claro y directo a Suscripción.
+function comunidadRequiereVIP(accion){
+  if (toolEsVIP()) return true;
+  try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
+  if (typeof Toast !== 'undefined') Toast.info('Función de membresía', 'Activa tu membresía para ' + (accion || 'participar en la comunidad') + '.');
+  if (typeof navigateToSection === 'function') navigateToSection('suscripcion', { skipPaywall: true });
+  return false;
+}
+window.comunidadRequiereVIP = comunidadRequiereVIP;
+
 function toolLockHTML(sub){
   return '<div class="tool-paywall" style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:20px;margin:0">'
     +'<div class="tool-paywall__ic"><svg class="ic"><use href="#i-crown"/></svg></div>'
@@ -6298,21 +6315,12 @@ function seccionPanelDesdeHash(){
 function navigateToSection(section, opts){
   opts = opts || {};
   if(!SECCIONES_VALIDAS_PANEL.includes(section)) section = 'inicio';
-  // ─── Guardia paywall · COMUNIDAD (Foro VIP, Directorio VIP, Canal WhatsApp) ───
-  // Su contenido es exclusivo de miembros: sin membresía se redirige a Suscripción cerrando
-  // cualquier modal que tenga encima.
-  // Las Herramientas Pro (tool-*) YA NO se bloquean al abrirlas: cualquier persona puede verlas y
-  // capturar datos; en cuanto intenta USARLAS (evaluar, calcular, guardar, descargar el PDF…)
-  // toolRequiereVIP() la envía directo a Suscripción.
-  const SECCIONES_SOLO_VIP = ['foro','directorio','canal'];
-  if (SECCIONES_SOLO_VIP.includes(section) && !opts.skipPaywall) {
-    const esVip = (typeof toolEsVIP === 'function') ? toolEsVIP() : (window.UserState?.modo === 'vip');
-    if (!esVip) {
-      try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
-      if (typeof Toast !== 'undefined') Toast.info('Comunidad VIP', 'Activa tu membresía para entrar a la comunidad.');
-      return navigateToSection('suscripcion', { skipPaywall: true });
-    }
-  }
+  // ─── Paywall por USO, no por entrada ───
+  // Herramientas Pro (tool-*) y Comunidad (Foro, Directorio, Canal WhatsApp) se pueden ABRIR y ver sin
+  // membresía. En cuanto la persona intenta USARLAS o participar (evaluar, calcular, guardar, publicar,
+  // comentar, contactar…) toolRequiereVIP() / comunidadRequiereVIP() la envían directo a Suscripción.
+  // El Foro y el Directorio muestran una VISTA PREVIA (ejemplos, sin datos reales de miembros):
+  // las reglas de Firestore solo dejan leer el contenido real a miembros activos.
   document.querySelectorAll('.nav-item, .mobile-nav__item, .mobile-drawer__item').forEach(n=>n.classList.remove('is-active'));
   document.querySelectorAll(`[data-section="${section}"]`).forEach(ni => ni.classList.add('is-active'));
 
@@ -11835,8 +11843,62 @@ const Sections = (function(){
     }
   }
 
+  // Vista previa del Directorio para quien no es miembro: tarjetas de ejemplo DIFUMINADAS (sin datos reales
+  // de nadie: nombres, correos y WhatsApp solo los ven los miembros). Cualquier toque lleva a Suscripción.
+  function renderDirectorioVistaPrevia(container){
+    const ejemplos = ['Gerente de Calidad','Ingeniera en Alimentos','Especialista en Inocuidad','Consultor HACCP','Jefe de Producción','Analista de Laboratorio'];
+    const tarjetas = ejemplos.map((puesto,i)=>`
+      <article class="dir-card">
+        <div class="dir-card__top"><div class="dir-card__foto dir-card__foto--ini" style="background:linear-gradient(135deg,#43A047,#43A047aa);">${'ABCDEF'[i]}${'MNPQRS'[i]}</div></div>
+        <div class="dir-card__body-m">
+          <div class="dir-card__name">Nombre del miembro</div>
+          <div class="dir-card__puesto">${puesto}</div>
+          <div class="dir-card__empresa"><svg class="ic"><use href="#i-briefcase"/></svg>Empresa del sector alimentario</div>
+          <span class="dir-card__sector">${SECTORES[i % SECTORES.length]}</span>
+          <div class="dir-card__bio">Perfil profesional con experiencia y datos de contacto.</div>
+        </div>
+      </article>`).join('');
+    container.innerHTML = `
+      <div class="fade-up">
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Networking profesional</span>
+          <h1 class="sec-hero__title">Directorio <span class="sec-hero__accent">VIP.</span></h1>
+          <p class="sec-hero__sub">Conecta con la comunidad Alintec Food. Crea tu tarjeta profesional y descubre a otros profesionales y especialistas del sector alimentario.</p>
+        </div>
+        <div class="foro-aviso">
+          <svg class="ic"><use href="#i-lock"/></svg>
+          <span>Vista previa: los perfiles reales y sus datos de contacto solo los ven los <strong>miembros VIP</strong>.</span>
+        </div>
+        <div class="dir-bar">
+          <div class="dir-search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input type="text" id="dir-buscar" placeholder="Buscar por nombre, empresa o especialidad…" readonly>
+          </div>
+        </div>
+        <div class="dir-chips" id="dir-chips">
+          <button class="dir-chip is-active" data-sector="todos">Todos</button>
+          ${SECTORES.slice(0,6).map(sx=>`<button class="dir-chip" data-sector="${sx}">${sx}</button>`).join('')}
+        </div>
+        <div class="dir-preview">
+          <div class="dir-grid dir-preview__grid" aria-hidden="true">${tarjetas}</div>
+          <div class="dir-preview__cta">
+            <div class="dir-preview__box">
+              <div class="foro-paywall__ic"><svg class="ic"><use href="#i-crown"/></svg></div>
+              <div class="dir-preview__t">Conoce a los profesionales de la comunidad</div>
+              <div class="dir-preview__d">Con tu membresía VIP ves los perfiles, buscas por sector y contactas a otros miembros.</div>
+              <button class="btn btn--accent" type="button">Activar VIP<svg class="ic"><use href="#i-arrow-right"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    container.querySelector('.fade-up').addEventListener('click', (e)=>{
+      if (e.target.closest('.dir-search, .dir-chip, .dir-preview')) { e.preventDefault(); comunidadRequiereVIP('ver los perfiles y contactar a otros miembros'); }
+    });
+  }
+
   function renderDirectorio(container){
     const esVip = window.UserState?.modo==='vip' || esAdminReal();
+    if (!esVip) return renderDirectorioVistaPrevia(container);
     container.innerHTML = `
       <div class="fade-up">
         <div class="sec-hero">
@@ -12205,8 +12267,78 @@ const Sections = (function(){
     });
   }
 
+  // Vista previa del Foro para quien no es miembro: publicaciones de EJEMPLO (marcadas como tales), sin
+  // contenido real de miembros. Escribir, comentar, reaccionar o cambiar de pestaña lleva a Suscripción.
+  function renderForoVistaPrevia(container){
+    const ejemplos = [
+      { ini:'CL', color:'#43A047', nombre:'Calidad · Planta de lácteos', hace:'hace 2 h', likes:12, resp:4,
+        texto:'¿Cada cuánto verifican la calibración de los termómetros en el área de pasteurización? Estamos revisando nuestro procedimiento.' },
+      { ini:'IN', color:'#2E7D32', nombre:'Inocuidad · Cárnicos', hace:'hace 5 h', likes:8, resp:3,
+        texto:'Compartimos nuestra lista de verificación para el cierre de turno en limpieza y desinfección. ¿Qué le agregarían?' },
+      { ini:'ES', color:'#9CCC65', nombre:'Estudiante de Ingeniería en Alimentos', hace:'ayer', likes:5, resp:6,
+        texto:'Me estoy preparando para la certificación en HACCP. ¿Qué materiales o cursos les ayudaron más?' }
+    ];
+    container.innerHTML = `
+      <div class="fade-up">
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Comunidad activa</span>
+          <h1 class="sec-hero__title">Foro <span class="sec-hero__accent">VIP.</span></h1>
+          <p class="sec-hero__sub">Comparte casos del sector, haz preguntas y conecta con la comunidad Alintec Food. Publica texto e imágenes, comenta y reacciona.</p>
+        </div>
+        <div class="foro-aviso">
+          <svg class="ic"><use href="#i-info"/></svg>
+          <span>Vista previa con <strong>publicaciones de ejemplo</strong>. Las conversaciones reales son solo para miembros VIP.</span>
+        </div>
+        <div class="foro-paywall">
+          <div class="foro-paywall__ic"><svg class="ic"><use href="#i-crown"/></svg></div>
+          <div>
+            <div class="foro-paywall__t">Únete al club VIP para participar</div>
+            <div class="foro-paywall__d">Así se ve el foro. Para publicar, comentar y reaccionar necesitas tu membresía VIP activa.</div>
+          </div>
+          <button class="btn btn--accent btn--sm" type="button">Activar VIP</button>
+        </div>
+        <div class="foro-composer">
+          <div class="foro-composer__avatar" style="background:linear-gradient(135deg,#43A047,#43A047aa);">${escapeHtml(window.UserState?.iniciales || 'IN')}</div>
+          <div class="foro-composer__main">
+            <textarea class="foro-composer__input" placeholder="¿Qué pasa en tu planta? Comparte un caso o haz una pregunta…" rows="2" readonly></textarea>
+            <div class="foro-composer__actions">
+              <div class="foro-composer__tools"><button class="foro-composer__tool" type="button"><svg class="ic"><use href="#i-image"/></svg> Imagen</button></div>
+              <button class="btn btn--accent btn--sm" type="button">Publicar<svg class="ic"><use href="#i-arrow-right"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="foro-tabs">
+          <button class="tab is-active" type="button">Recientes</button>
+          <button class="tab" type="button">Más reacciones</button>
+          <button class="tab" type="button">Mis publicaciones</button>
+        </div>
+        <div class="posts-list">
+          ${ejemplos.map(p=>`
+          <article class="post">
+            <div class="post__avatar" style="background:linear-gradient(135deg,${p.color},${p.color}aa);">${p.ini}</div>
+            <div class="post__main">
+              <div class="post__header">
+                <span class="post__author">${p.nombre}</span>
+                <span class="post__role">Ejemplo</span>
+                <span class="post__time">${p.hace}</span>
+              </div>
+              <div class="post__content">${p.texto}</div>
+              <div class="post__footer">
+                <button class="post__btn" type="button"><svg class="ic"><use href="#i-heart"/></svg><span>${p.likes}</span></button>
+                <button class="post__btn" type="button"><svg class="ic"><use href="#i-messages"/></svg><span>${p.resp}</span> respuestas</button>
+              </div>
+            </div>
+          </article>`).join('')}
+        </div>
+      </div>`;
+    container.querySelector('.fade-up').addEventListener('click', (e)=>{
+      if (e.target.closest('.foro-paywall .btn, .foro-composer, .foro-tabs, .post__btn')) { e.preventDefault(); comunidadRequiereVIP('publicar, comentar y reaccionar en el foro'); }
+    });
+  }
+
   function renderForo(container){
     const esVip = window.UserState?.modo === 'vip' || esAdminReal();
+    if (!esVip) return renderForoVistaPrevia(container);
     const ini = window.UserState?.iniciales || 'IN';
     const miColor = foroColorFor(window.UserState?.uid);
 
@@ -12563,6 +12695,7 @@ const Sections = (function(){
             <button class="btn btn--wa" id="btn-wa-canal-open"><svg class="ic"><use href="#i-whatsapp"/></svg>Abrir grupo</button>
             <button class="btn btn--ghost" id="btn-wa-canal-share"><svg class="ic"><use href="#i-arrow-right"/></svg>Compartir invitación</button>
           </div>
+          ${toolEsVIP() ? '' : '<p style="margin:14px 0 0;font-size:12.5px;opacity:.85;">Para unirte al canal necesitas tu membresía VIP activa.</p>'}
         </section>
 
         <div class="wa-rules">
@@ -14977,12 +15110,14 @@ function initNav(){
 
     // Sección Canal WhatsApp · abrir grupo
     if(t.closest('#btn-wa-canal-open')){
+      if (!comunidadRequiereVIP('unirte al canal de WhatsApp')) return;
       window.open(AlintecFood_CONTACT.canal,'_blank');
       Toast.success('Abriendo canal','Comunidad Alintec Food');
       return;
     }
     // Sección Canal WhatsApp · compartir
     if(t.closest('#btn-wa-canal-share')){
+      if (!comunidadRequiereVIP('compartir la invitación al canal')) return;
       window.open(AlintecFood_CONTACT.shareInvitacion(),'_blank');
       Toast.success('Compartiendo','Selecciona contactos');
       return;
