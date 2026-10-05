@@ -284,9 +284,9 @@
   function opciones(lista) {
     const grupo = el('div', 'af-cb-chips');
     lista.forEach(o => {
-      if (o.wa) {
-        const a = el('a', 'af-cb-chip is-wa', o.t);
-        a.href = enlaceWhatsApp();
+      if (o.wa || o.href) {
+        const a = el('a', 'af-cb-chip' + (o.wa ? ' is-wa' : ''), o.t);
+        a.href = o.wa ? enlaceWhatsApp() : o.href;
         a.target = '_blank';
         a.rel = 'noopener';
         grupo.appendChild(a);
@@ -470,27 +470,104 @@
       'Asesoría personalizada y canal VIP, sin permanencia.',
       p ? negritas('Cuesta **' + dinero(p.mes) + ' al mes** o **' + dinero(p.ano) + ' al año**.') : 'Al crear tu cuenta ves el precio vigente.'
     );
-    if (ok) opciones([{ t: 'Buscar un curso', fn: buscarCurso }, { t: 'Hablar con un asesor', fn: asesor }, { t: 'Menú principal', fn: menuDeNuevo() }]);
+    if (ok) opciones([{ t: 'Buscar un curso', fn: buscarCurso }, { t: 'Otra duda', fn: dudas }, { t: 'Hablar con un asesor', fn: asesor }, { t: 'Menú principal', fn: menuDeNuevo() }]);
   }
 
-  const DUDAS = [
-    { t: '¿Cómo funciona la prueba gratuita?', fn: duda('Al crear tu cuenta gratis eliges **un curso** como tu prueba gratuita y ves sus clases sin costo. La elección no se puede cambiar, así que escoge el que más te interese.') },
-    { t: '¿Cuánto cuesta?', fn: () => membresia() },
-    { t: '¿Dan certificado?', fn: duda('Sí. Al terminar un curso obtienes un certificado digital con folio oficial que cualquiera puede verificar en línea.') },
-    { t: '¿Cómo tomo las clases?', fn: duda('Entras con tu cuenta y ves las clases en video desde tu panel. Cada curso trae material descargable para aplicarlo en tu trabajo.') },
-    { t: '¿Puedo cancelar?', fn: duda('Sí. La membresía es sin permanencia: cancelas cuando quieras.') }
-  ];
-
-  function duda(texto) {
+  // ── Dudas frecuentes, por tema ──
+  // Cada respuesta repite lo que ya dicen el sitio, los términos y condiciones y el panel: nada inventado.
+  function duda(texto, extra) {
     return async () => {
-      const ok = await di(negritas(texto));
-      if (ok) opciones([{ t: 'Buscar un curso', fn: buscarCurso }, { t: 'Otra duda', fn: dudas }, { t: 'Hablar con un asesor', fn: asesor }]);
+      const ok = await di(...(Array.isArray(texto) ? texto : [texto]).map(negritas));
+      if (ok) opciones((extra || []).concat([{ t: 'Buscar un curso', fn: buscarCurso }, { t: 'Otra duda', fn: dudas }, { t: 'Hablar con un asesor', fn: asesor }]));
     };
   }
 
+  async function precio() {
+    const p = await cargarPrecios();
+    const ok = await di(p ? negritas('Cuesta **' + dinero(p.mes) + ' al mes** o **' + dinero(p.ano) + ' al año**. Cancelas cuando quieras.') : 'Al crear tu cuenta ves el precio vigente.');
+    if (ok) opciones([{ t: '¿Mensual o anual?', fn: planes }, { t: 'Otra duda', fn: dudas }, { t: 'Hablar con un asesor', fn: asesor }]);
+  }
+
+  async function planes() {
+    const p = await cargarPrecios();
+    let texto;
+    if (!p) texto = 'Hay plan mensual y plan anual. Al crear tu cuenta ves los precios vigentes de cada uno.';
+    else {
+      const ahorro = p.mes * 12 - p.ano;
+      texto = '**Mensual:** ' + dinero(p.mes) + ' al mes. **Anual:** ' + dinero(p.ano) + ' al año (' + dinero(Math.round(p.ano / 12)) + ' al mes)'
+        + (ahorro > 0 ? ', con lo que ahorras ' + dinero(ahorro) + ' frente a pagar cada mes.' : '.');
+    }
+    const ok = await di(negritas(texto));
+    if (ok) opciones([{ t: 'Otra duda', fn: dudas }, { t: 'Hablar con un asesor', fn: asesor }]);
+  }
+
+  const T = {
+    prueba: duda('Al crear tu cuenta gratis eliges **un curso** como tu prueba gratuita y ves sus clases sin costo. La elección no se puede cambiar, así que escoge el que más te interese.'),
+    pago: duda('El pago es con **tarjeta** de crédito o débito, en un pago seguro procesado por Stripe. Si necesitas otra forma de pago, escríbele al equipo.'),
+    cancelar: duda('Sí. La membresía es sin permanencia: cancelas cuando quieras.'),
+    reembolso: duda(['Una vez que se te da acceso al contenido, la compra se considera final, salvo que se indique otra cosa al momento de comprar.', 'Si tienes una situación especial, escríbele al equipo.']),
+    desbloqueo: duda('Los cursos de la membresía se **desbloquean poco a poco, uno cada 8 días**, para que aproveches cada uno a fondo. Tu recorrido empieza cuando terminas tu curso de prueba. En tu panel ves cuántos días faltan para cada curso.'),
+    formato: duda('Los cursos son **en línea**, con clases en video y material descargable. Además, la membresía incluye clases en vivo con especialistas.'),
+    material: duda('Sí. Cada curso trae material descargable (PDFs, presentaciones y otros archivos) para aplicarlo en tu trabajo.'),
+    celular: duda('Sí. Puedes entrar desde el navegador de tu celular, tablet o computadora con tu misma cuenta. También puedes instalar Alintec Food como app desde tu panel.'),
+    retos: duda('En **Retos** respondes juegos y preguntas para ganar puntos y subir de nivel. Al subir de nivel ganas premios, como abrir un curso antes de tiempo. Es parte de la membresía.'),
+    herramientas: duda('Tu panel incluye **herramientas pro** para el trabajo en planta o laboratorio: calculadora NOM-051, planificador HACCP, auditoría BPM, vida de anaquel y microbiología UFC.'),
+    certificado: duda('Sí. Al terminar un curso obtienes un certificado digital con folio oficial que cualquiera puede verificar en línea.'),
+    certOficial: duda('El certificado acredita que participaste y aprobaste el curso según los criterios de Alintec Food. **No es un título profesional ni una certificación oficial ante una autoridad del gobierno**, salvo que un curso indique expresamente lo contrario.'),
+    certVerificar: duda('Cada certificado trae un **folio**. Con ese folio puedes comprobar que es auténtico en nuestra página de verificación.', [{ t: 'Verificar un certificado', href: 'verificar.html' }]),
+    certNombre: duda('Sale el nombre que confirmas al entrar a tu panel. Puedes cambiarlo cuando quieras en **Mi perfil → Nombre completo**; escríbelo completo y bien escrito.'),
+    crear: duda('Creas tu cuenta con tu **correo y una contraseña**, o con tu cuenta de Google. Si usas correo, te llega un mensaje para confirmarlo y listo.'),
+    contrasena: duda('En la pantalla de iniciar sesión toca **«¿Olvidaste tu contraseña?»** y te llega un correo para crear una nueva.'),
+    compartir: duda('No. La cuenta y el contenido son personales: no se pueden compartir las credenciales de acceso ni el contenido de los cursos.'),
+    app: duda('Entra a tu panel y toca **«Instalar app»** en el menú, debajo de «Cerrar sesión». Te mostramos los pasos según tu teléfono.'),
+    donde: duda('Estamos en **Tehuacán, Puebla, México**. Los cursos son en línea, así que puedes tomarlos desde cualquier lugar.')
+  };
+
+  const TEMAS_DUDAS = [
+    { t: 'Membresía y pagos', preguntas: [
+      { t: '¿Cuánto cuesta?', fn: precio },
+      { t: '¿Qué incluye la membresía?', fn: () => membresia() },
+      { t: '¿Mensual o anual?', fn: planes },
+      { t: '¿Cómo puedo pagar?', fn: T.pago },
+      { t: '¿Puedo cancelar?', fn: T.cancelar },
+      { t: '¿Hay reembolsos?', fn: T.reembolso }
+    ] },
+    { t: 'Cursos y clases', preguntas: [
+      { t: '¿Cómo funciona la prueba gratuita?', fn: T.prueba },
+      { t: '¿Cómo se desbloquean los cursos?', fn: T.desbloqueo },
+      { t: '¿Son en vivo o grabados?', fn: T.formato },
+      { t: '¿Hay material descargable?', fn: T.material },
+      { t: '¿Los veo en el celular?', fn: T.celular },
+      { t: '¿Qué son los retos?', fn: T.retos },
+      { t: '¿Qué herramientas incluye?', fn: T.herramientas }
+    ] },
+    { t: 'Certificados', preguntas: [
+      { t: '¿Dan certificado?', fn: T.certificado },
+      { t: '¿Es un título oficial?', fn: T.certOficial },
+      { t: '¿Cómo verifico un certificado?', fn: T.certVerificar },
+      { t: '¿Qué nombre aparece?', fn: T.certNombre }
+    ] },
+    { t: 'Mi cuenta', preguntas: [
+      { t: '¿Cómo creo mi cuenta?', fn: T.crear },
+      { t: 'Olvidé mi contraseña', fn: T.contrasena },
+      { t: '¿Puedo compartir mi cuenta?', fn: T.compartir },
+      { t: '¿Cómo instalo la app?', fn: T.app }
+    ] },
+    { t: 'Ubicación y contacto', preguntas: [
+      { t: '¿Dónde están?', fn: T.donde },
+      { t: 'Hablar con un asesor', fn: () => asesor() }
+    ] }
+  ];
+  const DUDAS = TEMAS_DUDAS.reduce((todas, tema) => todas.concat(tema.preguntas), []); // DUDAS[0] = prueba gratuita
+
   async function dudas() {
-    const ok = await di('Claro, ¿cuál es tu duda?');
-    if (ok) opciones(DUDAS);
+    const ok = await di('Claro. ¿Sobre qué tema es tu duda?');
+    if (ok) opciones(TEMAS_DUDAS.map(tema => ({ t: tema.t, fn: () => tema_(tema) })));
+  }
+
+  async function tema_(tema) {
+    const ok = await di(negritas('Estas son las dudas más frecuentes de **' + tema.t.toLowerCase() + '**:'));
+    if (ok) opciones(tema.preguntas.concat([{ t: 'Otro tema', fn: dudas }]));
   }
 
   async function asesor() {
@@ -501,15 +578,39 @@
   // ── texto libre: intenciones sencillas y búsqueda en el catálogo ──
   const PARASITAS = new Set(['de', 'la', 'el', 'los', 'las', 'un', 'una', 'y', 'en', 'para', 'que', 'por', 'con', 'del', 'al', 'quiero', 'aprender', 'curso', 'cursos', 'sobre', 'busco', 'necesito', 'tienen', 'hay', 'como', 'mas', 'algo']);
 
+  // Intenciones por palabras clave (en orden: la primera que coincide gana).
+  const INTENCIONES = [
+    [/^(hola|buenas|hey|buen dia|buenos dias|buenas tardes|buenas noches)\b/, () => menuDeNuevo('¡Hola! ¿En qué te ayudo?')()],
+    [/(reembols|devoluc)/, () => T.reembolso()],
+    [/(cancel|dar de baja)/, () => T.cancelar()],
+    [/(como pag|formas? de pago|metodos? de pago|tarjeta|stripe|oxxo|paypal|transferencia)/, () => T.pago()],
+    [/(mensual|anual)/, () => planes()],
+    [/(precio|cuesta|costo|mensualidad|cuanto (cuesta|cobran|es|se paga))/, () => precio()],
+    [/(asesor|persona|humano|whatsapp|llamar|contacto|hablar)/, () => asesor()],
+    [/\b(donde|ubicacion|direccion|tehuacan|puebla)\b/, () => T.donde()],
+    [/certificad.*(oficial|titulo|valido)|(oficial|titulo).*certificad/, () => T.certOficial()],
+    [/certificad.*(verific|folio|autentic)|(verific|folio|autentic).*certificad|\bfolio\b/, () => T.certVerificar()],
+    [/(nombre).*(certificad)|(certificad).*(nombre)/, () => T.certNombre()],
+    [/(certificad|constancia|diploma)/, () => T.certificado()],
+    [/(contrasena|olvide mi|recuperar mi cuenta)/, () => T.contrasena()],
+    [/\bcompart/, () => T.compartir()],
+    [/\b(instalar|app|aplicacion)\b/, () => T.app()],
+    [/\b(celular|movil|telefono|tablet|dispositivo)\b/, () => T.celular()],
+    [/\b(en vivo|webinar|grabad[oa]s?)\b/, () => T.formato()],
+    [/\b(retos?|logros?|xp|premios?)\b/, () => T.retos()],
+    [/\b(herramientas?|calculadora)\b/, () => T.herramientas()],
+    [/(desbloque|cada 8|ocho dias|cuando se abren)/, () => T.desbloqueo()],
+    [/(material|pdf|descarg)/, () => T.material()],
+    [/(registr|crear (mi )?cuenta|inscrib)/, () => T.crear()],
+    [/(membres|suscrip|incluye)/, () => membresia()],
+    [/(gratis|gratuit|prueba)/, () => T.prueba()]
+  ];
+
   function escribio(q) {
     yo(q);
     const n = norm(q);
-    if (/^(hola|buenas|hey|buen dia|buenos dias|buenas tardes|buenas noches)\b/.test(n)) return menuDeNuevo('¡Hola! ¿En qué te ayudo?')();
-    if (/(precio|cuesta|costo|cuanto|mensualidad|pagar|pago)/.test(n)) return membresia();
-    if (/(asesor|persona|humano|whatsapp|llamar|contacto|hablar)/.test(n)) return asesor();
-    if (/(certificad|constancia|diploma)/.test(n)) return duda('Sí. Al terminar un curso obtienes un certificado digital con folio oficial que cualquiera puede verificar en línea.')();
-    if (/(membres|suscrip)/.test(n)) return membresia();
-    if (/(gratis|gratuit|prueba)/.test(n)) return DUDAS[0].fn();
+    const hit = INTENCIONES.find(([patron]) => patron.test(n));
+    if (hit) return hit[1]();
     conCatalogo(() => buscarTexto(q, n));
   }
 
