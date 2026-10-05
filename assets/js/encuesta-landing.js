@@ -630,12 +630,23 @@ function confirmarCurso(c, razon, rec, aviso) {
   const body = document.getElementById('af-enc-body');
   if (!body) return;
   resTk++;
-  document.getElementById('af-enc-step').textContent = 'Tu prueba gratuita';
-  ponerTitulo('Elegiste: ' + c.titulo);
-  af_setExpr('happy', { titulo: '¡Buena elección!', texto: 'Te llevo a crear tu cuenta y ahí confirmas tu prueba gratuita.' });
+  document.getElementById('af-enc-step').textContent = 'Último paso';
+  ponerTitulo(['¡Excelente ', nodo('span', 'af-enc-hl', 'elección'), '!'], true);
+  af_setExpr('happy', { titulo: '¡Buena elección!', texto: 'Crea tu cuenta y confirma tu prueba gratuita.' });
   const res = nodo('div', 'af-enc-res');
-  res.appendChild(nodo('p', 'af-enc-lead', 'Te llevo a crear tu cuenta gratis y ahí confirmas este curso como tu prueba gratuita.'));
-  res.appendChild(nodo('p', 'af-enc-hint', '¿Ya tienes cuenta? Inicia sesión: verás el curso en tu panel, pero la prueba gratuita se usa una sola vez por persona, así que no se desbloqueará de nuevo.'));
+  // el curso elegido, destacado
+  const sel = nodo('div', 'af-enc-sel');
+  const th = nodo('span', 'af-cb-th', c.emoji);
+  const img = nodo('img');
+  img.alt = '';
+  img.src = rec.portada(c);
+  img.addEventListener('error', () => img.remove());
+  th.appendChild(img);
+  const info = nodo('span', 'af-enc-sel-i');
+  info.append(nodo('span', 'af-enc-sel-tag', 'Tu prueba gratuita'), nodo('b', null, c.titulo), nodo('small', null, razon ? 'Para reforzar ' + razon : c.area));
+  sel.append(th, info);
+  res.appendChild(sel);
+  res.appendChild(nodo('p', 'af-enc-lead', 'Crea tu cuenta gratis y confirma este curso como tu prueba gratuita. Solo toma un minuto.'));
   const crear = nodo('a', 'af-enc-opt af-enc-cta', 'Crear mi cuenta gratis →');
   crear.href = AUTH_URL + '?tab=register&curso=' + encodeURIComponent(c.id);
   crear.addEventListener('click', ev => { ev.preventDefault(); irAAuth('register', c); });

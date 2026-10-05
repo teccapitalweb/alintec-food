@@ -337,6 +337,31 @@
 }
 .af-enc-promo-t mark { background: none; color: #FFD571; }
 .af-enc-promo-s { margin: 10px 0 0; font-size: 13px; font-weight: 500; letter-spacing: .01em; color: rgba(255, 255, 255, .82); }
+.af-enc-sel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 2px solid #58B71B;
+  border-radius: 18px;
+  background: #f2faec;
+  box-shadow: 0 10px 26px rgba(43, 157, 91, .14);
+}
+.af-enc-sel .af-cb-th { flex: 0 0 76px; width: 76px; height: 76px; border-radius: 14px; }
+.af-enc-sel-i { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.af-enc-sel-tag {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #FFC93C;
+  color: #2B2208;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.af-enc-sel-i b { font-size: 15px; line-height: 1.28; color: #16301f; }
+.af-enc-sel-i small { font-size: 12.5px; color: #4f6b5a; }
 .af-enc-ok { margin: 0; padding: 10px 14px; border-radius: 12px; background: #eef8f1; border: 1px solid #cfe8d7; font-size: 13px; font-weight: 600; color: #25573d; }
 .af-enc-h { margin: 6px 0 -6px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: #16301f; }
 .af-enc-hint { margin: 0; font-size: 13px; line-height: 1.5; color: #647a6c; }
