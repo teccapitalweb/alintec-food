@@ -4021,7 +4021,7 @@ window.__setDisplayName = async (nombre) => {
       <div class="nav-label">Principal</div>
       <a class="nav-item is-active" data-section="inicio"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
       <a class="nav-item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Mis cursos<span class="nav-item__badge">12</span></a>
-      <a class="nav-item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo<span class="nav-item__dot"></span></a>
+      <a class="nav-item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo<span class="nav-item__badge">Pronto</span></a>
       <a class="nav-item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs y material</a>
       <a class="nav-item" data-section="retos"><svg class="ic"><use href="#i-bolt"/></svg>Retos<span class="nav-item__badge is-new">Nuevo</span></a>
       <a class="nav-item" data-section="logros"><svg class="ic"><use href="#i-trophy"/></svg>Mis logros</a>
@@ -4315,6 +4315,15 @@ function applyGreeting(){
 async function initCountdown(){
   const widget = document.querySelector('.widget--next');
   if (!widget) return;
+  if (window.__CLASES_EN_VIVO_PRONTO === true) {
+    widget.innerHTML = `
+      <div class="widget__label">Clases en vivo</div>
+      <div style="padding:18px 0 4px;text-align:center;">
+        <div style="display:inline-block;margin-bottom:10px;padding:4px 12px;border-radius:100px;background:var(--primary);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;">Próximamente</div>
+        <div style="font-size:12px;color:var(--text-3);line-height:1.5;">Estamos preparando las transmisiones en vivo con especialistas.</div>
+      </div>`;
+    return;
+  }
 
   // Si tenemos cargarWebinarsFirestore disponible, esperamos a que cargue
   if (typeof window.__cargarWebinarsFirestore === 'function') {
@@ -4518,6 +4527,9 @@ function pdfTablaSimple(pdf, opts){
    Los registrados sin pagar pueden CAPTURAR datos, pero al pedir
    RESULTADO o PDF se les muestra el paywall. Solo VIP/admin obtienen salida.
    ========================================================= */
+// Mientras las clases en vivo no estén listas se muestra "Próximamente". Para activarlas basta ponerlo en false.
+window.__CLASES_EN_VIVO_PRONTO = true;
+
 function toolEsVIP(){
   const S = window.UserState;
   if (!S) return false;
@@ -4527,17 +4539,13 @@ function toolEsVIP(){
   if (S.isAdmin) return true;
   return false;
 }
-// Devuelve true si puede continuar; si NO es VIP, muestra paywall y devuelve false
+// Devuelve true si puede continuar. Si NO es VIP, la lleva directo a Suscripción (con un aviso) y devuelve false.
+// Se llama justo cuando la persona intenta USAR la herramienta; ver la herramienta y capturar datos es libre.
 function toolRequiereVIP(nombreHerramienta){
   if (toolEsVIP()) return true;
-  if (typeof window.__showPaywallModal === 'function'){
-    window.__showPaywallModal({
-      title: 'Función exclusiva para miembros VIP',
-      sub: 'Captura tus datos cuando quieras, pero generar resultados y reportes de ' + (nombreHerramienta||'las Herramientas Pro') + ' requiere una membresía activa. Hazte VIP y desbloquea todas las herramientas.'
-    });
-  } else if (typeof Toast !== 'undefined') {
-    Toast.info('Solo VIP','Activa tu membresía para usar esta función.');
-  }
+  try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
+  if (typeof Toast !== 'undefined') Toast.info('Función de membresía', 'Para usar ' + (nombreHerramienta || 'las Herramientas Pro') + ' activa tu membresía.');
+  if (typeof navigateToSection === 'function') navigateToSection('suscripcion', { skipPaywall: true });
   return false;
 }
 
@@ -6290,20 +6298,18 @@ function seccionPanelDesdeHash(){
 function navigateToSection(section, opts){
   opts = opts || {};
   if(!SECCIONES_VALIDAS_PANEL.includes(section)) section = 'inicio';
-  // ─── Guardia paywall · Herramientas Pro (son de PAGO) ───
-  // Si un usuario no-VIP intenta abrir cualquier tool-*, se redirige a
-  // suscripción cerrando cualquier modal que tenga encima.
-  // También aplica a la COMUNIDAD (Foro VIP, Directorio VIP, Canal WhatsApp):
-  // su contenido es exclusivo de miembros — sin membresía se redirige a pagar.
+  // ─── Guardia paywall · COMUNIDAD (Foro VIP, Directorio VIP, Canal WhatsApp) ───
+  // Su contenido es exclusivo de miembros: sin membresía se redirige a Suscripción cerrando
+  // cualquier modal que tenga encima.
+  // Las Herramientas Pro (tool-*) YA NO se bloquean al abrirlas: cualquier persona puede verlas y
+  // capturar datos; en cuanto intenta USARLAS (evaluar, calcular, guardar, descargar el PDF…)
+  // toolRequiereVIP() la envía directo a Suscripción.
   const SECCIONES_SOLO_VIP = ['foro','directorio','canal'];
-  if ((section.startsWith('tool-') || SECCIONES_SOLO_VIP.includes(section)) && !opts.skipPaywall) {
+  if (SECCIONES_SOLO_VIP.includes(section) && !opts.skipPaywall) {
     const esVip = (typeof toolEsVIP === 'function') ? toolEsVIP() : (window.UserState?.modo === 'vip');
     if (!esVip) {
       try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
-      if (typeof Toast !== 'undefined') {
-        if (section.startsWith('tool-')) Toast.info('Herramienta Pro', 'Activa tu membresía para usar las herramientas.');
-        else Toast.info('Comunidad VIP', 'Activa tu membresía para entrar a la comunidad.');
-      }
+      if (typeof Toast !== 'undefined') Toast.info('Comunidad VIP', 'Activa tu membresía para entrar a la comunidad.');
       return navigateToSection('suscripcion', { skipPaywall: true });
     }
   }
@@ -9141,7 +9147,8 @@ const Sections = (function(){
     const listaCursos = Array.isArray(cursos) ? cursos : [];
     const totalMateriales = listaCursos.reduce((total, curso) => total + (Array.isArray(curso.materiales) ? curso.materiales.length : 0), 0);
     setStat('banner-stat-cursos', listaCursos.length, 'Cursos disponibles');
-    setStat('banner-stat-clases', Array.isArray(webinars) ? webinars.length : 0, 'Clases en vivo y grabadas');
+    if (window.__CLASES_EN_VIVO_PRONTO === true) setStat('banner-stat-clases', 'Pronto', 'Clases en vivo: próximamente');
+    else setStat('banner-stat-clases', Array.isArray(webinars) ? webinars.length : 0, 'Clases en vivo y grabadas');
     setStat('banner-stat-pdfs', totalMateriales, 'PDFs y materiales');
     setStat('banner-stat-pro', 5, 'Herramientas Pro');
 
@@ -10051,6 +10058,26 @@ const Sections = (function(){
   let webState={tab:'proximas'};
 
   async function renderWebinars(container){
+    // Próximamente: mientras la función no esté lista, todas las personas ven este mensaje
+    if (window.__CLASES_EN_VIVO_PRONTO === true) {
+      container.innerHTML = `
+        <div class="fade-up">
+          <div class="sec-hero">
+            <span class="sec-hero__eyebrow">Aprende en directo</span>
+            <h1 class="sec-hero__title">Clases <span class="sec-hero__accent">en vivo.</span></h1>
+            <p class="sec-hero__sub">Sesiones en directo con profesionales y especialistas del sector alimentario.</p>
+          </div>
+          <div style="text-align:center;padding:64px 24px;background:var(--surface-2);border:1px dashed var(--border-2);border-radius:18px;margin-top:18px;">
+            <div style="width:72px;height:72px;border-radius:50%;background:color-mix(in srgb, var(--primary) 12%, transparent);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="34" height="34"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>
+            </div>
+            <div style="display:table;margin:0 auto 12px;padding:5px 14px;border-radius:100px;background:var(--primary);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;">Próximamente</div>
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.3px;color:var(--text);margin-bottom:8px;">Muy pronto tendrás clases en vivo</div>
+            <div style="font-size:13.5px;color:var(--text-3);max-width:420px;margin:0 auto;line-height:1.6;">Estamos preparando las transmisiones con especialistas del sector alimentario. Cuando estén listas aparecerán aquí.</div>
+          </div>
+        </div>`;
+      return;
+    }
     // Cargar de Firestore si aún no se cargó
     if (!_webinarsLoaded && !_webinarsLoading) {
       container.innerHTML = `
@@ -17422,7 +17449,7 @@ const NOM051Tool = (function(){
     q('#n51-tipo').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ s.tipo=b.dataset.v; save(); q('#n51-tipo').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); }));
     q('#n51-edul').addEventListener('click',()=>{ s.edulcorante=!s.edulcorante; save(); mount(container); });
     q('#n51-caf').addEventListener('click',()=>{ s.cafeina=!s.cafeina; save(); mount(container); });
-    q('#n51-calc').addEventListener('click',()=>{ sync(); s.calculado=true; save(); renderOut(); });
+    q('#n51-calc').addEventListener('click',()=>{ if(!toolRequiereVIP('la Calculadora NOM-051')) return; sync(); s.calculado=true; save(); renderOut(); });
     q('#n51-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar la evaluación?'))return; s=base(); save(); mount(container); });
     q('#n51-pdf').addEventListener('click',generarPDF);
     if(s.calculado) renderOut();
@@ -17605,7 +17632,7 @@ const MicroTool = (function(){
       q('#mc-limite').addEventListener('input',e=>{s.limite=e.target.value;save();});
       q('#mc-unidad').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{s.unidad=b.dataset.v;save();q('#mc-unidad').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}));
       q('#mc-addplaca').addEventListener('click',()=>{ s.placas.push({col:'',dil:s.placas.length+2,vol:1}); save(); formConteo(); });
-      q('#mc-calc').addEventListener('click',()=>{ s.calculado=true; save(); renderOut(); });
+      q('#mc-calc').addEventListener('click',()=>{ if(!toolRequiereVIP('la herramienta de Microbiología')) return; s.calculado=true; save(); renderOut(); });
     }
     function renderPlacas(){
       const wrap=q('#mc-placas');
@@ -17630,7 +17657,7 @@ const MicroTool = (function(){
       q('#mc-sm').addEventListener('input',e=>{s.ser_muestra=e.target.value;save();});
       q('#mc-sd').addEventListener('input',e=>{s.ser_diluyente=e.target.value;save();});
       q('#mc-sp').addEventListener('input',e=>{s.ser_pasos=e.target.value;save();});
-      q('#mc-calc2').addEventListener('click',()=>{ s.calculado=true; save(); renderOut(); });
+      q('#mc-calc2').addEventListener('click',()=>{ if(!toolRequiereVIP('la herramienta de Microbiología')) return; s.calculado=true; save(); renderOut(); });
     }
     function renderOut(){
       const out=q('#mc-out');
@@ -17798,7 +17825,7 @@ const AnaquelTool = (function(){
     q('#an-emp').addEventListener('input',e=>{s.empresa=e.target.value;save();});
     q('#an-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar los datos?'))return; s=base(); save(); mount(container); });
     q('#an-pdf').addEventListener('click',generarPDF);
-    q('#an-calc').addEventListener('click',()=>{s.calculado=true;save();renderOut();});
+    q('#an-calc').addEventListener('click',()=>{ if(!toolRequiereVIP('la calculadora de Vida de anaquel')) return; s.calculado=true;save();renderOut();});
     formFields(); if(s.calculado) renderOut();
 
     function formFields(){
@@ -18008,6 +18035,7 @@ const HACCPTool = (function(){
         const mo=q('#hc-mon'); if(mo) mo.addEventListener('input',e=>{d.monitoreo=e.target.value;save();});
         const co=q('#hc-corr'); if(co) co.addEventListener('input',e=>{d.correccion=e.target.value;save();});
         const sv=q('#hc-save'); if(sv) sv.addEventListener('click',()=>{
+          if(!toolRequiereVIP('el Planificador HACCP')) return;
           if(!d.etapa.trim()||!d.desc.trim()){ afToast('error','Faltan datos','Captura la fase y la descripción del peligro.'); return; }
           const veredicto=evaluarArbol(d);
           s.peligros.push(Object.assign({}, d, {pcc:!!veredicto.pcc, veredicto:veredicto.texto, modificar:!!veredicto.modificar}));
@@ -18224,6 +18252,7 @@ const BPMTool = (function(){
       }).join('');
       wrap.querySelectorAll('.af-audit-sec__head').forEach(h=>h.addEventListener('click',()=>{ const id=h.dataset.sec; s.abiertas[id]=!s.abiertas[id]; save(); renderSecciones(); }));
       wrap.querySelectorAll('.af-triopt').forEach(g2=>g2.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+        if(!toolRequiereVIP('la Auditoría BPM')) return;
         const key=g2.dataset.key; s.resp[key]= s.resp[key]===b.dataset.v ? null : b.dataset.v; save();
         g2.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.dataset.v===s.resp[key]));
         renderScore();
@@ -18288,7 +18317,7 @@ if(typeof Sections!=='undefined' && Sections.renderers){
       ${esVip ? '' : `
       <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;margin-bottom:14px;">
         <svg class="ic" style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"><use href="#i-crown"/></svg>
-        <div style="flex:1;font-size:12.5px;color:var(--text-2);line-height:1.45;">Las Herramientas Pro son de pago. Puedes explorar y capturar datos, pero los resultados y reportes requieren membresía activa.</div>
+        <div style="flex:1;font-size:12.5px;color:var(--text-2);line-height:1.45;">Puedes explorar las Herramientas Pro. Para usarlas (evaluar, calcular, guardar o descargar reportes) necesitas una membresía activa y te llevamos directo a Suscripción.</div>
         <button class="btn btn--accent" style="flex-shrink:0;" onclick="navigateToSection('suscripcion')">Hazte VIP</button>
       </div>`}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">
