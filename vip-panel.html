@@ -2807,39 +2807,45 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
 /* ─── Banner sticky FOMO (modo invitado y sin-membresia) ─── */
 .fomo-banner{
   position:relative;z-index:100;
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  padding:calc(8px + env(safe-area-inset-top)) 24px 8px;
-  background:linear-gradient(90deg,var(--primary),var(--highlight));
-  color:#0A120C;
-  font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  padding:calc(11px + env(safe-area-inset-top)) 24px 11px;
+  background:#17301F; /* color plano, sin degradado */
+  color:#F4F1E8;
+  font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;
   letter-spacing:-.1px;line-height:1.35;
-  border-bottom:1px solid color-mix(in srgb,#0A120C 18%,transparent);
+  border-bottom:3px solid #F2C14E;
   flex-wrap:wrap;
 }
 
 /* Si el banner FOMO está visible, él cubre el notch → el body no duplica el safe-area */
 body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
-.fomo-banner__icon{font-size:14px;line-height:1}
-.fomo-banner__text strong{font-weight:800}
+.fomo-banner__icon{
+  display:inline-grid;place-items:center;flex:0 0 auto;
+  width:26px;height:26px;border-radius:50%;
+  background:#F2C14E;color:#2B2208;
+  font-size:13px;line-height:1;
+}
+.fomo-banner__text strong{font-weight:800;color:#F2C14E}
 .fomo-banner__timer{
   font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;
-  padding:2px 8px;border-radius:6px;
-  background:rgba(14,10,6,.15);
+  padding:3px 9px;border-radius:999px;
+  background:rgba(255,255,255,.14);color:#fff;
   font-feature-settings:"tnum" 1;
 }
 .fomo-banner__cta{
-  display:inline-flex;align-items:center;gap:6px;
-  background:#0A120C;color:var(--primary);
-  font-size:11.5px;font-weight:700;letter-spacing:-.1px;
-  padding:6px 12px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:7px;
+  background:#F2C14E;color:#2B2208;
+  font-size:12.5px;font-weight:800;letter-spacing:-.1px;
+  padding:8px 16px;border-radius:999px;
   text-decoration:none;border:none;cursor:pointer;
-  transition:transform .15s ease, box-shadow .15s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.fomo-banner__cta:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.25)}
-.fomo-banner__cta svg{width:12px;height:12px}
+.fomo-banner__cta:hover{transform:translateY(-1px);background:#F7CE6A;box-shadow:0 8px 18px rgba(0,0,0,.3)}
+.fomo-banner__cta svg{width:13px;height:13px}
 @media (max-width:768px){
-  .fomo-banner{padding:max(50px, calc(env(safe-area-inset-top) + 12px)) 12px 12px;font-size:11.5px;gap:8px;line-height:1.3}
-  .fomo-banner__cta{padding:5px 10px;font-size:11px}
+  .fomo-banner{padding:max(50px, calc(env(safe-area-inset-top) + 12px)) 12px 12px;font-size:12px;gap:9px;line-height:1.3}
+  .fomo-banner__cta{padding:7px 13px;font-size:12px}
   .fomo-banner__icon{display:none}
 }
 
@@ -3254,8 +3260,8 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
 
 <!-- Banner sticky FOMO · solo visible para invitado y sin-membresia -->
 <div class="fomo-banner" id="fomo-banner" style="display:none">
-  <span class="fomo-banner__icon" aria-hidden="true">⭐</span>
-  <span class="fomo-banner__text" id="fomo-banner-text"><strong>Activa tu suscripción</strong> para acceder a cursos, clases y herramientas pro.</span>
+  <span class="fomo-banner__icon" aria-hidden="true">★</span>
+  <span class="fomo-banner__text" id="fomo-banner-text"><strong>Activa tu suscripción</strong> y desbloquea todos los cursos y las herramientas Pro.</span>
   <span class="fomo-banner__timer" id="fomo-banner-timer" style="display:none">5:00</span>
   <button class="fomo-banner__cta" id="fomo-banner-cta" type="button">
     Suscribirme
@@ -15271,7 +15277,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         startDemoTimer();
       } else { // sin-membresia
         banner.style.display = '';
-        if (bannerText) bannerText.innerHTML = '<strong>Activa tu suscripción</strong> para acceder a cursos, clases y herramientas pro.';
+        if (bannerText) bannerText.innerHTML = '<strong>Activa tu suscripción</strong> y desbloquea todos los cursos y las herramientas Pro.';
         if (bannerTimer) bannerTimer.style.display = 'none';
       }
     }
