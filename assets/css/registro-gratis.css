@@ -33,20 +33,19 @@
 .reg-stamp {
   position: absolute;
   z-index: 3;
-  top: -96px;
-  right: -6px;
-  width: 190px;
-  transform: rotate(9deg);
+  top: -74px;
+  right: 8px;
+  width: 148px;
+  transform: rotate(8deg);
   transform-origin: 50% 50%;
-  animation: regStamp 3.6s ease-in-out infinite;
-  filter: drop-shadow(0 6px 0 rgba(15, 36, 24, .08));
+  animation: regStamp 4.5s ease-in-out infinite;
+  filter: drop-shadow(0 12px 18px rgba(62, 154, 26, .35));
   pointer-events: none;
 }
 .reg-stamp svg { display: block; width: 100%; height: auto; overflow: visible; }
 @keyframes regStamp {
-  0%, 100% { transform: rotate(9deg) scale(1); }
-  45% { transform: rotate(5deg) scale(1.07); }
-  60% { transform: rotate(11deg) scale(1.03); }
+  0%, 100% { transform: rotate(8deg) translateY(0); }
+  50% { transform: rotate(5deg) translateY(-6px); }
 }
 
 /* ── Texto ─────────────────────────────────────────────── */
@@ -366,13 +365,13 @@
 @media (max-width: 960px) {
   .reg-section { padding: 96px 0 70px; }
   .reg-grid { grid-template-columns: 1fr; gap: 44px; padding: 44px 32px; }
-  .reg-stamp { top: -78px; right: 6px; width: 150px; }
+  .reg-stamp { top: -66px; right: 10px; width: 124px; }
 }
 @media (max-width: 520px) {
   .reg-section { padding-top: 88px; }
   .reg-section .section-container { padding: 0 16px; }
   .reg-grid { padding: 34px 20px 38px; border-radius: 26px; }
-  .reg-stamp { top: -80px; right: -2px; width: 122px; }
+  .reg-stamp { top: -62px; right: 6px; width: 104px; }
   .reg-title { letter-spacing: -.035em; }
   .reg-actions { flex-direction: column; align-items: stretch; }
   .reg-btn { justify-content: center; }
