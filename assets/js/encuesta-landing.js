@@ -264,6 +264,15 @@ function af_animarReaccion() {
   window.setTimeout(() => companion.classList.remove('is-reacting'), 450);
 }
 
+// Título de la tarjeta: acepta texto o nodos (para resaltar una parte); "grande" es el del resultado.
+function ponerTitulo(partes, grande) {
+  const q = document.getElementById('af-enc-q');
+  if (!q) return;
+  q.classList.toggle('is-result', !!grande);
+  q.textContent = '';
+  q.append(...[].concat(partes));
+}
+
 function renderPaso() {
   if (!document.getElementById('af-enc-card')) return; // se cerró la sección mientras esperaba la reacción
   const pasos = obtenerPasos();
@@ -271,7 +280,7 @@ function renderPaso() {
   if (!def) { renderResultado(); return; }
   resTk++; // cancela cualquier pantalla de resultado que estuviera cargando
   document.getElementById('af-enc-step').textContent = 'Cuéntanos de ti';
-  document.getElementById('af-enc-q').textContent = def.q;
+  ponerTitulo(def.q);
   af_setExpr(def.expr, def.mensaje);
   actualizarAtras();
   const body = document.getElementById('af-enc-body');
@@ -428,21 +437,15 @@ const PREF_CURSO_KEY = 'af_curso_pref'; // misma clave que lee vip-panel.html
 const AUTH_URL = 'vip-auth.html';
 
 const FORT_PERFIL = {
-  'Dueño de negocio': 'visión de negocio',
-  'Área de calidad': 'enfoque en la calidad',
-  'Estudiante': 'ganas de crecer',
-  'Consultor': 'mirada de consultor'
+  'Dueño de negocio': 'tu visión de negocio',
+  'Área de calidad': 'tu enfoque en la calidad',
+  'Estudiante': 'tus ganas de crecer',
+  'Consultor': 'tu mirada de consultor'
 };
 const EXP_TXT = {
   'Sí, me gusta': 'Ya sabes aprender en línea, así que avanzarás rápido.',
   'Prefiero presencial': 'Valoras el acompañamiento cercano: empieza con un curso y avanza a tu ritmo.',
   'Es mi primera vez': 'Es tu primera vez en línea y ya diste el primer paso; todo se hace paso a paso.'
-};
-const TEMA_FRASE = {
-  'Formulación de producto': 'la formulación de producto',
-  'Calidad y microbiología': 'la calidad y la microbiología',
-  'Normativa (NOM, COFEPRIS)': 'la normativa (NOM, COFEPRIS)',
-  'Inocuidad en planta': 'la inocuidad en planta'
 };
 const TEMA_CORTO = {
   'Formulación de producto': 'formulación de producto',
@@ -510,7 +513,7 @@ async function renderResultado() {
   const tk = ++resTk;
   actualizarAtras();
   document.getElementById('af-enc-step').textContent = 'Un momento';
-  document.getElementById('af-enc-q').textContent = 'Preparando tu resultado…';
+  ponerTitulo('Preparando tu resultado…');
   af_setExpr('thinking', { titulo: 'Analizando tus respuestas.', texto: 'Estoy armando tu resultado y los cursos que más te pueden servir.' });
   body.innerHTML = '';
   const espera = nodo('div', 'af-enc-res af-enc-wait');
@@ -529,17 +532,22 @@ function pintarResultado(rec, aviso) {
   if (!body) return;
   resTk++;
   const recomendados = rec ? recomendar(rec.lista) : [];
-  const fortaleza = FORT_PERFIL[respuestas.p1] || 'ganas de aprender';
+  const fortaleza = FORT_PERFIL[respuestas.p1] || 'tus ganas de aprender';
+  const tema = TEMA_CORTO[respuestas.interes];
   document.getElementById('af-enc-step').textContent = 'Tu resultado';
-  document.getElementById('af-enc-q').textContent = 'Tu fortaleza: ' + fortaleza;
+  if (tema) {
+    const resalta = nodo('span', 'af-enc-hl', tema);
+    ponerTitulo(['¡Vas por muy buen camino en ', resalta, '!'], true);
+  } else {
+    ponerTitulo('¡Estás listo para dar el siguiente paso!', true);
+  }
   af_setExpr('excited', { titulo: '¡Tu resultado está listo!', texto: 'Elige un curso y empieza tu prueba gratuita.' });
   actualizarAtras();
-  const tema = TEMA_FRASE[respuestas.interes];
-  const lead = (EXP_TXT[respuestas.experiencia] || 'Tienes todo para empezar.') +
-    (tema ? ' Por lo que nos contaste, ' + tema + ' puede ser tu siguiente paso.' : '');
+  const lead = nodo('p', 'af-enc-lead');
+  lead.append('Destacas por ', nodo('b', null, fortaleza), '. ' + (EXP_TXT[respuestas.experiencia] || 'Tienes todo para empezar.'));
 
   const res = nodo('div', 'af-enc-res');
-  res.appendChild(nodo('p', 'af-enc-lead', lead));
+  res.appendChild(lead);
   const beneficios = nodo('ul', 'af-enc-benef');
   BENEFICIOS.forEach(b => beneficios.appendChild(nodo('li', null, b)));
   res.appendChild(beneficios);
@@ -598,7 +606,7 @@ function confirmarCurso(c, razon, rec, aviso) {
   if (!body) return;
   resTk++;
   document.getElementById('af-enc-step').textContent = 'Tu prueba gratuita';
-  document.getElementById('af-enc-q').textContent = 'Elegiste: ' + c.titulo;
+  ponerTitulo('Elegiste: ' + c.titulo);
   af_setExpr('happy', { titulo: '¡Buena elección!', texto: 'Te llevo a crear tu cuenta y ahí confirmas tu prueba gratuita.' });
   const res = nodo('div', 'af-enc-res');
   res.appendChild(nodo('p', 'af-enc-lead', 'Te llevo a crear tu cuenta gratis y ahí confirmas este curso como tu prueba gratuita.'));
@@ -635,7 +643,7 @@ function renderContacto(rec) {
   resTk++;
   actualizarAtras(true);
   document.getElementById('af-enc-step').textContent = 'Un asesor te escribe';
-  document.getElementById('af-enc-q').textContent = '¿A qué WhatsApp te escribimos?';
+  ponerTitulo('¿A qué WhatsApp te escribimos?');
   af_setExpr('excited', { titulo: 'Con gusto te ayudamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
   body.innerHTML = `
     <div class="af-enc-telrow">
