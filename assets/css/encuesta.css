@@ -303,6 +303,59 @@
   font-family: inherit;
 }
 
+/* ── Pantalla de resultado: fortaleza, beneficios y cursos recomendados ── */
+.af-enc-res { grid-column: 1 / -1; display: grid; gap: 14px; min-width: 0; }
+.af-enc-lead { margin: 0; font-size: 14.5px; line-height: 1.55; color: #4a6154; }
+.af-enc-benef { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.af-enc-benef li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef8f1;
+  border: 1px solid #cfe8d7;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #25573d;
+}
+.af-enc-benef li::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #2B9D5B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 9px no-repeat;
+}
+.af-enc-ok { margin: 0; padding: 10px 14px; border-radius: 12px; background: #eef8f1; border: 1px solid #cfe8d7; font-size: 13px; font-weight: 600; color: #25573d; }
+.af-enc-h { margin: 6px 0 -6px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: #16301f; }
+.af-enc-hint { margin: 0; font-size: 13px; line-height: 1.5; color: #647a6c; }
+.af-enc-lista { display: grid; gap: 8px; }
+.af-enc-lista .af-cb-cur { border: 1px solid #e4ece6; box-shadow: 0 4px 14px rgba(20, 60, 40, .06); padding: 9px; }
+.af-enc-lista .af-cb-ct b { font-size: 13.5px; }
+.af-enc-lista .af-cb-ct small { font-size: 12px; }
+.af-enc-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; padding-top: 10px; border-top: 1px solid #edf2ed; }
+.af-enc-link {
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #25573d;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.af-enc-link:hover { color: #2B9D5B; }
+.af-enc-link:focus-visible { outline: 3px solid #9be07f; outline-offset: 2px; border-radius: 4px; }
+.af-enc-res > .af-enc-link { justify-self: start; }
+.af-enc-wait { display: flex; justify-content: center; gap: 8px; padding: 30px 0 34px; }
+.af-enc-wait i { width: 10px; height: 10px; border-radius: 50%; background: #58B71B; animation: af-enc-dot 1s ease-in-out infinite; }
+.af-enc-wait i:nth-child(2) { animation-delay: .15s; }
+.af-enc-wait i:nth-child(3) { animation-delay: .3s; }
+@keyframes af-enc-dot { 0%, 80%, 100% { transform: scale(.55); opacity: .4; } 40% { transform: scale(1); opacity: 1; } }
+
 /* ── Celular: la pregunta va primero y el personaje debajo ── */
 @media (max-width: 760px) {
   .af-enc-section { padding: 28px 16px 8px; }
@@ -319,5 +372,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .af-enc-face,
-  .af-enc-companion.is-reacting .af-enc-face { animation: none; }
+  .af-enc-companion.is-reacting .af-enc-face,
+  .af-enc-wait i { animation: none; }
 }

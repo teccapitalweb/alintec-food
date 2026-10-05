@@ -101,6 +101,8 @@
   }
 
   const disponibles = () => catalogo.filter(c => !c.pronto);
+  // La encuesta de la página usa el mismo catálogo y las mismas portadas para recomendar cursos.
+  window.AFCatalogo = { cargar: cargarCatalogo, portada };
   function areas() {
     const cuenta = new Map();
     disponibles().forEach(c => cuenta.set(c.area, (cuenta.get(c.area) || 0) + 1));

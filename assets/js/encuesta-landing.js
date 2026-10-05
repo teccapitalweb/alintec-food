@@ -1,6 +1,7 @@
 /* Encuesta del landing · perfila visitantes nuevos y los conecta
-   con su prueba gratuita. Anónima: solo pide el WhatsApp, de forma opcional,
-   en el último paso.
+   con su prueba gratuita. Anónima: el WhatsApp es opcional y va al final, como
+   opción secundaria ("que un asesor me escriba"). Al terminar muestra un resultado
+   (fortaleza, beneficios y cursos recomendados) que lleva a crear la cuenta.
 
    Árbol real (no es un formulario lineal tipo Google Forms): cada perfil
    (p1) sigue su propio camino de preguntas en obtenerPasos() — un
@@ -267,7 +268,8 @@ function renderPaso() {
   if (!document.getElementById('af-enc-card')) return; // se cerró la sección mientras esperaba la reacción
   const pasos = obtenerPasos();
   const def = pasos[paso];
-  if (!def) { renderContactoOFin(); return; }
+  if (!def) { renderResultado(); return; }
+  resTk++; // cancela cualquier pantalla de resultado que estuviera cargando
   document.getElementById('af-enc-step').textContent = 'Cuéntanos de ti';
   document.getElementById('af-enc-q').textContent = def.q;
   af_setExpr(def.expr, def.mensaje);
@@ -304,6 +306,7 @@ function elegir(clave, opt, boton) {
     (DEPENDENCIAS[clave] || []).forEach(k => { delete respuestas[k]; });
   }
   respuestas[clave] = opt;
+  guardarProgreso({ guardado: false }); // si cambió una respuesta, el resultado se vuelve a guardar
   const body = document.getElementById('af-enc-body');
   if (body) body.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
   if (boton) boton.classList.add('is-selected');
@@ -413,17 +416,228 @@ function normalizarWhatsapp(codPais, crudo) {
   return pais.pref + d;
 }
 
-// Último paso (todos pasan por aquí, sea cual sea su urgencia): WhatsApp opcional y salida.
-// "Ver prueba gratuita" lleva a crear la cuenta; "Seguir viendo" cierra la encuesta y deja
-// seguir en la página. En ambos casos se guarda lo respondido (y el WhatsApp si lo dejó).
-function renderContactoOFin() {
+// ── Resultado final ─────────────────────────────────────────────────────────
+// Al terminar las preguntas se muestra una pantalla de resultado: la fortaleza de la persona (sale de
+// lo que respondió; el test no mide conocimientos, por eso solo se habla de su perfil, nunca de su nivel), los
+// beneficios de empezar y 3 cursos recomendados con las mismas tarjetas de la guía virtual.
+// Al elegir un curso se guarda como preferencia (la misma que usa la guía virtual: 'af_curso_pref') y
+// se le lleva a crear su cuenta; ya en el panel, ese curso se le propone como prueba gratuita. Si ya
+// tiene cuenta, inicia sesión: el panel le muestra el curso en su estado normal (la prueba es una sola).
+// El WhatsApp pasó a ser una opción secundaria ("que un asesor me escriba").
+const PREF_CURSO_KEY = 'af_curso_pref'; // misma clave que lee vip-panel.html
+const AUTH_URL = 'vip-auth.html';
+
+const FORT_PERFIL = {
+  'Dueño de negocio': 'visión de negocio',
+  'Área de calidad': 'enfoque en la calidad',
+  'Estudiante': 'ganas de crecer',
+  'Consultor': 'mirada de consultor'
+};
+const EXP_TXT = {
+  'Sí, me gusta': 'Ya sabes aprender en línea, así que avanzarás rápido.',
+  'Prefiero presencial': 'Valoras el acompañamiento cercano: empieza con un curso y avanza a tu ritmo.',
+  'Es mi primera vez': 'Es tu primera vez en línea y ya diste el primer paso; todo se hace paso a paso.'
+};
+const TEMA_FRASE = {
+  'Formulación de producto': 'la formulación de producto',
+  'Calidad y microbiología': 'la calidad y la microbiología',
+  'Normativa (NOM, COFEPRIS)': 'la normativa (NOM, COFEPRIS)',
+  'Inocuidad en planta': 'la inocuidad en planta'
+};
+const TEMA_CORTO = {
+  'Formulación de producto': 'formulación de producto',
+  'Calidad y microbiología': 'calidad y microbiología',
+  'Normativa (NOM, COFEPRIS)': 'normativa',
+  'Inocuidad en planta': 'inocuidad en planta'
+};
+const TEMA_CLAVES = {
+  'Formulación de producto': /formul|tecnolog|nutric|funcional|conserva|suplement|extrac|recubrim/,
+  'Calidad y microbiología': /microbio|calidad|laborator/,
+  'Normativa (NOM, COFEPRIS)': /normativ|etiquet|nom|cofepris|distintivo|haccp|bpm|buenas prac/,
+  'Inocuidad en planta': /inocuidad|haccp|bpm|buenas prac|higien|sanit/
+};
+const METAS_NORMA = { 'haccp': 'HACCP', 'iso 22000': 'ISO 22000', 'nom-051': 'NOM-051', 'distintivo h': 'Distintivo H' };
+const BENEFICIOS = ['Prueba gratuita del curso que elijas', 'Sin tarjeta de crédito', 'Aprende en línea y a tu ritmo'];
+
+let resTk = 0; // sube cada vez que cambia la pantalla: cancela esperas de una pantalla anterior
+let contactoGuardado = false;
+
+const esperar = ms => new Promise(r => setTimeout(r, ms));
+const normaTxt = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+function nodo(tag, cls, texto) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (texto != null) n.textContent = texto;
+  return n;
+}
+
+// Catálogo real de cursos (lo carga la guía virtual de la página). Si no está disponible, el resultado
+// se muestra igual, solo sin la lista de cursos.
+async function cargarRecomendaciones() {
+  // La guía virtual se carga después de la encuesta: si se retoma el resultado al recargar, se espera un poco.
+  for (let i = 0; i < 30 && !window.AFCatalogo; i++) await esperar(100);
+  const guia = window.AFCatalogo;
+  if (!guia) return null;
+  try {
+    const catalogo = await guia.cargar();
+    const lista = catalogo.filter(c => !c.pronto && c.clases >= 2);
+    return lista.length ? { lista, portada: guia.portada } : null;
+  } catch (e) { return null; }
+}
+
+// Elige hasta 3 cursos: primero los que coinciden con su meta (HACCP, NOM-051…) y con el tema que dijo
+// que le interesa; el resto del catálogo solo completa si hacen falta.
+function recomendar(lista) {
+  const re = TEMA_CLAVES[respuestas.interes];
+  const metas = [respuestas.p2b, respuestas.p2].filter(Boolean).map(normaTxt).filter(v => METAS_NORMA[v]);
+  return lista
+    .map((c, i) => {
+      const t = normaTxt(c.titulo + ' ' + c.area);
+      let pts = 0, razon = null;
+      metas.forEach(m => { if (t.includes(m)) { pts += 5; razon = razon || METAS_NORMA[m]; } });
+      if (re && re.test(t)) { pts += 3; razon = razon || TEMA_CORTO[respuestas.interes]; }
+      if (re && re.test(normaTxt(c.area))) pts += 2; // el área del curso coincide: va por delante de una coincidencia solo en el título
+      return { c, pts, razon, i };
+    })
+    .sort((a, b) => b.pts - a.pts || a.i - b.i)
+    .slice(0, 3);
+}
+
+async function renderResultado() {
   const body = document.getElementById('af-enc-body');
+  if (!body) return;
+  const tk = ++resTk;
   actualizarAtras();
-  document.getElementById('af-enc-step').textContent = 'Un último detalle';
-  document.getElementById('af-enc-q').textContent = '¿Quieres recibir más información de cursos?';
-  af_setExpr('excited', { titulo: 'Casi terminamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
+  document.getElementById('af-enc-step').textContent = 'Un momento';
+  document.getElementById('af-enc-q').textContent = 'Preparando tu resultado…';
+  af_setExpr('thinking', { titulo: 'Analizando tus respuestas.', texto: 'Estoy armando tu resultado y los cursos que más te pueden servir.' });
+  body.innerHTML = '';
+  const espera = nodo('div', 'af-enc-res af-enc-wait');
+  espera.setAttribute('aria-hidden', 'true');
+  espera.append(nodo('i'), nodo('i'), nodo('i'));
+  body.appendChild(espera);
+  const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [rec] = await Promise.all([cargarRecomendaciones(), esperar(reducido ? 250 : 1500)]);
+  if (tk !== resTk || !document.getElementById('af-enc-card')) return;
+  guardarRespuesta(null, { marcar: false }); // las respuestas ya están completas: se guardan sin esperar
+  pintarResultado(rec);
+}
+
+function pintarResultado(rec, aviso) {
+  const body = document.getElementById('af-enc-body');
+  if (!body) return;
+  resTk++;
+  const recomendados = rec ? recomendar(rec.lista) : [];
+  const fortaleza = FORT_PERFIL[respuestas.p1] || 'ganas de aprender';
+  document.getElementById('af-enc-step').textContent = 'Tu resultado';
+  document.getElementById('af-enc-q').textContent = 'Tu fortaleza: ' + fortaleza;
+  af_setExpr('excited', { titulo: '¡Tu resultado está listo!', texto: 'Elige un curso y empieza tu prueba gratuita.' });
+  actualizarAtras();
+  const tema = TEMA_FRASE[respuestas.interes];
+  const lead = (EXP_TXT[respuestas.experiencia] || 'Tienes todo para empezar.') +
+    (tema ? ' Por lo que nos contaste, ' + tema + ' puede ser tu siguiente paso.' : '');
+
+  const res = nodo('div', 'af-enc-res');
+  res.appendChild(nodo('p', 'af-enc-lead', lead));
+  const beneficios = nodo('ul', 'af-enc-benef');
+  BENEFICIOS.forEach(b => beneficios.appendChild(nodo('li', null, b)));
+  res.appendChild(beneficios);
+  if (aviso) res.appendChild(nodo('p', 'af-enc-ok', aviso));
+
+  if (recomendados.length) {
+    res.appendChild(nodo('p', 'af-enc-h', 'Cursos que te pueden servir'));
+    res.appendChild(nodo('p', 'af-enc-hint', 'Selecciona el curso de tu interés y comienza tu prueba gratuita con el curso de tu preferencia.'));
+    const lista = nodo('div', 'af-enc-lista');
+    recomendados.forEach(({ c, razon }) => lista.appendChild(filaCurso(c, razon, rec.portada, () => confirmarCurso(c, razon, rec, aviso))));
+    res.appendChild(lista);
+  } else {
+    const crear = nodo('a', 'af-enc-opt af-enc-cta', 'Crear mi cuenta gratis →');
+    crear.href = AUTH_URL + '?tab=register';
+    crear.addEventListener('click', ev => { ev.preventDefault(); irAAuth('register'); });
+    res.appendChild(crear);
+  }
+
+  const pie = nodo('div', 'af-enc-pie');
+  const yaTengo = nodo('button', 'af-enc-link', 'Ya tengo cuenta');
+  yaTengo.type = 'button';
+  yaTengo.addEventListener('click', () => irAAuth('login'));
+  const asesor = nodo('button', 'af-enc-link', 'Prefiero que un asesor me escriba');
+  asesor.type = 'button';
+  asesor.addEventListener('click', () => renderContacto(rec));
+  const seguir = nodo('button', 'af-enc-link', 'Seguir viendo');
+  seguir.type = 'button';
+  seguir.addEventListener('click', async () => { await guardarRespuesta(null); cerrarSeccion(); });
+  pie.append(yaTengo, asesor, seguir);
+  res.appendChild(pie);
+  body.innerHTML = '';
+  body.appendChild(res);
+}
+
+// Misma tarjeta que usa la guía virtual (foto, nombre y "Ver →"), con el motivo de la recomendación.
+function filaCurso(c, razon, portada, alElegir) {
+  const b = nodo('button', 'af-cb-cur');
+  b.type = 'button';
+  const th = nodo('span', 'af-cb-th', c.emoji);
+  const img = nodo('img');
+  img.alt = '';
+  img.loading = 'lazy';
+  img.src = portada(c);
+  img.addEventListener('error', () => img.remove());
+  th.appendChild(img);
+  const ct = nodo('span', 'af-cb-ct');
+  ct.append(nodo('b', null, c.titulo), nodo('small', null, razon ? 'Te serviría para reforzar ' + razon : c.area));
+  b.append(th, ct, nodo('span', 'af-cb-go', 'Ver →'));
+  b.addEventListener('click', alElegir);
+  return b;
+}
+
+// Confirmación antes de llevar a la persona a otra página (como en la guía virtual).
+function confirmarCurso(c, razon, rec, aviso) {
+  const body = document.getElementById('af-enc-body');
+  if (!body) return;
+  resTk++;
+  document.getElementById('af-enc-step').textContent = 'Tu prueba gratuita';
+  document.getElementById('af-enc-q').textContent = 'Elegiste: ' + c.titulo;
+  af_setExpr('happy', { titulo: '¡Buena elección!', texto: 'Te llevo a crear tu cuenta y ahí confirmas tu prueba gratuita.' });
+  const res = nodo('div', 'af-enc-res');
+  res.appendChild(nodo('p', 'af-enc-lead', 'Te llevo a crear tu cuenta gratis y ahí confirmas este curso como tu prueba gratuita.'));
+  res.appendChild(nodo('p', 'af-enc-hint', '¿Ya tienes cuenta? Inicia sesión: verás el curso en tu panel, pero la prueba gratuita se usa una sola vez por persona, así que no se desbloqueará de nuevo.'));
+  const crear = nodo('a', 'af-enc-opt af-enc-cta', 'Crear mi cuenta gratis →');
+  crear.href = AUTH_URL + '?tab=register&curso=' + encodeURIComponent(c.id);
+  crear.addEventListener('click', ev => { ev.preventDefault(); irAAuth('register', c); });
+  const ya = nodo('button', 'af-enc-opt af-enc-sec', 'Ya tengo cuenta');
+  ya.type = 'button';
+  ya.addEventListener('click', () => irAAuth('login', c));
+  const otro = nodo('button', 'af-enc-link', '← Elegir otro curso');
+  otro.type = 'button';
+  otro.addEventListener('click', () => pintarResultado(rec, aviso));
+  res.append(crear, ya, otro);
+  body.innerHTML = '';
+  body.appendChild(res);
+}
+
+// Guarda lo respondido y lleva a crear cuenta o iniciar sesión. El curso elegido queda como preferencia
+// para que el panel lo proponga como prueba gratuita (solo si la cuenta es nueva y elegible).
+async function irAAuth(tab, curso) {
+  if (curso) {
+    try { localStorage.setItem(PREF_CURSO_KEY, JSON.stringify({ id: curso.id, titulo: curso.titulo, t: Date.now() })); } catch (e) {}
+  }
+  document.querySelectorAll('#af-enc-body button, #af-enc-body a').forEach(el => { el.style.pointerEvents = 'none'; });
+  await guardarRespuesta(null); // se espera el guardado: si no, el cambio de página lo cancelaría
+  window.location.href = AUTH_URL + '?tab=' + tab + (curso ? '&curso=' + encodeURIComponent(curso.id) : '');
+}
+
+// Pantalla secundaria: dejar el WhatsApp para que un asesor escriba (opcional, con Aviso de privacidad).
+function renderContacto(rec) {
+  const body = document.getElementById('af-enc-body');
+  if (!body) return;
+  resTk++;
+  actualizarAtras(true);
+  document.getElementById('af-enc-step').textContent = 'Un asesor te escribe';
+  document.getElementById('af-enc-q').textContent = '¿A qué WhatsApp te escribimos?';
+  af_setExpr('excited', { titulo: 'Con gusto te ayudamos.', texto: 'Déjanos tu WhatsApp y un asesor te escribe con opciones para ti. Es opcional.' });
   body.innerHTML = `
-    <p class="af-enc-sub">Opcional</p>
     <div class="af-enc-telrow">
       <select class="af-enc-pais" id="af-enc-pais" aria-label="País de tu WhatsApp">
         ${PAISES.map(p => `<option value="${p.cod}">${p.nombre}${p.pref ? ' +' + p.pref : ''}</option>`).join('')}
@@ -435,45 +649,28 @@ function renderContactoOFin() {
       <input type="checkbox" id="af-enc-acepto">
       <span>Acepto el <a href="aviso-de-privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a> y que un asesor me escriba por WhatsApp con información de cursos.</span>
     </label>
-    <a class="af-enc-opt af-enc-cta" id="af-enc-prueba" href="vip-auth.html">Ver prueba gratuita →</a>
-    <button type="button" class="af-enc-opt af-enc-sec" id="af-enc-seguir">Seguir viendo</button>
+    <button type="button" class="af-enc-opt af-enc-cta" id="af-enc-enviar">Guardar mi WhatsApp</button>
+    <button type="button" class="af-enc-opt af-enc-sec" id="af-enc-volver">Volver a mis cursos</button>
   `;
   const input = document.getElementById('af-enc-contacto');
   const error = document.getElementById('af-enc-error');
   const acepto = document.getElementById('af-enc-acepto');
   const consent = document.getElementById('af-enc-consent');
-  const prueba = document.getElementById('af-enc-prueba');
-  const seguir = document.getElementById('af-enc-seguir');
-  const avisar = (texto, marcarCasilla) => {
-    error.textContent = texto;
-    error.hidden = false;
-    consent.classList.toggle('is-error', !!marcarCasilla);
-  };
-  // Vacío = sin WhatsApp (es opcional). Si escribió un número debe ser válido (WhatsApp de México)
-  // y tener marcada la casilla del Aviso de privacidad: sin eso no se guarda ni se usa el número.
-  const leerContacto = () => {
-    const crudo = input.value.trim();
-    if (!crudo) return { ok: true, valor: null };
-    const numero = normalizarWhatsapp(pais.value, crudo);
-    if (!numero) {
-      avisar(`Ese número no parece válido. ${AYUDA_NUMERO[pais.value] || AYUDA_NUMERO.otro} O déjalo vacío para continuar sin él.`, false);
-      input.focus();
-      return { ok: false };
-    }
-    if (!acepto.checked) {
-      avisar('Marca la casilla para que un asesor pueda escribirte, o deja el número vacío.', true);
-      return { ok: false };
-    }
-    return { ok: true, valor: numero };
-  };
-  // El texto de ayuda del campo cambia con el país elegido.
+  const enviar = document.getElementById('af-enc-enviar');
+  const volver = document.getElementById('af-enc-volver');
+  const pais = document.getElementById('af-enc-pais');
   const AYUDA_NUMERO = {
     MX: 'Escribe tu WhatsApp de México con 10 dígitos y lada (por ejemplo 55 1234 5678).',
     OT: 'Escríbelo completo con el código de tu país (por ejemplo +49 151 2345 6789).',
     otro: 'Escríbelo completo, sin el código del país.'
   };
   const PLACEHOLDER = { MX: '10 dígitos con lada', OT: 'Con código de país (+…)' };
-  const pais = document.getElementById('af-enc-pais');
+  const avisar = (texto, marcarCasilla) => {
+    error.textContent = texto;
+    error.hidden = false;
+    consent.classList.toggle('is-error', !!marcarCasilla);
+  };
+  const limpiarError = () => { error.hidden = true; consent.classList.remove('is-error'); };
   pais.value = paisPorDefecto();
   // El selector se ajusta al texto del país elegido para que la flecha quede junto a él, no al fondo.
   const ajustarAnchoPais = () => {
@@ -488,33 +685,40 @@ function renderContactoOFin() {
   const actualizarPais = () => { input.placeholder = PLACEHOLDER[pais.value] || 'Tu número'; ajustarAnchoPais(); };
   actualizarPais();
   pais.addEventListener('change', () => { actualizarPais(); limpiarError(); });
-  const irAPrueba = async (ev) => {
-    if (ev) ev.preventDefault();
-    const c = leerContacto();
-    if (!c.ok) return;
-    prueba.textContent = 'Un momento…';
-    prueba.style.pointerEvents = 'none';
-    seguir.disabled = true;
-    await guardarRespuesta(c.valor); // se espera el guardado: si no, el cambio de página lo cancelaría
-    window.location.href = 'vip-auth.html';
-  };
-  prueba.addEventListener('click', irAPrueba);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') irAPrueba(e); });
-  const limpiarError = () => { error.hidden = true; consent.classList.remove('is-error'); };
   input.addEventListener('input', limpiarError);
   acepto.addEventListener('change', limpiarError);
-  seguir.addEventListener('click', () => {
-    const c = leerContacto();
-    if (!c.ok) return;
-    guardarRespuesta(c.valor);
-    cerrarSeccion();
-  });
+  // Aquí el número sí es el objetivo: debe ser válido (WhatsApp de México u otro país) y tener marcada la
+  // casilla del Aviso de privacidad; sin eso no se guarda ni se usa.
+  const guardar = async () => {
+    const crudo = input.value.trim();
+    if (!crudo) { avisar('Escribe tu número, o vuelve a tus cursos si prefieres no dejarlo.', false); input.focus(); return; }
+    const numero = normalizarWhatsapp(pais.value, crudo);
+    if (!numero) {
+      avisar(`Ese número no parece válido. ${AYUDA_NUMERO[pais.value] || AYUDA_NUMERO.otro}`, false);
+      input.focus();
+      return;
+    }
+    if (!acepto.checked) { avisar('Marca la casilla para que un asesor pueda escribirte.', true); return; }
+    enviar.textContent = 'Guardando…';
+    enviar.disabled = true;
+    volver.disabled = true;
+    await guardarRespuesta(numero, { marcar: false });
+    contactoGuardado = true;
+    pintarResultado(rec, '¡Listo! Un asesor te escribirá por WhatsApp. Mientras, puedes elegir tu curso.');
+  };
+  enviar.addEventListener('click', guardar);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') guardar(); });
+  volver.addEventListener('click', () => pintarResultado(rec));
 }
 
 // Guarda la encuesta completa. Espera como máximo 3 s para no dejar colgada a la persona.
-async function guardarRespuesta(contacto) {
-  marcarEstado('completada');
-  const doc = { sessionId: getSessionId(), respuestas, completada: true, creado: serverTimestamp() };
+// Las respuestas se guardan una sola vez (al mostrar el resultado); el WhatsApp, si lo deja, va en un
+// segundo documento con la misma sesión (el panel de admin prefiere el que trae contacto).
+async function guardarRespuesta(contacto, { marcar = true } = {}) {
+  if (marcar) marcarEstado('completada');
+  if (!contacto && leerProgreso().guardado) return;
+  guardarProgreso({ guardado: true });
+  const doc = { sessionId: getSessionId(), respuestas: { ...respuestas }, completada: true, creado: serverTimestamp() };
   if (contacto) {
     doc.contacto = contacto;
     doc.avisoAceptado = true;
@@ -535,7 +739,7 @@ function cerrarSeccion() {
 // admin la reemplaza por la completa si luego termina). Mejor esfuerzo: al salir
 // de la página el navegador puede cortar la petición.
 function guardarParcialSiHaceFalta() {
-  if (leerEstado() === 'completada') return;
+  if (leerEstado() === 'completada' || leerProgreso().guardado) return;
   const n = Object.keys(respuestas).length;
   if (n === 0 || n === (leerProgreso().parcialN || 0)) return;
   guardarProgreso({ parcialN: n });

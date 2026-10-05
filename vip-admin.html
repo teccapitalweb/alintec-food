@@ -1609,7 +1609,8 @@ const Pages={
       const previa = porSesion.get(clave);
       const n = Object.keys(d.respuestas || {}).length;
       const nPrevia = previa ? Object.keys(previa.respuestas || {}).length : -1;
-      if (!previa || (d.completada && !previa.completada) || (d.completada === previa.completada && n > nPrevia)) porSesion.set(clave, d);
+      if (!previa || (d.completada && !previa.completada) || (d.completada === previa.completada && n > nPrevia)
+        || (d.completada === previa.completada && n === nPrevia && d.contacto && !previa.contacto)) porSesion.set(clave, d);
     });
     docs = [...porSesion.values()];
     const total = docs.length;
