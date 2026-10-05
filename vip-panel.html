@@ -4049,6 +4049,7 @@ window.__setDisplayName = async (nombre) => {
       <a class="nav-item" data-section="perfil"><svg class="ic"><use href="#i-user"/></svg>Mi perfil</a>
       <a class="nav-item" data-section="suscripcion"><svg class="ic"><use href="#i-credit-card"/></svg>Suscripción</a>
       <a class="nav-item" id="btn-logout"><svg class="ic"><use href="#i-logout"/></svg>Cerrar sesión</a>
+      <a class="nav-item" id="btn-install-app" role="button" tabindex="0"><svg class="ic"><use href="#i-download"/></svg>Instalar app</a>
     </div>
   </aside>
 
@@ -4278,6 +4279,7 @@ window.__setDisplayName = async (nombre) => {
         <a class="mobile-drawer__item" data-section="perfil"><svg class="ic"><use href="#i-user"/></svg>Mi perfil</a>
         <a class="mobile-drawer__item" data-section="suscripcion"><svg class="ic"><use href="#i-credit-card"/></svg>Suscripción</a>
         <a class="mobile-drawer__item" id="drawer-logout-btn" style="color:#EF4444;"><svg class="ic"><use href="#i-logout"/></svg>Cerrar sesión</a>
+        <a class="mobile-drawer__item" id="drawer-install-btn" role="button" tabindex="0"><svg class="ic"><use href="#i-download"/></svg>Instalar app</a>
       </div>
     </div>
   </div>
@@ -16184,7 +16186,131 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
     });
   }
 </script>
-<!-- (Se quitó la tarjeta emergente para instalar la app: el panel ya no la muestra al entrar.) -->
+<!-- ═══ Instalar Alintec Food como app · se abre SOLO al tocar "Instalar app" (menú lateral / móvil) ═══ -->
+<style>
+  #alintec-install-pop{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif}
+  #alintec-install-pop.show{display:flex;animation:iipFade .25s ease}
+  #alintec-install-pop .iip-overlay{position:absolute;inset:0;background:rgba(7,11,18,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #alintec-install-pop .iip-card{position:relative;width:100%;max-width:380px;background:#14231A;border:1px solid #2C4434;border-radius:24px;padding:28px 24px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.55);animation:iipPop .35s cubic-bezier(.16,1,.3,1)}
+  #alintec-install-pop .iip-glow{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:120px;background:radial-gradient(ellipse,rgba(111,175,123,.32),transparent 70%);pointer-events:none}
+  #alintec-install-pop .iip-icon{width:84px;height:84px;border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6FAF7B,#397655);box-shadow:0 10px 28px rgba(57,118,85,.32);position:relative}
+  #alintec-install-pop .iip-icon img{width:54px;height:54px;object-fit:contain}
+  #alintec-install-pop .iip-badge{position:absolute;top:-8px;right:-8px;background:#B8DBBE;color:#183724;font-size:10px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:20px;text-transform:uppercase}
+  #alintec-install-pop h3{margin:0 0 8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:21px;font-weight:800;color:#EDF1F8;letter-spacing:-.3px}
+  #alintec-install-pop p{margin:0 0 18px;font-size:13.5px;line-height:1.55;color:#9AA6BC}
+  #alintec-install-pop .iip-feats{display:flex;flex-direction:column;gap:9px;text-align:left;margin:0 0 22px;padding:0}
+  #alintec-install-pop .iip-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:#EDF1F8}
+  #alintec-install-pop .iip-feat svg{width:18px;height:18px;flex-shrink:0;color:#6FAF7B}
+  #alintec-install-pop .iip-btn{display:block;width:100%;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;background:linear-gradient(135deg,#6FAF7B,#397655);color:#fff;box-shadow:0 8px 20px rgba(57,118,85,.28);transition:transform .15s,box-shadow .15s}
+  #alintec-install-pop .iip-btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(57,118,85,.38)}
+  #alintec-install-pop .iip-later{display:block;width:100%;margin-top:10px;background:none;border:none;color:#69748A;font-size:13px;font-family:inherit;cursor:pointer;padding:8px}
+  #alintec-install-pop .iip-later:hover{color:#9AA6BC}
+  #alintec-install-pop .iip-ios{display:none;margin:0 0 14px;padding:12px 14px;background:#1C2638;border:1px solid #2A3850;border-radius:12px;font-size:12.5px;line-height:1.6;color:#9AA6BC;text-align:left}
+  #alintec-install-pop .iip-ios b{color:#B8DBBE}
+  @keyframes iipFade{from{opacity:0}to{opacity:1}}
+  @keyframes iipPop{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
+  html[data-theme="day"] #alintec-install-pop .iip-card{background:#FFFFFF;border-color:#D8E5DA}
+  html[data-theme="day"] #alintec-install-pop h3{color:#14301C}
+  html[data-theme="day"] #alintec-install-pop p{color:#5A6478}
+  html[data-theme="day"] #alintec-install-pop .iip-feat{color:#14301C}
+  html[data-theme="day"] #alintec-install-pop .iip-ios{background:#EEF7EE;border-color:#D8E5DA}
+</style>
+<style>
+  #alintec-install-pop .iip-manual{display:none;margin:0 0 14px;padding:12px 14px;background:#1C2638;border:1px solid #2A3850;border-radius:12px;font-size:12.5px;line-height:1.6;color:#9AA6BC;text-align:left}
+  #alintec-install-pop .iip-manual b{color:#B8DBBE}
+  html[data-theme="day"] #alintec-install-pop .iip-manual{background:#EEF7EE;border-color:#D8E5DA}
+  html[data-theme="day"] #alintec-install-pop .iip-manual,html[data-theme="day"] #alintec-install-pop .iip-ios{color:#3D4A5C}
+  html[data-theme="day"] #alintec-install-pop .iip-manual b,html[data-theme="day"] #alintec-install-pop .iip-ios b{color:#1F6F3A}
+</style>
+<div id="alintec-install-pop" role="dialog" aria-modal="true" aria-labelledby="iip-title">
+  <div class="iip-overlay" id="iip-overlay"></div>
+  <div class="iip-card">
+    <div class="iip-glow"></div>
+    <div class="iip-icon">
+      <span class="iip-badge">App</span>
+      <img src="assets/img/alintec-isotipo.png" alt="Alintec Food" onerror="this.style.display='none'">
+    </div>
+    <h3 id="iip-title">Instala Alintec Food como app</h3>
+    <p>Accede más rápido, sin la barra del navegador, y vive una mejor experiencia desde tu pantalla de inicio.</p>
+    <div class="iip-ios" id="iip-ios-help">
+      En iPhone/iPad: toca el botón <b>Compartir</b> en Safari y luego <b>“Agregar a inicio”</b>.
+    </div>
+    <div class="iip-manual" id="iip-manual-help">
+      Abre el menú de tu navegador (<b>⋮</b> o <b>⋯</b>) y elige <b>“Instalar Alintec Food”</b> o <b>“Agregar a pantalla de inicio”</b>.
+    </div>
+    <div class="iip-feats">
+      <div class="iip-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Acceso directo desde tu pantalla de inicio</div>
+      <div class="iip-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Carga más rápida, como una app nativa</div>
+      <div class="iip-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Pantalla completa, sin distracciones</div>
+    </div>
+    <button class="iip-btn" id="iip-install-btn">Instalar ahora</button>
+    <button class="iip-later" id="iip-later-btn">Ahora no</button>
+  </div>
+</div>
+<script>
+(function(){
+  var deferredPrompt = null;
+  var pop = document.getElementById('alintec-install-pop');
+  var installBtn = document.getElementById('iip-install-btn');
+  var laterBtn = document.getElementById('iip-later-btn');
+  var overlay = document.getElementById('iip-overlay');
+  var iosHelp = document.getElementById('iip-ios-help');
+  var manualHelp = document.getElementById('iip-manual-help');
+  var botones = ['btn-install-app', 'drawer-install-btn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  if (!pop) return;
+
+  // ¿Ya está instalada (corriendo en modo app)?
+  function yaInstalada(){
+    try {
+      return window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.navigator.standalone === true;
+    } catch(e){ return false; }
+  }
+  function esIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream; }
+  function ocultarBotones(){ botones.forEach(function(b){ b.style.display = 'none'; }); }
+  if (yaInstalada()) ocultarBotones(); // dentro de la app no tiene sentido ofrecer instalarla
+
+  function abrir(){
+    if (yaInstalada()) { if (window.Toast) Toast.info('Ya tienes la app', 'Estás usando Alintec Food como app instalada.'); return; }
+    var ios = esIOS();
+    var automatica = !!deferredPrompt && !ios;
+    if (iosHelp) iosHelp.style.display = ios ? 'block' : 'none';            // iPhone/iPad: instrucciones de Safari
+    if (installBtn) installBtn.style.display = automatica ? 'block' : 'none'; // Android/Chrome/Edge: botón que instala
+    if (manualHelp) manualHelp.style.display = (!ios && !automatica) ? 'block' : 'none'; // resto: pasos del menú del navegador
+    pop.classList.add('show');
+  }
+  function cerrar(){ pop.classList.remove('show'); }
+
+  // Chrome/Edge/Android avisan que se puede instalar: se guarda el aviso para usarlo al tocar "Instalar ahora"
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; });
+  window.addEventListener('appinstalled', function(){
+    deferredPrompt = null; cerrar(); ocultarBotones();
+    if (window.Toast) Toast.success('¡Listo!', 'Busca el ícono de Alintec Food en tu pantalla de inicio.');
+  });
+
+  botones.forEach(function(b){
+    function accion(e){
+      e.preventDefault();
+      try { window.cerrarDrawerMovil && window.cerrarDrawerMovil(); } catch(x){}
+      setTimeout(abrir, b.id === 'drawer-install-btn' ? 220 : 0);
+    }
+    b.addEventListener('click', accion);
+    b.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') accion(e); });
+  });
+  if (installBtn) installBtn.addEventListener('click', function(){
+    if (!deferredPrompt){ abrir(); return; }
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      deferredPrompt = null; cerrar();
+      if (r && r.outcome === 'accepted' && window.Toast) Toast.success('Instalando…', 'En unos segundos verás el ícono de Alintec Food.');
+    });
+  });
+  if (laterBtn) laterBtn.addEventListener('click', cerrar);
+  if (overlay) overlay.addEventListener('click', cerrar);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && pop.classList.contains('show')) cerrar(); });
+})();
+</script>
 
 <!-- ===== HERRAMIENTAS PRO ALIMENTOS · inyectadas ===== -->
 <!-- ═══════════════════════════════════════════════════════════════════
