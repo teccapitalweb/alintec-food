@@ -1852,3 +1852,8 @@ button, input, select, textarea { font-family: inherit; }
   .hero p { margin: 0 0 31px; max-width: 610px; }
   .hero-btns { justify-content: flex-start; }
 }
+
+/* Portada: el bloque de texto baja unos 40 px (más aire arriba, menos abajo) en pantallas medianas y grandes */
+@media (min-width: 761px) {
+  .hero-inner { padding-top: 195px; padding-bottom: 75px; }
+}
