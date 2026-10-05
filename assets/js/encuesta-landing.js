@@ -165,6 +165,12 @@ function construirUI() {
   const hero = document.getElementById('inicio');
   if (hero) hero.after(sec); else document.body.prepend(sec);
   sec.querySelector('#af-enc-atras').addEventListener('click', atras);
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entradas => {
+      if (entradas.some(e => e.isIntersecting)) { io.disconnect(); setTimeout(saludar, 350); }
+    }, { threshold: 0.4 });
+    io.observe(sec);
+  }
   return sec;
 }
 
@@ -253,6 +259,18 @@ function af_setExpr(nombre, mensaje) {
   const copia = document.getElementById('af-enc-note-copy');
   if (titulo) titulo.textContent = contenido.titulo;
   if (copia) copia.textContent = contenido.texto;
+}
+
+// Saludo del personaje: se menea una vez (al aparecer la encuesta y al mostrar el resultado).
+let saludoTimer = null;
+function saludar() {
+  const cara = document.getElementById('af-enc-face');
+  if (!cara) return;
+  clearTimeout(saludoTimer);
+  cara.classList.remove('is-hello');
+  void cara.offsetWidth; // reinicia la animación si ya estaba puesta
+  cara.classList.add('is-hello');
+  saludoTimer = setTimeout(() => cara.classList.remove('is-hello'), 2100);
 }
 
 function af_animarReaccion() {
@@ -565,6 +583,7 @@ function pintarResultado(rec, aviso) {
     ponerTitulo('¡Estás listo para dar el siguiente paso!', true);
   }
   af_setExpr('excited', { titulo: '¡Tu resultado está listo!', texto: 'Elige un curso y empieza tu prueba gratuita.' });
+  saludar();
   actualizarAtras();
   const lead = nodo('p', 'af-enc-lead');
   lead.append('Destacas por ', nodo('b', null, fortaleza), '. ' + halagos());

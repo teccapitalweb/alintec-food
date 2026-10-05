@@ -33,6 +33,13 @@
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center bottom;
+  transform-origin: 50% 100%;
+  animation: af-enc-breathe 4.6s ease-in-out infinite; /* respira suavemente mientras está en pantalla */
+}
+/* Saludo: se menea un poco al aparecer la encuesta y al mostrar el resultado (usa la propiedad "rotate",
+   que se combina con el balanceo de "transform") */
+.af-enc-face.is-hello {
+  animation: af-enc-breathe 4.6s ease-in-out infinite, af-enc-hello 1.9s ease-in-out 1;
 }
 
 .af-enc-note {
@@ -80,6 +87,20 @@
 
 .af-enc-companion.is-reacting .af-enc-face {
   animation: af-enc-react .42s ease-out;
+}
+
+@keyframes af-enc-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.012); }
+}
+@keyframes af-enc-hello {
+  0% { rotate: 0deg; }
+  14% { rotate: -4deg; }
+  28% { rotate: 4deg; }
+  42% { rotate: -3.5deg; }
+  56% { rotate: 3deg; }
+  72% { rotate: -1.5deg; }
+  100% { rotate: 0deg; }
 }
 
 @keyframes af-enc-in {
@@ -408,5 +429,6 @@
 @media (prefers-reduced-motion: reduce) {
   .af-enc-face,
   .af-enc-companion.is-reacting .af-enc-face,
+  .af-enc-face.is-hello,
   .af-enc-wait i { animation: none; }
 }
