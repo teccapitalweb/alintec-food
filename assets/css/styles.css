@@ -1767,13 +1767,19 @@ body { background: #F4F1EC; }
 .panel-showcase-copy .section-title em,.certificacion-copy .section-title em { font-style: normal; }
 .panel-showcase-copy .section-title em { color: #B9674F; }
 .panel-showcase-copy .section-subtitle,.certificacion-copy .section-subtitle { max-width: 690px; font-size: 1rem; line-height: 1.72; }
-.panel-pulse { display: flex; align-items: center; gap: 15px; max-width: 700px; margin: 26px 0 6px; padding: 19px 22px; border: 1px solid rgba(57,118,85,.16); border-radius: 16px; background: #EEF5ED; }
+.panel-pulse { display: flex; align-items: center; gap: 15px; max-width: none; margin: 26px 0 6px; padding: 19px 22px; border: 1px solid rgba(57,118,85,.16); border-radius: 16px; background: #EEF5ED; }
 .panel-pulse > i { flex: 0 0 auto; width: 11px; height: 11px; border: 3px solid #D6E9D9; border-radius: 50%; background: #4C9562; box-shadow: 0 0 0 5px rgba(76,149,98,.09); animation: livePulse 1.8s ease-out infinite; }
 .panel-pulse span,.panel-pulse strong,.panel-pulse small { display: block; }.panel-pulse strong { color: #244531; font-size: 1.02rem; }.panel-pulse small { margin-top: 4px; color: #647369; font-size: .9rem; line-height: 1.45; }
-.panel-feature-list { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; max-width: 760px; }
+.panel-feature-list { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; max-width: none; }
 .panel-feature { align-content: start; grid-template-columns: 1fr; min-height: 200px; padding: 24px 22px; border-radius: 20px; }
 .panel-feature > span { width: 54px; height: 54px; margin-bottom: 14px; border-radius: 16px; font-size: .95rem; }.panel-feature:nth-child(2)>span { background: #FCECE7; color: #B9674F; }.panel-feature:nth-child(3)>span { background: #F7EED8; color: #9B6A1F; }
 .panel-feature strong { margin-bottom: 6px; font-size: 1.12rem; line-height: 1.25; }.panel-feature small { font-size: .93rem; line-height: 1.5; }
+/* Pantalla grande: la columna de texto es angosta, así que las tarjetas van una debajo de otra y ocupan todo su ancho */
+@media (min-width: 1001px) {
+  .panel-feature-list { grid-template-columns: 1fr; gap: 14px; }
+  .panel-feature { grid-template-columns: 54px minmax(0,1fr); align-items: center; gap: 18px; min-height: 0; padding: 18px 22px; }
+  .panel-feature > span { margin-bottom: 0; }
+}
 .showcase-link { min-height: 43px; padding: 0 5px; font-size: .82rem; }
 
 .showcase-index--light { color: rgba(255,255,255,.57); }.showcase-index--light b { background: #E7C56F; color: #3F310F; box-shadow: 0 9px 20px rgba(3,18,10,.2); }.showcase-index--light::after { background: rgba(255,255,255,.19); }
@@ -1811,7 +1817,7 @@ body { background: #F4F1EC; }
 }
 @media (max-width:1000px) {
   .panel-showcase-grid,.certificacion-grid { grid-template-columns: 1fr; }
-  .panel-showcase-copy,.certificacion-copy { max-width: 680px; }
+  .panel-showcase-copy,.certificacion-copy { max-width: none; } /* las tarjetas ocupan todo el ancho; los títulos y párrafos conservan su propio límite */
   .panel-3d-stage,.cert-3d-stage { min-height: 510px; }
   .certificacion-copy { order: -1; }
 }
