@@ -474,7 +474,7 @@
   }
 
   const DUDAS = [
-    { t: '¿Cómo funciona la prueba gratuita?', fn: duda('Al crear tu cuenta gratis eliges **un curso** como tu prueba gratuita y ves sus clases sin costo. La última clase de cada curso se desbloquea con la membresía. La elección no se puede cambiar, así que escoge el que más te interese.') },
+    { t: '¿Cómo funciona la prueba gratuita?', fn: duda('Al crear tu cuenta gratis eliges **un curso** como tu prueba gratuita y ves sus clases sin costo. La elección no se puede cambiar, así que escoge el que más te interese.') },
     { t: '¿Cuánto cuesta?', fn: () => membresia() },
     { t: '¿Dan certificado?', fn: duda('Sí. Al terminar un curso obtienes un certificado digital con folio oficial que cualquiera puede verificar en línea.') },
     { t: '¿Cómo tomo las clases?', fn: duda('Entras con tu cuenta y ves las clases en video desde tu panel. Cada curso trae material descargable para aplicarlo en tu trabajo.') },
