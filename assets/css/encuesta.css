@@ -309,27 +309,34 @@
 .af-enc-hl { color: #2B9D5B; background: linear-gradient(180deg, transparent 64%, #FFE3A3 64%); padding: 0 .06em; }
 .af-enc-lead b { color: #16301f; font-weight: 700; }
 .af-enc-lead { margin: 0; font-size: 14.5px; line-height: 1.55; color: #4a6154; }
-.af-enc-benef { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.af-enc-benef li {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
+.af-enc-promo {
+  position: relative;
+  padding: 20px 22px 18px;
+  border-radius: 20px;
+  background: #25573d; /* color plano */
+  color: #fff;
+}
+.af-enc-promo-tag {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 11px;
   border-radius: 999px;
-  background: #eef8f1;
-  border: 1px solid #cfe8d7;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #25573d;
+  background: #FFC93C;
+  color: #2B2208;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
 }
-.af-enc-benef li::before {
-  content: '';
-  flex: 0 0 auto;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: #2B9D5B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 9px no-repeat;
+.af-enc-promo-t {
+  margin: 0;
+  font-size: clamp(22px, 3.4vw, 31px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
 }
+.af-enc-promo-t mark { background: none; color: #FFD571; }
+.af-enc-promo-s { margin: 10px 0 0; font-size: 13px; font-weight: 500; letter-spacing: .01em; color: rgba(255, 255, 255, .82); }
 .af-enc-ok { margin: 0; padding: 10px 14px; border-radius: 12px; background: #eef8f1; border: 1px solid #cfe8d7; font-size: 13px; font-weight: 600; color: #25573d; }
 .af-enc-h { margin: 6px 0 -6px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: #16301f; }
 .af-enc-hint { margin: 0; font-size: 13px; line-height: 1.5; color: #647a6c; }

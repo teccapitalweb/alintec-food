@@ -442,11 +442,35 @@ const FORT_PERFIL = {
   'Estudiante': 'tus ganas de crecer',
   'Consultor': 'tu mirada de consultor'
 };
-const EXP_TXT = {
-  'Sí, me gusta': 'Ya sabes aprender en línea, así que avanzarás rápido.',
-  'Prefiero presencial': 'Valoras el acompañamiento cercano: empieza con un curso y avanza a tu ritmo.',
-  'Es mi primera vez': 'Es tu primera vez en línea y ya diste el primer paso; todo se hace paso a paso.'
+// Halagos según lo que respondió: son para motivar (hablan de su actitud y su momento, no de lo que "sabe").
+const HALAGO_EXP = {
+  'Sí, me gusta': 'Ya dominas el aprendizaje en línea.',
+  'Prefiero presencial': 'Valoras el trato cercano, y eso se nota en cómo aprendes.',
+  'Es mi primera vez': 'Es tu primera vez en línea y ya diste el paso: eso no lo hace cualquiera.'
 };
+const HALAGO_NIVEL = {
+  'Principiante': 'Empezar con tanta motivación es una gran ventaja.',
+  'Intermedio': 'Tienes una base que te hará avanzar rápido.',
+  'Avanzado': 'Tu nivel avanzado te permite sacarle el máximo provecho a cada curso.'
+};
+const HALAGO_URGENCIA = {
+  'Lo antes posible': 'Tu decisión de empezar ya habla de alguien que va por más.',
+  'En el próximo mes': 'Planear con calma es lo que hacen quienes llegan lejos.',
+  'Solo estoy explorando': 'Explorar con curiosidad es el primer paso de quienes terminan destacando.'
+};
+const HALAGO_FRENO = {
+  'Nada, listo': 'Y con la actitud de que nada te detiene, vas un paso adelante.',
+  'Precio': 'Cuidas cada decisión, y eso es de quien sabe lo que vale.',
+  'Tiempo': 'Y aun con poco tiempo piensas en crecer: eso se llama constancia.',
+  'No estoy seguro': 'Y pensarlo bien antes de elegir es de quien se toma en serio su futuro.'
+};
+const HALAGO_EQUIPO = 'Liderar a un equipo grande exige visión, y se nota que la tienes.';
+
+function halagos() {
+  const primera = HALAGO_NIVEL[respuestas.p2b] || (respuestas.tamano === 'Más de 50' ? HALAGO_EQUIPO : HALAGO_EXP[respuestas.experiencia]);
+  const frases = [primera, HALAGO_URGENCIA[respuestas.urgencia], HALAGO_FRENO[respuestas.freno]].filter(Boolean);
+  return frases.join(' ') || 'Tienes todo para empezar.';
+}
 const TEMA_CORTO = {
   'Formulación de producto': 'formulación de producto',
   'Calidad y microbiología': 'calidad y microbiología',
@@ -460,7 +484,6 @@ const TEMA_CLAVES = {
   'Inocuidad en planta': /inocuidad|haccp|bpm|buenas prac|higien|sanit/
 };
 const METAS_NORMA = { 'haccp': 'HACCP', 'iso 22000': 'ISO 22000', 'nom-051': 'NOM-051', 'distintivo h': 'Distintivo H' };
-const BENEFICIOS = ['Prueba gratuita del curso que elijas', 'Sin tarjeta de crédito', 'Aprende en línea y a tu ritmo'];
 
 let resTk = 0; // sube cada vez que cambia la pantalla: cancela esperas de una pantalla anterior
 let contactoGuardado = false;
@@ -544,17 +567,19 @@ function pintarResultado(rec, aviso) {
   af_setExpr('excited', { titulo: '¡Tu resultado está listo!', texto: 'Elige un curso y empieza tu prueba gratuita.' });
   actualizarAtras();
   const lead = nodo('p', 'af-enc-lead');
-  lead.append('Destacas por ', nodo('b', null, fortaleza), '. ' + (EXP_TXT[respuestas.experiencia] || 'Tienes todo para empezar.'));
+  lead.append('Destacas por ', nodo('b', null, fortaleza), '. ' + halagos());
 
   const res = nodo('div', 'af-enc-res');
   res.appendChild(lead);
-  const beneficios = nodo('ul', 'af-enc-benef');
-  BENEFICIOS.forEach(b => beneficios.appendChild(nodo('li', null, b)));
-  res.appendChild(beneficios);
+  const promo = nodo('div', 'af-enc-promo');
+  const etiqueta = nodo('span', 'af-enc-promo-tag', '¡GRATIS!');
+  const titular = nodo('p', 'af-enc-promo-t');
+  titular.append('Comienza tu ', nodo('mark', null, 'prueba gratuita'), ' con lo que buscas');
+  promo.append(etiqueta, titular, nodo('p', 'af-enc-promo-s', 'Sin tarjeta de crédito · 100% en línea · A tu ritmo'));
+  res.appendChild(promo);
   if (aviso) res.appendChild(nodo('p', 'af-enc-ok', aviso));
 
   if (recomendados.length) {
-    res.appendChild(nodo('p', 'af-enc-h', 'Cursos que te pueden servir'));
     res.appendChild(nodo('p', 'af-enc-hint', 'Selecciona el curso de tu interés y comienza tu prueba gratuita con el curso de tu preferencia.'));
     const lista = nodo('div', 'af-enc-lista');
     recomendados.forEach(({ c, razon }) => lista.appendChild(filaCurso(c, razon, rec.portada, () => confirmarCurso(c, razon, rec, aviso))));
