@@ -217,6 +217,7 @@
 .af-cb-bot b { color: #174a37; }
 .af-cb-bot p { margin: 0; }
 .af-cb-bot p + p { margin-top: 8px; }
+.af-cb-bot p.af-cb-aviso { margin-top: 10px; font-size: 11.5px; color: #6a8374; }
 .af-cb-me {
   align-self: flex-end;
   padding: 11px 15px;

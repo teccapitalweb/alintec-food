@@ -394,6 +394,7 @@
 
   const MENU = () => [
     { t: 'Buscar un curso', fn: buscarCurso },
+    { t: 'Aprender un concepto', fn: conceptos },
     { t: 'Conocer la membresía', fn: membresia },
     { t: 'Ver próximos cursos', fn: proximos },
     { t: 'Resolver una duda', fn: dudas },
@@ -580,7 +581,6 @@
 
   // Intenciones por palabras clave (en orden: la primera que coincide gana).
   const INTENCIONES = [
-    [/^(hola|buenas|hey|buen dia|buenos dias|buenas tardes|buenas noches)\b/, () => menuDeNuevo('¡Hola! ¿En qué te ayudo?')()],
     [/(reembols|devoluc)/, () => T.reembolso()],
     [/(cancel|dar de baja)/, () => T.cancelar()],
     [/(como pag|formas? de pago|metodos? de pago|tarjeta|stripe|oxxo|paypal|transferencia)/, () => T.pago()],
@@ -606,11 +606,140 @@
     [/(gratis|gratuit|prueba)/, () => T.prueba()]
   ];
 
+  // ── Charla básica: saludos, "¿quién eres?", gracias, despedidas… ──
+  const SOCIAL = {
+    identidad: /(quien eres|quien es usted|que eres|como te llamas|cual es tu nombre|eres (un |una )?(robot|bot|humano|humana|persona|ia|inteligencia artificial|real|chatgpt)|con quien hablo|hablo con (un|una))/,
+    saludo: /(^|\b)(hola|holi|holis|buenas|buenos dias|buen dia|buenas tardes|buenas noches|hey|saludos)\b|^(que tal|que onda)\W*$/,
+    estado: /(como estas|como esta usted|como te va|como andas|que tal estas|que tal tu)/,
+    gracias: /(gracias|te agradezco|muy amable)/,
+    adios: /(adios|hasta luego|hasta pronto|nos vemos|\bbye\b|\bchao\b|\bchau\b|me voy|que descanses)/,
+    ayuda: /(\bayuda\b|ayudame|auxilio|que puedes hacer|que sabes hacer|que haces|para que sirves|como funcionas|\bmenu\b|\bopciones\b)/,
+    ok: /^(ok|okey|okay|vale|listo|perfecto|entendido|claro|sale|de acuerdo|esta bien|muy bien)\W*$/
+  };
+
+  function saludoSegunHora(n) {
+    if (/(buenos dias|buen dia)/.test(n)) return '¡Buenos días!';
+    if (/buenas tardes/.test(n)) return '¡Buenas tardes!';
+    if (/buenas noches/.test(n)) return '¡Buenas noches!';
+    const h = new Date().getHours();
+    return h < 12 ? '¡Hola, buenos días!' : (h < 19 ? '¡Hola, buenas tardes!' : '¡Hola, buenas noches!');
+  }
+
+  function charlaSocial(n) {
+    if (n.length > 90) return null;
+    const f = {};
+    Object.keys(SOCIAL).forEach(k => { f[k] = SOCIAL[k].test(n); });
+    if (!Object.values(f).some(Boolean)) return null;
+    return async () => {
+      const partes = [];
+      if (f.saludo) partes.push(saludoSegunHora(n));
+      if (f.estado) partes.push('Muy bien, gracias por preguntar. Soy una guía virtual y siempre estoy lista para ayudarte.');
+      if (f.identidad) partes.push('Soy **tu guía virtual** de Alintec Food. No soy una persona ni una inteligencia artificial: respondo con información preparada por el equipo y con el catálogo de cursos. Si prefieres hablar con una persona, te paso con el equipo por WhatsApp.');
+      if (f.gracias) partes.push('¡Con gusto! Me alegra poder ayudarte.');
+      if (f.adios) partes.push('¡Hasta pronto! Aquí estaré cuando me necesites. Mucho éxito en tus estudios.');
+      if (f.ayuda) partes.push('Puedo ayudarte a **buscar un curso**, explicarte **conceptos** de calidad y seguridad alimentaria (como HACCP, BPM o la NOM-051), resolver dudas sobre la **membresía**, los pagos o los certificados, y pasarte con el equipo por WhatsApp.');
+      if (f.ok && !partes.length) partes.push('¡Perfecto!');
+      if (!f.adios) partes.push('¿En qué te puedo ayudar?');
+      const ok = await di(...partes.map(negritas));
+      if (ok) opciones(f.adios ? [{ t: 'Menú principal', fn: menuDeNuevo() }] : MENU());
+    };
+  }
+
+  // ── Conceptos de ciencia, calidad y seguridad alimentaria (glosario en chatbot-glosario.js) ──
+  const PALABRAS_VACIAS = new Set(['que', 'es', 'son', 'para', 'como', 'cual', 'cuales', 'por', 'una', 'unos', 'unas', 'los', 'las', 'del', 'con', 'sin', 'mas', 'muy', 'hay', 'sus', 'este', 'esta', 'esto', 'eso', 'ese', 'tipos', 'significa', 'sirve', 'existen', 'puedo', 'debe', 'cuando', 'donde', 'quien', 'explicame', 'dime', 'hablame', 'sobre', 'acerca']);
+  const contenido = txt => norm(txt).split(/[^a-z0-9]+/).filter(t => t.length >= 3 && !PALABRAS_VACIAS.has(t));
+  const escapar = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const sinPuntuacion = t => ' ' + String(t).replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
+  const contieneFrase = (n, frase) => sinPuntuacion(n).includes(sinPuntuacion(frase));
+
+  function glosarioCoincide(n) {
+    const G = window.AF_GLOSARIO;
+    if (!Array.isArray(G)) return null;
+    const tokens = new Set(contenido(n));
+    let mejor = null;
+    let mejorPuntos = 0;
+    G.forEach(e => {
+      let p = 0;
+      e.claves.forEach(c => { const cn = norm(c); if (contieneFrase(n, cn)) p = Math.max(p, 3 + cn.length / 40); });
+      // Preguntas parecidas a los ejemplos: comparten casi todas sus palabras de contenido
+      e.ejemplos.forEach(x => {
+        const ex = contenido(x);
+        if (ex.length < 2) return;
+        const compartidas = ex.filter(t => tokens.has(t)).length;
+        if (compartidas >= 2 && compartidas / ex.length >= 0.75) p = Math.max(p, 2.5 + compartidas / ex.length / 2);
+      });
+      if (p > mejorPuntos) { mejor = e; mejorPuntos = p; }
+    });
+    return mejorPuntos >= 3 ? mejor : null;
+  }
+
+  // Cursos de la plataforma relacionados con un concepto (por palabras que aparecen en título, área o descripción)
+  function cursosRelacionados(terminos) {
+    const lista = [];
+    disponibles().forEach((c, i) => {
+      const tit = norm(c.titulo), area = norm(c.area), desc = norm(c.desc);
+      let puntos = 0;
+      terminos.forEach(t => {
+        const tn = norm(t);
+        if (tit.includes(tn)) puntos += 3;
+        else if (area.includes(tn)) puntos += 2;
+        else if (desc.includes(tn)) puntos += 1;
+      });
+      if (puntos >= 3) lista.push({ c, puntos, i });
+    });
+    return lista.sort((a, b) => b.puntos - a.puntos || a.i - b.i).slice(0, 6).map(r => r.c);
+  }
+
+  async function responderGlosario(e) {
+    const aviso = el('p', 'af-cb-aviso', 'Es información general y orientativa.');
+    const ok = await di(...e.respuesta.map(negritas), aviso);
+    if (!ok) return;
+    const siguientes = [{ t: 'Otro concepto', fn: conceptos }, { t: 'Hablar con un asesor', fn: asesor }];
+    let lista = [];
+    try { await cargarCatalogo(); lista = cursosRelacionados(e.cursos || []); } catch (x) { /* sin catálogo: solo se ofrece seguir */ }
+    if (!lista.length) { opciones(siguientes); return; }
+    const ok2 = await di('Estos cursos de la plataforma tratan este tema:');
+    if (ok2) mostrarCursos(lista, siguientes);
+  }
+
+  async function conceptos(todos) {
+    const G = window.AF_GLOSARIO || [];
+    const lista = todos === true ? G.filter(e => !e.destacado) : G.filter(e => e.destacado);
+    const ok = await di(todos === true
+      ? 'Más conceptos que puedo explicarte:'
+      : '¿Qué concepto quieres conocer? También puedes **escribir tu pregunta** en la barra de abajo, por ejemplo «¿qué es la contaminación cruzada?».'.replace(/\*\*/g, ''));
+    if (!ok) return;
+    const botones = lista.map(e => ({ t: e.tema, dice: e.tema, fn: () => responderGlosario(e) }));
+    if (todos !== true && G.some(e => !e.destacado)) botones.push({ t: 'Más conceptos…', fn: () => conceptos(true) });
+    opciones(botones);
+  }
+
+  async function preguntaLibre() {
+    const ok = await di('Claro. Escribe tu pregunta en la barra de abajo y te ayudo.');
+    if (ok) opciones(MENU());
+  }
+
   function escribio(q) {
     yo(q);
     const n = norm(q);
+    // 1) "¿Quién eres?" / "¿eres un robot?" antes que nada (si no, "persona" lo confundiría con pedir un asesor)
+    if (SOCIAL.identidad.test(n)) return charlaSocial(n)();
+    // 2) Conceptos de ciencia, calidad y seguridad alimentaria. No aplica si la persona pide un curso, ni si
+    //    escribió algo largo que parece el título de un curso (no una pregunta): eso va a la búsqueda de cursos.
+    const quiereCurso = /\b(curso|cursos|clase|clases|capacitacion|capacitarme|capacitar|diplomado|taller|aprender|estudiar|inscribirme)\b/.test(n);
+    const esPregunta = /\?|^(que|como|cual|cuales|por que|para que|cuando|donde|quien|cuanto|cuantos|es|son|se|puedo|hay|existe|explicame|dime|hablame|cuentame|quiero saber|necesito saber|me puedes|puedes|podrias)\b/.test(n);
+    const pareceTitulo = n.split(/\s+/).length >= 9 && !esPregunta;
+    if (!quiereCurso && !pareceTitulo) {
+      const g = glosarioCoincide(n);
+      if (g) return responderGlosario(g);
+    }
+    // 3) Dudas de la membresía, pagos, certificados, cuenta…
     const hit = INTENCIONES.find(([patron]) => patron.test(n));
     if (hit) return hit[1]();
+    // 4) Saludos, gracias, despedidas…
+    const social = charlaSocial(n);
+    if (social) return social();
+    // 5) Búsqueda en el catálogo de cursos
     conCatalogo(() => buscarTexto(q, n));
   }
 
