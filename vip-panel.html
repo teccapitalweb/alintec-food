@@ -17587,7 +17587,7 @@ const NOM051Tool = (function(){
     q('#n51-calc').addEventListener('click',()=>{ if(!toolRequiereVIP('la Calculadora NOM-051')) return; sync(); s.calculado=true; save(); renderOut(); });
     q('#n51-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar la evaluación?'))return; s=base(); save(); mount(container); });
     q('#n51-pdf').addEventListener('click',generarPDF);
-    if(s.calculado) renderOut();
+    if(s.calculado && toolEsVIP()) renderOut();
 
     function renderOut(){
       const r=evaluar();
@@ -17620,8 +17620,8 @@ const NOM051Tool = (function(){
   }
 
   function generarPDF(){
+    if(!toolRequiereVIP('la Calculadora NOM-051')) return; // sin membresía: directo a Suscripción, antes de cualquier otra validación
     if(!s.calculado){ afToast('error','Sin evaluación','Evalúa los sellos antes de generar el PDF.'); return; }
-    if(!toolRequiereVIP('la Calculadora NOM-051')) return;
     if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
     try{
       const r=evaluar(); const {jsPDF}=window.jspdf;
@@ -17743,7 +17743,7 @@ const MicroTool = (function(){
     q('#mc-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar los datos?'))return; s=base(); save(); mount(container); });
     q('#mc-pdf').addEventListener('click',generarPDF);
     if(conteo) formConteo(); else formSerie();
-    if(s.calculado) renderOut();
+    if(s.calculado && toolEsVIP()) renderOut();
 
     function formConteo(){
       q('#mc-form').innerHTML = `
@@ -17829,8 +17829,8 @@ const MicroTool = (function(){
   }
 
   function generarPDF(){
+    if(!toolRequiereVIP('la herramienta de Microbiología')) return; // sin membresía: directo a Suscripción, antes de cualquier otra validación
     if(!s.calculado){ afToast('error','Sin cálculo','Realiza el cálculo antes de generar el PDF.'); return; }
-    if(!toolRequiereVIP('la herramienta de Microbiología')) return;
     if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
     try{
       const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -17961,7 +17961,7 @@ const AnaquelTool = (function(){
     q('#an-reset').addEventListener('click',()=>{ if(!confirm('¿Limpiar los datos?'))return; s=base(); save(); mount(container); });
     q('#an-pdf').addEventListener('click',generarPDF);
     q('#an-calc').addEventListener('click',()=>{ if(!toolRequiereVIP('la calculadora de Vida de anaquel')) return; s.calculado=true;save();renderOut();});
-    formFields(); if(s.calculado) renderOut();
+    formFields(); if(s.calculado && toolEsVIP()) renderOut();
 
     function formFields(){
       if(proy){
@@ -18006,9 +18006,9 @@ const AnaquelTool = (function(){
     }
   }
   function generarPDF(){
+    if(!toolRequiereVIP('la calculadora de Vida de anaquel')) return; // sin membresía: directo a Suscripción, antes de cualquier otra validación
     const r=calcular();
     if(!s.calculado||!r.valido){ afToast('error','Sin estimación','Calcula la vida útil antes de generar el PDF.'); return; }
-    if(!toolRequiereVIP('la calculadora de Vida de anaquel')) return;
     if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
     try{
       const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -18159,6 +18159,7 @@ const HACCPTool = (function(){
         }
         tw.innerHTML=html;
         tw.querySelectorAll('.af-yn').forEach(g=>g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+          if(!toolRequiereVIP('el Planificador HACCP')) return;
           const k=g.dataset.q; d[k]=b.dataset.a;
           // limpiar respuestas aguas abajo al cambiar
           if(k==='p1'){ d.p1b=null; d.p2=null; d.p3=null; d.p4=null; }
@@ -18204,8 +18205,8 @@ const HACCPTool = (function(){
     }
   }
   function generarPDF(){
+    if(!toolRequiereVIP('el Planificador HACCP')) return; // sin membresía: directo a Suscripción, antes de cualquier otra validación
     if(!s.peligros.length){ afToast('error','Plan vacío','Agrega al menos un peligro antes de generar el PDF.'); return; }
-    if(!toolRequiereVIP('el Planificador HACCP')) return;
     if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
     try{
       const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -18398,9 +18399,9 @@ const BPMTool = (function(){
     }
   }
   function generarPDF(){
+    if(!toolRequiereVIP('la Auditoría BPM')) return; // sin membresía: directo a Suscripción, antes de cualquier otra validación
     const g=puntajeGlobal();
     if(g.respondidos===0){ afToast('error','Sin evaluar','Responde al menos un punto de la auditoría.'); return; }
-    if(!toolRequiereVIP('la Auditoría BPM')) return;
     if(!window.jspdf){ afToast('error','Generador no disponible','Verifica tu conexión.'); return; }
     try{
       const {jsPDF}=window.jspdf; const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
