@@ -691,7 +691,8 @@
   }
 
   async function responderGlosario(e) {
-    const aviso = el('p', 'af-cb-aviso', 'Es información general y orientativa.');
+    // Si el tema se verificó contra un documento oficial, se muestra cuál; si no, se avisa que es información general.
+    const aviso = el('p', 'af-cb-aviso', e.fuente ? 'Fuente: ' + e.fuente + '. Información general y orientativa.' : 'Es información general y orientativa.');
     const ok = await di(...e.respuesta.map(negritas), aviso);
     if (!ok) return;
     const siguientes = [{ t: 'Otro concepto', fn: conceptos }, { t: 'Hablar con un asesor', fn: asesor }];
