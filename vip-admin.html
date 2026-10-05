@@ -1315,6 +1315,7 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Marketing</div>
       <a class="nav-item" data-section="encuestas"><svg class="ic"><use href="#i-chart-bar"/></svg>Encuestas</a>
+      <a class="nav-item" data-section="pruebas"><svg class="ic"><use href="#i-trend"/></svg>Pruebas gratuitas</a>
     </div>
 
     <div class="nav-section">
@@ -1749,6 +1750,143 @@ const Pages={
           return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;"><span>${enlace}</span>${etiqueta}${constancia}<span style="color:var(--text-3);">${fecha}</span></div>`;
         }).join('');
       }
+    }
+  },
+
+  // ─── Pruebas gratuitas: cuántos eligen curso, cuáles y cuántos terminan pagando ───
+  pruebas(p){
+    p.innerHTML = `
+      <div class="fade-up">
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Marketing</span>
+          <h1 class="sec-hero__title">Pruebas gratuitas</h1>
+          <p class="sec-hero__sub">Qué curso eligen las cuentas nuevas como su prueba gratuita y cuántas de ellas terminan pagando la membresía.</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
+            <div class="kpi-card__label">Pruebas elegidas</div>
+            <div class="kpi-card__value" id="pg-kpi-elegidas">—</div>
+            <div class="kpi-card__sub" id="pg-kpi-elegidas-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
+            <div class="kpi-card__label">Cuentas nuevas sin elegir</div>
+            <div class="kpi-card__value" id="pg-kpi-sin">—</div>
+            <div class="kpi-card__sub">Se registraron y todavía no escogen curso</div>
+          </div>
+          <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
+            <div class="kpi-card__label">Eligieron y ya pagaron</div>
+            <div class="kpi-card__value" id="pg-kpi-pagaron">—</div>
+            <div class="kpi-card__sub" id="pg-kpi-pagaron-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#A855F7;--c2:#C084FC;">
+            <div class="kpi-card__label">Pagaron sin elegir curso</div>
+            <div class="kpi-card__value" id="pg-kpi-pagaron-sin">—</div>
+            <div class="kpi-card__sub" id="pg-kpi-pagaron-sin-sub">Para comparar contra los que sí eligieron</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Cursos más elegidos</h3>
+            <canvas id="pg-chart-cursos" height="260"></canvas>
+          </div>
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Pruebas elegidas por día (últimos 14 días)</h3>
+            <canvas id="pg-chart-dias" height="260"></canvas>
+          </div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
+          <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Últimas pruebas elegidas</h3>
+          <div id="pg-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">"Cuentas nuevas" son las creadas desde el 2 de octubre de 2026 (la fecha en que arrancó esta función). "Pagó" significa que la cuenta tiene o tuvo una membresía.</p>
+      </div>`;
+    Pages._cargarPruebas();
+  },
+
+  async _cargarPruebas(){
+    const lista = document.getElementById('pg-lista');
+    let miembros = [], cursosPorId = {};
+    try {
+      await Pages._esperarAdmin();
+      const { db, collection, getDocs } = window._fb;
+      const [mSnap, cSnap] = await Promise.all([getDocs(collection(db, 'miembros')), getDocs(collection(db, 'cursos'))]);
+      miembros = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      cSnap.docs.forEach(d => { cursosPorId[d.id] = d.data().titulo || d.id; });
+    } catch (e) {
+      console.error('❌ No se pudieron leer las pruebas gratuitas:', e.code || '', e.message);
+      if (lista) {
+        lista.innerHTML = 'No se pudieron cargar los datos (' + AdminEsc(e.code || e.message || 'error') + '). <a href="#" id="pg-reintentar" style="color:var(--primary);font-weight:700;">Reintentar</a>';
+        const re = document.getElementById('pg-reintentar');
+        if (re) re.addEventListener('click', ev => { ev.preventDefault(); Pages._cargarPruebas(); });
+      }
+      return;
+    }
+    const CORTE = new Date('2026-10-02T22:00:00Z'); // misma fecha de corte que usa el servidor (PRUEBA_GRATUITA_DESDE)
+    const fechaReg = m => Pages._mbToDate(m.fechaRegistro || m.createdAt);
+    const pago = m => !!(m.fechaAlta || m.stripeSubscriptionId || m.activa === true || m.activo === true || m.esRegalo === true);
+    const nuevas = miembros.filter(m => { const f = fechaReg(m); return f && f >= CORTE; });
+    const elegidas = miembros.filter(m => typeof m.cursoPruebaElegido === 'string' && m.cursoPruebaElegido);
+    const sinElegir = nuevas.filter(m => !m.cursoPruebaElegido && !pago(m));
+    const elegidasPagaron = elegidas.filter(pago);
+    const nuevasSinElegir = nuevas.filter(m => !m.cursoPruebaElegido);
+    const sinElegirPagaron = nuevasSinElegir.filter(pago);
+    const pct = (a, b) => b > 0 ? Math.round(a / b * 100) + '%' : '—';
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('pg-kpi-elegidas', elegidas.length);
+    set('pg-kpi-elegidas-sub', nuevas.length ? pct(elegidas.length, nuevas.length) + ' de las cuentas nuevas (' + nuevas.length + ')' : 'Aún no hay cuentas nuevas');
+    set('pg-kpi-sin', sinElegir.length);
+    set('pg-kpi-pagaron', elegidasPagaron.length);
+    set('pg-kpi-pagaron-sub', elegidas.length ? pct(elegidasPagaron.length, elegidas.length) + ' de quienes eligieron' : 'Todavía nadie elige');
+    set('pg-kpi-pagaron-sin', sinElegirPagaron.length);
+    set('pg-kpi-pagaron-sin-sub', nuevasSinElegir.length ? pct(sinElegirPagaron.length, nuevasSinElegir.length) + ' de las cuentas nuevas que no eligieron' : 'Para comparar contra los que sí eligieron');
+
+    // Cursos más elegidos
+    const porCurso = {};
+    elegidas.forEach(m => { const t = cursosPorId[m.cursoPruebaElegido] || m.cursoPruebaElegido; porCurso[t] = (porCurso[t] || 0) + 1; });
+    const ordenCursos = Object.entries(porCurso).sort((a, b) => b[1] - a[1]).slice(0, 12);
+    // Por día (últimos 14)
+    const dias = [];
+    for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); dias.push(d); }
+    const claveDia = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    const porDia = {};
+    elegidas.forEach(m => { const f = Pages._mbToDate(m.pruebaElegidaEn); if (f) porDia[claveDia(f)] = (porDia[claveDia(f)] || 0) + 1; });
+
+    const mostrarVacio = (cv) => { cv.insertAdjacentHTML('afterend', '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">Aún no hay datos.</p>'); cv.style.display = 'none'; };
+    const cvCursos = document.getElementById('pg-chart-cursos');
+    const cvDias = document.getElementById('pg-chart-dias');
+    if (!window.Chart) {
+      [cvCursos, cvDias].forEach(cv => { if (cv) { cv.insertAdjacentHTML('afterend', '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">No se pudo cargar la librería de gráficas. Recarga la página.</p>'); cv.style.display = 'none'; } });
+    } else {
+      Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
+      if (cvCursos) {
+        if (!ordenCursos.length) mostrarVacio(cvCursos);
+        else new Chart(cvCursos, { type: 'bar', data: { labels: ordenCursos.map(c => c[0].length > 38 ? c[0].slice(0, 38) + '…' : c[0]), datasets: [{ data: ordenCursos.map(c => c[1]), backgroundColor: '#58B71B' }] },
+          options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
+      }
+      if (cvDias) {
+        if (!elegidas.length) mostrarVacio(cvDias);
+        else new Chart(cvDias, { type: 'bar', data: { labels: dias.map(d => d.getDate() + '/' + (d.getMonth() + 1)), datasets: [{ data: dias.map(d => porDia[claveDia(d)] || 0), backgroundColor: '#3B82F6' }] },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+      }
+    }
+
+    // Lista de las últimas pruebas elegidas
+    if (lista) {
+      const recientes = elegidas.slice().sort((a, b) => ((Pages._mbToDate(b.pruebaElegidaEn) || 0) - (Pages._mbToDate(a.pruebaElegidaEn) || 0))).slice(0, 15);
+      if (!recientes.length) { lista.textContent = 'Todavía nadie ha elegido su prueba gratuita.'; return; }
+      lista.innerHTML = recientes.map(m => {
+        const f = Pages._mbToDate(m.pruebaElegidaEn);
+        const fecha = f ? f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+        const nombre = m.nombre || m.displayName || (m.email || '').split('@')[0] || 'Miembro';
+        const curso = cursosPorId[m.cursoPruebaElegido] || m.cursoPruebaElegido;
+        const pagoTxt = pago(m)
+          ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,.18);color:#0f9f6e;">Pagó</span>'
+          : '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);">Aún no</span>';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">'
+          + '<span style="min-width:0;flex:1 1 220px;"><strong style="color:var(--text);">' + AdminEsc(nombre) + '</strong><br><span style="font-size:11.5px;color:var(--text-3);">' + AdminEsc(m.email || '') + '</span></span>'
+          + '<span style="flex:2 1 260px;color:var(--text);">' + AdminEsc(curso) + '</span>'
+          + pagoTxt + '<span style="color:var(--text-3);">' + AdminEsc(fecha) + '</span></div>';
+      }).join('');
     }
   },
 
@@ -6375,7 +6513,7 @@ function dirAdminCargar(){
    refresh te deja donde estabas, los botones atrás/adelante del
    navegador funcionan y puedes compartir un link directo a la sección.
    ═══════════════════════════════════════════════════════════════════ */
-const SECCIONES_VALIDAS = ['dashboard','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas'];
+const SECCIONES_VALIDAS = ['dashboard','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
