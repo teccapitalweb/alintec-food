@@ -39,7 +39,7 @@
   transform: rotate(8deg);
   transform-origin: 50% 50%;
   animation: regStamp 4.5s ease-in-out infinite;
-  filter: drop-shadow(0 12px 18px rgba(62, 154, 26, .35));
+  filter: drop-shadow(0 12px 18px rgba(170, 115, 8, .38));
   pointer-events: none;
 }
 .reg-stamp svg { display: block; width: 100%; height: auto; overflow: visible; }
