@@ -1,5 +1,5 @@
 /* Sección "Crea tu cuenta completamente gratis" (debajo del Concepto de marca).
-   Diseño limpio: tarjeta suave, tipografía Sora (títulos) e Instrument Sans (texto) y un sello GRATIS en la esquina.
+   Diseño limpio: tarjeta suave, tipografía Instrument Sans y un sello GRATIS en la esquina.
    La animación del registro es CSS (no una captura). */
 
 .reg-section {
@@ -52,7 +52,7 @@
 .reg-copy .section-tag { margin-bottom: 4px; }
 .reg-title {
   margin: 10px 0 12px;
-  font-family: 'Sora', system-ui, sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: clamp(2.2rem, 4.3vw, 3.6rem);
   font-weight: 800;
   line-height: 1.06;
@@ -62,7 +62,7 @@
 .reg-hl { display: inline; color: var(--verde); }
 .reg-sub {
   margin: 0 0 18px;
-  font-family: 'Sora', system-ui, sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: clamp(1.2rem, 2.2vw, 1.65rem);
   font-weight: 600;
   line-height: 1.28;
@@ -102,12 +102,12 @@
   place-items: center;
   border-radius: 50%;
   background: #E3F2D5;
-  font-family: 'Sora', sans-serif;
+  font-family: 'Instrument Sans', sans-serif;
   font-size: .95rem;
   font-weight: 700;
   color: var(--verde);
 }
-.reg-steps b { display: block; font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 600; letter-spacing: -.02em; color: var(--ink); }
+.reg-steps b { display: block; font-family: 'Instrument Sans', sans-serif; font-size: 1rem; font-weight: 600; letter-spacing: -.02em; color: var(--ink); }
 .reg-steps span.d { display: block; margin-top: 1px; font-size: .92rem; line-height: 1.45; color: #6a7c6f; }
 
 .reg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
@@ -119,7 +119,7 @@
   border-radius: 14px;
   background: var(--verde-claro);
   color: #fff;
-  font-family: 'Sora', sans-serif;
+  font-family: 'Instrument Sans', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: -.01em;
@@ -186,9 +186,9 @@
   opacity: 0;
   background: #fff;
 }
-.reg-logo { margin-bottom: 4px; font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -.02em; color: #2B9D5B; }
+.reg-logo { margin-bottom: 4px; font-family: 'Instrument Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -.02em; color: #2B9D5B; }
 .reg-logo b { color: #16301f; font-weight: 700; }
-.reg-s h4 { margin: 0 0 14px; font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -.03em; color: #0f2418; }
+.reg-s h4 { margin: 0 0 14px; font-family: 'Instrument Sans', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -.03em; color: #0f2418; }
 .reg-field { margin-bottom: 11px; }
 .reg-field label { display: block; margin-bottom: 4px; font-size: 11.5px; font-weight: 600; color: #6b7c72; }
 .reg-input {
@@ -211,7 +211,7 @@
   place-items: center;
   border-radius: 12px;
   background: var(--verde-claro);
-  font-family: 'Sora', sans-serif;
+  font-family: 'Instrument Sans', sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: #fff;
@@ -267,7 +267,7 @@
 }
 .reg-card--2 .th { background: #FFCB85; }
 .reg-card--3 .th { background: #A9CDF2; }
-.reg-card b { display: block; font-family: 'Sora', sans-serif; font-size: 12.8px; font-weight: 600; letter-spacing: -.01em; color: #16301f; line-height: 1.25; }
+.reg-card b { display: block; font-family: 'Instrument Sans', sans-serif; font-size: 12.8px; font-weight: 600; letter-spacing: -.01em; color: #16301f; line-height: 1.25; }
 .reg-card small { font-size: 11px; color: #7a8a81; }
 .reg-badge {
   position: absolute;
@@ -345,7 +345,7 @@
   background: #fff;
   border: 1px solid #E1EBD8;
   box-shadow: 0 14px 30px rgba(25, 60, 35, .16);
-  font-family: 'Sora', sans-serif;
+  font-family: 'Instrument Sans', sans-serif;
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: -.01em;
