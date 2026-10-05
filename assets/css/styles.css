@@ -1784,13 +1784,20 @@ body { background: #F4F1EC; }
 
 .showcase-index--light { color: rgba(255,255,255,.57); }.showcase-index--light b { background: #E7C56F; color: #3F310F; box-shadow: 0 9px 20px rgba(3,18,10,.2); }.showcase-index--light::after { background: rgba(255,255,255,.19); }
 .certificacion-copy .section-title em { color: #FFD073; }
-.cert-trust-strip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 23px 0 8px; }
-.cert-trust-strip span { padding: 12px 11px; border: 1px solid rgba(255,255,255,.13); border-radius: 14px; background: rgba(255,255,255,.055); color: rgba(255,255,255,.58); font-size: .64rem; line-height: 1.35; }
-.cert-trust-strip b { display: block; margin-bottom: 4px; color: #FFD073; font-size: .72rem; }
-.cert-benefits { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; margin: 17px 0 24px; }
-.cert-benefits > div { align-content: start; grid-template-columns: 1fr; min-height: 128px; padding: 15px; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; background: rgba(255,255,255,.045); }
-.cert-benefits > div > span { display: grid; width: 32px; height: 32px; margin-bottom: 12px; place-items: center; border-radius: 10px; background: rgba(226,184,91,.13); }
-.cert-benefits strong { font-size: .78rem; line-height: 1.3; }.cert-benefits small { font-size: .66rem; }
+.cert-trust-strip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin: 28px 0 14px; }
+.cert-trust-strip span { padding: 18px 20px; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.72); font-size: .92rem; line-height: 1.4; }
+.cert-trust-strip b { display: block; margin-bottom: 5px; color: #FFD073; font-size: 1.08rem; }
+.cert-benefits { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; margin: 20px 0 30px; }
+.cert-benefits > div { align-content: start; grid-template-columns: 1fr; min-height: 200px; padding: 24px 22px; border: 1px solid rgba(255,255,255,.13); border-radius: 20px; background: rgba(255,255,255,.05); }
+.cert-benefits > div > span { display: grid; width: 54px; height: 54px; margin-bottom: 14px; place-items: center; border-radius: 16px; background: rgba(226,184,91,.15); font-size: .95rem; }
+.cert-benefits strong { margin-bottom: 6px; font-size: 1.12rem; line-height: 1.25; }.cert-benefits small { font-size: .93rem; line-height: 1.5; color: rgba(255,255,255,.66); }
+.cert-actions { gap: 14px; }.cert-btn { min-height: 56px; padding: 14px 28px; font-size: .98rem; }
+@media (min-width: 1001px) {
+  .cert-benefits { grid-template-columns: 1fr; gap: 14px; }
+  .cert-benefits > div { grid-template-columns: 54px minmax(0,1fr); align-items: center; gap: 18px; min-height: 0; padding: 18px 22px; }
+  .cert-benefits > div > span { margin-bottom: 0; }
+  .cert-trust-strip span { padding: 14px 16px; }
+}
 
 /* Testimonios y contacto: se elimina por completo el azul anterior. */
 .testimonios-section { background: #214532 !important; }
@@ -1826,7 +1833,7 @@ body { background: #F4F1EC; }
   .panel-3d-stage { min-height: 380px; }.cert-3d-stage { min-height: 390px; }
   .panel-sim { width: 103%; border-width: 5px; border-radius: 17px; box-shadow: 0 24px 44px rgba(21,50,32,.2),-7px 10px 0 #D8E3D7; }.panel-sim__top { height: 40px; padding-inline: 11px; }.panel-sim__body { height: calc(100% - 40px); grid-template-columns: 38px minmax(0,1fr); }.panel-sim__rail { gap: 11px; padding-top: 14px; }.panel-sim__rail i { width: 11px; height: 11px; }.panel-sim__content { gap: 8px; padding: 10px; }.panel-sim__welcome { padding: 9px; }.panel-sim__welcome span { display: none; }.panel-sim__course { min-height: 145px; padding: 13px; }.panel-sim__course strong { font-size: .72rem; }.panel-sim__course em { width: 39px; height: 39px; border-width: 3px; font-size: .55rem; }.panel-sim__cards { gap: 5px; }.panel-sim__cards > div { padding: 7px; }.panel-float-card { padding: 9px 10px; }.panel-float-card--xp { right: -4%; }.panel-float-card--live { left: -2%; bottom: 5%; }.panel-orbit--one { width: 310px; height: 310px; }.panel-orbit--two { width: 370px; height: 230px; }
   .cert-sheet { width: 102%; padding: 28px 29px 23px; border-width: 6px; box-shadow: 0 26px 48px rgba(3,18,10,.3),-8px 11px 0 #C9D9C8; }.cert-sheet__eyebrow { margin-top: 25px; }.cert-sheet__title { font-size: 1.05rem; }.cert-sheet__to { margin-top: 14px; }.cert-sheet__foot { left: 29px; right: 29px; bottom: 22px; }.cert-seal { right: 35px; bottom: 21px; width: 51px; height: 51px; }.cert-seal svg { width: 22px; }.cert-verify-chip { right: -3%; bottom: 3%; }.cert-halo { width: 330px; height: 330px; }.cert-actions { display: grid; grid-template-columns: 1fr; }.cert-btn { width: 100%; }
-  .panel-showcase-copy .section-title,.certificacion-copy .section-title { font-size: clamp(2.35rem,12vw,3.25rem); }.panel-feature-list,.cert-trust-strip,.cert-benefits { grid-template-columns: 1fr; }.panel-feature,.cert-benefits>div { min-height: 0; }.panel-feature { grid-template-columns: 54px minmax(0,1fr); align-items: center; gap: 16px; padding: 18px; }.panel-feature>span { margin-bottom: 0; }.cert-trust-strip span { padding: 11px 13px; }.cert-benefits>div { grid-template-columns: 34px minmax(0,1fr); }.cert-benefits>div>span { margin-bottom: 0; }
+  .panel-showcase-copy .section-title,.certificacion-copy .section-title { font-size: clamp(2.35rem,12vw,3.25rem); }.panel-feature-list,.cert-trust-strip,.cert-benefits { grid-template-columns: 1fr; }.panel-feature,.cert-benefits>div { min-height: 0; }.panel-feature { grid-template-columns: 54px minmax(0,1fr); align-items: center; gap: 16px; padding: 18px; }.panel-feature>span { margin-bottom: 0; }.cert-trust-strip span { padding: 11px 13px; }.cert-benefits>div { grid-template-columns: 54px minmax(0,1fr); align-items: center; gap: 16px; padding: 18px; }.cert-benefits>div>span { margin-bottom: 0; }
 }
 @media (prefers-reduced-motion:reduce) {
   .panel-sim,.panel-3d-stage::after,.panel-orbit,.panel-float-card,.panel-float-card--live i,.panel-sim__course span b,.panel-sim__cards i,.panel-sim__course em,.cert-sheet,.cert-halo,.cert-seal,.cert-verify-chip { animation: none !important; }
