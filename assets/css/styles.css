@@ -23,7 +23,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   background: var(--white);
   color: var(--text);
   overflow-x: hidden;
@@ -125,7 +125,7 @@ body {
 .hero-badge::before { content: '🔬'; }
 @keyframes slideDown { from { opacity:0; transform: translateY(-20px); } }
 .hero h1 {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: clamp(2.3rem, 4vw, 3.4rem);
   font-weight: 800; color: var(--white); letter-spacing: -1px;
   line-height: 1.14; margin-bottom: 22px;
@@ -339,7 +339,7 @@ body {
   box-shadow: 0 0 0 4px rgba(88,183,27,0.15);
 }
 .section-title {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: clamp(1.9rem, 4vw, 2.7rem);
   font-weight: 700; color: var(--dark); line-height: 1.2;
 }
@@ -383,7 +383,7 @@ body {
 }
 .trusted-logos-header .section-tag { color: var(--primary-light); justify-content: center; margin-bottom: 8px; }
 .trusted-logos-header h2 {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: clamp(1rem, 1.8vw, 1.25rem);
   color: rgba(255,255,255,0.85);
   font-weight: 600;
@@ -550,7 +550,7 @@ body {
   align-items: center;
 }
 .concept-title {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: clamp(2rem, 3.4vw, 2.65rem);
   font-weight: 800; color: var(--dark); letter-spacing: -0.5px;
   line-height: 1.18; margin-bottom: 20px;
@@ -659,7 +659,7 @@ body {
   margin-bottom: 14px;
 }
 .areas-feature__text h3 {
-  font-family: 'Montserrat', sans-serif; color: var(--white);
+  font-family: 'Instrument Sans', system-ui, sans-serif; color: var(--white);
   font-size: clamp(1.4rem, 2.6vw, 1.9rem); font-weight: 800; letter-spacing: -.3px;
   margin-bottom: 12px; line-height: 1.25;
 }
@@ -880,7 +880,7 @@ body {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(88,183,27,0.12);
   border-radius: 12px; color: var(--white);
-  font-family: 'Montserrat', sans-serif; font-size: 0.92rem;
+  font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 0.92rem;
   transition: all 0.3s; outline: none;
 }
 .form-group input:focus,
@@ -895,7 +895,7 @@ body {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: var(--dark); font-weight: 700; font-size: 1rem;
   border: none; border-radius: 14px; cursor: pointer;
-  transition: all 0.3s; font-family: 'Montserrat', sans-serif;
+  transition: all 0.3s; font-family: 'Instrument Sans', system-ui, sans-serif;
 }
 .form-submit:hover {
   transform: translateY(-2px);
@@ -919,7 +919,7 @@ body {
 .footer-logo { height: 34px; width: auto; border-radius: 8px; object-fit: contain; background: var(--white); padding: 6px 10px; align-self: flex-start; }
 .footer-desc { color: rgba(255,255,255,0.5); font-size: 0.88rem; line-height: 1.7; max-width: 320px; }
 .footer-col__title {
-  color: var(--white); font-family: 'Montserrat', sans-serif;
+  color: var(--white); font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: 0.78rem; font-weight: 700; letter-spacing: 1.2px;
   text-transform: uppercase; margin-bottom: 4px;
 }
@@ -1047,7 +1047,7 @@ body {
   text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px;
 }
 .curso-modal__body h3 {
-  font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 800;
+  font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 1.5rem; font-weight: 800;
   color: var(--dark); line-height: 1.25; margin-bottom: 16px; letter-spacing: -.3px;
 }
 .curso-modal__instructor {
@@ -1135,7 +1135,7 @@ body {
   position: relative; overflow: hidden;
 }
 .legal-hero h1 {
-  font-family: 'Montserrat', sans-serif; color: var(--white);
+  font-family: 'Instrument Sans', system-ui, sans-serif; color: var(--white);
   font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 10px;
   position: relative; z-index: 2;
 }
@@ -1145,7 +1145,7 @@ body {
   color: var(--text-light); line-height: 1.75; font-size: 0.98rem;
 }
 .legal-content h2 {
-  font-family: 'Montserrat', sans-serif; color: var(--dark);
+  font-family: 'Instrument Sans', system-ui, sans-serif; color: var(--dark);
   font-size: 1.35rem; margin: 38px 0 14px; padding-top: 6px;
   border-top: 1px solid var(--border);
 }
@@ -1256,7 +1256,7 @@ body {
 }
 .exp-card__num {
   position: absolute; top: 22px; left: 24px;
-  font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1rem;
+  font-family: 'Instrument Sans', system-ui, sans-serif; font-weight: 800; font-size: 1rem;
   color: var(--primary-light); letter-spacing: 1px;
 }
 .exp-card__icon {
@@ -1267,7 +1267,7 @@ body {
 .exp-card__icon svg { width: 100%; height: 100%; }
 .exp-card__title {
   position: absolute; left: 24px; right: 24px; bottom: 22px;
-  color: #fff; font-family: 'Montserrat', sans-serif; font-weight: 700;
+  color: #fff; font-family: 'Instrument Sans', system-ui, sans-serif; font-weight: 700;
   font-size: 1.15rem; line-height: 1.3;
   transform: translateY(6px);
   transition: transform .4s ease;
@@ -1410,7 +1410,7 @@ body { background: #F5F2EA; color: var(--text); }
 .hero h1 {
   max-width: 670px;
   margin-bottom: 25px;
-  font-family: 'Lora', Georgia, serif;
+  font-family: 'Sora', system-ui, sans-serif;
   font-size: clamp(3rem, 5.35vw, 5.15rem);
   font-weight: 500;
   letter-spacing: -.045em;
@@ -1472,7 +1472,7 @@ body { background: #F5F2EA; color: var(--text); }
 .stat:nth-child(2) .stat-num {
   margin-bottom: 5px;
   color: #D5B35D;
-  font-family: 'Lora', Georgia, serif;
+  font-family: 'Sora', system-ui, sans-serif;
   font-size: 1.75rem;
   font-weight: 600;
 }
@@ -1489,7 +1489,7 @@ body { background: #F5F2EA; color: var(--text); }
 .areas-feature__text h3,
 .curso-info h3,
 .contact-section h2 {
-  font-family: 'Lora', Georgia, serif;
+  font-family: 'Sora', system-ui, sans-serif;
   font-weight: 600;
   letter-spacing: -.035em;
 }
@@ -1553,7 +1553,7 @@ body { background: #F5F2EA; color: var(--text); }
 .exp-card img { filter: grayscale(20%) brightness(.62); }
 .exp-card__num,
 .exp-card__icon { color: #D8BC71; }
-.exp-card__title { font-family: 'Lora', Georgia, serif; font-weight: 600; }
+.exp-card__title { font-family: 'Sora', system-ui, sans-serif; font-weight: 600; }
 
 .testimonios-section { background: linear-gradient(145deg,#10281C,#1D4430); }
 .test-card { border-color: rgba(255,255,255,.1); border-radius: 22px; background: rgba(255,255,255,.055); }
@@ -1724,7 +1724,7 @@ body { background: #F4F1EC; }
 .certificacion-copy .section-subtitle { font-size: .97rem; line-height: 1.75; }
 .panel-feature-list { display: grid; gap: 11px; margin: 30px 0; }
 .panel-feature { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 13px; padding: 13px 15px; border: 1px solid rgba(57,118,85,.13); border-radius: 15px; background: #fff; box-shadow: 0 8px 23px rgba(24,55,37,.055); }
-.panel-feature > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: #E7F1E8; color: #397655; font: 800 .67rem 'Montserrat',sans-serif; }
+.panel-feature > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: #E7F1E8; color: #397655; font: 800 .67rem 'Instrument Sans', system-ui, sans-serif; }
 .panel-feature strong,.panel-feature small { display: block; }.panel-feature strong { margin-bottom: 3px; color: #1F3127; font-size: .86rem; }.panel-feature small { color: #707970; font-size: .74rem; line-height: 1.4; }
 .showcase-link { display: inline-flex; align-items: center; gap: 13px; color: #397655; font-weight: 750; font-size: .88rem; text-decoration: none; }.showcase-link span { display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid rgba(57,118,85,.28); border-radius: 50%; transition: transform .25s ease; }.showcase-link:hover span { transform: translateX(4px); }
 
@@ -1741,8 +1741,8 @@ body { background: #F4F1EC; }
 .panel-sim__body { height: calc(100% - 50px); display: grid; grid-template-columns: 54px minmax(0,1fr); }
 .panel-sim__rail { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 22px; border-right: 1px solid #E1E8E0; background: #fff; }.panel-sim__rail i { width: 15px; height: 15px; border: 2px solid #A9B4AB; border-radius: 5px; }.panel-sim__rail i.is-active { border-color: #4E9161; background: #DDECDD; box-shadow: 0 0 0 7px #F0F6F0; }
 .panel-sim__content { min-width: 0; display: grid; grid-template-columns: 1.2fr .8fr; grid-template-rows: auto 1fr; gap: 13px; padding: 18px; }
-.panel-sim__welcome { grid-column: 1/-1; display: flex; align-items: baseline; gap: 11px; padding: 14px 16px; border-radius: 15px; background: #fff; }.panel-sim__welcome small { color: #7A8B80; font-size: .45rem; font-weight: 800; letter-spacing: .13em; }.panel-sim__welcome strong { color: #223B2C; font: 700 .92rem 'Lora',serif; }.panel-sim__welcome span { margin-left: auto; color: #849087; font-size: .5rem; }
-.panel-sim__course { min-height: 205px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 21px; border-radius: 18px; background: #244B36; color: #fff; box-shadow: 0 16px 29px rgba(28,67,43,.19); }.panel-sim__course div { display: grid; gap: 8px; }.panel-sim__course small { color: #B8DBBE; font-size: .48rem; letter-spacing: .13em; font-weight: 800; }.panel-sim__course strong { max-width: 220px; font: 700 1.03rem/1.27 'Lora',serif; }.panel-sim__course span { color: rgba(255,255,255,.66); font-size: .52rem; }.panel-sim__course span b { display: inline-block; width: 66px; height: 4px; margin-right: 6px; border-radius: 5px; background: #8DC399; animation: courseProgress 3.5s ease-in-out infinite; transform-origin: left; }.panel-sim__course em { display: grid; place-items: center; flex: 0 0 auto; width: 52px; height: 52px; border: 5px solid rgba(255,255,255,.15); border-top-color: #A8D3AF; border-radius: 50%; color: #fff; font: 800 .72rem 'Montserrat',sans-serif; animation: courseRing 8s linear infinite; }
+.panel-sim__welcome { grid-column: 1/-1; display: flex; align-items: baseline; gap: 11px; padding: 14px 16px; border-radius: 15px; background: #fff; }.panel-sim__welcome small { color: #7A8B80; font-size: .45rem; font-weight: 800; letter-spacing: .13em; }.panel-sim__welcome strong { color: #223B2C; font: 700 .92rem 'Sora', system-ui, sans-serif; }.panel-sim__welcome span { margin-left: auto; color: #849087; font-size: .5rem; }
+.panel-sim__course { min-height: 205px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 21px; border-radius: 18px; background: #244B36; color: #fff; box-shadow: 0 16px 29px rgba(28,67,43,.19); }.panel-sim__course div { display: grid; gap: 8px; }.panel-sim__course small { color: #B8DBBE; font-size: .48rem; letter-spacing: .13em; font-weight: 800; }.panel-sim__course strong { max-width: 220px; font: 700 1.03rem/1.27 'Sora', system-ui, sans-serif; }.panel-sim__course span { color: rgba(255,255,255,.66); font-size: .52rem; }.panel-sim__course span b { display: inline-block; width: 66px; height: 4px; margin-right: 6px; border-radius: 5px; background: #8DC399; animation: courseProgress 3.5s ease-in-out infinite; transform-origin: left; }.panel-sim__course em { display: grid; place-items: center; flex: 0 0 auto; width: 52px; height: 52px; border: 5px solid rgba(255,255,255,.15); border-top-color: #A8D3AF; border-radius: 50%; color: #fff; font: 800 .72rem 'Instrument Sans', system-ui, sans-serif; animation: courseRing 8s linear infinite; }
 .panel-sim__cards { display: grid; gap: 9px; }.panel-sim__cards > div { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 11px 12px; border: 1px solid #E0E7DF; border-radius: 13px; background: #fff; }.panel-sim__cards span { color: #859087; font-size: .43rem; letter-spacing: .11em; font-weight: 800; }.panel-sim__cards strong { grid-row: 1/span 2; grid-column: 2; color: #315D43; font-size: 1rem; }.panel-sim__cards i { width: 58%; height: 4px; margin-top: 7px; border-radius: 4px; background: #DDECDD; animation: miniProgress 4s ease-in-out infinite; transform-origin: left; }.panel-sim__cards > div:nth-child(2) i { animation-delay: -.8s; }.panel-sim__cards > div:nth-child(3) i { animation-delay: -1.6s; }
 .panel-float-card { position: absolute; z-index: 4; display: flex; align-items: center; gap: 9px; padding: 12px 15px; border: 1px solid rgba(57,118,85,.14); border-radius: 14px; background: rgba(255,255,255,.94); box-shadow: 0 16px 32px rgba(25,55,37,.15); backdrop-filter: blur(10px); animation: floatChip 4.8s ease-in-out infinite; }.panel-float-card span { color: #397655; font-weight: 850; }.panel-float-card small { color: #5E6C63; font-size: .66rem; font-weight: 650; }.panel-float-card--xp { right: -1%; top: 16%; }.panel-float-card--live { left: 2%; bottom: 10%; animation-delay: -2.2s; }.panel-float-card--live i { width: 9px; height: 9px; border-radius: 50%; background: #D96B63; box-shadow: 0 0 0 6px rgba(217,107,99,.13); animation: livePulse 1.5s ease-out infinite; }
 
@@ -1752,18 +1752,18 @@ body { background: #F4F1EC; }
 .cert-3d-stage { position: relative; min-height: 545px; display: grid; place-items: center; perspective: 1500px; isolation: isolate; }.cert-halo { position: absolute; z-index: -1; width: 460px; height: 460px; border: 1px solid rgba(184,219,190,.19); border-radius: 50%; box-shadow: 0 0 0 38px rgba(184,219,190,.035),0 0 0 95px rgba(184,219,190,.018); animation: certHalo 5s ease-in-out infinite; }
 .cert-sheet { position: relative; width: min(88%,520px); aspect-ratio: 1.36; padding: 38px 40px 31px; border: 8px solid #EFE9DB; outline: 1px solid #C9B98F; outline-offset: -18px; background: #FFFDF8; color: #21352A; box-shadow: 0 37px 65px rgba(3,18,10,.34),-15px 18px 0 #C9D9C8; transform-style: preserve-3d; animation: certFloat 7.5s ease-in-out infinite; }.cert-sheet::before,.cert-sheet::after { content: ''; position: absolute; pointer-events: none; }.cert-sheet::before { inset: 25px; border: 1px solid rgba(57,118,85,.22); }.cert-sheet::after { right: 38px; top: 34px; width: 82px; height: 82px; border: 1px solid rgba(201,162,76,.3); border-radius: 50%; box-shadow: 0 0 0 9px rgba(201,162,76,.06); }
 .cert-sheet__edge { position: absolute; inset: -8px -20px -8px auto; width: 20px; background: #CBD6C9; transform: rotateY(72deg); transform-origin: left; }
-.cert-sheet__top { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 5px; color: #397655; font: 850 1rem 'Montserrat',sans-serif; letter-spacing: -.03em; }.cert-sheet__top small { color: #D77A61; font-size: .46rem; letter-spacing: .12em; }.cert-sheet__eyebrow { position: relative; z-index: 1; display: block; margin-top: 40px; color: #90743D; font-size: .48rem; font-weight: 800; letter-spacing: .2em; }.cert-sheet__title { position: relative; z-index: 1; display: block; margin-top: 11px; font: 600 clamp(1.25rem,2.4vw,2rem)/1.13 'Lora',serif; }.cert-sheet__to { position: relative; z-index: 1; display: block; margin-top: 23px; color: #8B938D; font-size: .5rem; }.cert-sheet__name { position: relative; z-index: 1; display: block; margin-top: 4px; font: italic 600 .85rem 'Lora',serif; }.cert-sheet__line { position: relative; z-index: 1; width: 42%; height: 1px; margin-top: 8px; background: #C7CEC6; }.cert-sheet__foot { position: absolute; z-index: 1; left: 40px; right: 39px; bottom: 29px; display: flex; align-items: flex-end; justify-content: space-between; color: #7C887F; font-size: .45rem; font-weight: 700; letter-spacing: .09em; }.cert-qr { width: 39px; height: 39px; border: 4px solid #294332; background: repeating-conic-gradient(#294332 0 25%,#fff 0 50%) 50%/8px 8px; box-shadow: inset 0 0 0 4px #fff; }
+.cert-sheet__top { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 5px; color: #397655; font: 850 1rem 'Instrument Sans', system-ui, sans-serif; letter-spacing: -.03em; }.cert-sheet__top small { color: #D77A61; font-size: .46rem; letter-spacing: .12em; }.cert-sheet__eyebrow { position: relative; z-index: 1; display: block; margin-top: 40px; color: #90743D; font-size: .48rem; font-weight: 800; letter-spacing: .2em; }.cert-sheet__title { position: relative; z-index: 1; display: block; margin-top: 11px; font: 600 clamp(1.25rem,2.4vw,2rem)/1.13 'Sora', system-ui, sans-serif; }.cert-sheet__to { position: relative; z-index: 1; display: block; margin-top: 23px; color: #8B938D; font-size: .5rem; }.cert-sheet__name { position: relative; z-index: 1; display: block; margin-top: 4px; font: italic 600 .85rem 'Sora', system-ui, sans-serif; }.cert-sheet__line { position: relative; z-index: 1; width: 42%; height: 1px; margin-top: 8px; background: #C7CEC6; }.cert-sheet__foot { position: absolute; z-index: 1; left: 40px; right: 39px; bottom: 29px; display: flex; align-items: flex-end; justify-content: space-between; color: #7C887F; font-size: .45rem; font-weight: 700; letter-spacing: .09em; }.cert-qr { width: 39px; height: 39px; border: 4px solid #294332; background: repeating-conic-gradient(#294332 0 25%,#fff 0 50%) 50%/8px 8px; box-shadow: inset 0 0 0 4px #fff; }
 .cert-seal { position: absolute; z-index: 2; right: 54px; bottom: 28px; width: 70px; height: 70px; display: grid; place-items: center; border: 1px solid #B5903D; border-radius: 50%; background: #D9B25B; color: #59430F; box-shadow: 0 8px 18px rgba(102,73,15,.22); animation: sealTurn 14s linear infinite; }.cert-seal::before { content: ''; position: absolute; inset: 7px; border: 1px dashed rgba(78,57,12,.55); border-radius: inherit; }.cert-seal svg { width: 30px; height: 30px; }
 .cert-verify-chip { position: absolute; z-index: 3; right: 2%; bottom: 11%; display: flex; align-items: center; gap: 11px; padding: 13px 16px; border: 1px solid rgba(184,219,190,.23); border-radius: 15px; background: rgba(255,255,255,.94); color: #244B36; box-shadow: 0 18px 36px rgba(3,18,10,.26); animation: verifyFloat 4.5s ease-in-out infinite; }.cert-verify-chip > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #DDECDD; color: #397655; font-weight: 900; }.cert-verify-chip strong,.cert-verify-chip small { display: block; }.cert-verify-chip strong { font-size: .74rem; }.cert-verify-chip small { margin-top: 2px; color: #78857C; font-size: .59rem; }
-.cert-benefits { display: grid; gap: 10px; margin: 29px 0; }.cert-benefits > div { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 14px; padding-bottom: 13px; border-bottom: 1px solid rgba(255,255,255,.11); }.cert-benefits > div > span { color: #E2B85B; font: 800 .65rem 'Montserrat',sans-serif; }.cert-benefits p,.cert-benefits strong,.cert-benefits small { margin: 0; display: block; }.cert-benefits strong { color: #fff; font-size: .85rem; }.cert-benefits small { margin-top: 4px; color: rgba(255,255,255,.56); font-size: .73rem; line-height: 1.45; }
+.cert-benefits { display: grid; gap: 10px; margin: 29px 0; }.cert-benefits > div { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 14px; padding-bottom: 13px; border-bottom: 1px solid rgba(255,255,255,.11); }.cert-benefits > div > span { color: #E2B85B; font: 800 .65rem 'Instrument Sans', system-ui, sans-serif; }.cert-benefits p,.cert-benefits strong,.cert-benefits small { margin: 0; display: block; }.cert-benefits strong { color: #fff; font-size: .85rem; }.cert-benefits small { margin-top: 4px; color: rgba(255,255,255,.56); font-size: .73rem; line-height: 1.45; }
 .cert-actions { display: flex; gap: 10px; flex-wrap: wrap; }.cert-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 12px 18px; border-radius: 999px; font-size: .77rem; font-weight: 750; text-decoration: none; }.cert-btn--primary { background: #E7C56F; color: #243126; }.cert-btn--ghost { border: 1px solid rgba(255,255,255,.25); color: #fff; }
 
 /* Copys editoriales: jerarquía moderna y datos fáciles de recorrer. */
 .panel-showcase-copy,.certificacion-copy { position: relative; }
-.showcase-index { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 18px; color: #7B897F; font: 750 .62rem 'Montserrat',sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.showcase-index { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 18px; color: #7B897F; font: 750 .62rem 'Instrument Sans', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .showcase-index b { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: #244E39; color: #FFD073; font-size: .68rem; box-shadow: 0 8px 18px rgba(36,78,57,.16); }
 .showcase-index::after { content: ''; width: 46px; height: 1px; background: rgba(57,118,85,.28); }
-.panel-showcase-copy .section-title,.certificacion-copy .section-title { max-width: 690px; font-family: 'Montserrat',sans-serif; font-size: clamp(2.55rem,5.1vw,4.6rem); font-weight: 900; line-height: .95; letter-spacing: -.065em; text-wrap: balance; }
+.panel-showcase-copy .section-title,.certificacion-copy .section-title { max-width: 690px; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: clamp(2.55rem,5.1vw,4.6rem); font-weight: 900; line-height: .95; letter-spacing: -.065em; text-wrap: balance; }
 .panel-showcase-copy .section-title em,.certificacion-copy .section-title em { font-style: normal; }
 .panel-showcase-copy .section-title em { color: #B9674F; }
 .panel-showcase-copy .section-subtitle,.certificacion-copy .section-subtitle { max-width: 690px; font-size: 1rem; line-height: 1.72; }
@@ -1825,3 +1825,8 @@ body { background: #F4F1EC; }
 @media (prefers-reduced-motion:reduce) {
   .panel-sim,.panel-3d-stage::after,.panel-orbit,.panel-float-card,.panel-float-card--live i,.panel-sim__course span b,.panel-sim__cards i,.panel-sim__course em,.cert-sheet,.cert-halo,.cert-seal,.cert-verify-chip { animation: none !important; }
 }
+
+/* Tipografía única de la página: Instrument Sans (texto) y Sora (títulos), como en la referencia. */
+h1, h2, h3, .section-title, .hero h1 { font-family: 'Sora', system-ui, sans-serif; }
+h1, h2, .section-title { letter-spacing: -.035em; }
+button, input, select, textarea { font-family: inherit; }

@@ -8,12 +8,11 @@
   <link rel="icon" href="assets/img/favicon-alintec.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20261002-1">
-  <link rel="stylesheet" href="assets/css/registro-gratis.css?v=20261005-2">
-  <link rel="stylesheet" href="assets/css/encuesta.css?v=20261002-12">
-  <link rel="stylesheet" href="assets/css/chatbot.css?v=20261005-1">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20261005-3">
+  <link rel="stylesheet" href="assets/css/registro-gratis.css?v=20261005-3">
+  <link rel="stylesheet" href="assets/css/encuesta.css?v=20261005-1">
+  <link rel="stylesheet" href="assets/css/chatbot.css?v=20261005-2">
 </head>
 <body>
 
@@ -198,8 +197,49 @@
   <!-- REGÍSTRATE GRATIS · animación del registro -->
   <!-- ══════════════════════════════════════════ -->
   <section class="section reg-section" id="registro-gratis" aria-labelledby="reg-title">
-    <div class="section-container">
+    <div class="section-container reg-wrap">
+      <div class="reg-stamp" aria-hidden="true">
+        <svg viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <defs>
+            <pattern id="reg-dots" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2.4" cy="2.4" r="1.9" fill="#E09400"/></pattern>
+            <clipPath id="reg-burst"><polygon points="130.0,26.0 147.4,54.0 169.7,47.5 178.6,69.0 214.6,62.6 200.3,96.2 223.3,108.7 208.0,130.0 231.4,153.1 200.3,163.8 199.1,185.1 178.6,191.0 177.8,229.3 147.4,206.0 130.0,223.6 112.6,206.0 84.9,223.7 81.4,191.0 58.4,187.1 59.7,163.8 24.6,154.1 52.0,130.0 36.7,108.7 59.7,96.2 48.7,65.2 81.4,69.0 91.6,50.4 112.6,54.0"/></clipPath>
+            <clipPath id="reg-lower"><circle cx="215" cy="215" r="108"/></clipPath>
+          </defs>
+          <g fill="#0f2418">
+            <polygon class="reg-ray" points="22,66 64,92 52,100"/><polygon class="reg-ray" points="34,36 78,76 62,82"/><polygon class="reg-ray" points="64,14 94,64 80,66"/>
+            <polygon class="reg-ray" points="254,86 214,98 220,110"/><polygon class="reg-ray" points="238,52 196,84 206,94"/>
+            <polygon class="reg-ray" points="20,196 62,176 66,190"/><polygon class="reg-ray" points="40,236 76,200 86,212"/>
+            <path class="reg-spark" d="M26 118l5 12 12 5-12 5-5 12-5-12-12-5 12-5z" transform="translate(-6 -22) scale(.9)"/>
+            <path class="reg-spark" d="M246 150l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+            <path class="reg-spark" d="M232 14l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
+          </g>
+          <polygon points="137.0,34.0 154.4,62.0 176.7,55.5 185.6,77.0 221.6,70.6 207.3,104.2 230.3,116.7 215.0,138.0 238.4,161.1 207.3,171.8 206.1,193.1 185.6,199.0 184.8,237.3 154.4,214.0 137.0,231.6 119.6,214.0 91.9,231.7 88.4,199.0 65.4,195.1 66.7,171.8 31.6,162.1 59.0,138.0 43.7,116.7 66.7,104.2 55.7,73.2 88.4,77.0 98.6,58.4 119.6,62.0" fill="#0f2418"/>
+          <polygon points="130.0,26.0 147.4,54.0 169.7,47.5 178.6,69.0 214.6,62.6 200.3,96.2 223.3,108.7 208.0,130.0 231.4,153.1 200.3,163.8 199.1,185.1 178.6,191.0 177.8,229.3 147.4,206.0 130.0,223.6 112.6,206.0 84.9,223.7 81.4,191.0 58.4,187.1 59.7,163.8 24.6,154.1 52.0,130.0 36.7,108.7 59.7,96.2 48.7,65.2 81.4,69.0 91.6,50.4 112.6,54.0" fill="#FFC21A" stroke="#0f2418" stroke-width="5" stroke-linejoin="round"/>
+          <g clip-path="url(#reg-burst)"><g clip-path="url(#reg-lower)"><rect width="270" height="270" fill="url(#reg-dots)"/></g></g>
+          <g transform="rotate(-8 130 130)" text-anchor="middle" font-family="Sora, system-ui, sans-serif" font-weight="800">
+            <text x="130" y="100" font-size="19" fill="#0f2418" letter-spacing="1.5">¡NUEVO!</text>
+            <text x="134" y="150" font-size="49" fill="#0f2418" stroke="#0f2418" stroke-width="9" stroke-linejoin="round" letter-spacing="-2">GRATIS</text>
+            <text x="130" y="146" font-size="49" fill="#fff" stroke="#0f2418" stroke-width="9" stroke-linejoin="round" paint-order="stroke" letter-spacing="-2">GRATIS</text>
+            <text x="130" y="146" font-size="49" fill="#E8381B" letter-spacing="-2">GRATIS</text>
+          </g>
+        </svg>
+      </div>
       <div class="reg-grid">
+        <div class="reg-copy reveal">
+          <div class="section-tag"><span class="tag-dot"></span>Únete al Club VIP</div>
+          <h2 class="reg-title" id="reg-title">Crea tu cuenta <span class="reg-hl">completamente gratis</span></h2>
+          <p class="reg-sub">y obtén tu <mark>prueba gratuita</mark> del curso de tu elección</p>
+          <p class="reg-lead">¿Ya conocías nuestra consultora? Únete a nuestro <strong>Club VIP</strong>: te toma menos de un minuto y solo necesitas tu correo.</p>
+          <ol class="reg-steps">
+            <li><span class="n">1</span><span><b>Crea tu cuenta</b><span class="d">Con tu correo o con tu cuenta de Google.</span></span></li>
+            <li><span class="n">2</span><span><b>Elige el curso que quieras</b><span class="d">Escoge el que más te interese y disfruta de tu prueba gratuita.</span></span></li>
+          </ol>
+          <div class="reg-actions">
+            <a class="reg-btn" href="vip-auth.html?tab=register">Crear mi cuenta gratis <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="reg-link" href="vip-auth.html?tab=login">Ya tengo cuenta</a>
+            <p class="reg-note">Solo necesitas tu correo. Sin tarjeta de crédito.</p>
+          </div>
+        </div>
         <div class="reg-demo reveal" role="img" aria-label="Animación del registro: escribes tus datos, creas tu cuenta y eliges tu curso de prueba gratuita">
           <div class="reg-device" aria-hidden="true">
             <div class="reg-bar"><i></i><i></i><i></i><span class="reg-url">alitecfood.com</span></div>
@@ -234,21 +274,6 @@
           <div class="reg-float reg-float--b" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#F7941D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>Prueba gratuita</div>
         </div>
 
-        <div class="reg-copy reveal">
-          <div class="section-tag"><span class="tag-dot"></span>Únete al Club VIP</div>
-          <h2 class="reg-title" id="reg-title">Crea tu cuenta <span class="reg-hl">completamente gratis</span></h2>
-          <p class="reg-sub">y obtén tu <mark>prueba gratuita</mark> del curso de tu elección</p>
-          <p class="reg-lead">¿Ya conocías nuestra consultora? Únete a nuestro <strong>Club VIP</strong>: te toma menos de un minuto y solo necesitas tu correo.</p>
-          <ol class="reg-steps">
-            <li><span class="n">1</span><span><b>Crea tu cuenta</b><span class="d">Con tu correo o con tu cuenta de Google.</span></span></li>
-            <li><span class="n">2</span><span><b>Elige el curso que quieras</b><span class="d">Escoge el que más te interese y disfruta de tu prueba gratuita.</span></span></li>
-          </ol>
-          <div class="reg-actions">
-            <a class="reg-btn" href="vip-auth.html?tab=register">Crear mi cuenta gratis <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-            <a class="reg-link" href="vip-auth.html?tab=login">Ya tengo cuenta</a>
-            <p class="reg-note">Solo necesitas tu correo. Sin tarjeta de crédito.</p>
-          </div>
-        </div>
       </div>
     </div>
   </section>

@@ -28,12 +28,12 @@
   var css =
     '#alintec-cookies{position:fixed;left:16px;right:16px;bottom:16px;z-index:2147483000;max-width:640px;margin:0 auto;' +
     'background:#141a16;color:#eef4ef;border:1px solid rgba(124,196,127,.35);border-radius:16px;padding:18px 20px;' +
-    'box-shadow:0 18px 50px rgba(0,0,0,.35);font:500 13.5px/1.55 Montserrat,Inter,system-ui,sans-serif}' +
-    '#alintec-cookies h2{margin:0 0 6px;font:700 15px/1.3 Montserrat,Inter,system-ui,sans-serif;color:#fff}' +
+    'box-shadow:0 18px 50px rgba(0,0,0,.35);font:500 13.5px/1.55 "Instrument Sans",system-ui,sans-serif}' +
+    '#alintec-cookies h2{margin:0 0 6px;font:700 15px/1.3 "Instrument Sans",system-ui,sans-serif;color:#fff}' +
     '#alintec-cookies p{margin:0;color:#cfdcd2}' +
     '#alintec-cookies a{color:#9be07f;font-weight:600;text-decoration:underline}' +
     '#alintec-cookies .ac-btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}' +
-    '#alintec-cookies button{flex:1 1 150px;min-height:44px;border-radius:12px;cursor:pointer;font:700 13.5px Montserrat,Inter,system-ui,sans-serif;' +
+    '#alintec-cookies button{flex:1 1 150px;min-height:44px;border-radius:12px;cursor:pointer;font:700 13.5px "Instrument Sans",system-ui,sans-serif;' +
     'padding:10px 16px;border:1.5px solid rgba(155,224,127,.55);background:transparent;color:#d8f5c8}' +
     '#alintec-cookies button.ac-si{background:linear-gradient(135deg,#58B71B,#3E8F18);border-color:transparent;color:#0d1a0a}' +
     '#alintec-cookies button:focus-visible{outline:3px solid #9be07f;outline-offset:2px}' +
