@@ -1843,3 +1843,12 @@ body { background: #F4F1EC; }
 h1, h2, h3, .section-title, .hero h1 { font-family: 'Instrument Sans', system-ui, sans-serif; }
 h1, h2, .section-title { letter-spacing: -.035em; }
 button, input, select, textarea { font-family: inherit; }
+
+/* Portada en pantallas medianas (tablet y ventana angosta): título, párrafo y botones alineados a la izquierda.
+   Antes el párrafo y los botones quedaban centrados por una regla vieja y no coincidían con el título. */
+@media (max-width: 980px) {
+  .hero-inner { text-align: left; }
+  .hero-content { text-align: left; margin: 0; }
+  .hero p { margin: 0 0 31px; max-width: 610px; }
+  .hero-btns { justify-content: flex-start; }
+}
