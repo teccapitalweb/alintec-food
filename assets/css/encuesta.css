@@ -27,18 +27,28 @@
 }
 
 .af-enc-face {
+  position: relative;
   width: 100%;
   max-width: 330px;
   aspect-ratio: 841 / 706;
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center bottom;
   transform-origin: 50% 100%;
   animation: af-enc-breathe 4.6s ease-in-out infinite; /* respira suavemente mientras está en pantalla */
 }
-/* Saludo: se menea un poco al aparecer la encuesta y al mostrar el resultado (usa la propiedad "rotate",
-   que se combina con el balanceo de "transform") */
-.af-enc-face.is-hello {
+/* El personaje son dos capas con la misma imagen (la pone encuesta-landing.js en --af-cara): el cuerpo y,
+   solo en la pose de bienvenida ("tiene-mano"), la mano con guante, que saluda girando sobre la muñeca. */
+.af-enc-base,
+.af-enc-mano {
+  position: absolute;
+  inset: 0;
+  background: var(--af-cara) no-repeat center bottom / contain;
+}
+.af-enc-mano { display: none; transform-origin: 23.1% 58.7%; }
+.af-enc-face.tiene-mano .af-enc-base { clip-path: polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 13.08% 33.49%, 30.77% 33.49%, 30.77% 57.34%, 27.69% 58.26%, 22.31% 58.72%, 18.46% 55.96%, 13.08% 47.71%, 13.08% 33.49%, 0% 0%); }
+.af-enc-face.tiene-mano .af-enc-mano { display: block; clip-path: polygon(13.46% 33.94%, 30.38% 33.94%, 30.38% 57.80%, 28.46% 60.55%, 21.54% 60.55%, 17.69% 56.88%, 13.46% 48.17%); }
+/* Saludo con la mano (pose de bienvenida): solo gira la mano */
+.af-enc-face.is-hello.tiene-mano .af-enc-mano { animation: af-enc-wave 1.8s ease-in-out 1; }
+/* Saludo en las demás poses: el cuerpo se menea un poco (usa la propiedad "rotate", que se combina con el balanceo) */
+.af-enc-face.is-hello:not(.tiene-mano) {
   animation: af-enc-breathe 4.6s ease-in-out infinite, af-enc-hello 1.9s ease-in-out 1;
 }
 
@@ -92,6 +102,16 @@
 @keyframes af-enc-breathe {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-5px) scale(1.012); }
+}
+@keyframes af-enc-wave {
+  0% { transform: rotate(0deg); }
+  12% { transform: rotate(-17deg); }
+  28% { transform: rotate(15deg); }
+  44% { transform: rotate(-15deg); }
+  60% { transform: rotate(13deg); }
+  76% { transform: rotate(-9deg); }
+  90% { transform: rotate(4deg); }
+  100% { transform: rotate(0deg); }
 }
 @keyframes af-enc-hello {
   0% { rotate: 0deg; }
@@ -430,5 +450,6 @@
   .af-enc-face,
   .af-enc-companion.is-reacting .af-enc-face,
   .af-enc-face.is-hello,
+  .af-enc-face.is-hello .af-enc-mano,
   .af-enc-wait i { animation: none; }
 }

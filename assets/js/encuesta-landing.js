@@ -143,7 +143,7 @@ function construirUI() {
           <strong id="af-enc-note-title"></strong>
           <span id="af-enc-note-copy"></span>
         </div>
-        <div id="af-enc-face" class="af-enc-face" aria-hidden="true"></div>
+        <div id="af-enc-face" class="af-enc-face" aria-hidden="true"><span class="af-enc-base"></span><span class="af-enc-mano"></span></div>
       </div>
       <div id="af-enc-card">
         <div class="af-enc-top">
@@ -159,10 +159,15 @@ function construirUI() {
   if (hero) hero.after(sec); else document.body.prepend(sec);
   sec.querySelector('#af-enc-atras').addEventListener('click', atras);
   if ('IntersectionObserver' in window) {
+    let visible = false;
     const io = new IntersectionObserver(entradas => {
-      if (entradas.some(e => e.isIntersecting)) { io.disconnect(); setTimeout(saludar, 350); }
+      const ahora = entradas.some(e => e.isIntersecting);
+      if (ahora && !visible) setTimeout(saludar, 350); // saluda al aparecer en pantalla
+      visible = ahora;
     }, { threshold: 0.4 });
     io.observe(sec);
+    // mientras se ve la primera pregunta, vuelve a saludar de vez en cuando
+    setInterval(() => { if (visible && paso === 0 && document.visibilityState === 'visible') saludar(); }, 9000);
   }
   return sec;
 }
@@ -246,7 +251,10 @@ function af_setExpr(nombre, mensaje) {
   const cara = document.getElementById('af-enc-face');
   if (!cara) return;
   const src = IMAGENES_EXPR[nombre] || IMAGENES_EXPR.neutral;
-  cara.style.backgroundImage = `url('${src}')`;
+  // dirección completa: una variable CSS con url() relativa se resolvería desde la carpeta de estilos, no desde la página
+  cara.style.setProperty('--af-cara', `url('${new URL(src, document.baseURI).href}')`);
+  // Solo el dibujo de bienvenida tiene la mano levantada: ahí la mano se separa para poder saludar
+  cara.classList.toggle('tiene-mano', src === IMAGENES_EXPR.neutral);
   const contenido = mensaje || MENSAJES_EXPR[nombre] || MENSAJES_EXPR.neutral;
   const titulo = document.getElementById('af-enc-note-title');
   const copia = document.getElementById('af-enc-note-copy');

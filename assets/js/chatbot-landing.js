@@ -469,7 +469,7 @@
     const ok = await di(
       negritas('**La membresía incluye:**'),
       'Biblioteca completa de cursos: inocuidad, microbiología, normativa y tecnología de alimentos.',
-      'Clases en vivo con especialistas, material descargable y certificados con folio verificable.',
+      'Material descargable y certificados con folio verificable. Las clases en vivo con especialistas llegarán próximamente.',
       'Asesoría personalizada y canal VIP, sin permanencia.',
       p ? negritas('Cuesta **' + dinero(p.mes) + ' al mes** o **' + dinero(p.ano) + ' al año**.') : 'Al crear tu cuenta ves el precio vigente.'
     );
@@ -510,7 +510,7 @@
     cancelar: duda('Sí. La membresía es sin permanencia: cancelas cuando quieras.'),
     reembolso: duda(['Una vez que se te da acceso al contenido, la compra se considera final, salvo que se indique otra cosa al momento de comprar.', 'Si tienes una situación especial, escríbele al equipo.']),
     desbloqueo: duda('Los cursos de la membresía se **desbloquean poco a poco, uno cada 8 días**, para que aproveches cada uno a fondo. Tu recorrido empieza cuando terminas tu curso de prueba. En tu panel ves cuántos días faltan para cada curso.'),
-    formato: duda('Los cursos son **en línea**, con clases en video y material descargable. Además, la membresía incluye clases en vivo con especialistas.'),
+    formato: duda('Los cursos son **en línea**, con clases en video y material descargable. Las clases en vivo con especialistas llegarán **próximamente**.'),
     material: duda('Sí. Cada curso trae material descargable (PDFs, presentaciones y otros archivos) para aplicarlo en tu trabajo.'),
     celular: duda('Sí. Puedes entrar desde el navegador de tu celular, tablet o computadora con tu misma cuenta. También puedes instalar Alintec Food como app desde tu panel.'),
     retos: duda('En **Retos** respondes juegos y preguntas para ganar puntos y subir de nivel. Al subir de nivel ganas premios, como abrir un curso antes de tiempo. Es parte de la membresía.'),
