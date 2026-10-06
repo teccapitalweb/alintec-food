@@ -29,8 +29,9 @@ const db = getFirestore(app);
 // EDICION identifica la "vuelta" de la encuesta. Para que TODOS vuelvan a verla (por ejemplo después de borrar
 // los datos de prueba) basta con subir este número: el estado guardado en cada navegador deja de aplicar.
 const EDICION = 2;
-const ESTADO_KEY = 'af_encuesta_estado_e' + EDICION; // 'completada' (la sección ya no vuelve a mostrarse)
-const PROG_KEY = 'af_encuesta_prog_e' + EDICION; // { respuestas, paso, parcialN } para retomar donde se quedó
+const ESTADO_KEY = 'af_encuesta_estado_e' + EDICION; // ya no se usa (antes: 'completada'); solo se borra si quedó de versiones anteriores
+const PROG_KEY = 'af_encuesta_prog_e' + EDICION; // { respuestas, paso, parcialN, guardado } para retomar donde se quedó (se borra al terminar)
+const PEND_KEY = 'af_encuesta_pend_e' + EDICION; // envíos que la base de datos aún no confirmó (se reintentan solos)
 const SID_KEY = 'af_encuesta_sid';
 // Fecha de la última actualización del texto de aviso-de-privacidad.html: queda guardada junto con
 // el WhatsApp como constancia de qué versión aceptó la persona.
@@ -45,14 +46,6 @@ function getSessionId() {
     }
     return sid;
   } catch (e) { return 'sid-' + Date.now(); }
-}
-
-function leerEstado() {
-  try { return localStorage.getItem(ESTADO_KEY); } catch (e) { return null; }
-}
-
-function marcarEstado(valor) {
-  try { localStorage.setItem(ESTADO_KEY, valor); } catch (e) {}
 }
 
 function leerProgreso() {
@@ -334,6 +327,7 @@ function elegir(clave, opt, boton) {
   }
   respuestas[clave] = opt;
   guardarProgreso({ guardado: false }); // si cambió una respuesta, el resultado se vuelve a guardar
+  guardadoPrincipal = null;
   const body = document.getElementById('af-enc-body');
   if (body) body.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
   if (boton) boton.classList.add('is-selected');
@@ -504,7 +498,6 @@ const TEMA_CLAVES = {
 const METAS_NORMA = { 'haccp': 'HACCP', 'iso 22000': 'ISO 22000', 'nom-051': 'NOM-051', 'distintivo h': 'Distintivo H' };
 
 let resTk = 0; // sube cada vez que cambia la pantalla: cancela esperas de una pantalla anterior
-let contactoGuardado = false;
 
 const esperar = ms => new Promise(r => setTimeout(r, ms));
 const normaTxt = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -564,7 +557,7 @@ async function renderResultado() {
   const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const [rec] = await Promise.all([cargarRecomendaciones(), esperar(reducido ? 250 : 1500)]);
   if (tk !== resTk || !document.getElementById('af-enc-card')) return;
-  guardarRespuesta(null, { marcar: false }); // las respuestas ya están completas: se guardan sin esperar
+  guardarRespuesta(null); // las respuestas ya están completas: se guardan sin esperar
   pintarResultado(rec);
 }
 
@@ -619,7 +612,7 @@ function pintarResultado(rec, aviso) {
   asesor.addEventListener('click', () => renderContacto(rec));
   const seguir = nodo('button', 'af-enc-link', 'Seguir viendo');
   seguir.type = 'button';
-  seguir.addEventListener('click', async () => { await guardarRespuesta(null); cerrarSeccion(); });
+  seguir.addEventListener('click', async () => { await finalizarEncuesta(); cerrarSeccion(); });
   pie.append(yaTengo, asesor, seguir);
   res.appendChild(pie);
   body.innerHTML = '';
@@ -687,7 +680,7 @@ async function irAAuth(tab, curso) {
     try { localStorage.setItem(PREF_CURSO_KEY, JSON.stringify({ id: curso.id, titulo: curso.titulo, t: Date.now() })); } catch (e) {}
   }
   document.querySelectorAll('#af-enc-body button, #af-enc-body a').forEach(el => { el.style.pointerEvents = 'none'; });
-  await guardarRespuesta(null); // se espera el guardado: si no, el cambio de página lo cancelaría
+  await finalizarEncuesta(); // se espera el guardado: si no, el cambio de página lo cancelaría (y si falla queda pendiente)
   window.location.href = AUTH_URL + '?tab=' + tab + (curso ? '&curso=' + encodeURIComponent(curso.id) : '');
 }
 
@@ -753,6 +746,7 @@ function renderContacto(rec) {
   // Aquí el número sí es el objetivo: debe ser válido (WhatsApp de México u otro país) y tener marcada la
   // casilla del Aviso de privacidad; sin eso no se guarda ni se usa.
   const guardar = async () => {
+    if (enviar.disabled) return; // ya se está guardando (por ejemplo, doble Enter)
     const crudo = input.value.trim();
     if (!crudo) { avisar('Escribe tu número, o vuelve a tus cursos si prefieres no dejarlo.', false); input.focus(); return; }
     const numero = normalizarWhatsapp(pais.value, crudo);
@@ -765,8 +759,7 @@ function renderContacto(rec) {
     enviar.textContent = 'Guardando…';
     enviar.disabled = true;
     volver.disabled = true;
-    await guardarRespuesta(numero, { marcar: false });
-    contactoGuardado = true;
+    await guardarRespuesta(numero);
     pintarResultado(rec, '¡Listo! Un asesor te escribirá por WhatsApp. Mientras, puedes elegir tu curso.');
   };
   enviar.addEventListener('click', guardar);
@@ -774,25 +767,77 @@ function renderContacto(rec) {
   volver.addEventListener('click', () => pintarResultado(rec));
 }
 
-// Guarda la encuesta completa. Espera como máximo 3 s para no dejar colgada a la persona.
-// Las respuestas se guardan una sola vez (al mostrar el resultado); el WhatsApp, si lo deja, va en un
-// segundo documento con la misma sesión (el panel de admin prefiere el que trae contacto).
-async function guardarRespuesta(contacto, { marcar = true } = {}) {
-  if (marcar) marcarEstado('completada');
-  if (!contacto && leerProgreso().guardado) return;
-  guardarProgreso({ guardado: true });
-  const doc = { sessionId: getSessionId(), respuestas: { ...respuestas }, completada: true, creado: serverTimestamp() };
-  if (contacto) {
-    doc.contacto = contacto;
+// ── Guardado ────────────────────────────────────────────────────────────────
+// Las respuestas completas se guardan una sola vez por vuelta de la encuesta; el WhatsApp, si lo deja, va
+// en un segundo documento con la misma sesión (el panel de admin junta ambos).
+// Cada envío queda anotado en el navegador (PEND_KEY) hasta que la base de datos lo CONFIRMA: si falla el
+// internet o la persona cierra la página antes, se reintenta solo cuando vuelva la conexión o la próxima
+// vez que abra el sitio. Solo se marca "guardado" tras la confirmación.
+const enVuelo = new Set();
+let guardadoPrincipal = null; // envío de las respuestas de esta vuelta (se reinicia si cambia una respuesta)
+let finalizada = false;       // la persona ya terminó y salió de la encuesta
+
+function leerPendientes() {
+  try { const l = JSON.parse(localStorage.getItem(PEND_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+}
+function escribirPendientes(lista) {
+  try { if (lista.length) localStorage.setItem(PEND_KEY, JSON.stringify(lista)); else localStorage.removeItem(PEND_KEY); } catch (e) {}
+}
+
+function enviarPendiente(item) {
+  if (enVuelo.has(item.id)) return Promise.resolve(false);
+  enVuelo.add(item.id);
+  const doc = { sessionId: item.sid, respuestas: item.respuestas, completada: true, creado: serverTimestamp() };
+  if (item.contacto) {
+    doc.contacto = item.contacto;
     doc.avisoAceptado = true;
     doc.avisoVersion = AVISO_VERSION;
   }
-  const guardado = addDoc(collection(db, 'encuestasProspectos'), doc)
-    .catch(e => console.warn('[encuesta] no se pudo guardar:', e.message));
-  await Promise.race([guardado, new Promise(r => setTimeout(r, 3000))]);
+  return addDoc(collection(db, 'encuestasProspectos'), doc)
+    .then(() => { escribirPendientes(leerPendientes().filter(x => x.id !== item.id)); return true; })
+    .catch(e => { console.warn('[encuesta] no se pudo guardar; se reintentará:', e.message); return false; })
+    .finally(() => enVuelo.delete(item.id));
 }
 
-// Una vez completada, la sección se puede cerrar y no vuelve a aparecer en ese navegador.
+function enviarNuevo(contacto) {
+  const item = { id: Date.now() + '-' + Math.random().toString(16).slice(2), sid: getSessionId(), respuestas: { ...respuestas }, contacto: contacto || null };
+  escribirPendientes([...leerPendientes(), item]);
+  return enviarPendiente(item);
+}
+
+function reintentarPendientes() {
+  leerPendientes().forEach(enviarPendiente);
+}
+
+// Guarda lo respondido. Espera como máximo 3 s para no dejar colgada a la persona; si no alcanzó a confirmarse,
+// el envío sigue en curso (o queda pendiente para reintentarse).
+async function guardarRespuesta(contacto) {
+  let promesa;
+  if (contacto) {
+    promesa = enviarNuevo(contacto);
+  } else {
+    if (leerProgreso().guardado) return true; // ya confirmado en esta vuelta
+    if (!guardadoPrincipal) {
+      guardadoPrincipal = enviarNuevo(null).then(ok => {
+        if (ok && !finalizada) guardarProgreso({ guardado: true });
+        else if (!ok) guardadoPrincipal = null; // falló: el siguiente intento vuelve a mandarlo
+        return ok;
+      });
+    }
+    promesa = guardadoPrincipal;
+  }
+  return Promise.race([promesa, new Promise(r => setTimeout(() => r(false), 3000))]);
+}
+
+// La persona terminó (eligió un curso, creó cuenta/inició sesión o pulsó "Seguir viendo"): se asegura el guardado
+// y se borra su avance, de modo que al actualizar la página la encuesta aparece de nuevo desde el principio.
+async function finalizarEncuesta() {
+  await guardarRespuesta(null);
+  finalizada = true;
+  try { localStorage.removeItem(PROG_KEY); } catch (e) {}
+}
+
+// La sección desaparece en esta visita; al actualizar la página vuelve a aparecer.
 function cerrarSeccion() {
   const sec = document.getElementById('encuentra');
   if (sec) sec.remove();
@@ -802,7 +847,7 @@ function cerrarSeccion() {
 // admin la reemplaza por la completa si luego termina). Mejor esfuerzo: al salir
 // de la página el navegador puede cortar la petición.
 function guardarParcialSiHaceFalta() {
-  if (leerEstado() === 'completada' || leerProgreso().guardado) return;
+  if (finalizada || guardadoPrincipal || leerProgreso().guardado) return;
   const n = Object.keys(respuestas).length;
   if (n === 0 || n === (leerProgreso().parcialN || 0)) return;
   guardarProgreso({ parcialN: n });
@@ -812,9 +857,14 @@ function guardarParcialSiHaceFalta() {
 }
 
 function iniciar() {
-  // Limpia el estado de ediciones anteriores para no dejar basura en el navegador.
-  try { Object.keys(localStorage).filter(k => /^af_encuesta_(estado|prog)(_ed+)?$/.test(k) && k !== ESTADO_KEY && k !== PROG_KEY).forEach(k => localStorage.removeItem(k)); } catch (e) {}
-  if (leerEstado() === 'completada') return; // ya la respondió: la sección no vuelve a aparecer
+  // Limpia el estado de ediciones anteriores y el "completada" que dejaban las versiones previas
+  // (ya no se usa: la encuesta vuelve a aparecer al actualizar la página).
+  try {
+    localStorage.removeItem(ESTADO_KEY);
+    Object.keys(localStorage).filter(k => /^af_encuesta_(estado|prog|pend)_e/.test(k) && !k.endsWith('_e' + EDICION)).forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
+  setTimeout(reintentarPendientes, 1500); // envíos que no se confirmaron en una visita anterior
+  window.addEventListener('online', reintentarPendientes);
   precargarImagenes();
   const prog = leerProgreso();
   Object.assign(respuestas, prog.respuestas || {});

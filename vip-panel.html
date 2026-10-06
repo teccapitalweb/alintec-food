@@ -18186,7 +18186,7 @@ const HACCPTool = (function(){
       }
     }
     function renderList(){
-      const wrap=q('#hc-list'); if(!s.peligros.length){ wrap.innerHTML=''; return; }
+      const wrap=q('#hc-list'); if(!s.peligros.length || !toolEsVIP()){ wrap.innerHTML=''; return; }
       const pccs=s.peligros.filter(p=>p.pcc).length;
       wrap.innerHTML=`
         <div class="thx-card">
@@ -18355,6 +18355,7 @@ const BPMTool = (function(){
     renderScore(); renderSecciones();
 
     function renderScore(){
+      if(!toolEsVIP()){ q('#bp-score').innerHTML='<div style="padding:6px 2px;color:var(--text-3);font-size:13px;line-height:1.5">El puntaje de cumplimiento se muestra con tu membresía activa.</div>'; return; }
       const g=puntajeGlobal(); const cl=clasif(g.pct);
       q('#bp-score').innerHTML=`
         <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">

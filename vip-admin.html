@@ -1601,16 +1601,28 @@ const Pages={
       }
       return;
     }
-    // Una misma persona puede tener una copia parcial (minimizó la encuesta) y luego
-    // la completa: nos quedamos con una sola por sesión, prefiriendo la completa.
-    const porSesion = new Map();
+    // Una misma persona puede tener varias copias (parcial, completa, otra vuelta, una con WhatsApp):
+    // por sesión nos quedamos con una sola. La completa gana a la parcial; entre completas, la más reciente
+    // (a igualdad, la que tiene más respuestas); y si la elegida no trae WhatsApp pero otra copia sí, se conserva.
+    const msDe = x => (x && x.creado && typeof x.creado.toMillis === 'function') ? x.creado.toMillis() : 0;
+    const nResp = x => Object.keys(x.respuestas || {}).length;
+    const grupos = new Map();
     docs.forEach((d, i) => {
       const clave = d.sessionId || ('sin-sesion-' + i);
-      const previa = porSesion.get(clave);
-      const n = Object.keys(d.respuestas || {}).length;
-      const nPrevia = previa ? Object.keys(previa.respuestas || {}).length : -1;
-      if (!previa || (d.completada && !previa.completada) || (d.completada === previa.completada && n > nPrevia)
-        || (d.completada === previa.completada && n === nPrevia && d.contacto && !previa.contacto)) porSesion.set(clave, d);
+      if (!grupos.has(clave)) grupos.set(clave, []);
+      grupos.get(clave).push(d);
+    });
+    const porSesion = new Map();
+    grupos.forEach((g, clave) => {
+      const elegida = g.reduce((a, d) => {
+        if (!!d.completada !== !!a.completada) return d.completada ? d : a;
+        if (msDe(d) !== msDe(a)) return msDe(d) > msDe(a) ? d : a;
+        return nResp(d) > nResp(a) ? d : a;
+      });
+      const conContacto = g.find(d => d.contacto);
+      porSesion.set(clave, (conContacto && !elegida.contacto)
+        ? { ...elegida, contacto: conContacto.contacto, avisoAceptado: conContacto.avisoAceptado, avisoVersion: conContacto.avisoVersion }
+        : elegida);
     });
     docs = [...porSesion.values()];
     const total = docs.length;
