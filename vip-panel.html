@@ -8385,10 +8385,9 @@ const Sections = (function(){
       texto = `Este curso se abre${cr.fecha ? ' el <strong>' + escapeHtml(cr.fecha) + '</strong>' : ' pronto'}. Los cursos se desbloquean progresivamente para que aproveches cada uno a fondo.`;
     }
     Modal.open({
-      id: 'curso-desbloqueo', title: titulo, subtitle: c.titulo.length > 46 ? c.titulo.slice(0, 46) + '…' : c.titulo, icon: 'i-lock', size: 'sm',
-      body: `<p class="prueba-aviso" style="font-size:14px;line-height:1.6;color:var(--text-2);">${texto}</p>
-        <p style="font-size:12.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">🎁 ¿Ya tienes un <strong>premio por tu nivel</strong>? Puedes abrir este curso antes desde <a href="#" onclick="Modal.closeAll();window.navigateToSection('logros');return false;" style="color:var(--primary);font-weight:700;">Mis logros</a>.</p>`,
-      footer: '<button class="btn btn--ghost" onclick="Modal.close(\'curso-desbloqueo\')">Entendido</button>'
+      id: 'aviso-desbloqueo', title: titulo, subtitle: c.titulo.length > 46 ? c.titulo.slice(0, 46) + '…' : c.titulo, icon: 'i-lock', size: 'sm',
+      body: `<p class="prueba-aviso" style="font-size:14px;line-height:1.6;color:var(--text-2);">${texto}</p>`,
+      footer: '<button class="btn btn--ghost" onclick="Modal.close(\'aviso-desbloqueo\')">Entendido</button>'
     });
   };
 
