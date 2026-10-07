@@ -2699,10 +2699,6 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
   .topbar__right .avatar{display:none}
   .banner{flex-direction:column;align-items:flex-start;padding:20px 22px}
   .banner__stats{align-self:stretch;justify-content:space-between;flex-wrap:wrap}
-  .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--surface);border-top:0.5px solid var(--border-2);padding:6px 4px max(6px,env(safe-area-inset-bottom));justify-content:space-around;align-items:center}
-  .mobile-nav__item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-3);padding:5px 8px;border-radius:8px;font-size:9.5px;font-weight:500;letter-spacing:.3px}
-  .mobile-nav__item.is-active{color:var(--primary)}
-  .mobile-nav__item .ic{width:18px;height:18px}
 
   /* Secciones internas mobile */
   .sec-hero{padding:4px 0 14px;margin-bottom:16px}
@@ -4074,6 +4070,11 @@ window.__setDisplayName = async (nombre) => {
       <div class="topbar__left">
         <span class="pill" id="topbar-pill"><svg class="ic"><use href="#i-user"/></svg><span id="topbar-pill-text">Ingeniero</span></span>
       </div>
+      <div class="topbar__search" id="topbar-search" role="search">
+        <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+        <input type="search" id="global-search" placeholder="Buscar…" autocomplete="off" enterkeyhint="search" aria-label="Buscar cursos, clases o materiales" aria-controls="global-search-results">
+        <div class="topbar__results" id="global-search-results" role="listbox" hidden></div>
+      </div>
       <div class="topbar__right">
         <button class="icon-btn" id="btn-tour-help" data-tour-restart type="button" aria-label="Volver a ver el recorrido guiado" title="Recorrido guiado">
           <span class="tour-help-icon" aria-hidden="true">?</span>
@@ -4093,6 +4094,7 @@ window.__setDisplayName = async (nombre) => {
             <span class="avatar__plan">VIP ANUAL</span>
           </div>
         </div>
+        <button class="icon-btn topbar__salir" id="btn-logout-top" type="button" aria-label="Cerrar sesión" title="Cerrar sesión"><svg class="ic"><use href="#i-logout"/></svg></button>
       </div>
     </header>
 
@@ -4234,12 +4236,12 @@ window.__setDisplayName = async (nombre) => {
 </div>
 
 <nav class="mobile-nav">
-  <a class="mobile-nav__item is-active" data-section="inicio"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
-  <a class="mobile-nav__item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Cursos</a>
-  <a class="mobile-nav__item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs</a>
-  <a class="mobile-nav__item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Vivo</a>
-  <a class="mobile-nav__item" data-section="herramientas" data-tour="tools-nav"><svg class="ic"><use href="#i-tools"/></svg>Pro</a>
-  <a class="mobile-nav__item" id="mobile-nav-more" role="button"><svg class="ic"><use href="#i-menu"/></svg>Más</a>
+  <a class="mobile-nav__item is-active" data-section="inicio"><svg class="ic"><use href="#i-home"/></svg><span class="mobile-nav__lbl">Inicio</span></a>
+  <a class="mobile-nav__item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg><span class="mobile-nav__lbl">Cursos</span></a>
+  <a class="mobile-nav__item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg><span class="mobile-nav__lbl">PDFs</span></a>
+  <a class="mobile-nav__item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg><span class="mobile-nav__lbl">Vivo</span></a>
+  <a class="mobile-nav__item" data-section="herramientas" data-tour="tools-nav"><svg class="ic"><use href="#i-tools"/></svg><span class="mobile-nav__lbl">Pro</span></a>
+  <a class="mobile-nav__item" id="mobile-nav-more" role="button"><svg class="ic"><use href="#i-menu"/></svg><span class="mobile-nav__lbl">Más</span></a>
 </nav>
 
 <!-- Drawer móvil con TODAS las opciones · se abre al tocar "Más" -->
@@ -4336,6 +4338,17 @@ async function initCountdown(){
       <div style="padding:18px 0 4px;text-align:center;">
         <div style="display:inline-block;margin-bottom:10px;padding:4px 12px;border-radius:100px;background:var(--primary);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;">Próximamente</div>
         <div style="font-size:12px;color:var(--text-3);line-height:1.5;">Estamos preparando las transmisiones en vivo con especialistas.</div>
+      </div>`;
+    return;
+  }
+
+  // Solo miembros VIP ven la próxima clase
+  if (typeof window.__puedeVerClasesEnVivo === 'function' && !window.__puedeVerClasesEnVivo()) {
+    widget.innerHTML = `
+      <div class="widget__label">Clases en vivo</div>
+      <div style="padding:18px 0 4px;text-align:center;">
+        <div style="display:inline-block;margin-bottom:10px;padding:4px 12px;border-radius:100px;background:var(--primary);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;">Solo miembros VIP</div>
+        <div style="font-size:12px;color:var(--text-3);line-height:1.5;">Suscríbete para ver y unirte a las clases en vivo.</div>
       </div>`;
     return;
   }
@@ -8472,8 +8485,16 @@ const Sections = (function(){
   let _webinarsLoaded = false;
   let _webinarsLoading = false;
 
+  // Las clases en vivo son solo para miembros VIP (y administradores). Sin membresía ni se consultan:
+  // las reglas de Firestore tampoco se lo permitirían.
+  function puedeVerClasesEnVivo() {
+    return window.__isDemoMode !== true && (esAdminReal() || tieneAccesoVipCompleto());
+  }
+  window.__puedeVerClasesEnVivo = puedeVerClasesEnVivo;
+
   async function cargarWebinarsFirestore() {
     if (_webinarsLoading) return;
+    if (!puedeVerClasesEnVivo()) { webinars = []; _webinarsLoaded = true; return; }
     _webinarsLoading = true;
     try {
       const db = window.__db;
@@ -8528,6 +8549,23 @@ const Sections = (function(){
   };
   // ⚡ Exponer array para que initCountdown (que vive en scope global) pueda leerlo
   window.__getWebinars = function() { return webinars; };
+
+  // Buscador del encabezado (teléfono y tableta): cursos, clases y materiales del catálogo
+  window.__abrirCursoDetalle = openCursoDetalle;
+  window.__buscarEnPanel = async function(texto) {
+    if (!_cursosLoaded && !_cursosLoading) { try { await cargarCursosBackend(); } catch (e) {} }
+    const nrm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const palabras = nrm(texto).split(/\s+/).filter(Boolean);
+    if (!palabras.length) return [];
+    const coincide = (...campos) => { const t = nrm(campos.join(' ')); return palabras.every(p => t.includes(p)); };
+    const cursosOk = [], clasesOk = [], materialesOk = [];
+    (Array.isArray(cursos) ? cursos : []).forEach(c => {
+      if (coincide(c.titulo, c.instructor, c.area, c.desc, c.descripcion)) cursosOk.push({ tipo: 'curso', id: c.id, titulo: c.titulo, sub: c.area || 'Curso' });
+      (c.sesiones || []).forEach((x, i) => { if (coincide(x.titulo)) clasesOk.push({ tipo: 'clase', id: c.id, idx: i, titulo: x.titulo, sub: c.titulo }); });
+      (c.materiales || []).forEach((m, i) => { if (coincide(m.titulo)) materialesOk.push({ tipo: 'material', id: c.id, idx: i, titulo: m.titulo, sub: c.titulo }); });
+    });
+    return [...cursosOk.slice(0, 4), ...clasesOk.slice(0, 3), ...materialesOk.slice(0, 3)];
+  };
   window.__webinarsReady = function() { return _webinarsLoaded; };
 
   const usuario = {nombre:'Invitado',xp:0,racha:0,diasActivos:0};
@@ -9192,6 +9230,7 @@ const Sections = (function(){
     const totalMateriales = listaCursos.reduce((total, curso) => total + (Array.isArray(curso.materiales) ? curso.materiales.length : 0), 0);
     setStat('banner-stat-cursos', listaCursos.length, 'Cursos disponibles');
     if (window.__CLASES_EN_VIVO_PRONTO === true) setStat('banner-stat-clases', 'Pronto', 'Clases en vivo: próximamente');
+    else if (!puedeVerClasesEnVivo()) setStat('banner-stat-clases', 'VIP', 'Clases en vivo: solo para miembros VIP');
     else setStat('banner-stat-clases', Array.isArray(webinars) ? webinars.length : 0, 'Clases en vivo y grabadas');
     setStat('banner-stat-pdfs', totalMateriales, 'PDFs y materiales');
     setStat('banner-stat-pro', 5, 'Herramientas Pro');
@@ -10194,6 +10233,26 @@ const Sections = (function(){
             <div style="font-size:13.5px;color:var(--text-3);max-width:420px;margin:0 auto;line-height:1.6;">Estamos preparando las transmisiones con especialistas del sector alimentario. Cuando estén listas aparecerán aquí.</div>
           </div>
         </div>`;
+      return;
+    }
+    // Solo miembros VIP: quien no tiene membresía no ve las clases (ni sus links), solo la invitación
+    if (!puedeVerClasesEnVivo()) {
+      container.innerHTML = `
+        <div class="fade-up">
+          <div class="sec-hero">
+            <span class="sec-hero__eyebrow">Aprende en directo</span>
+            <h1 class="sec-hero__title">Clases <span class="sec-hero__accent">en vivo.</span></h1>
+            <p class="sec-hero__sub">Sesiones en directo con profesionales y especialistas del sector alimentario.</p>
+          </div>
+          <div style="text-align:center;padding:60px 24px;background:var(--surface-2);border:1px dashed var(--border-2);border-radius:18px;margin-top:18px;">
+            <div style="width:72px;height:72px;border-radius:50%;background:color-mix(in srgb, var(--primary) 12%, transparent);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><svg class="ic" style="width:32px;height:32px;"><use href="#i-lock"/></svg></div>
+            <div style="display:table;margin:0 auto 12px;padding:5px 14px;border-radius:100px;background:var(--primary);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;">Solo miembros VIP</div>
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.3px;color:var(--text);margin-bottom:8px;">Las clases en vivo son para miembros</div>
+            <div style="font-size:13.5px;color:var(--text-3);max-width:420px;margin:0 auto 18px;line-height:1.6;">Suscríbete para ver las próximas transmisiones, unirte en vivo y consultar las grabaciones.</div>
+            <button type="button" class="btn btn--accent" id="web-suscribir">Ver suscripción</button>
+          </div>
+        </div>`;
+      container.querySelector('#web-suscribir')?.addEventListener('click', () => mostrarPaywallCurso('Clases en vivo para miembros', 'Suscríbete para ver y unirte a las clases en vivo.'));
       return;
     }
     // Cargar de Firestore si aún no se cargó
@@ -15103,7 +15162,7 @@ function injectSupportFAB(){
     #wa-fab-menu .wa-fab-opt-tx{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.3}
     #wa-fab-menu .wa-fab-opt-sub{font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.3}
     @keyframes dropFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    @media (max-width:768px){#wa-fab{bottom:88px;left:16px;width:50px;height:50px}#wa-fab-menu{bottom:148px;left:16px}}
+    @media (max-width:880px){#wa-fab{bottom:calc(92px + env(safe-area-inset-bottom));left:16px;width:50px;height:50px}#wa-fab-menu{bottom:calc(152px + env(safe-area-inset-bottom));left:16px}}
   `;
   document.head.appendChild(style);
 
@@ -15226,6 +15285,47 @@ function initNav(){
 
   // ─── Botones del DOM estático (topbar, sidebar, widgets siempre presentes) ───
   document.getElementById('btn-logout')?.addEventListener('click',openLogoutModal);
+  document.getElementById('btn-logout-top')?.addEventListener('click',openLogoutModal);
+  // Buscador del encabezado (teléfono y tableta)
+  (function () {
+    const caja = document.getElementById('global-search');
+    const lista = document.getElementById('global-search-results');
+    if (!caja || !lista) return;
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ICONOS = { curso: 'i-book', clase: 'i-play', material: 'i-news' };
+    const ETIQUETAS = { curso: 'Curso', clase: 'Clase', material: 'Material' };
+    let turno = 0, resultados = [];
+    const ajustarPlaceholder = () => { caja.placeholder = window.matchMedia('(min-width:600px)').matches ? 'Buscar cursos, clases o materiales…' : 'Buscar…'; };
+    ajustarPlaceholder(); window.addEventListener('resize', ajustarPlaceholder);
+    const cerrar = () => { lista.hidden = true; lista.innerHTML = ''; resultados = []; };
+    const abrir = r => {
+      cerrar(); caja.value = ''; caja.blur();
+      if (r.tipo === 'curso') window.__abrirCursoDetalle?.(r.id);
+      else if (r.tipo === 'clase') window.abrirClaseAlintec?.(r.id, r.idx);
+      else window.abrirMaterialAlintec?.(r.id, r.idx);
+    };
+    async function buscar() {
+      const q = caja.value.trim();
+      const mio = ++turno;
+      if (q.length < 2) return cerrar();
+      let res = [];
+      try { res = await window.__buscarEnPanel(q); } catch (e) {}
+      if (mio !== turno) return; // llegó una búsqueda más nueva
+      resultados = res;
+      lista.hidden = false;
+      lista.innerHTML = res.length
+        ? res.map((r, i) => '<button type="button" class="gs-item' + (i === 0 ? ' is-first' : '') + '" role="option" data-i="' + i + '"><span class="gs-item__ic"><svg class="ic"><use href="#' + ICONOS[r.tipo] + '"/></svg></span><span class="gs-item__txt"><strong>' + esc(r.titulo) + '</strong><small>' + esc(r.sub) + '</small></span><span class="gs-item__tag">' + ETIQUETAS[r.tipo] + '</span></button>').join('')
+        : '<div class="gs-vacio">No encontramos resultados para «' + esc(q) + '».</div>';
+    }
+    let temporizador;
+    caja.addEventListener('input', () => { clearTimeout(temporizador); temporizador = setTimeout(buscar, 180); });
+    caja.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { cerrar(); caja.blur(); }
+      else if (e.key === 'Enter' && resultados[0]) { e.preventDefault(); abrir(resultados[0]); }
+    });
+    lista.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b && resultados[+b.dataset.i]) abrir(resultados[+b.dataset.i]); });
+    document.addEventListener('click', e => { if (!e.target.closest('#topbar-search')) cerrar(); });
+  })();
   document.getElementById('btn-wa')?.addEventListener('click',()=>{
     // El grupo de la comunidad es solo para miembros
     if (window.UserState?.modo !== 'vip') { navigateToSection('canal'); return; } // la guardia lo manda a Suscripción
@@ -17539,6 +17639,57 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .bib-reto--ok{border-color:color-mix(in srgb,var(--primary) 30%,var(--border))}
 #continuar-widget.is-vacio{display:none!important}
 #continuar-widget.is-espera .continuar__barra,#continuar-widget.is-espera .continuar__barra-txt{display:none}
+
+/* ═══ Teléfono y tableta: encabezado con buscador y barra inferior flotante (estilo app) ═══ */
+.topbar__search,.topbar .topbar__salir{display:none}
+@media(max-width:880px){
+  .main{padding-bottom:calc(108px + env(safe-area-inset-bottom))!important}
+  .topbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 10px!important;top:calc(6px + env(safe-area-inset-top))}
+  .topbar__left{display:none!important}
+  .topbar__search{display:flex;align-items:center;gap:8px;min-width:0;height:40px;padding:0 13px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-3);transition:border-color .2s,box-shadow .2s,background .2s}
+  .topbar__search:focus-within{border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 18%,transparent)}
+  .topbar__search .ic{flex:0 0 16px;width:16px;height:16px}
+  .topbar__search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:500 13px Inter,system-ui,sans-serif;-webkit-appearance:none;appearance:none}
+  .topbar__search input::placeholder{color:var(--text-3)}
+  .topbar__search input::-webkit-search-cancel-button{display:none}
+  .topbar__right{gap:6px}
+  .topbar .icon-btn,.topbar .theme-toggle{width:38px;height:38px;padding:0;justify-content:center;flex:0 0 auto}
+  .topbar .theme-toggle #theme-label{display:none}
+  .topbar .topbar__salir{display:flex;color:#DC2626}
+  .topbar__right .avatar{display:flex!important;padding:0!important;border:0!important;background:transparent!important}
+  .topbar__right .avatar__info{display:none}
+  .topbar__right .avatar__circle{width:38px;height:38px;font-size:12px;box-shadow:0 0 0 2px var(--surface),0 0 0 3px color-mix(in srgb,var(--primary) 38%,transparent)}
+  .topbar__results{position:absolute;left:8px;right:8px;top:calc(100% + 8px);z-index:60;max-height:min(60vh,420px);overflow:auto;padding:6px;border:1px solid var(--border-2);border-radius:18px;background:var(--surface);box-shadow:0 18px 44px rgba(18,48,26,.2)}
+  .topbar__results[hidden]{display:none}
+  .gs-item{display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border:0;border-radius:12px;background:transparent;text-align:left;cursor:pointer;color:var(--text)}
+  .gs-item:hover,.gs-item:focus-visible,.gs-item.is-first{background:var(--surface-2);outline:0}
+  .gs-item__ic{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:color-mix(in srgb,var(--primary) 13%,transparent);color:var(--primary)}
+  .gs-item__ic .ic{width:15px;height:15px}
+  .gs-item__txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .gs-item__txt strong{font:700 13px/1.3 Inter,system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gs-item__txt small{font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gs-item__tag{flex:0 0 auto;padding:2px 8px;border-radius:99px;background:var(--surface-3);color:var(--text-2);font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.6px;text-transform:uppercase}
+  .gs-vacio{padding:14px 12px;font-size:12.5px;color:var(--text-3);text-align:center}
+
+  /* Barra inferior flotante: el apartado activo se expande con su nombre */
+  .mobile-nav{display:flex!important;position:fixed!important;left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;max-width:560px;margin:0 auto;z-index:60;gap:2px;align-items:stretch;padding:6px!important;border:1px solid var(--border-2)!important;border-radius:28px!important;background:color-mix(in srgb,var(--surface) 90%,transparent)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 16px 36px rgba(18,48,26,.2),0 2px 6px rgba(18,48,26,.08)}
+  .mobile-nav__item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 2px;border-radius:22px;color:var(--text-3);font-size:10px;font-weight:600;letter-spacing:.1px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:flex-grow .38s cubic-bezier(.2,.8,.25,1),background .25s,color .2s,transform .15s,box-shadow .25s}
+  .mobile-nav__item .ic{width:20px;height:20px;transition:transform .3s cubic-bezier(.2,.8,.25,1)}
+  .mobile-nav__item:active{transform:scale(.93)}
+  .mobile-nav__lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .mobile-nav__item.is-active{flex-grow:2.4;flex-direction:row;gap:7px;padding:10px 10px;color:#fff;font-size:12px;background:linear-gradient(135deg,#2E6A4B,#43875F);box-shadow:0 8px 18px rgba(46,106,75,.38)}
+  .mobile-nav__item.is-active .ic{transform:scale(1.06)}
+  :root[data-theme="night"] .mobile-nav{background:rgba(18,29,40,.92)!important}
+  :root[data-theme="night"] .mobile-nav__item.is-active{background:linear-gradient(135deg,#2D5C74,#3F7D98);box-shadow:0 8px 18px rgba(30,70,95,.45)}
+  :root[data-theme="night"] .topbar__search{background:#172431}
+}
+@media(max-width:420px){
+  .topbar{gap:6px;padding:7px 8px!important}
+  .topbar .icon-btn,.topbar .theme-toggle,.topbar__right .avatar__circle{width:34px;height:34px}
+  .topbar__right{gap:4px}
+  .topbar__search{height:38px;padding:0 10px}
+}
+@media (prefers-reduced-motion:reduce){.mobile-nav__item,.mobile-nav__item .ic{transition:none}}
 #continuar-widget{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(290px,.82fr)!important;gap:16px!important;margin-bottom:30px!important;background:none!important;border:0!important;box-shadow:none!important}
 .home-course-hero.continuar__main{position:relative;isolation:isolate;min-height:440px;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:26px;background-color:#203746!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important;box-shadow:0 20px 46px rgba(29,52,66,.18)!important}
 .home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(20,48,33,.45)}

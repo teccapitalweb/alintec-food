@@ -206,8 +206,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Clases en vivo: solo miembros con membresía vigente (o administrador). Con signedIn() cualquier
+    // cuenta gratuita podía leer el link de la transmisión.
     match /webinars/{webinarId} {
-      allow read: if signedIn();
+      allow read: if activeMember() || isAdmin();
       allow write: if isAdmin();
     }
 

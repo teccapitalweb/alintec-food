@@ -2026,6 +2026,7 @@ const Pages={
               <div class="dash-card__title"><svg class="ic"><use href="#i-broadcast"/></svg>Próximas clases</div>
               <a class="dash-card__link" data-go="webinars">Programar<svg class="ic"><use href="#i-arrow-right"/></svg></a>
             </div>
+            ${window.__CLASES_EN_VIVO_ACTIVAS === true ? '' : '<div style="margin:0 0 8px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--warning) 11%,var(--surface-2));font-size:11.5px;line-height:1.45;color:var(--text-2);">Aún no visibles para los usuarios: la función sigue en «Próximamente».</div>'}
             <div class="mini-list">
               ${(() => {
                 const proximas = ready ? store.webinars.filter(w => {
@@ -3906,6 +3907,17 @@ const Pages={
     tab: 'todos' // todos / proximos / pasados
   },
 
+  // Aviso para quien administra: mientras la función no esté activa, lo que se programe no lo ve ningún usuario
+  _avisoClasesEnVivo(compacto) {
+    if (window.__CLASES_EN_VIVO_ACTIVAS === true) return '';
+    return `<div role="note" style="display:flex;gap:12px;align-items:flex-start;margin:0 0 ${compacto ? '14px' : '18px'};padding:13px 15px;border:1px solid color-mix(in srgb,var(--warning) 45%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--warning) 11%,var(--surface));">
+      <svg class="ic" style="flex:0 0 18px;width:18px;height:18px;margin-top:1px;color:var(--warning);"><use href="#i-broadcast"/></svg>
+      <div style="font-size:13px;line-height:1.55;color:var(--text-2);">${compacto
+        ? '<strong style="color:var(--text);">Aún no es visible para los usuarios.</strong> La función sigue en «Próximamente»: la clase se guardará, pero nadie la verá hasta que se active (y después, solo los miembros VIP).'
+        : '<strong style="color:var(--text);">Las clases en vivo aún no están activas para los usuarios.</strong> En el panel de los miembros esta sección sigue mostrando «Próximamente». Lo que programes aquí se guarda, pero <strong>nadie lo verá ni podrá conectarse</strong> hasta que se active la función. Cuando se active, <strong>solo las verán los miembros VIP</strong>. Si necesitas activarla, avisa al equipo de desarrollo.'}</div>
+    </div>`;
+  },
+
   webinars(p) {
     p.innerHTML = `
       <div class="fade-up">
@@ -3921,6 +3933,7 @@ const Pages={
           </div>
         </div>
 
+        ${Pages._avisoClasesEnVivo()}
         <div class="kpi-grid" id="web-kpis"></div>
 
         <div class="curso-toolbar">
@@ -4198,6 +4211,7 @@ const Pages={
     const wb = esEdicion ? w : {};
     const body = document.createElement('div');
     body.innerHTML = `
+      ${Pages._avisoClasesEnVivo(true)}
       <input type="hidden" id="web-edit-id" value="${esEdicion ? wb.id : ''}">
 
       <div class="form-grid">
@@ -4298,7 +4312,7 @@ const Pages={
           data.creadoPor = window.__currentAdmin?.email || 'admin';
           data.registrados = 0;
           await fb.addDoc(fb.collection(fb.db, 'webinars'), data);
-          Toast.success('¡Clase programada!', titulo);
+          Toast.success('¡Clase programada!', window.__CLASES_EN_VIVO_ACTIVAS === true ? titulo : titulo + ' · aún no es visible para los usuarios (función en «Próximamente»)');
         }
         Modal.close();
       } catch (err) {
@@ -6540,6 +6554,9 @@ function dirAdminCargar(){
    refresh te deja donde estabas, los botones atrás/adelante del
    navegador funcionan y puedes compartir un link directo a la sección.
    ═══════════════════════════════════════════════════════════════════ */
+// ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
+// de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
+window.__CLASES_EN_VIVO_ACTIVAS = false;
 const SECCIONES_VALIDAS = ['dashboard','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
 
 function seccionDesdeHash(){
