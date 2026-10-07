@@ -1139,6 +1139,18 @@ window.setLoading = function(btn, isLoading, originalLabel) {
     }
   } catch(e){}
 })();
+
+/* ===== Llegada desde el enlace de confirmación (otro navegador o dispositivo): avisa y deja listo el inicio de sesión ===== */
+(function(){
+  try {
+    if (new URLSearchParams(location.search).get('verificado') !== '1') return;
+    document.querySelector('[data-tab="login"]')?.click();
+    showAlert('success', '¡Correo confirmado!', 'Inicia sesión con tu contraseña para entrar a tu panel.');
+    const em = document.getElementById('li-email');
+    const pass = document.getElementById('li-pass');
+    setTimeout(() => { const el = em && em.value ? pass : em; if (el) el.focus(); }, 250);
+  } catch(e){}
+})();
 </script>
 
 <!-- Firebase Auth (módulo) -->

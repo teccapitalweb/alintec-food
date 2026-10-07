@@ -1301,10 +1301,10 @@ window.__signOut = async () => {
 
     <div class="nav-section">
       <div class="nav-label">Contenido</div>
-      <a class="nav-item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Cursos<span class="nav-item__badge">12</span></a>
-      <a class="nav-item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo<span class="nav-item__badge">3</span></a>
-      <a class="nav-item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs y material<span class="nav-item__badge">9</span></a>
-      <a class="nav-item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados<span class="nav-item__badge">2</span></a>
+      <a class="nav-item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Cursos<span class="nav-item__badge" id="badge-cursos">0</span></a>
+      <a class="nav-item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo<span class="nav-item__badge" id="badge-webinars">0</span></a>
+      <a class="nav-item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs y material<span class="nav-item__badge" id="badge-pdfs">0</span></a>
+      <a class="nav-item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados<span class="nav-item__badge" id="badge-certs">0</span></a>
     </div>
 
     <div class="nav-section">
@@ -1320,7 +1320,7 @@ window.__signOut = async () => {
 
     <div class="nav-section">
       <div class="nav-label">Comunidad</div>
-      <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros VIP<span class="nav-item__badge">486</span></a>
+      <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros VIP<span class="nav-item__badge" id="badge-miembros" title="Miembros activos">0</span></a>
       <a class="nav-item" data-section="noticias"><svg class="ic"><use href="#i-news"/></svg>Noticias y datos</a>
       <a class="nav-item" data-section="foro"><svg class="ic"><use href="#i-users"/></svg>Foro<span class="nav-item__badge" id="badge-foro">0</span></a>
       <a class="nav-item" data-section="directorio"><svg class="ic"><use href="#i-user"/></svg>Directorio<span class="nav-item__badge" id="badge-dir">0</span></a>
@@ -1894,7 +1894,7 @@ const Pages={
         const curso = cursosPorId[m.cursoPruebaElegido] || m.cursoPruebaElegido;
         const pagoTxt = pago(m)
           ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,.18);color:#0f9f6e;">Pagó</span>'
-          : '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);">Aún no</span>';
+          : '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);">Sin pagar</span>';
         return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">'
           + '<span style="min-width:0;flex:1 1 220px;"><strong style="color:var(--text);">' + AdminEsc(nombre) + '</strong><br><span style="font-size:11.5px;color:var(--text-3);">' + AdminEsc(m.email || '') + '</span></span>'
           + '<span style="flex:2 1 260px;color:var(--text);">' + AdminEsc(curso) + '</span>'
@@ -1918,8 +1918,9 @@ const Pages={
     // MODIFICADO: ingresos del mes con los precios EN VIVO de config/club
     const pMes = window.__preciosClub.mes, pAnoEquiv = Math.round(window.__preciosClub.ano / 12);
     const ingresoMes = ready ? store.miembros.reduce((sum, m) => {
-      if (m.activo === false) return sum;
-      return sum + (m.plan === 'anual' || m.plan === 'Anual' ? pAnoEquiv : pMes);
+      if (!Pages._mbEstaActivo(m)) return sum;
+      const tipo = Pages._mbPlanTipo(m);
+      return sum + (tipo === 'anual' ? pAnoEquiv : tipo === 'mensual' ? pMes : 0);
     }, 0) : 0;
 
     // Próximo webinar real
@@ -1991,22 +1992,25 @@ const Pages={
             </div>
             <div class="mini-list">
               ${(() => {
-                const arr = ready ? store.miembros.slice(0,4) : [];
+                const reg = m => { const d = Pages._mbToDate(m.fechaRegistro || m.createdAt || m.fechaAlta); return d ? d.getTime() : 0; };
+                const arr = ready ? store.miembros.slice().sort((a, b) => reg(b) - reg(a)).slice(0, 4) : [];
                 if (arr.length === 0) {
                   return `<div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px;">${ready ? 'Sin miembros registrados aún' : 'Cargando…'}</div>`;
                 }
                 return arr.map(m => {
-                  const planLabel = m.plan === 'anual' || m.plan === 'Anual' ? 'Anual' : 'Mensual';
-                  const c1 = planLabel === 'Anual' ? '#43A047' : '#3B82F6';
-                  const activo = m.activo !== false;
+                  const tipo = Pages._mbPlanTipo(m);
+                  const planLabel = { anual: 'Plan Anual', mensual: 'Plan Mensual', regalo: 'Acceso de regalo', 'sin-plan': 'Sin plan de pago' }[tipo];
+                  const c1 = tipo === 'anual' ? '#43A047' : tipo === 'mensual' ? '#3B82F6' : '#94A3B8';
+                  const activo = Pages._mbEstaActivo(m);
+                  const estado = activo ? 'Activo' : (Pages._mbEstaExpirado(m) ? 'Expirado' : 'Sin pagar');
                   return `
                     <div class="mini-row" style="--c1:${c1};">
                       <div class="mini-row__dot"><svg class="ic"><use href="#i-user"/></svg></div>
                       <div class="mini-row__body">
                         <div class="mini-row__title">${AdminEsc(m.nombre || m.displayName || m.email?.split('@')[0] || 'Miembro')}</div>
-                        <div class="mini-row__meta">${AdminEsc(m.email || '—')} · Plan ${planLabel}</div>
+                        <div class="mini-row__meta">${AdminEsc(m.email || '—')} · ${planLabel}</div>
                       </div>
-                      <span class="tag ${activo?'tag--success':'tag--danger'}">${activo?'Activo':'Inactivo'}</span>
+                      <span class="tag ${activo?'tag--success':'tag--danger'}">${estado}</span>
                     </div>
                   `;
                 }).join('');
@@ -5035,6 +5039,13 @@ const Pages={
     return expira.getTime() > Date.now();
   },
 
+  // Tipo de plan real del miembro; "sin-plan" = cuenta sin pago (o acceso manual sin plan)
+  _mbPlanTipo(m) {
+    if (m.esRegalo === true || m.plan === 'regalo') return 'regalo';
+    const p = String(m.plan || '').toLowerCase();
+    return p === 'anual' || p === 'mensual' ? p : 'sin-plan';
+  },
+
   _mbEstaExpirado(m) {
     const expira = Pages._mbToDate(m.expiraEn);
     if (!expira) return false;
@@ -6740,7 +6751,7 @@ const AdminStore = {
 
   // KPIs calculados en tiempo real
   get stats() {
-    const miembrosActivos = this.miembros.filter(m => m.activo !== false).length;
+    const miembrosActivos = this.miembros.filter(m => Pages._mbEstaActivo(m)).length;
     const cursosActivos = this.cursos.filter(c => c.activo !== false && c.disponible !== false).length;
     const cursosInactivos = this.cursos.length - cursosActivos;
     const ahora = new Date();
@@ -6785,6 +6796,13 @@ const AdminStore = {
     // Actualizar badge de notif en el sidebar siempre
     const badge = document.getElementById('badge-notif');
     if (badge) badge.textContent = String(this.notificaciones.length);
+    // Resto de números del menú lateral, con los datos reales
+    const ponerBadge = (id, n) => { const b = document.getElementById(id); if (b) b.textContent = String(n); };
+    ponerBadge('badge-cursos', this.cursos.length);
+    ponerBadge('badge-webinars', this.webinars.length);
+    ponerBadge('badge-pdfs', this.pdfs.length);
+    ponerBadge('badge-certs', this.certificados.length);
+    ponerBadge('badge-miembros', this.miembros.filter(m => Pages._mbEstaActivo(m)).length);
 
     // Detecta cuál es la sección activa y re-renderiza
     const active = document.querySelector('.nav-item.is-active[data-section]');

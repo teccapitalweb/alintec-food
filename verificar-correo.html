@@ -50,7 +50,7 @@
       <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <div class="kicker">Cuenta activada</div>
       <h1>¡Correo confirmado!</h1>
-      <p>Tu cuenta de Alintec Food ya está lista. Entra a tu panel para elegir tu prueba gratuita y empezar a aprender.</p>
+      <p id="ok-texto">Tu cuenta de Alintec Food ya está lista. Entra a tu panel para elegir tu prueba gratuita y empezar a aprender.</p>
       <a class="btn" id="continuar" href="vip-panel.html">Continuar a mi panel →</a>
     </section>
 
@@ -72,7 +72,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, applyActionCode } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, applyActionCode, checkActionCode } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBi2H0tyb1DEBi-KFpTV4a7CrFt6riuvPA",
@@ -92,9 +92,27 @@ const mostrar = id => ['st-espera', 'st-ok', 'st-error'].forEach(s => { $(s).hid
   try {
     // Avisa desde ya a la pestaña que espera (antes de activar), para que no abra un segundo panel por su cuenta
     try { const bc0 = new BroadcastChannel('af_verificacion'); bc0.postMessage('abierta'); setTimeout(() => bc0.close(), 500); } catch (e) {}
+    // El correo al que pertenece el enlace (para precargarlo si hay que iniciar sesión)
+    let correo = '';
+    try { const info = await checkActionCode(auth, code); correo = (info && info.data && info.data.email) || ''; } catch (e) {}
     await applyActionCode(auth, code);
     // Si en este navegador ya hay sesión, se actualiza para entrar al panel sin pasar por otra pantalla de espera
-    try { await auth.authStateReady(); if (auth.currentUser) { await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); } } catch (e) {}
+    let haySesion = false;
+    try { await auth.authStateReady(); if (auth.currentUser) { haySesion = true; await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); } } catch (e) {}
+    // Si el enlace se abrió en otro navegador o dispositivo (sin sesión), el panel mandaría a "Crear cuenta":
+    // se lleva a iniciar sesión, con el correo ya escrito y el aviso de que quedó confirmado.
+    if (!haySesion) {
+      try {
+        if (correo) {
+          const previo = JSON.parse(localStorage.getItem('alintec_last_user') || 'null');
+          const mismo = previo && String(previo.email || '').toLowerCase() === correo.toLowerCase();
+          localStorage.setItem('alintec_last_user', JSON.stringify({ email: correo, nombre: mismo ? (previo.nombre || '') : '' }));
+        }
+      } catch (e) {}
+      $('continuar').href = 'vip-auth.html?tab=login&verificado=1';
+      $('continuar').textContent = 'Iniciar sesión para continuar →';
+      $('ok-texto').textContent = 'Tu cuenta de Alintec Food ya está lista. Inicia sesión con tu correo y contraseña para entrar a tu panel y elegir tu prueba gratuita.';
+    }
     // Avisa a la pestaña que estaba esperando, para que no abra un segundo panel por su cuenta:
     // el panel (con su bienvenida) se abre desde AQUÍ, con el botón "Continuar a mi panel".
     try { const bc = new BroadcastChannel('af_verificacion'); bc.postMessage('ok'); setTimeout(() => bc.close(), 500); } catch (e) {}
