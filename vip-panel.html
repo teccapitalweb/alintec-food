@@ -7003,23 +7003,34 @@ const Sections = (function(){
     const lista = curso.juegoDinamico.datos.palabras || [];
     if (lista.length === 0) { onDone(); return; }
     _ensureJuegosCSS();
-    const elegido = lista[Math.floor(Math.random()*lista.length)];
-    const palabra = (elegido.palabra || '').toUpperCase();
-    let errores = 0;
+    let elegido, palabra, errores, adivinadas, usadas, letrasApoyo;
     const MAX_ERRORES = 6;
-    const adivinadas = new Set();
-    const usadas = new Set();
-    // Letras de apoyo: se revelan 1-2 letras únicas al empezar para no partir de cero.
-    const unicas = Array.from(new Set(palabra.replace(/[^A-ZÑ]/g,'').split('')));
-    const nPistas = Math.max(1, Math.min(2, Math.floor(unicas.length * 0.25)));
-    const barajadas = unicas.slice().sort(() => Math.random() - 0.5);
-    const letrasApoyo = barajadas.slice(0, nPistas);
-    letrasApoyo.forEach(l => { adivinadas.add(l); usadas.add(l); });
+    // Partida nueva: palabra al azar (en el reintento procura que sea otra) y letras de apoyo
+    function nuevaPartida() {
+      const otras = lista.length > 1 ? lista.filter(p => p !== elegido) : lista;
+      elegido = otras[Math.floor(Math.random()*otras.length)];
+      palabra = (elegido.palabra || '').toUpperCase();
+      errores = 0;
+      adivinadas = new Set();
+      usadas = new Set();
+      // Letras de apoyo: se revelan 1-2 letras únicas al empezar para no partir de cero.
+      const unicas = Array.from(new Set(palabra.replace(/[^A-ZÑ]/g,'').split('')));
+      const nPistas = Math.max(1, Math.min(2, Math.floor(unicas.length * 0.25)));
+      const barajadas = unicas.slice().sort(() => Math.random() - 0.5);
+      letrasApoyo = barajadas.slice(0, nPistas);
+      letrasApoyo.forEach(l => { adivinadas.add(l); usadas.add(l); });
+    }
+    nuevaPartida();
     const modalId = 'juego-ahorcado-' + curso.id;
     const letras = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
     const body = document.createElement('div');
-    const footer = document.createElement('button');
-    footer.className = 'jg-continuar'; footer.textContent = 'Continuar →'; footer.disabled = true;
+    const footer = document.createElement('div');
+    footer.style.cssText = 'display:flex;gap:10px;align-items:center;justify-content:flex-end;';
+    const btnRetry = document.createElement('button');
+    btnRetry.className = 'jg-ghost'; btnRetry.textContent = '↻ Intentar de nuevo'; btnRetry.style.display = 'none';
+    const btnGo = document.createElement('button');
+    btnGo.className = 'jg-continuar'; btnGo.textContent = 'Continuar →'; btnGo.disabled = true;
+    footer.appendChild(btnRetry); footer.appendChild(btnGo);
     function render() {
       const visible = palabra.split('').map(ch => adivinadas.has(ch) ? ch : '_').join(' ');
       body.innerHTML = `
@@ -7050,14 +7061,22 @@ const Sections = (function(){
             const res = body.querySelector('#ah-resultado');
             if (res) res.innerHTML = `<div class="jg-win" style="color:${gano?'var(--success)':'var(--text-2)'};">${gano ? '¡Bien hecho! 🎉' : 'La palabra era: '+palabra}</div>`;
             body.querySelectorAll('[data-letra]').forEach(b => b.disabled = true);
-            footer.disabled = false;
+            btnGo.disabled = false;
+            // Si se quedó sin intentos puede volver a jugar o seguir adelante
+            if (perd) btnRetry.style.display = '';
           }
         });
       });
     }
     render();
     Modal.open({ id: modalId, title:'Ahorcado', subtitle: curso.titulo, size:'lg', body, footer, closeOnBackdrop:false });
-    footer.addEventListener('click', () => { Modal.close(modalId); onDone(); });
+    btnRetry.addEventListener('click', () => {
+      nuevaPartida();
+      btnRetry.style.display = 'none';
+      btnGo.disabled = true;
+      render();
+    });
+    btnGo.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   }
 
   window.__abrirJuegoDinamico = function(curso, onDone) {
@@ -7103,7 +7122,9 @@ const Sections = (function(){
       .qz-opt.is-selected .qz-opt__txt,.qz-opt.is-correct .qz-opt__txt{color:var(--text);}
       .qz-opt__check{margin-left:auto;width:18px;height:18px;color:var(--success);opacity:0;transform:scale(.6);transition:all .15s;flex-shrink:0;}
       .qz-opt.is-selected .qz-opt__check,.qz-opt.is-correct .qz-opt__check{opacity:1;transform:scale(1);}
-      .qz-opt.is-incorrect .qz-opt__check{opacity:1;transform:scale(1);color:var(--danger,#F87171);}
+      .qz-opt__x{display:none;margin-left:auto;width:18px;height:18px;color:var(--danger,#F87171);flex-shrink:0;}
+      .qz-opt.is-incorrect .qz-opt__check{display:none;}
+      .qz-opt.is-incorrect .qz-opt__x{display:block;}
       .qz-footer-progreso{display:flex;align-items:center;justify-content:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-3);font-weight:700;letter-spacing:.6px;text-transform:uppercase;}
       .qz-continuar{background:linear-gradient(135deg,var(--primary),var(--highlight));color:#fff;border:none;border-radius:100px;padding:13px 28px;font-family:Inter,sans-serif;font-weight:800;font-size:13.5px;letter-spacing:.1px;cursor:pointer;box-shadow:0 8px 20px var(--primary-glow,rgba(0,0,0,.2));transition:opacity .2s,transform .15s;}
       .qz-continuar:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
@@ -7124,13 +7145,11 @@ const Sections = (function(){
     const body = document.createElement('div');
     const footer = document.createElement('div');
     footer.style.cssText = 'display:flex;gap:10px;align-items:center;';
-    const btnRetry = document.createElement('button');
-    btnRetry.className = 'jg-ghost'; btnRetry.textContent = '↻ Intentar de nuevo'; btnRetry.style.display = 'none';
     const btnCheck = document.createElement('button');
     btnCheck.className = 'qz-continuar'; btnCheck.textContent = 'Comprobar respuestas'; btnCheck.disabled = true;
     const btnGo = document.createElement('button');
     btnGo.className = 'qz-continuar'; btnGo.textContent = 'Continuar →'; btnGo.style.display = 'none';
-    footer.appendChild(btnRetry); footer.appendChild(btnCheck); footer.appendChild(btnGo);
+    footer.appendChild(btnCheck); footer.appendChild(btnGo);
 
     function pintar() {
       body.innerHTML = `
@@ -7149,6 +7168,7 @@ const Sections = (function(){
                   <span class="qz-opt__badge">${esVof ? (oi===0?'✓':'✕') : LETRAS[oi]}</span>
                   <span class="qz-opt__txt">${escapeHtml(op)}</span>
                   <svg class="qz-opt__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg class="qz-opt__x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </label>
               `).join('')}
             </div>
@@ -7190,43 +7210,48 @@ const Sections = (function(){
           body:JSON.stringify({ sessionIndex, respuestas })
         });
         const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || data.aprobado !== true) throw new Error(data.error || 'No se aprobó el quiz');
+        if (!resp.ok || !Array.isArray(data.detalle)) throw new Error(data.error || 'No se pudo validar el quiz');
+        // Se muestra cuál era la correcta; equivocarse no frena: siempre se puede continuar.
         preguntas.forEach((_, i) => {
+          const d = data.detalle[i] || {};
           const elegida = respuestas[i];
           const card = body.querySelector(`[data-qz-card="${i}"]`);
           const optSel = body.querySelector(`[data-qz-opt="${i}:${elegida}"]`);
+          const optOk = body.querySelector(`[data-qz-opt="${i}:${d.correcta}"]`);
           const ver = body.querySelector(`[data-qz-veredicto="${i}"]`);
-          if (card) { card.classList.remove('is-done'); card.classList.add('is-right'); }
-          if (optSel) { optSel.classList.remove('is-selected'); optSel.classList.add('is-correct'); }
-          if (ver) { ver.style.display=''; ver.textContent='✓ CORRECTA'; ver.className='qz-veredicto qz-veredicto--ok'; }
+          if (card) { card.classList.remove('is-done'); card.classList.add(d.acertada ? 'is-right' : 'is-bad'); }
+          if (optSel) optSel.classList.remove('is-selected');
+          if (!d.acertada && optSel) {
+            optSel.classList.add('is-incorrect');
+            const b = optSel.querySelector('.qz-opt__badge'); if (b) b.textContent = '✕';
+          }
+          if (optOk) {
+            optOk.classList.add('is-correct');
+            const b = optOk.querySelector('.qz-opt__badge'); if (b) b.textContent = '✓';
+          }
+          if (ver) {
+            ver.style.display = '';
+            ver.textContent = d.acertada ? '✓ CORRECTA' : '✕ INCORRECTA';
+            ver.className = 'qz-veredicto ' + (d.acertada ? 'qz-veredicto--ok' : 'qz-veredicto--mal');
+          }
         });
         body.classList.add('qz-locked');
         const prog = body.querySelector('#quiz-progreso');
-        if (prog) prog.textContent = `Quiz aprobado: ${data.correctas} / ${data.total}`;
+        if (prog) prog.textContent = `Acertaste ${data.correctas} de ${data.total}`;
         btnCheck.style.display = 'none';
-        btnRetry.style.display = 'none';
         btnGo.style.display = '';
+        const primera = body.querySelector('.qz-card.is-bad');
+        if (primera && primera.scrollIntoView) primera.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch(e) {
-        Toast.info('Quiz no aprobado', e.message || 'Revisa tus respuestas e intenta de nuevo.');
-        btnRetry.style.display = '';
+        Toast.info('No se pudo comprobar', e.message || 'Intenta de nuevo en un momento.');
       } finally {
         btnCheck.disabled = false;
         btnCheck.textContent = 'Comprobar respuestas';
       }
     }
-    function reiniciar() {
-      respuestas = new Array(total).fill(null);
-      body.classList.remove('qz-locked');
-      btnRetry.style.display = 'none';
-      btnGo.style.display = 'none';
-      btnCheck.style.display = '';
-      btnCheck.disabled = true;
-      pintar();
-    }
     pintar();
     Modal.open({ id: modalId, title: 'Antes de seguir', subtitle: sesion.titulo || '', size: 'lg', body, footer, closeOnBackdrop: false });
     btnCheck.addEventListener('click', calificar);
-    btnRetry.addEventListener('click', reiniciar);
     btnGo.addEventListener('click', () => { Modal.close(modalId); onDone(); });
   };
 
