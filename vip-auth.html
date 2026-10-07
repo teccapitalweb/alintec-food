@@ -1159,6 +1159,9 @@ window.setLoading = function(btn, isLoading, originalLabel) {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth,
+  initializeAuth,
+  indexedDBLocalPersistence,
+  browserPopupRedirectResolver,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -1201,9 +1204,12 @@ const ADMINS = [
 ];
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Sesión guardada solo en localStorage (y lee la de IndexedDB si quedó ahí). Con getAuth() + setPersistence() cada página nueva
+// movía la sesión de un almacén a otro y las demás pestañas abiertas la perdían y mandaban a iniciar sesión.
+let auth;
+try { auth = initializeAuth(app, { persistence: [browserLocalPersistence, indexedDBLocalPersistence], popupRedirectResolver: browserPopupRedirectResolver }); }
+catch (e) { auth = getAuth(app); setPersistence(auth, browserLocalPersistence); }
 const db = getFirestore(app);
-setPersistence(auth, browserLocalPersistence);
 /* Marca que el módulo sí arrancó · el salvavidas de emergencia lo consulta */
 window.__odtAuthBooted = true;
 

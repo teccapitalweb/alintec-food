@@ -72,7 +72,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { initializeAuth, browserLocalPersistence, applyActionCode, checkActionCode } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, initializeAuth, setPersistence, browserLocalPersistence, indexedDBLocalPersistence, browserPopupRedirectResolver, applyActionCode, checkActionCode } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBi2H0tyb1DEBi-KFpTV4a7CrFt6riuvPA",
@@ -82,9 +82,11 @@ const app = initializeApp({
   messagingSenderId: "559261559287",
   appId: "1:559261559287:web:8d1434cfbd3127521de6f2"
 });
-// Misma forma de guardar la sesión que usan el acceso y el panel (localStorage). Con la de por defecto, esta página
-// movía la sesión a otro almacén y las demás pestañas abiertas (la que espera la verificación) se cerraban solas.
-const auth = initializeAuth(app, { persistence: browserLocalPersistence });
+// Sesión guardada solo en localStorage (y lee la de IndexedDB si quedó ahí). Con getAuth() + setPersistence() cada página nueva
+// movía la sesión de un almacén a otro y las demás pestañas abiertas la perdían y mandaban a iniciar sesión.
+let auth;
+try { auth = initializeAuth(app, { persistence: [browserLocalPersistence, indexedDBLocalPersistence], popupRedirectResolver: browserPopupRedirectResolver }); }
+catch (e) { auth = getAuth(app); setPersistence(auth, browserLocalPersistence); }
 const $ = id => document.getElementById(id);
 const mostrar = id => ['st-espera', 'st-ok', 'st-error'].forEach(s => { $(s).hidden = s !== id; });
 
