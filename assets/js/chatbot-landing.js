@@ -663,6 +663,8 @@
     G.forEach(e => {
       let p = 0;
       e.claves.forEach(c => { const cn = norm(c); if (contieneFrase(n, cn)) p = Math.max(p, 3 + cn.length / 40); });
+      // Preguntas completas muy generales («¿qué es un alimento?»): solo valen si la persona escribe justo eso
+      (e.exactas || []).forEach(x => { if (sinPuntuacion(n) === sinPuntuacion(norm(x))) p = Math.max(p, 10); });
       // Preguntas parecidas a los ejemplos: comparten casi todas sus palabras de contenido
       e.ejemplos.forEach(x => {
         const ex = contenido(x);

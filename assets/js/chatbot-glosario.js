@@ -7,8 +7,9 @@
                    Si está vacía, es un concepto general de ciencia de alimentos, sin cifras ni normas específicas.
      · cursos    → palabras para mostrar los cursos de la plataforma que tratan el tema
      · destacado → aparece como botón en "Aprender un concepto"
+     · exactas   → (opcional) preguntas completas que, escritas tal cual, siempre llevan a este tema (para definiciones muy generales como «¿qué es un alimento?»)
    Es información general y orientativa; no sustituye la asesoría de un especialista.
-   Verificado contra fuentes oficiales el 5 de octubre de 2026. Si cambia una norma, hay que revisar el tema que la cita. */
+   Verificado contra fuentes oficiales el 5 de octubre de 2026 (los temas de ciencia de los alimentos, microorganismos, bacterias, virus, hongos y parásitos, el 7 de octubre de 2026; también alimento, nutrientes, dieta saludable, ETA, cinco claves de la OMS, lavado de manos, actividad de agua, probióticos y NOM). Si cambia una norma, hay que revisar el tema que la cita. */
 window.AF_GLOSARIO = [
   {
     "id": "haccp",
@@ -89,7 +90,9 @@ window.AF_GLOSARIO = [
       "inocuo",
       "alimento inocuo",
       "seguridad alimentaria",
-      "alimentos seguros"
+      "alimentos seguros",
+      "que es un alimento seguro",
+      "que es un alimento inocuo"
     ],
     "ejemplos": [
       "¿Qué es la inocuidad?",
@@ -279,24 +282,13 @@ window.AF_GLOSARIO = [
     "destacado": true,
     "claves": [
       "microbiologia",
-      "microbiologico",
-      "microorganismos",
-      "microorganismo",
-      "bacterias",
-      "bacteria",
-      "hongos",
-      "moho",
-      "levaduras",
-      "virus en alimentos"
+      "microbiologico"
     ],
     "ejemplos": [
       "¿Qué es la microbiología de alimentos?",
       "¿Qué estudia la microbiología?",
-      "¿Qué bacterias hay en los alimentos?",
-      "¿Todas las bacterias son malas?",
       "¿Por qué se echan a perder los alimentos?",
-      "¿Qué es un análisis microbiológico?",
-      "¿Qué es el moho en los alimentos?"
+      "¿Qué es un análisis microbiológico?"
     ],
     "respuesta": [
       "La **microbiología de alimentos** estudia los microorganismos (bacterias, levaduras, mohos y virus) que **contaminan o echan a perder** los alimentos, y también los que sirven para **elaborarlos** (como en el yogur, el pan o la cerveza).",
@@ -309,6 +301,541 @@ window.AF_GLOSARIO = [
     ],
     "fuente": "",
     "verificado": false
+  },
+  {
+    "id": "ciencia-alimentos",
+    "tema": "Ciencia de los alimentos",
+    "claves": [
+      "ciencia de los alimentos",
+      "ciencia de alimentos",
+      "ciencia y tecnologia de alimentos",
+      "ciencia y tecnologia de los alimentos",
+      "tecnologia de alimentos",
+      "tecnologia de los alimentos",
+      "que es la ciencia",
+      "ciencia alimentaria"
+    ],
+    "ejemplos": [
+      "¿Qué es la ciencia de los alimentos?",
+      "¿Qué estudia la ciencia de alimentos?",
+      "¿Qué es la ciencia y tecnología de alimentos?",
+      "¿Qué es la tecnología de alimentos?",
+      "¿Qué hace un científico de alimentos?",
+      "¿Qué es la ciencia?"
+    ],
+    "respuesta": [
+      "La **ciencia de los alimentos** usa la ingeniería y las ciencias biológicas, físicas y químicas para estudiar **cómo son los alimentos**, por qué **se deterioran**, los principios del **procesamiento** de alimentos y cómo **mejorarlos** para quienes los consumen.",
+      "Por eso reúne temas como microbiología, inocuidad, calidad, conservación y normatividad: son los que trabajamos en los cursos de la plataforma."
+    ],
+    "cursos": [
+      "ciencia de alimentos",
+      "tecnologia de alimentos",
+      "alimentos"
+    ],
+    "fuente": "IFT (Institute of Food Technologists), definición del Comité de Educación Superior en «IFT and the Food Science Profession», Food Technology (2006)",
+    "verificado": true
+  },
+  {
+    "id": "microorganismos",
+    "tema": "Microorganismos",
+    "claves": [
+      "microorganismos",
+      "microorganismo",
+      "microbios",
+      "microbio",
+      "que es un microorganismo",
+      "seres microscopicos"
+    ],
+    "ejemplos": [
+      "¿Qué son los microorganismos?",
+      "¿Qué es un microorganismo?",
+      "¿Qué son los microbios?",
+      "¿Qué tipos de microorganismos hay en los alimentos?",
+      "¿Todos los microorganismos son malos?"
+    ],
+    "respuesta": [
+      "Los **microorganismos** (o **microbios**) son organismos microscópicos que están en el aire, el agua, el suelo, las personas y los alimentos. En los alimentos se agrupan en cinco: **bacterias, levaduras, mohos, virus y parásitos**.",
+      "No todos son malos: unos se usan para **elaborar** alimentos (vino, cerveza, pan y productos lácteos), otros los **echan a perder** y algunos son **patógenos**, es decir, pueden causar enfermedades si el alimento está contaminado."
+    ],
+    "cursos": [
+      "microbio",
+      "patogeno",
+      "inocuidad"
+    ],
+    "fuente": "Lorenzo y col. (2018), «Main Groups of Microorganisms of Relevance for Food Safety and Stability», en Innovative Technologies for Food Preservation, Elsevier; OMS, nota descriptiva «Inocuidad de los alimentos» (actualizada en junio de 2026)",
+    "verificado": true
+  },
+  {
+    "id": "bacterias",
+    "tema": "Bacterias",
+    "claves": [
+      "bacterias",
+      "bacteria",
+      "que son las bacterias",
+      "que es una bacteria",
+      "que es la bacteria",
+      "bacterias buenas",
+      "bacterias malas",
+      "bacterias buenas y malas",
+      "todas las bacterias"
+    ],
+    "ejemplos": [
+      "¿Qué son las bacterias?",
+      "¿Qué es una bacteria?",
+      "¿Todas las bacterias son malas?",
+      "¿Existen bacterias buenas?",
+      "¿Qué bacterias hay en los alimentos?"
+    ],
+    "respuesta": [
+      "Las **bacterias** son microorganismos de **una sola célula**, tan pequeños que solo se ven con microscopio, y viven en casi cualquier ambiente: suelo, agua, aire, alimentos y nuestro propio cuerpo.",
+      "**La mayoría son inofensivas o incluso útiles**: por ejemplo, las bacterias lácticas que se usan en lácteos fermentados como el yogur, y algunas son **probióticos** (microorganismos vivos que, en cantidades adecuadas, dan un beneficio a la salud). Solo una parte son **patógenas** y pueden enfermarnos, como Salmonella, Campylobacter, Shigella, Listeria o la E. coli productora de toxina Shiga.",
+      "Por eso en la industria se controlan con buenas prácticas de higiene y sistemas de inocuidad como el HACCP."
+    ],
+    "cursos": [
+      "microbio",
+      "patogeno",
+      "inocuidad"
+    ],
+    "fuente": "Soni, Sinha y Pandey (2024), Frontiers in Microbiology; FAO/OMS, Informe de la Consulta de Expertos sobre probióticos en alimentos (2001); OMS, nota descriptiva «Inocuidad de los alimentos» (actualizada en junio de 2026); CDC, «Foodborne Germs» (mar. 2026)",
+    "verificado": true
+  },
+  {
+    "id": "virus",
+    "tema": "Virus",
+    "claves": [
+      "virus",
+      "que es un virus",
+      "que son los virus",
+      "virus en los alimentos",
+      "virus alimentarios",
+      "virus de los alimentos",
+      "norovirus",
+      "hepatitis a"
+    ],
+    "ejemplos": [
+      "¿Qué es un virus?",
+      "¿Qué son los virus?",
+      "¿Los virus pueden estar en los alimentos?",
+      "¿Qué es el norovirus?",
+      "¿Cómo llegan los virus a los alimentos?"
+    ],
+    "respuesta": [
+      "Los **virus** son agentes infecciosos mucho **más pequeños que las bacterias**. No pueden reproducirse solos: necesitan entrar en una **célula viva** de un huésped.",
+      "En los alimentos destacan el **norovirus** (náuseas, vómito explosivo, diarrea y dolor abdominal) y el **virus de la hepatitis A**, que suele llegar por mariscos crudos o poco cocidos y por frutas y verduras crudas o congeladas contaminadas, como las bayas.",
+      "A diferencia de las bacterias, **no se multiplican en el alimento**: lo contaminan personas infectadas que lo manipulan o el agua contaminada. Por eso la prevención está en la **higiene personal**, en que quien esté enfermo **no manipule alimentos** y en usar agua segura."
+    ],
+    "cursos": [
+      "microbio",
+      "inocuidad",
+      "patogeno"
+    ],
+    "fuente": "OMS, nota descriptiva «Inocuidad de los alimentos» (actualizada en junio de 2026); Livsmedelsverket (Agencia Nacional de Alimentos de Suecia), «Risk profile: Virus in food and drinking water» (2004)",
+    "verificado": true
+  },
+  {
+    "id": "hongos",
+    "tema": "Hongos: mohos y levaduras",
+    "claves": [
+      "hongos",
+      "hongo",
+      "que son los hongos",
+      "que es un hongo",
+      "moho",
+      "mohos",
+      "que es el moho",
+      "que es un moho",
+      "levaduras",
+      "que es la levadura",
+      "que es una levadura",
+      "que son las levaduras",
+      "micotoxina",
+      "micotoxinas",
+      "aflatoxina",
+      "aflatoxinas"
+    ],
+    "ejemplos": [
+      "¿Qué son los hongos?",
+      "¿Qué es el moho?",
+      "¿Qué son los mohos y las levaduras?",
+      "¿Qué es una levadura?",
+      "¿Qué son las micotoxinas?",
+      "¿Por qué sale moho en los alimentos?"
+    ],
+    "respuesta": [
+      "Los **hongos** que más aparecen en los alimentos son los **mohos** y las **levaduras**. Las **levaduras** crecen como células solitarias que se reproducen por gemación; los **mohos** son hongos filamentosos y en los alimentos se reconocen por su aspecto **algodonoso o velloso**.",
+      "Hay varios cientos de especies. Pueden crecer en casi cualquier alimento (granos, nueces, frutas y alimentos procesados), incluso con **poca humedad**, y echarlo a perder. Algunos mohos producen **micotoxinas**, sustancias tóxicas que **no se destruyen al cocinar**: pueden seguir en el alimento aunque el moho ya no esté.",
+      "También son útiles: se usan para elaborar **vino, cerveza, pan** y productos lácteos."
+    ],
+    "cursos": [
+      "microbio",
+      "inocuidad",
+      "conservacion"
+    ],
+    "fuente": "FDA, Bacteriological Analytical Manual (BAM), capítulo 18: Yeasts, Molds and Mycotoxins (2001); Lorenzo y col. (2018), en Innovative Technologies for Food Preservation, Elsevier",
+    "verificado": true
+  },
+  {
+    "id": "parasitos",
+    "tema": "Parásitos",
+    "claves": [
+      "parasitos",
+      "parasito",
+      "que son los parasitos",
+      "que es un parasito",
+      "parasitos en los alimentos",
+      "que es la tenia",
+      "que es una tenia",
+      "taenia",
+      "lombriz solitaria",
+      "toxoplasma",
+      "toxoplasmosis",
+      "anisakis",
+      "cisticercosis",
+      "giardia",
+      "cryptosporidium",
+      "cyclospora",
+      "triquinosis"
+    ],
+    "ejemplos": [
+      "¿Qué son los parásitos?",
+      "¿Qué es un parásito?",
+      "¿Los parásitos pueden estar en los alimentos?",
+      "¿Qué es la toxoplasmosis?",
+      "¿Cómo llegan los parásitos a los alimentos?"
+    ],
+    "respuesta": [
+      "Un **parásito** es un organismo que vive en o sobre otro (el huésped) y se alimenta a costa de él. Los principales tipos son los **protozoarios** (de una sola célula y microscópicos), los **helmintos** (gusanos) y los **ectoparásitos** (garrapatas, pulgas, piojos y ácaros).",
+      "En los alimentos importan sobre todo los que se transmiten por **vía fecal-oral**, es decir, por comida o agua contaminada. Algunos ejemplos son Toxoplasma gondii (puede causar daños graves al bebé si la infección ocurre en el embarazo), la tenia Taenia solium (causa cisticercosis, que suele provocar epilepsia) y los trematodos que se transmiten por el pescado.",
+      "Las enfermedades por parásitos se caracterizan por **periodos de incubación largos**."
+    ],
+    "cursos": [
+      "microbio",
+      "inocuidad",
+      "patogeno"
+    ],
+    "fuente": "OMS, nota descriptiva «Inocuidad de los alimentos» (actualizada en junio de 2026); CDC, «About Parasites» (revisado en noviembre de 2024)",
+    "verificado": true
+  },
+  {
+    "id": "alimento",
+    "tema": "Alimento",
+    "exactas": [
+      "que es un alimento",
+      "que es el alimento",
+      "que es alimento",
+      "que son los alimentos",
+      "definicion de alimento",
+      "que se considera alimento"
+    ],
+    "claves": [
+      "definicion de alimento",
+      "que se considera un alimento",
+      "que se considera alimento"
+    ],
+    "ejemplos": [
+      "¿Qué es un alimento?",
+      "¿Qué son los alimentos?",
+      "¿Cuál es la definición de alimento?",
+      "¿Qué se considera alimento?"
+    ],
+    "respuesta": [
+      "Según el **Codex Alimentarius**, un **alimento** es cualquier sustancia, **procesada, semiprocesada o cruda**, destinada al **consumo humano**. Incluye las **bebidas**, la goma de mascar y cualquier sustancia que se haya usado en la fabricación, preparación o tratamiento del alimento.",
+      "No incluye los cosméticos, el tabaco ni las sustancias que se usan solo como medicamentos."
+    ],
+    "cursos": [
+      "alimentos",
+      "ciencia de alimentos"
+    ],
+    "fuente": "Codex Alimentarius (FAO/OMS): Norma general para el etiquetado de los alimentos preenvasados, CXS 1-1985",
+    "verificado": true
+  },
+  {
+    "id": "nutrientes",
+    "tema": "Nutrientes: macro y micronutrientes",
+    "claves": [
+      "nutrientes",
+      "nutriente",
+      "macronutrientes",
+      "macronutriente",
+      "micronutrientes",
+      "micronutriente",
+      "que son los nutrientes",
+      "que es un nutriente",
+      "vitaminas y minerales",
+      "proteinas grasas y carbohidratos"
+    ],
+    "ejemplos": [
+      "¿Qué son los nutrientes?",
+      "¿Qué son los macronutrientes?",
+      "¿Qué son los micronutrientes?",
+      "¿Qué es un nutriente?",
+      "¿Qué diferencia hay entre macronutrientes y micronutrientes?"
+    ],
+    "respuesta": [
+      "Los **nutrientes** son las sustancias de los alimentos que el cuerpo necesita para funcionar. Se dividen en dos grupos.",
+      "Los **macronutrientes** son los **carbohidratos** (la principal fuente de energía del cuerpo), las **proteínas** (los «ladrillos» de estructuras como el músculo y de moléculas como hormonas y enzimas) y las **grasas** (esenciales para el buen funcionamiento de las células).",
+      "Los **micronutrientes** son **vitaminas y minerales** esenciales: hay unos 30 en total (13 vitaminas, como la A, el complejo B, C, D, E y K, y 16 minerales, como hierro, yodo, zinc y calcio) y el cuerpo los necesita en **cantidades pequeñas** para crecer y mantenerse sano."
+    ],
+    "cursos": [
+      "nutri",
+      "alimentos",
+      "nutraceutica"
+    ],
+    "fuente": "OMS, nota descriptiva «Alimentación sana» (Healthy diet, actualizada en enero de 2026)",
+    "verificado": true
+  },
+  {
+    "id": "dieta-saludable",
+    "tema": "Dieta saludable (recomendaciones de la OMS)",
+    "claves": [
+      "dieta saludable",
+      "alimentacion saludable",
+      "alimentacion sana",
+      "dieta sana",
+      "comer saludable",
+      "comer sano",
+      "dieta balanceada",
+      "dieta equilibrada",
+      "cuanta sal",
+      "cuanta azucar",
+      "cuanta fibra",
+      "cuantas frutas y verduras"
+    ],
+    "ejemplos": [
+      "¿Qué es una dieta saludable?",
+      "¿Cuánta sal se puede comer al día?",
+      "¿Cuánta azúcar es recomendable al día?",
+      "¿Cuántas frutas y verduras debo comer?",
+      "¿Cómo es una alimentación sana?"
+    ],
+    "respuesta": [
+      "La **OMS** recomienda para los adultos:",
+      "**Frutas y verduras:** al menos **400 g** al día (mayores de 10 años). **Azúcares libres:** menos del **10 %** de la energía diaria (unos 50 g, casi 12 cucharaditas, con 2000 kcal). **Sal:** menos de **5 g** al día. **Fibra:** al menos **25 g** de fibra natural.",
+      "**Grasas:** 30 % o menos de la energía diaria, con grasas saturadas por debajo del **10 %** y grasas trans por debajo del **1 %**."
+    ],
+    "cursos": [
+      "nutri",
+      "alimentos",
+      "etiquetado"
+    ],
+    "fuente": "OMS, nota descriptiva «Alimentación sana» (Healthy diet, actualizada en enero de 2026)",
+    "verificado": true
+  },
+  {
+    "id": "eta",
+    "tema": "Enfermedades transmitidas por alimentos (intoxicación alimentaria)",
+    "claves": [
+      "intoxicacion",
+      "intoxicaciones",
+      "intoxicacion alimentaria",
+      "intoxicaciones alimentarias",
+      "enfermedades transmitidas por alimentos",
+      "enfermedad transmitida por alimentos",
+      "enfermedades alimentarias",
+      "eta",
+      "etas",
+      "sintomas de intoxicacion",
+      "que es una intoxicacion",
+      "diarrea por alimentos"
+    ],
+    "ejemplos": [
+      "¿Qué es una intoxicación alimentaria?",
+      "¿Qué son las enfermedades transmitidas por alimentos?",
+      "¿Cuáles son los síntomas de una intoxicación por alimentos?",
+      "¿Qué son las ETA?",
+      "¿Cuántas personas se enferman por comer alimentos contaminados?"
+    ],
+    "respuesta": [
+      "Las **enfermedades transmitidas por alimentos (ETA)**, o intoxicaciones alimentarias, son enfermedades generalmente **infecciosas o tóxicas** causadas por **bacterias, virus, parásitos o sustancias químicas** que entran al cuerpo con alimentos contaminados.",
+      "Hay **más de 200 enfermedades** distintas, desde la diarrea hasta el cáncer. Los síntomas más comunes son **fiebre, dolor de cabeza, náuseas, vómito, dolor abdominal y diarrea**.",
+      "Según la OMS, cada año unas **866 millones de personas** (casi 1 de cada 9) se enferman por comer alimentos contaminados y **1.52 millones** mueren. Afectan sobre todo a lactantes, niños pequeños, personas mayores y enfermos; los menores de 5 años concentran el **29 %** de la carga de enfermedad."
+    ],
+    "cursos": [
+      "inocuidad",
+      "patogeno",
+      "microbio"
+    ],
+    "fuente": "OMS, nota descriptiva «Inocuidad de los alimentos» (actualizada en junio de 2026)",
+    "verificado": true
+  },
+  {
+    "id": "cinco-claves",
+    "tema": "Cinco claves para alimentos más seguros (OMS)",
+    "claves": [
+      "cinco claves",
+      "5 claves",
+      "las 5 claves",
+      "las cinco claves",
+      "claves para alimentos seguros",
+      "claves de la inocuidad",
+      "cinco claves de la oms",
+      "5 claves de la oms",
+      "como evitar intoxicaciones",
+      "como evitar una intoxicacion",
+      "como evito una intoxicacion",
+      "como evitar una intoxicacion alimentaria",
+      "como evito una intoxicacion alimentaria",
+      "como evitar intoxicaciones alimentarias",
+      "prevenir intoxicaciones",
+      "prevenir una intoxicacion",
+      "como prevenir una intoxicacion alimentaria",
+      "prevenir enfermedades transmitidas por alimentos",
+      "como prevenir enfermedades transmitidas por alimentos",
+      "como prevengo enfermedades transmitidas por alimentos"
+    ],
+    "ejemplos": [
+      "¿Cuáles son las cinco claves de la OMS para alimentos seguros?",
+      "¿Cómo evito una intoxicación alimentaria?",
+      "¿Cómo prevengo enfermedades transmitidas por alimentos?",
+      "¿Qué hago para que mis alimentos sean seguros en casa?"
+    ],
+    "respuesta": [
+      "La **OMS** resume la inocuidad de los alimentos en **5 claves**:",
+      "**1. Mantén la limpieza:** lávate las manos antes y durante la preparación y después de ir al baño, lava y desinfecta superficies y equipo, y protege la cocina de insectos y otros animales.",
+      "**2. Separa lo crudo de lo cocido:** mantén aparte la carne, las aves y los mariscos crudos, con utensilios y tablas distintos.",
+      "**3. Cocina bien los alimentos:** sobre todo carne, aves, huevos y mariscos; sopas y guisos deben hervir hasta alcanzar **70 °C**.",
+      "**4. Mantén los alimentos a temperaturas seguras:** no dejes comida cocinada más de **2 horas** a temperatura ambiente, refrigera pronto (de preferencia por debajo de **5 °C**), mantén caliente lo cocinado (más de **60 °C**) y no descongeles a temperatura ambiente.",
+      "**5. Usa agua y materias primas seguras:** agua segura o tratada, alimentos frescos, alimentos procesados para su seguridad (como la leche pasteurizada), frutas y verduras lavadas y nada después de su fecha de caducidad."
+    ],
+    "cursos": [
+      "inocuidad",
+      "bpm",
+      "higiene"
+    ],
+    "fuente": "OMS, «Cinco claves para unos alimentos más seguros» (Five keys to safer food)",
+    "verificado": true
+  },
+  {
+    "id": "lavado-manos",
+    "tema": "Lavado de manos",
+    "claves": [
+      "lavado de manos",
+      "lavarse las manos",
+      "lavar las manos",
+      "lavarme las manos",
+      "como lavar las manos",
+      "como lavarse las manos",
+      "como me lavo las manos",
+      "higiene de manos",
+      "como se lavan las manos",
+      "lavo bien las manos"
+    ],
+    "ejemplos": [
+      "¿Cómo se lavan bien las manos?",
+      "¿Cuánto tiempo hay que lavarse las manos?",
+      "¿Cuándo debo lavarme las manos al preparar alimentos?",
+      "¿Cuáles son los pasos para lavarse las manos?",
+      "¿Cómo me lavo bien las manos al manipular alimentos?"
+    ],
+    "respuesta": [
+      "Pasos para lavarse las manos con agua y jabón:",
+      "**1. Mójalas** con agua limpia corriente (tibia o fría), cierra la llave y aplica jabón. **2. Haz espuma** frotándolas: dorso, entre los dedos y debajo de las uñas. **3. Frota al menos 20 segundos.** **4. Enjuaga** bien con agua corriente. **5. Sécalas** con una toalla limpia o con un secador de aire.",
+      "Lávalas **antes, durante y después de preparar alimentos**, antes y después de comer y después de ir al baño."
+    ],
+    "cursos": [
+      "higiene",
+      "inocuidad",
+      "bpm"
+    ],
+    "fuente": "CDC (EE. UU.), «About Handwashing» (revisado en febrero de 2024)",
+    "verificado": true
+  },
+  {
+    "id": "actividad-agua",
+    "tema": "Actividad de agua (aw)",
+    "claves": [
+      "actividad de agua",
+      "actividad del agua",
+      "aw",
+      "que es la actividad de agua",
+      "que es la actividad del agua",
+      "humedad en los alimentos",
+      "humedad de los alimentos"
+    ],
+    "ejemplos": [
+      "¿Qué es la actividad de agua?",
+      "¿Qué significa aw en alimentos?",
+      "¿Por qué importa la actividad de agua?",
+      "¿Cómo se mide la actividad del agua?"
+    ],
+    "respuesta": [
+      "La **actividad de agua (aw)** es la relación entre la **presión de vapor del alimento** y la del **agua destilada** en las mismas condiciones. El agua pura vale **1.0**: una aw de 0.80 significa que la presión de vapor es el 80 % de la del agua pura.",
+      "La mayoría de los alimentos tienen una aw **mayor a 0.95**, suficiente humedad para que crezcan **bacterias, levaduras y mohos**. Por eso controlar la aw ayuda a **conservar** los alimentos.",
+      "Como referencia, la aw mínima para que crezca Clostridium botulinum es de unos **0.93**; los mohos de los alimentos pueden crecer incluso con aw de **0.85 o menos**, mientras que las levaduras suelen necesitar más humedad."
+    ],
+    "cursos": [
+      "vida de anaquel",
+      "conservacion",
+      "microbio"
+    ],
+    "fuente": "FDA (EE. UU.), «Water Activity (aw) in Foods», Inspection Technical Guide n.º 39; FDA, Bacteriological Analytical Manual (BAM), capítulo 18 (2001)",
+    "verificado": true
+  },
+  {
+    "id": "probioticos",
+    "tema": "Probióticos y prebióticos",
+    "claves": [
+      "probioticos",
+      "probiotico",
+      "prebioticos",
+      "prebiotico",
+      "que son los probioticos",
+      "que son los prebioticos",
+      "diferencia entre probioticos y prebioticos",
+      "simbioticos"
+    ],
+    "ejemplos": [
+      "¿Qué son los probióticos?",
+      "¿Qué son los prebióticos?",
+      "¿Cuál es la diferencia entre probióticos y prebióticos?",
+      "¿Qué es un probiótico?"
+    ],
+    "respuesta": [
+      "Según la **FAO y la OMS**, los **probióticos** son **microorganismos vivos** que, administrados en cantidades adecuadas, dan un **beneficio a la salud** de quien los consume. Por ejemplo, ciertas bacterias lácticas presentes en lácteos fermentados.",
+      "Los **prebióticos** no son microorganismos: según la definición de consenso de la **ISAPP** (2017), son sustratos que los **microorganismos del huésped utilizan de forma selectiva** y que dan un **beneficio a la salud**."
+    ],
+    "cursos": [
+      "fermentaciones",
+      "funcionales",
+      "nutraceutica"
+    ],
+    "fuente": "FAO/OMS, Informe de la Consulta de Expertos sobre probióticos en alimentos (2001); ISAPP, declaración de consenso sobre la definición y el alcance de los prebióticos, Nature Reviews Gastroenterology & Hepatology (2017)",
+    "verificado": true
+  },
+  {
+    "id": "nom",
+    "tema": "Norma Oficial Mexicana (NOM)",
+    "exactas": [
+      "que es una nom",
+      "que es la nom",
+      "que son las nom",
+      "que significa nom",
+      "que es nom",
+      "las nom son obligatorias"
+    ],
+    "claves": [
+      "que son las normas oficiales mexicanas",
+      "norma oficial mexicana",
+      "normas oficiales mexicanas",
+      "que es una norma oficial"
+    ],
+    "ejemplos": [
+      "¿Qué es una NOM?",
+      "¿Qué es una Norma Oficial Mexicana?",
+      "¿Qué significa NOM?",
+      "¿Las NOM son obligatorias?"
+    ],
+    "respuesta": [
+      "Una **Norma Oficial Mexicana (NOM)** es una **regulación técnica de observancia obligatoria** expedida por las autoridades normalizadoras competentes. Su fin esencial es **fomentar la calidad** y proteger objetivos legítimos de **interés público**, mediante reglas, especificaciones o características aplicables a un bien, producto, proceso o servicio, incluidas las de terminología, marcado, etiquetado e información.",
+      "Se basan en la **Ley de Infraestructura de la Calidad**. En alimentos, por ejemplo, la **NOM-051** regula el etiquetado y la **NOM-251** las buenas prácticas de higiene."
+    ],
+    "cursos": [
+      "normativ",
+      "nom-051",
+      "etiquetado"
+    ],
+    "fuente": "Ley de Infraestructura de la Calidad (DOF, 1 de julio de 2020), artículo 4; Secretaría de Economía, Plataforma de Infraestructura de la Calidad",
+    "verificado": true
   },
   {
     "id": "patogenos",
@@ -327,10 +854,7 @@ window.AF_GLOSARIO = [
       "staphylococcus",
       "estafilococo",
       "campylobacter",
-      "botulismo",
-      "intoxicacion",
-      "enfermedades transmitidas por alimentos",
-      "eta"
+      "botulismo"
     ],
     "ejemplos": [
       "¿Qué es un patógeno?",
@@ -338,9 +862,7 @@ window.AF_GLOSARIO = [
       "¿Qué es la Listeria?",
       "¿Qué es E. coli?",
       "¿Cuáles son las bacterias que enferman por alimentos?",
-      "¿Qué es una intoxicación alimentaria?",
-      "¿Qué es el botulismo?",
-      "¿Qué son las enfermedades transmitidas por alimentos?"
+      "¿Qué es el botulismo?"
     ],
     "respuesta": [
       "Un **patógeno** es un microorganismo que puede causar enfermedad. Entre los más conocidos en alimentos están **Salmonella**, **Campylobacter**, **Listeria monocytogenes**, **E. coli** (cepas productoras de toxina Shiga), **Shigella**, **Staphylococcus aureus** y **Clostridium botulinum**.",
@@ -743,7 +1265,6 @@ window.AF_GLOSARIO = [
       "sanitizante",
       "desinfectante",
       "cip",
-      "lavado de manos",
       "higiene"
     ],
     "ejemplos": [
@@ -751,7 +1272,6 @@ window.AF_GLOSARIO = [
       "¿Cómo limpio una planta de alimentos?",
       "¿Qué es sanitizar?",
       "¿Qué es un programa de limpieza y desinfección?",
-      "¿Cómo me lavo bien las manos al manipular alimentos?",
       "¿Qué es el CIP?"
     ],
     "respuesta": [
@@ -1007,8 +1527,6 @@ window.AF_GLOSARIO = [
       "fermentados",
       "fermentar",
       "biotecnologia",
-      "probioticos",
-      "probiotico",
       "levadura",
       "yogur",
       "cerveza"
@@ -1016,7 +1534,6 @@ window.AF_GLOSARIO = [
     "ejemplos": [
       "¿Qué es la fermentación?",
       "¿Cómo funciona la fermentación en alimentos?",
-      "¿Qué son los probióticos?",
       "¿Qué alimentos son fermentados?",
       "¿Qué es la biotecnología de alimentos?",
       "¿Cómo se hace la cerveza?"
