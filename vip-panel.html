@@ -13519,6 +13519,7 @@ const Sections = (function(){
         <div class="rz-head">
           <div><span class="rz-head__eyebrow">Laboratorio de habilidades</span><h1>Zona de retos</h1><p>Practica, supera misiones cortas y fortalece lo aprendido en tus cursos.</p></div>
           <span class="rz-xp" id="rz-xp">0 XP acumulados</span>
+          <div class="rz-prog" id="rz-prog" aria-live="polite"></div>
         </div>
 
         ${miembro ? '' : `<div class="retos-note" style="flex-wrap:wrap;">
@@ -13569,6 +13570,24 @@ const Sections = (function(){
           <div class="reto-ranking__loading"><span></span><span></span><span></span></div>
         </section>
       </div>`;
+    // Barra de avance de nivel (la calcula el servidor; los mismos datos de Mis logros)
+    const NOMBRES_NIVEL = ['Aprendiz', 'Técnico', 'Profesional', 'Líder', 'Maestro'];
+    const pintarAvanceRetos = (premios) => {
+      const prog = container.querySelector('#rz-prog');
+      const xp = premios ? Number(premios.xp) || 0 : 0;
+      const nivelId = premios && premios.nivel ? premios.nivel.id : 1;
+      const desde = premios && premios.nivel ? premios.nivel.desde : 0;
+      const sig = premios && premios.xpSiguiente ? premios.xpSiguiente : (nivelId >= 5 ? null : 300);
+      const nombre = NOMBRES_NIVEL[nivelId - 1] || 'Aprendiz';
+      const pct = sig ? Math.max(0, Math.min(100, Math.round((xp - desde) / (sig - desde) * 100))) : 100;
+      if (prog) {
+        prog.innerHTML = '<div class="rz-prog__row"><span>Nivel ' + nivelId + ' de 5 · ' + nombre + '</span><span>' + (sig ? xp.toLocaleString('es-MX') + ' / ' + sig.toLocaleString('es-MX') + ' XP' : xp.toLocaleString('es-MX') + ' XP · nivel máximo') + '</span></div>'
+          + '<div class="rz-prog__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div class="rz-prog__fill" style="width:' + pct + '%"></div></div>'
+          + '<div class="rz-prog__note">' + (sig ? 'Te faltan ' + (sig - xp).toLocaleString('es-MX') + ' XP para ser ' + NOMBRES_NIVEL[nivelId] + '. Cada reto superado suma.' : 'Llegaste al nivel más alto. ¡Felicidades!') + '</div>';
+      }
+    };
+    pintarAvanceRetos(null);
+    if (miembro) { try { Promise.resolve(cargarPremios()).then(p => { if (p) pintarAvanceRetos(p); }).catch(() => {}); } catch(e){} }
     // XP acumulados (los calcula el servidor)
     try { Promise.resolve(cargarEstadoRetos()).then(e => { const el = container.querySelector('#rz-xp'); if (el && e) el.textContent = (e.xp || 0) + ' XP acumulados'; }).catch(() => {}); } catch(e){}
     const rankingEl = container.querySelector('#reto-ranking');
@@ -17363,6 +17382,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .sec-hero__eyebrow,.sec-hero--library .sec-hero__eyebrow{color:var(--alintec-green-deep)!important}.sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{color:var(--text)!important}.sec-hero__title::after{width:46px!important;background:var(--alintec-coral)!important}
 
 /* Retos y tarjetas: color por acento, no por fondos saturados. */
+.rz-prog{flex:1 1 100%;margin-top:6px}.rz-prog__row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:rgba(255,255,255,.94);font:700 12px Inter,system-ui,sans-serif}.rz-prog__bar{height:9px;margin:8px 0 7px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.24)}.rz-prog__fill{height:100%;min-width:3px;border-radius:99px;background:#E7BE6A;transition:width .7s cubic-bezier(.2,.8,.25,1)}.rz-prog__note{color:rgba(255,255,255,.82);font:500 12px Inter,system-ui,sans-serif}@media(prefers-reduced-motion:reduce){.rz-prog__fill{transition:none}}
 .rz-head{background:linear-gradient(135deg,#426F50,#6A9771)!important}.rz-head::after{display:none!important}.rz-hero{background:linear-gradient(135deg,#456C50,#66886C)!important}.rz-daily{background:var(--surface)!important}.rz-card{background:var(--surface)!important}.rz-card::before{display:none!important}.rz-card::after{background:var(--rz-accent)!important}.rz-card__title{background:color-mix(in srgb,var(--rz-accent) 9%,var(--surface))!important}.rz-card__tile::after{background:rgba(15,35,47,.12)!important}.reto-ranking{background:var(--surface)!important}.reto-podium__card[data-pos="1"]{background:#FFF9EA!important}
 
 /* Biblioteca/PDF: retirar velos verdosos y conservar fotografía natural. */
