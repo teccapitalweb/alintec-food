@@ -3256,7 +3256,7 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
 <!-- Banner sticky FOMO · solo visible para invitado y sin-membresia -->
 <div class="fomo-banner" id="fomo-banner" style="display:none">
   <span class="fomo-banner__icon" aria-hidden="true"><svg class="ic"><use href="#i-crown"/></svg></span>
-  <span class="fomo-banner__text" id="fomo-banner-text"><strong>Activa tu suscripción</strong> y desbloquea todos los cursos y las herramientas Pro.</span>
+  <span class="fomo-banner__text" id="fomo-banner-text"><strong>Activar suscripción</strong></span>
   <span class="fomo-banner__timer" id="fomo-banner-timer" style="display:none">5:00</span>
   <button class="fomo-banner__cta" id="fomo-banner-cta" type="button">
     Suscribirme
@@ -8666,13 +8666,13 @@ const Sections = (function(){
           <div class="sec-hero__courses-visual" aria-hidden="true">
             <img class="sec-hero__virtual-art" src="assets/img/ui/mis-cursos-plataforma-3d-v1.webp" alt="" decoding="async">
           </div>
+          <div class="cur-seg" role="tablist" aria-label="Filtrar mis cursos">
+            <button type="button" class="cur-seg__btn${cursosState.tab==='catalogo'?' is-active':''}" role="tab" aria-selected="${cursosState.tab==='catalogo'}" data-curtab="catalogo">Todos</button>
+            <button type="button" class="cur-seg__btn${cursosState.tab==='progreso'?' is-active':''}" role="tab" aria-selected="${cursosState.tab==='progreso'}" data-curtab="progreso">En progreso</button>
+            <button type="button" class="cur-seg__btn${cursosState.tab==='completado'?' is-active':''}" role="tab" aria-selected="${cursosState.tab==='completado'}" data-curtab="completado">Completados</button>
+          </div>
         </div>
         <div id="prueba-slot">${pruebaBannerHtml()}</div>
-        <div class="tabs">
-          <button class="tab ${cursosState.tab==='progreso'?'is-active':''}" data-curtab="progreso">En progreso · ${c.progreso}</button>
-          <button class="tab ${cursosState.tab==='completado'?'is-active':''}" data-curtab="completado">Completados · ${c.completado}</button>
-          <button class="tab ${cursosState.tab==='catalogo'?'is-active':''}" data-curtab="catalogo">Catálogo · ${c.catalogo}</button>
-        </div>
         <div class="toolbar">
           <div class="searchbar">
             <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6 -6"/></svg>
@@ -8702,12 +8702,7 @@ const Sections = (function(){
   }
 
   function actualizarTabsCursos(){
-    const etiquetas={progreso:'En progreso',completado:'Completados',catalogo:'Catálogo'};
-    const n=counts();
-    document.querySelectorAll('[data-curtab]').forEach(b=>{
-      const k=b.dataset.curtab;
-      if(etiquetas[k]) b.textContent=etiquetas[k]+' · '+n[k];
-    });
+    // Las pestañas Todos / En progreso / Completados no llevan cifras
   }
   function renderCursosList(){
     const list=document.getElementById('cur-list');if(!list)return;
@@ -15583,7 +15578,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         startDemoTimer();
       } else { // sin-membresia
         banner.style.display = '';
-        if (bannerText) bannerText.innerHTML = '<strong>Activa tu suscripción</strong> y desbloquea todos los cursos y las herramientas Pro.';
+        if (bannerText) bannerText.innerHTML = '<strong>Activar suscripción</strong>';
         if (bannerTimer) bannerTimer.style.display = 'none';
       }
     }
@@ -17856,6 +17851,17 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 @media(max-width:680px){.canal-view{padding:10px;border-radius:22px}.canal-view .wa-hero{min-height:300px;padding:27px 18px!important;border-radius:19px!important}.canal-view .wa-hero__icon{width:64px!important;height:64px!important;border-radius:18px!important}.canal-view .wa-hero__actions{display:grid;width:min(100%,310px);grid-template-columns:1fr}.canal-view .wa-hero__actions .btn{width:100%;justify-content:center}.canal-view .wa-rules{padding:17px!important}.canal-view .wa-rule__text{font-size:11.5px}}
 @media(max-width:760px){.sec-hero.sec-hero--courses{width:100%;grid-template-columns:1fr;gap:10px;min-height:370px!important;padding:25px 22px 12px!important}.sec-hero--courses .sec-hero__sub{max-width:none}.sec-hero__courses-visual{height:182px}.sec-hero--courses .sec-hero__virtual-art{width:min(100%,390px);height:205px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
 @media(max-width:760px){.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{grid-template-columns:1fr;gap:10px;min-height:0!important;padding:25px 22px 12px!important}.sec-hero--library .sec-hero__sub,.sec-hero--certificates .sec-hero__sub{max-width:none}.sec-hero__media{height:188px}.sec-hero__media img{width:min(100%,410px);height:215px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
+/* ═══ Mis cursos: resumen y pestañas dentro de la tarjeta de título ═══ */
+.sec-hero.sec-hero--courses .cur-seg{grid-column:1/-1;margin-top:6px}
+.cur-seg{display:flex;gap:4px;width:100%;max-width:560px;box-sizing:border-box;padding:5px;border-radius:999px;background:#fff;border:1.5px solid color-mix(in srgb,var(--alintec-green,#6FAF7B) 55%,var(--border));box-shadow:0 4px 12px rgba(30,70,45,.08)}
+.cur-seg__btn{flex:1 1 auto;min-width:0;padding:12px 8px;border:0;border-radius:999px;background:transparent;color:var(--text);font:700 13px/1.1 Inter,system-ui,sans-serif;text-align:center;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s,color .25s,box-shadow .25s,transform .15s}
+.cur-seg__btn:active{transform:scale(.96)}
+.cur-seg__btn.is-active{background:linear-gradient(135deg,#235C40,#3A7F58);color:#fff;box-shadow:0 6px 14px rgba(35,92,64,.35)}
+@media(max-width:420px){.cur-seg{padding:4px;gap:2px}.cur-seg__btn{padding:12px 6px;font-size:12px}}
+:root[data-theme="night"] .cur-seg{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14)}
+:root[data-theme="night"] .cur-seg__btn{color:#C5D3DC}
+:root[data-theme="night"] .cur-seg__btn.is-active{background:linear-gradient(135deg,#2D5C74,#3F7D98);color:#fff}
+
 /* ═══ Capsulitas de áreas (Mis cursos y PDFs y material) ═══ */
 .area-chips{display:flex;flex:1 1 100%;min-width:0;flex-wrap:wrap;gap:8px;padding:2px 0}
 .area-chip{flex:0 0 auto;padding:8px 15px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);font:600 12.5px/1.2 Inter,system-ui,sans-serif;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,border-color .2s,box-shadow .2s,transform .15s}
@@ -17870,32 +17876,20 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   .area-chip{padding:7px 13px;font-size:12px}
 }
 
-/* ═══ Tarjetas de título en teléfono y tableta: compactas, con la ilustración a un lado (antes quedaban altísimas) ═══ */
+/* Tableta y teléfono: la tarjeta de Mis cursos ocupa el mismo ancho que el resto de las tarjetas (antes quedaba más angosta y desalineada) y la cápsula va a lo ancho */
 @media(max-width:880px){
-  .sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:0!important;padding:20px 20px!important;border-radius:22px!important}
-  .sec-hero::before,.sec-hero:not(.sec-hero--library)::before,.sec-hero--library::before{top:20px!important;bottom:20px!important}
-  .sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(26px,5.6vw,34px)!important;line-height:1.1!important}
-  .sec-hero__sub,.sec-hero--library .sec-hero__sub{font-size:13px!important;line-height:1.55!important;margin-top:8px!important;max-width:none!important}
-  .sec-hero.sec-hero--courses,.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{display:grid!important;grid-template-columns:minmax(0,1fr) clamp(100px,27%,200px)!important;gap:12px!important;align-items:center!important;width:100%!important;min-height:0!important;padding:20px 16px 20px 22px!important}
-  .sec-hero__courses-visual,.sec-hero__media{height:auto!important;max-height:150px;overflow:visible}
-  .sec-hero--courses .sec-hero__virtual-art,.sec-hero__media img{width:100%!important;height:auto!important;max-height:150px;object-fit:contain;animation:none!important}
+  .sec-hero.sec-hero--courses{width:100%!important;max-width:none!important}
+  .cur-seg{max-width:none}
 }
 /* Barra verde de suscripción: delgada en teléfono (antes dejaba 50 px vacíos arriba y el botón en otra fila) */
 @media(max-width:768px){
-  .fomo-banner{flex-wrap:wrap;justify-content:space-between;gap:8px 10px;padding:calc(9px + env(safe-area-inset-top)) 12px 9px;font-size:12px;line-height:1.3;text-align:left}
-  .fomo-banner__text{flex:1 1 150px;min-width:0}
+  .fomo-banner{flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 14px;padding:calc(9px + env(safe-area-inset-top)) 12px 9px;font-size:12px;line-height:1.3;text-align:center}
+  .fomo-banner__text{flex:0 1 auto;min-width:0;text-align:center}
   .fomo-banner__cta{flex:0 0 auto;padding:7px 13px;font-size:12px}
 }
 /* En la app instalada (pantalla completa) sí se deja el espacio de la barra de estado */
 @media(max-width:768px) and (display-mode:standalone),(max-width:768px) and (display-mode:fullscreen),(max-width:768px) and (display-mode:minimal-ui){
   .fomo-banner{padding-top:max(44px,calc(env(safe-area-inset-top) + 12px))}
-}
-@media(max-width:480px){
-  .sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{padding:18px 16px!important;border-radius:20px!important}
-  .sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(24px,7.6vw,30px)!important}
-  .sec-hero.sec-hero--courses,.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{grid-template-columns:minmax(0,1fr) 44%!important;gap:2px!important;padding:18px 8px 18px 18px!important}
-  .sec-hero__courses-visual,.sec-hero__media{max-height:150px}
-  .sec-hero--courses .sec-hero__virtual-art,.sec-hero__media img{max-height:150px}
 }
 </style>
 <script>
