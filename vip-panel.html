@@ -17887,9 +17887,15 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   .fomo-banner__text{flex:0 1 auto;min-width:0;text-align:center}
   .fomo-banner__cta{flex:0 0 auto;padding:7px 13px;font-size:12px}
 }
-/* En la app instalada (pantalla completa) sí se deja el espacio de la barra de estado */
-@media(max-width:768px) and (display-mode:standalone),(max-width:768px) and (display-mode:fullscreen),(max-width:768px) and (display-mode:minimal-ui){
-  .fomo-banner{padding-top:max(44px,calc(env(safe-area-inset-top) + 12px))}
+/* Aviso de Herramientas Pro (sin membresía): en pantallas angostas el botón baja a su propia fila y el texto ocupa todo el ancho */
+.pro-aviso{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;margin-bottom:14px}
+.pro-aviso__ic{width:18px;height:18px;color:var(--primary);flex-shrink:0}
+.pro-aviso__txt{flex:1 1 220px;min-width:0;font-size:12.5px;color:var(--text-2);line-height:1.45}
+.pro-aviso .btn{flex:0 0 auto}
+@media(max-width:560px){
+  .pro-aviso{padding:12px 14px}
+  .pro-aviso__txt{flex:1 1 calc(100% - 34px)}
+  .pro-aviso .btn{flex:1 1 100%;justify-content:center}
 }
 </style>
 <script>
@@ -18869,10 +18875,10 @@ if(typeof Sections!=='undefined' && Sections.renderers){
         <p class="sec-hero__sub">Cinco herramientas del sector alimentario, incluidas en tu membresía.</p>
       </div>
       ${esVip ? '' : `
-      <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;margin-bottom:14px;">
-        <svg class="ic" style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"><use href="#i-crown"/></svg>
-        <div style="flex:1;font-size:12.5px;color:var(--text-2);line-height:1.45;">Puedes explorar las Herramientas Pro. Para usarlas (evaluar, calcular, guardar o descargar reportes) necesitas una membresía activa y te llevamos directo a Suscripción.</div>
-        <button class="btn btn--accent" style="flex-shrink:0;" onclick="navigateToSection('suscripcion')">Hazte VIP</button>
+      <div class="pro-aviso">
+        <svg class="ic pro-aviso__ic"><use href="#i-crown"/></svg>
+        <div class="pro-aviso__txt">Puedes explorar las Herramientas Pro. Para usarlas (evaluar, calcular, guardar o descargar reportes) necesitas una membresía activa y te llevamos directo a Suscripción.</div>
+        <button class="btn btn--accent" onclick="navigateToSection('suscripcion')">Hazte VIP</button>
       </div>`}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">
         ${tools.map(t=>`
