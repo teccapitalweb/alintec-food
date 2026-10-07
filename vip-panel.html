@@ -4109,7 +4109,7 @@ window.__setDisplayName = async (nombre) => {
       </section>
 
       <!-- Continúa tu curso: retoma justo donde te quedaste (datos reales) -->
-      <section class="continuar" id="continuar-widget" style="display:none;">
+      <section class="continuar is-vacio" id="continuar-widget">
         <div class="continuar__main home-course-hero">
           <div class="home-course-hero__shade" aria-hidden="true"></div>
           <div class="home-course-hero__content">
@@ -8057,6 +8057,9 @@ const Sections = (function(){
       try { window.__actualizarResumenInicio?.(); } catch (e) {}
       await hidratarProgresoBackend();
       await cargarEstadoPrueba();
+      // "Continúa tu curso" se pintaba a los 0.4 s del arranque, casi siempre antes de que llegara el catálogo,
+      // y no se volvía a pintar: se refresca en cuanto están los cursos y el progreso
+      try { window.__actualizarContinuarWidget?.(); } catch (e) {}
       programarFlujoPrueba();
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
@@ -9228,7 +9231,7 @@ const Sections = (function(){
     });
     if (!elegido) { const libre = disponibles.find(({ c }) => !getProgresoCurso(c.id).completado); elegido = libre ? libre.c : null; }
 
-    if (!elegido) { wrap.style.display = 'none'; if (spacer) spacer.style.display = ''; return; }
+    if (!elegido) { wrap.classList.add('is-vacio'); if (spacer) spacer.style.display = ''; return; }
 
     const progreso = getProgresoCurso(elegido.id);
     const sesiones = Array.isArray(elegido.sesiones) ? elegido.sesiones : [];
@@ -9237,9 +9240,6 @@ const Sections = (function(){
     const numeroSiguiente = siguienteClase >= 0 ? (sesiones[siguienteClase].numero || (siguienteClase + 1)) : 0;
     const esInicio = progreso.clasesVistas.length === 0;
     const esUltima = siguienteClase === sesiones.length - 1;
-
-    wrap.style.display = '';
-    if (spacer) spacer.style.display = 'none';
 
     const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
@@ -9286,6 +9286,8 @@ const Sections = (function(){
       proKeys.forEach(k => { try { if (localStorage.getItem(k)) proUsadas++; } catch (e) {} });
     }
     setTxt('continuar-kpi-pro', `${proUsadas}/5`);
+    wrap.classList.remove('is-vacio');
+    if (spacer) spacer.style.display = 'none';
   }
   window.__actualizarContinuarWidget = actualizarContinuarWidget;
 
@@ -17354,6 +17356,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .home-greeting__date-wrap{min-width:190px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}
 .home-greeting__date-wrap>span{display:block;margin-bottom:5px;color:var(--alintec-green-deep);font:800 7.5px 'JetBrains Mono',monospace;letter-spacing:1.2px}.home-greeting__date-wrap>div{display:flex;align-items:center;gap:7px}.home-greeting__date-wrap .ic{width:14px;height:14px;color:var(--alintec-green-deep)}
 .home-greeting__date{color:var(--text-2);font:700 9.5px 'JetBrains Mono',monospace;text-transform:capitalize}
+#continuar-widget.is-vacio{display:none!important}
 #continuar-widget{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(290px,.82fr)!important;gap:16px!important;margin-bottom:30px!important;background:none!important;border:0!important;box-shadow:none!important}
 .home-course-hero.continuar__main{position:relative;isolation:isolate;min-height:440px;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:26px;background-color:#203746!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important;box-shadow:0 20px 46px rgba(29,52,66,.18)!important}
 .home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(20,48,33,.45)}
