@@ -7464,6 +7464,25 @@ const Sections = (function(){
     });
   };
 
+  // Capsulitas de áreas: reemplazan al menú desplegable, que se encimaba con las tarjetas de los cursos
+  window.areaChipsHTML = function(id, areas, activa) {
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const chip = (valor, texto) => '<button type="button" class="area-chip' + (activa === valor ? ' is-active' : '') + '" data-value="' + esc(valor) + '" aria-pressed="' + (activa === valor) + '">' + esc(texto) + '</button>';
+    return '<div class="area-chips" id="' + id + '-chips" role="group" aria-label="Filtrar por área">' + chip('todas', 'Todas') + areas.map(a => chip(a, a)).join('') + '</div>';
+  };
+  window.bindAreaChips = function(id, onChange, root) {
+    const scope = root && typeof root.querySelector === 'function' ? root : document;
+    const cont = scope.querySelector('#' + id + '-chips');
+    if (!cont) return;
+    cont.addEventListener('click', e => {
+      const chip = e.target.closest('.area-chip');
+      if (!chip || !cont.contains(chip)) return;
+      cont.querySelectorAll('.area-chip').forEach(c => { const on = c === chip; c.classList.toggle('is-active', on); c.setAttribute('aria-pressed', String(on)); });
+      try { chip.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (err) {}
+      if (typeof onChange === 'function') onChange(chip.dataset.value);
+    });
+  };
+
   // Cerrar cualquier dropdown al click fuera
   document.addEventListener('click', () => {
     document.querySelectorAll('.dd-fancy__menu.is-open').forEach(m => m.classList.remove('is-open'));
@@ -8659,31 +8678,15 @@ const Sections = (function(){
             <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6 -6"/></svg>
             <input type="text" placeholder="Buscar curso o instructor…" id="cur-search" value="${cursosState.search.replace(/"/g,'&quot;')}">
           </div>
-          <div class="dd-fancy" data-dd="cur-area">
-            <button type="button" class="dd-fancy__trigger" id="cur-area-trigger" aria-haspopup="listbox" aria-expanded="false">
-              <svg class="dd-fancy__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              <span class="dd-fancy__label" id="cur-area-label">${cursosState.area === 'todas' ? 'Todas las áreas' : cursosState.area}</span>
-              <svg class="dd-fancy__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="dd-fancy__menu" id="cur-area-menu" role="listbox">
-              ${(function(){
-                const areas = ['todas', ...Array.from(new Set(cursos.map(c=>c.area).filter(Boolean))).sort()];
-                return areas.map(a => {
-                  const label = a === 'todas' ? 'Todas las áreas' : a;
-                  const sel = cursosState.area === a ? 'is-selected' : '';
-                  return `<button type="button" class="dd-fancy__item ${sel}" data-value="${a}" role="option">${label}</button>`;
-                }).join('');
-              })()}
-            </div>
-          </div>
+          ${window.areaChipsHTML('cur-area', Array.from(new Set(cursos.map(c=>c.area).filter(Boolean))).sort(), cursosState.area)}
         </div>
         <div id="cur-list"></div>
       </div>
     `;
     container.querySelectorAll('[data-curtab]').forEach(b=>b.addEventListener('click',()=>{cursosState.tab=b.dataset.curtab;renderCursos(container);}));
     container.querySelector('#cur-search').addEventListener('input',e=>{cursosState.search=e.target.value;renderCursosList();});
-    // Dropdown custom de áreas
-    window.bindFancyDropdown('cur-area', (value) => {
+    // Capsulitas de áreas
+    window.bindAreaChips('cur-area', (value) => {
       cursosState.area = value;
       renderCursosList();
     }, container);
@@ -11645,17 +11648,7 @@ const Sections = (function(){
               <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6 -6"/></svg>
               <input type="text" id="pdf-search-input" placeholder="Buscar material…">
             </div>
-            <div class="dd-fancy" data-dd="pdf-area">
-              <button type="button" class="dd-fancy__trigger" id="pdf-area-trigger" aria-haspopup="listbox" aria-expanded="false">
-                <svg class="dd-fancy__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                <span class="dd-fancy__label" id="pdf-area-label">Todas las áreas</span>
-                <svg class="dd-fancy__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="dd-fancy__menu" id="pdf-area-menu" role="listbox">
-                <button type="button" class="dd-fancy__item is-selected" data-value="todas" role="option">Todas las áreas</button>
-                ${areasUnicas.map(a => `<button type="button" class="dd-fancy__item" data-value="${a}" role="option">${a}</button>`).join('')}
-              </div>
-            </div>
+            ${window.areaChipsHTML('pdf-area', areasUnicas, 'todas')}
           </div>
           <div class="pdfs-grid" id="pdfs-grid-container">
             ${_asignarPortadasMaterial(materialesTodos.slice().sort((a,b) => (_materialDisponible(b)?1:0) - (_materialDisponible(a)?1:0))).map(m => _renderPdfCard(m)).join('')}
@@ -11687,8 +11680,8 @@ const Sections = (function(){
 
       if (search) search.addEventListener('input', aplicarFiltros);
 
-      // Bind del dropdown custom de áreas
-      window.bindFancyDropdown('pdf-area', (value) => {
+      // Bind de las capsulitas de áreas
+      window.bindAreaChips('pdf-area', (value) => {
         currentArea = value;
         aplicarFiltros();
       }, container);
@@ -17672,12 +17665,12 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   .gs-vacio{padding:14px 12px;font-size:12.5px;color:var(--text-3);text-align:center}
 
   /* Barra inferior flotante: el apartado activo se expande con su nombre */
-  .mobile-nav{display:flex!important;position:fixed!important;left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;max-width:560px;margin:0 auto;z-index:60;gap:2px;align-items:stretch;padding:6px!important;border:1px solid var(--border-2)!important;border-radius:28px!important;background:color-mix(in srgb,var(--surface) 90%,transparent)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 16px 36px rgba(18,48,26,.2),0 2px 6px rgba(18,48,26,.08)}
+  .mobile-nav{display:flex!important;position:fixed!important;left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;z-index:60;gap:2px;align-items:stretch;padding:6px!important;border:1px solid var(--border-2)!important;border-radius:28px!important;background:color-mix(in srgb,var(--surface) 90%,transparent)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 16px 36px rgba(18,48,26,.2),0 2px 6px rgba(18,48,26,.08)}
   .mobile-nav__item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 2px;border-radius:22px;color:var(--text-3);font-size:10px;font-weight:600;letter-spacing:.1px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:flex-grow .38s cubic-bezier(.2,.8,.25,1),background .25s,color .2s,transform .15s,box-shadow .25s}
   .mobile-nav__item .ic{width:20px;height:20px;transition:transform .3s cubic-bezier(.2,.8,.25,1)}
   .mobile-nav__item:active{transform:scale(.93)}
   .mobile-nav__lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-  .mobile-nav__item.is-active{flex-grow:2.4;flex-direction:row;gap:7px;padding:10px 10px;color:#fff;font-size:12px;background:linear-gradient(135deg,#2E6A4B,#43875F);box-shadow:0 8px 18px rgba(46,106,75,.38)}
+  .mobile-nav__item.is-active{flex-grow:2.4;max-width:168px;flex-direction:row;gap:7px;padding:10px 10px;color:#fff;font-size:12px;background:linear-gradient(135deg,#2E6A4B,#43875F);box-shadow:0 8px 18px rgba(46,106,75,.38)}
   .mobile-nav__item.is-active .ic{transform:scale(1.06)}
   :root[data-theme="night"] .mobile-nav{background:rgba(18,29,40,.92)!important}
   :root[data-theme="night"] .mobile-nav__item.is-active{background:linear-gradient(135deg,#2D5C74,#3F7D98);box-shadow:0 8px 18px rgba(30,70,95,.45)}
@@ -17863,6 +17856,47 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 @media(max-width:680px){.canal-view{padding:10px;border-radius:22px}.canal-view .wa-hero{min-height:300px;padding:27px 18px!important;border-radius:19px!important}.canal-view .wa-hero__icon{width:64px!important;height:64px!important;border-radius:18px!important}.canal-view .wa-hero__actions{display:grid;width:min(100%,310px);grid-template-columns:1fr}.canal-view .wa-hero__actions .btn{width:100%;justify-content:center}.canal-view .wa-rules{padding:17px!important}.canal-view .wa-rule__text{font-size:11.5px}}
 @media(max-width:760px){.sec-hero.sec-hero--courses{width:100%;grid-template-columns:1fr;gap:10px;min-height:370px!important;padding:25px 22px 12px!important}.sec-hero--courses .sec-hero__sub{max-width:none}.sec-hero__courses-visual{height:182px}.sec-hero--courses .sec-hero__virtual-art{width:min(100%,390px);height:205px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
 @media(max-width:760px){.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{grid-template-columns:1fr;gap:10px;min-height:0!important;padding:25px 22px 12px!important}.sec-hero--library .sec-hero__sub,.sec-hero--certificates .sec-hero__sub{max-width:none}.sec-hero__media{height:188px}.sec-hero__media img{width:min(100%,410px);height:215px;animation:none;filter:drop-shadow(0 13px 16px rgba(28,73,46,.13))}}
+/* ═══ Capsulitas de áreas (Mis cursos y PDFs y material) ═══ */
+.area-chips{display:flex;flex:1 1 100%;min-width:0;flex-wrap:wrap;gap:8px;padding:2px 0}
+.area-chip{flex:0 0 auto;padding:8px 15px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);font:600 12.5px/1.2 Inter,system-ui,sans-serif;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,border-color .2s,box-shadow .2s,transform .15s}
+.area-chip:hover{border-color:var(--alintec-green,#6FAF7B);color:var(--text)}
+.area-chip:active{transform:scale(.96)}
+.area-chip.is-active{background:linear-gradient(135deg,#2E6A4B,#43875F);border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(46,106,75,.28)}
+:root[data-theme="night"] .area-chip{background:#172431;color:#C5D3DC}
+:root[data-theme="night"] .area-chip.is-active{background:linear-gradient(135deg,#2D5C74,#3F7D98);color:#fff;box-shadow:0 6px 14px rgba(30,70,95,.4)}
+/* Se adaptan al ancho: si ya no caben en la fila, pasan a la siguiente (no se deslizan de lado) */
+@media(max-width:880px){
+  .area-chips{gap:7px}
+  .area-chip{padding:7px 13px;font-size:12px}
+}
+
+/* ═══ Tarjetas de título en teléfono y tableta: compactas, con la ilustración a un lado (antes quedaban altísimas) ═══ */
+@media(max-width:880px){
+  .sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{min-height:0!important;padding:20px 20px!important;border-radius:22px!important}
+  .sec-hero::before,.sec-hero:not(.sec-hero--library)::before,.sec-hero--library::before{top:20px!important;bottom:20px!important}
+  .sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(26px,5.6vw,34px)!important;line-height:1.1!important}
+  .sec-hero__sub,.sec-hero--library .sec-hero__sub{font-size:13px!important;line-height:1.55!important;margin-top:8px!important;max-width:none!important}
+  .sec-hero.sec-hero--courses,.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{display:grid!important;grid-template-columns:minmax(0,1fr) clamp(100px,27%,200px)!important;gap:12px!important;align-items:center!important;width:100%!important;min-height:0!important;padding:20px 16px 20px 22px!important}
+  .sec-hero__courses-visual,.sec-hero__media{height:auto!important;max-height:150px;overflow:visible}
+  .sec-hero--courses .sec-hero__virtual-art,.sec-hero__media img{width:100%!important;height:auto!important;max-height:150px;object-fit:contain;animation:none!important}
+}
+/* Barra verde de suscripción: delgada en teléfono (antes dejaba 50 px vacíos arriba y el botón en otra fila) */
+@media(max-width:768px){
+  .fomo-banner{flex-wrap:wrap;justify-content:space-between;gap:8px 10px;padding:calc(9px + env(safe-area-inset-top)) 12px 9px;font-size:12px;line-height:1.3;text-align:left}
+  .fomo-banner__text{flex:1 1 150px;min-width:0}
+  .fomo-banner__cta{flex:0 0 auto;padding:7px 13px;font-size:12px}
+}
+/* En la app instalada (pantalla completa) sí se deja el espacio de la barra de estado */
+@media(max-width:768px) and (display-mode:standalone),(max-width:768px) and (display-mode:fullscreen),(max-width:768px) and (display-mode:minimal-ui){
+  .fomo-banner{padding-top:max(44px,calc(env(safe-area-inset-top) + 12px))}
+}
+@media(max-width:480px){
+  .sec-hero,.sec-hero:not(.sec-hero--library),.sec-hero--library{padding:18px 16px!important;border-radius:20px!important}
+  .sec-hero__title,.sec-hero:not(.sec-hero--library) .sec-hero__title{font-size:clamp(24px,7.6vw,30px)!important}
+  .sec-hero.sec-hero--courses,.sec-hero.sec-hero--library,.sec-hero.sec-hero--certificates{grid-template-columns:minmax(0,1fr) 44%!important;gap:2px!important;padding:18px 8px 18px 18px!important}
+  .sec-hero__courses-visual,.sec-hero__media{max-height:150px}
+  .sec-hero--courses .sec-hero__virtual-art,.sec-hero__media img{max-height:150px}
+}
 </style>
 <script>
 /* Helper de folio compartido por las herramientas de alimentos */
@@ -18835,9 +18869,10 @@ if(typeof Sections!=='undefined' && Sections.renderers){
       { s:'tool-microbio',ic:'i-search',          t:'Microbiología UFC',   d:'Cálculo de UFC/g·mL a partir de diluciones.' }
     ];
     dyn.innerHTML = `
-      <div class="section-head" style="margin-bottom:16px;">
-        <h2 style="font-size:20px;font-weight:800;letter-spacing:-.4px;margin:0;">Herramientas Pro</h2>
-        <p style="font-size:13px;color:var(--text-3);margin:6px 0 0;">Cinco herramientas del sector alimentario, incluidas en tu membresía.</p>
+      <div class="sec-hero" style="margin-bottom:16px;">
+        <span class="sec-hero__eyebrow">Para tu operación</span>
+        <h1 class="sec-hero__title">Herramientas <span class="sec-hero__accent">Pro.</span></h1>
+        <p class="sec-hero__sub">Cinco herramientas del sector alimentario, incluidas en tu membresía.</p>
       </div>
       ${esVip ? '' : `
       <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;margin-bottom:14px;">
