@@ -9210,11 +9210,79 @@ const Sections = (function(){
   // 🏠 INICIO · "Continúa tu curso" (retoma donde te quedaste, con
   //     datos reales: mismo curso/progreso que usa Mis cursos).
   // ═══════════════════════════════════════════════════════════════
+  // Sin curso que continuar (todo lo abierto ya está terminado): en vez de ocultar la tarjeta dice qué sigue,
+  // es decir, cuándo se abre el próximo curso, o que ya terminó todos los disponibles.
+  function pintarContinuarSinCurso(wrap, spacer) {
+    const ocultar = () => { wrap.classList.add('is-vacio'); wrap.classList.remove('is-espera'); if (spacer) spacer.style.display = ''; };
+    const lista = Array.isArray(cursos) ? cursos : [];
+    if (!lista.length) return ocultar();
+    const proximos = lista.map((c, idx) => ({ c, idx, dias: diasParaDesbloquear(idx, c) }))
+      .filter(({ c, idx, dias }) => c.marcarProximamente !== true && Array.isArray(c.sesiones) && c.sesiones.length && dias !== null && !cursoDesbloqueado(idx, c))
+      .sort((a, b) => {
+        const ta = a.c.desbloqueoEn ? new Date(a.c.desbloqueoEn).getTime() : Infinity;
+        const tb = b.c.desbloqueoEn ? new Date(b.c.desbloqueoEn).getTime() : Infinity;
+        return (ta - tb) || (a.dias - b.dias);
+      });
+    const completados = lista.filter(c => getProgresoCurso(c.id).completado).length;
+    if (!proximos.length && !completados) return ocultar();
+
+    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    const ir = seccion => () => navigateToSection(seccion);
+    const btnClase = document.getElementById('continuar-clase-btn');
+    const btnIr = document.getElementById('continuar-ir-btn');
+    let filas;
+    if (proximos.length) {
+      const { c, dias } = proximos[0];
+      const cr = cuentaRegresivaCurso(c, dias);
+      setTxt('continuar-titulo', 'Espera tu próximo curso.');
+      setTxt('continuar-card-lbl', 'PRÓXIMO DESBLOQUEO');
+      setTxt('continuar-curso', c.titulo || '');
+      setTxt('continuar-clase-lbl', 'SE ABRE EN');
+      setTxt('continuar-clase-nombre', cr.corto + (cr.fecha ? ' · ' + cr.fecha : ''));
+      setTxt('continuar-ir-txt', 'Ver mis cursos');
+      if (btnClase) btnClase.onclick = ir('cursos');
+      if (btnIr) btnIr.onclick = ir('cursos');
+      setTxt('continuar-meta-titulo', 'Mientras esperas');
+      filas = [
+        { small: 'AHORA', icon: 'i-play', txt: completados ? 'Repasa los cursos que ya completaste' : 'Practica en la Zona de retos' },
+        { small: 'DESPUÉS', icon: 'i-arrow-right', txt: 'Gana libros y sube de nivel superando retos' },
+        { small: 'CUANDO SE ABRA', icon: 'i-trophy', txt: 'Podrás empezar «' + (c.titulo || 'tu siguiente curso') + '» desde Mis cursos' }
+      ];
+    } else {
+      setTxt('continuar-titulo', 'Completaste tus cursos.');
+      setTxt('continuar-card-lbl', 'CURSOS TERMINADOS');
+      setTxt('continuar-curso', 'Terminaste todos los cursos disponibles');
+      setTxt('continuar-clase-lbl', 'SIGUIENTE PASO');
+      setTxt('continuar-clase-nombre', 'Descarga tus certificados');
+      setTxt('continuar-ir-txt', 'Ver certificados');
+      if (btnClase) btnClase.onclick = ir('certificados');
+      if (btnIr) btnIr.onclick = ir('certificados');
+      setTxt('continuar-meta-titulo', 'Sigue aprendiendo');
+      filas = [
+        { small: 'AHORA', icon: 'i-trophy', txt: 'Descarga tus certificados' },
+        { small: 'DESPUÉS', icon: 'i-arrow-right', txt: 'Practica en la Zona de retos y gana libros' },
+        { small: 'MÁS ADELANTE', icon: 'i-play', txt: 'Cuando se publique un curso nuevo lo verás aquí' }
+      ];
+    }
+    const pasos = document.getElementById('continuar-pasos');
+    if (pasos) {
+      pasos.innerHTML = filas.map(x => `
+        <li class="continuar__paso">
+          <span class="continuar__paso-ic"><svg class="ic"><use href="#${x.icon}"/></svg></span>
+          <span class="continuar__paso-txt"><small>${x.small}</small><strong>${escapeHtml(x.txt)}</strong></span>
+        </li>`).join('');
+    }
+    wrap.classList.add('is-espera');
+    wrap.classList.remove('is-vacio');
+    if (spacer) spacer.style.display = 'none';
+  }
+
   async function actualizarContinuarWidget() {
     const wrap = document.getElementById('continuar-widget');
     const spacer = document.getElementById('continuar-spacer');
     if (!wrap) return;
     try { await actualizarResumenInicio(); } catch (e) {}
+    const setTxt0 = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
     const esVipUser = window.UserState?.modo === 'vip' || (typeof esAdminReal === 'function' && esAdminReal()) || window.UserState?.isAdmin;
     const disponibles = (cursos || [])
@@ -9231,7 +9299,10 @@ const Sections = (function(){
     });
     if (!elegido) { const libre = disponibles.find(({ c }) => !getProgresoCurso(c.id).completado); elegido = libre ? libre.c : null; }
 
-    if (!elegido) { wrap.classList.add('is-vacio'); if (spacer) spacer.style.display = ''; return; }
+    if (!elegido) { pintarContinuarSinCurso(wrap, spacer); return; }
+    wrap.classList.remove('is-espera');
+    setTxt0('continuar-titulo', 'Continúa tu curso.');
+    setTxt0('continuar-card-lbl', 'CURSO ACTUAL');
 
     const progreso = getProgresoCurso(elegido.id);
     const sesiones = Array.isArray(elegido.sesiones) ? elegido.sesiones : [];
@@ -9787,7 +9858,9 @@ const Sections = (function(){
         if (d.codigo === 'membresia-requerida') window.__mostrarPaywallAlintec?.('Retos para miembros', 'Activa tu suscripción para resolver los retos y sumar XP.');
         return null;
       }
-      return r.ok ? await r.json() : null;
+      const datos = r.ok ? await r.json() : null;
+      window.__libroRetoRespuesta?.(datos);
+      return datos;
     } catch(e){ return null; }
   };
   // Camino (quiz/detective/orden): el servidor decide si el índice recibido es el siguiente
@@ -9805,7 +9878,9 @@ const Sections = (function(){
         if (d.codigo === 'membresia-requerida') window.__mostrarPaywallAlintec?.('Retos para miembros', 'Activa tu suscripción para resolver los retos y sumar XP.');
         return null;
       }
-      return r.ok ? await r.json() : null;
+      const datos = r.ok ? await r.json() : null;
+      window.__libroRetoRespuesta?.(datos);
+      return datos;
     } catch(e){ return null; }
   };
 
@@ -11098,6 +11173,55 @@ const Sections = (function(){
       ]
     }
   ];
+  // ── Libros que se desbloquean con retos superados ──
+  // Cuántos retos pide cada libro lo decide el servidor (services/retos.js, LIBROS); estos números solo se usan
+  // para mostrar el mínimo a quien aún no tiene membresía y no recibe el estado del servidor.
+  const LIBROS_RETOS_BASE = { 'nom-051': 5, 'nom-251': 15, 'nom-210': 30 };
+  let _librosEstado = null; // { superados, libros:[{id, requiere, desbloqueado}] } · 'error' si no se pudo consultar
+  async function cargarLibrosEstado() {
+    _librosEstado = null;
+    const miembro = !!(window.__esMiembroVip && window.__esMiembroVip()) && window.__isDemoMode !== true;
+    if (!miembro || esAdminReal()) return;
+    try {
+      const e = await cargarEstadoRetos();
+      _librosEstado = e && Array.isArray(e.libros) ? { superados: Number(e.superados) || 0, libros: e.libros } : 'error';
+    } catch (err) { _librosEstado = 'error'; }
+  }
+  function libroAcceso(id) {
+    if (esAdminReal()) return { abierto: true, miembro: true };
+    const miembro = !!(window.__esMiembroVip && window.__esMiembroVip()) && window.__isDemoMode !== true;
+    // Si un miembro no logra consultar sus retos (sin conexión), no se le cierra el libro por una falla de red
+    if (miembro && _librosEstado === 'error') return { abierto: true, miembro };
+    const dato = _librosEstado && _librosEstado !== 'error' ? _librosEstado.libros.find(x => x.id === id) : null;
+    const requiere = dato ? dato.requiere : (LIBROS_RETOS_BASE[id] || 5);
+    const superados = _librosEstado && _librosEstado !== 'error' ? _librosEstado.superados : 0;
+    return { abierto: !!(miembro && dato && dato.desbloqueado), miembro, requiere, superados, faltan: Math.max(0, requiere - superados) };
+  }
+  // Se llama con cada respuesta del servidor al superar un reto: actualiza el estado y avisa si se ganó un libro
+  window.__libroRetoRespuesta = function(r) {
+    try {
+      if (!r) return;
+      if (Array.isArray(r.libros)) _librosEstado = { superados: Number(r.superados) || 0, libros: r.libros };
+      const nuevos = Array.isArray(r.librosNuevos) ? r.librosNuevos : [];
+      if (nuevos.length && typeof Toast !== 'undefined') {
+        const primero = nuevos.some(l => l.id === LIBROS_RETOS_PRIMERO);
+        Toast.success(primero ? '¡Desbloqueaste tu primer libro!' : '¡Desbloqueaste un nuevo libro!', nuevos[nuevos.length - 1].titulo + ' · ya está en la Biblioteca');
+      }
+    } catch (e) {}
+  };
+  const LIBROS_RETOS_PRIMERO = 'nom-051';
+  function avisoLibroBloqueado(l, acc) {
+    if (!acc.miembro) {
+      window.__mostrarPaywallAlintec?.('Libros para miembros', 'Suscríbete, supera retos y desbloquea tu primer libro.');
+      return;
+    }
+    if (typeof Toast !== 'undefined') Toast.info('Libro bloqueado', 'Supera ' + acc.faltan + ' reto' + (acc.faltan === 1 ? '' : 's') + ' más en la Zona de retos para abrir «' + l.titulo + '».');
+  }
+  function _libroGateInfo(acc) {
+    if (acc.abierto) return null;
+    if (!acc.miembro) return { pct: 0, etiqueta: 'Solo para miembros · supera ' + acc.requiere + ' retos' };
+    return { pct: Math.min(100, Math.round(acc.superados / acc.requiere * 100)), etiqueta: 'Retos superados: ' + Math.min(acc.superados, acc.requiere) + ' de ' + acc.requiere };
+  }
   const BIB_GUARDADOS_KEY = 'alintec:biblioteca:guardados';
   function bibGuardadosLeer(){ try{ return new Set(JSON.parse(localStorage.getItem(BIB_GUARDADOS_KEY)||'[]')); }catch(e){ return new Set(); } }
   function bibGuardadosToggle(id){
@@ -11130,10 +11254,14 @@ const Sections = (function(){
   function _libroDestacadoHTML(l){
     const guardado = bibGuardadosLeer().has('libro:'+l.id);
     const portada = escapeHtml(l.portada || '');
-    const progreso = bibProgresoLibro(l);
+    const acc = libroAcceso(l.id);
+    const gate = _libroGateInfo(acc);
+    const progreso = gate ? { pagina: 1, porcentaje: gate.pct } : bibProgresoLibro(l);
+    const etiquetaProgreso = gate ? gate.etiqueta : `Página ${progreso.pagina} de ${l.paginas.length}`;
     return `
-      <article class="libro-feature" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
+      <article class="libro-feature${gate ? ' is-locked' : ''}" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
         <div class="libro-feature__cover" style="--book-cover:url('${portada}')">
+          ${gate ? '<span class="libro-lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>' : ''}
           <span class="libro-feature__edition">Biblioteca técnica</span>
           <div class="libro-feature__cover-copy"><small>${escapeHtml(l.categoria)}</small><strong>${escapeHtml(l.titulo)}</strong></div>
         </div>
@@ -11143,13 +11271,13 @@ const Sections = (function(){
           <p class="libro-feature__author">${escapeHtml(l.autor)}</p>
           <p class="libro-feature__summary">${escapeHtml(l.resumen)}</p>
           <div class="libro-feature__actions">
-            <span class="libro-feature__cta">Leer ahora <svg class="ic"><use href="#i-book-2"/></svg></span>
+            <span class="libro-feature__cta">${gate ? (acc.miembro ? 'Bloqueado · supera ' + acc.requiere + ' retos' : 'Supera retos y desbloquéalo') : 'Leer ahora'} <svg class="ic"><use href="#${gate ? 'i-lock' : 'i-book-2'}"/></svg></span>
             <button type="button" class="libro-feature__save${guardado?' is-on':''}" data-guardar="libro:${l.id}" aria-label="Guardar libro" title="Guardar"><svg class="ic"><use href="#i-pin"/></svg></button>
             <span class="libro-feature__pages">Libro · ${l.paginas.length} páginas</span>
           </div>
-          <div class="libro-reading libro-feature__reading" aria-label="Progreso de lectura: página ${progreso.pagina} de ${l.paginas.length}">
+          <div class="libro-reading libro-feature__reading" aria-label="${escapeHtml(etiquetaProgreso)}">
             <div class="libro-progress"><span style="width:${progreso.porcentaje}%"></span></div>
-            <div class="libro-progress-label">Página ${progreso.pagina} de ${l.paginas.length}</div>
+            <div class="libro-progress-label">${escapeHtml(etiquetaProgreso)}</div>
           </div>
         </div>
       </article>`;
@@ -11159,23 +11287,53 @@ const Sections = (function(){
   function _libroCardHTML(l){
     const guardado = bibGuardadosLeer().has('libro:'+l.id);
     const portada = escapeHtml(l.portada || '');
-    const progreso = bibProgresoLibro(l);
+    const acc = libroAcceso(l.id);
+    const gate = _libroGateInfo(acc);
+    const progreso = gate ? { pagina: 1, porcentaje: gate.pct } : bibProgresoLibro(l);
+    const etiquetaProgreso = gate ? gate.etiqueta : `Página ${progreso.pagina} de ${l.paginas.length}`;
     return `
-      <article class="libro-card" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
+      <article class="libro-card${gate ? ' is-locked' : ''}" data-libro="${l.id}" role="button" tabindex="0" style="--lc:${l.color};">
         <button type="button" class="libro-card__save${guardado?' is-on':''}" data-guardar="libro:${l.id}" aria-label="Guardar" title="Guardar"><svg class="ic"><use href="#i-pin"/></svg></button>
         <div class="libro-card__top" style="--book-cover:url('${portada}')">
+          ${gate ? '<span class="libro-lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>' : ''}
           <span class="libro-card__edition">Edición de consulta</span>
           <div class="libro-card__cover-copy"><small>${escapeHtml(l.categoria)}</small><strong>${escapeHtml(l.titulo)}</strong><em>${escapeHtml(l.subtitulo)}</em></div>
         </div>
         <div class="libro-card__body">
           <div class="libro-card__title">${escapeHtml(l.titulo)}</div>
           <div class="libro-card__autor">${escapeHtml(l.autor)}</div>
-          <div class="libro-reading libro-card__reading" aria-label="Progreso de lectura: página ${progreso.pagina} de ${l.paginas.length}">
+          <div class="libro-reading libro-card__reading" aria-label="${escapeHtml(etiquetaProgreso)}">
             <div class="libro-progress libro-card__progress"><span style="width:${progreso.porcentaje}%"></span></div>
-            <div class="libro-progress-label libro-card__progress-label">Página ${progreso.pagina} de ${l.paginas.length}</div>
+            <div class="libro-progress-label libro-card__progress-label">${escapeHtml(etiquetaProgreso)}</div>
           </div>
         </div>
       </article>`;
+  }
+  // Invitación a ganar libros con retos: miembros ven su avance; quien no tiene membresía, el camino para empezar
+  function _bibRetosBannerHTML(){
+    if (esAdminReal()) return '';
+    const orden = BIBLIOTECA_LIBROS.map(l => ({ l, acc: libroAcceso(l.id) }));
+    const siguiente = orden.find(x => !x.acc.abierto);
+    if (!siguiente) {
+      return orden.some(x => x.acc.abierto)
+        ? '<div class="bib-reto bib-reto--ok"><div class="bib-reto__txt"><strong>Desbloqueaste todos los libros</strong><span>Sigue practicando en la Zona de retos para subir de nivel.</span></div></div>' : '';
+    }
+    const { l, acc } = siguiente;
+    const hechos = orden.filter(x => x.acc.abierto).length;
+    if (!acc.miembro) {
+      return `<div class="bib-reto">
+        <span class="bib-reto__ic"><svg class="ic"><use href="#i-lock"/></svg></span>
+        <div class="bib-reto__txt"><strong>Supera retos y desbloquea tu primer libro</strong><span>Con tu suscripción, completa ${acc.requiere} retos de la Zona de retos y abre «${escapeHtml(l.titulo)}». Los demás libros se abren con más retos.</span></div>
+        <button type="button" class="btn btn--accent btn--sm" id="bib-reto-suscribir">Ver suscripción</button>
+      </div>`;
+    }
+    const pct = Math.min(100, Math.round(acc.superados / acc.requiere * 100));
+    return `<div class="bib-reto">
+      <span class="bib-reto__ic"><svg class="ic"><use href="#i-bolt"/></svg></span>
+      <div class="bib-reto__txt"><strong>${hechos ? 'Tu siguiente libro' : 'Supera retos y desbloquea tu primer libro'}</strong><span>«${escapeHtml(l.titulo)}» · llevas ${Math.min(acc.superados, acc.requiere)} de ${acc.requiere} retos</span>
+        <div class="bib-reto__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>
+      <button type="button" class="btn btn--accent btn--sm" id="bib-reto-ir">Ir a los retos</button>
+    </div>`;
   }
   // ── Pestañas de la biblioteca (Todo · Guardados · Guías · PDF · Libros · Presentaciones) ──
   function _bibTabsHTML(){
@@ -11216,6 +11374,8 @@ const Sections = (function(){
   // ═══ Lector editorial: libro abierto, página individual y giro de hoja ═══
   function abrirLector(id, paginaInicial){
     const l = BIBLIOTECA_LIBROS.find(x => x.id === id); if (!l) return;
+    const acceso = libroAcceso(l.id);
+    if (!acceso.abierto) { avisoLibroBloqueado(l, acceso); return; }
     const progresoKey = 'alintec:lector:' + l.id + ':pagina';
     let guardada = 1;
     try { guardada = Math.max(1, parseInt(localStorage.getItem(progresoKey) || '1', 10) || 1); } catch(e){}
@@ -11356,6 +11516,7 @@ const Sections = (function(){
       await cargarCursosBackend();
     }
 
+    await cargarLibrosEstado();
     if (_cursosLoadError) {
       container.innerHTML = `<div class="empty-state" style="margin-top:32px;">
         <div class="empty-state__icon"><svg class="ic ic--xl"><use href="#i-news"/></svg></div>
@@ -11394,6 +11555,7 @@ const Sections = (function(){
         </div>
         ${_bibTabsHTML()}
         <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-book-2"/></svg>Libros</div>
+        ${_bibRetosBannerHTML()}
         <div id="bib-libros-bloque">
           ${_libroDestacadoHTML(BIBLIOTECA_LIBROS[0])}
           <div class="bib-shelf-title"><span>Explora más libros</span><small>${Math.max(0, BIBLIOTECA_LIBROS.length - 1)} títulos de consulta</small></div>
@@ -11499,6 +11661,8 @@ const Sections = (function(){
         tab.classList.add('is-active');
         _bibAplicarFiltro(container, tab.dataset.bib);
       }));
+      container.querySelector('#bib-reto-ir')?.addEventListener('click', () => navigateToSection('retos'));
+      container.querySelector('#bib-reto-suscribir')?.addEventListener('click', () => window.__mostrarPaywallAlintec?.('Libros para miembros', 'Suscríbete, supera retos y desbloquea tu primer libro.'));
       container.querySelectorAll('.libro-feature, .libro-card').forEach(el => {
         el.addEventListener('click', () => window.__abrirLector(el.dataset.libro));
         el.addEventListener('keydown', e => { if (e.key === 'Enter') window.__abrirLector(el.dataset.libro); });
@@ -14552,7 +14716,8 @@ function iniciarAvisosPersonales() {
     certificado: { icono: 'i-certificate', color: '#34D399' },
     foro: { icono: 'i-messages', color: '#60A5FA' },
     logro: { icono: 'i-trophy', color: '#FBBF24' },
-    premio: { icono: 'i-crown', color: '#F59E0B' }
+    premio: { icono: 'i-crown', color: '#F59E0B' },
+    libro: { icono: 'i-book-2', color: '#34D399' }
   };
   try {
     const q = fs.query(fs.collection(fs.db, 'avisos', uid, 'items'), fs.orderBy('creadoEn', 'desc'), fs.limit(30));
@@ -17356,7 +17521,23 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .home-greeting__date-wrap{min-width:190px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}
 .home-greeting__date-wrap>span{display:block;margin-bottom:5px;color:var(--alintec-green-deep);font:800 7.5px 'JetBrains Mono',monospace;letter-spacing:1.2px}.home-greeting__date-wrap>div{display:flex;align-items:center;gap:7px}.home-greeting__date-wrap .ic{width:14px;height:14px;color:var(--alintec-green-deep)}
 .home-greeting__date{color:var(--text-2);font:700 9.5px 'JetBrains Mono',monospace;text-transform:capitalize}
+/* Libros que se ganan con retos */
+.libro-lock{position:absolute;top:10px;right:10px;z-index:5;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:rgba(18,38,27,.82);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.libro-lock .ic{width:15px;height:15px}
+.libro-feature.is-locked .libro-feature__cover,.libro-card.is-locked .libro-card__top{filter:saturate(.35) brightness(.8)}
+.libro-feature.is-locked .libro-feature__cta{background:var(--surface-3);color:var(--text-2);box-shadow:none}
+.libro-feature__cover,.libro-card__top{position:relative}
+.bib-reto{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:10px 0 18px;padding:16px 18px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+.bib-reto__ic{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:14px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+.bib-reto__ic .ic{width:19px;height:19px}
+.bib-reto__txt{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:3px}
+.bib-reto__txt strong{font:800 14.5px 'Plus Jakarta Sans',Inter,sans-serif;color:var(--text)}
+.bib-reto__txt span{font-size:12.5px;line-height:1.5;color:var(--text-2)}
+.bib-reto__bar{height:8px;margin-top:8px;overflow:hidden;border-radius:99px;background:var(--surface-3)}
+.bib-reto__bar i{display:block;height:100%;min-width:3px;border-radius:99px;background:var(--primary)}
+.bib-reto--ok{border-color:color-mix(in srgb,var(--primary) 30%,var(--border))}
 #continuar-widget.is-vacio{display:none!important}
+#continuar-widget.is-espera .continuar__barra,#continuar-widget.is-espera .continuar__barra-txt{display:none}
 #continuar-widget{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(290px,.82fr)!important;gap:16px!important;margin-bottom:30px!important;background:none!important;border:0!important;box-shadow:none!important}
 .home-course-hero.continuar__main{position:relative;isolation:isolate;min-height:440px;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:26px;background-color:#203746!important;background-image:url('assets/img/inicio/curso-seguridad-alimentaria-v1.png')!important;background-position:center!important;background-size:cover!important;box-shadow:0 20px 46px rgba(29,52,66,.18)!important}
 .home-course-hero__shade{position:absolute;z-index:-1;inset:0;background:rgba(20,48,33,.45)}
