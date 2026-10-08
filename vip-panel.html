@@ -3645,6 +3645,8 @@ if (window.__isDemoMode) {
     })();
 
     document.body.style.visibility = 'visible';
+    // Si quien entra es administrador, se muestra cómo volver al panel de administrador
+    setTimeout(() => { try { window.__montarBarraAdmin && window.__montarBarraAdmin(); } catch (e) { console.warn('barra admin:', e); } }, 200);
 
     // Cargar noticias reales del home (Firestore noticias_auto)
     setTimeout(()=>{ if(typeof window.__cargarNoticiasHome==='function') window.__cargarNoticiasHome(); }, 300);
@@ -7391,19 +7393,51 @@ const Sections = (function(){
     return Math.max(0, cursoUnlockDay(curso) - diasRuta);
   }
 
-  // Mostrar banner si está en modo preview (solo admins lo ven)
-  if (PREVIEW_AS_USER) {
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!window.UserState?.isAdmin) return;
-      const banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:9998;background:linear-gradient(135deg,#43A047,#9CCC65);color:#0A120C;padding:11px 18px;border-radius:13px;font-family:Inter,sans-serif;font-size:12.5px;font-weight:700;letter-spacing:-.1px;box-shadow:0 12px 28px rgba(67,160,71,.35);display:flex;align-items:center;gap:14px;';
-      banner.innerHTML = `
-        <span>Vista previa como usuario VIP · día ${calcularDiasMembresia()} de membresía</span>
-        <a href="?" style="background:#0A120C;color:#9CCC65;padding:6px 12px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.3px;">Salir del preview</a>
-      `;
-      document.body.appendChild(banner);
-    });
-  }
+  // Barra del administrador: quien administra puede ver el panel de usuario con su misma cuenta
+  // y siempre tiene a la vista cómo volver al panel de administrador (solo la ven los administradores).
+  window.__montarBarraAdmin = function () {
+    const S = window.UserState || {};
+    if (!S.isAdmin || document.getElementById('admin-volver-barra')) return;
+    if (!document.getElementById('admin-volver-css')) {
+      const st = document.createElement('style');
+      st.id = 'admin-volver-css';
+      st.textContent = '#admin-volver-barra{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:#173427;color:#EAF4EC;font:600 12.5px/1.35 Inter,system-ui,sans-serif;position:relative;z-index:120}'
+        + '#admin-volver-barra .avb__sub{color:#9FC4AB;font-weight:500}'
+        + '#admin-volver-barra .avb__acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}'
+        + '#admin-volver-barra a{text-decoration:none;white-space:nowrap;border-radius:999px;padding:6px 12px;font-weight:700;font-size:12px}'
+        + '#admin-volver-barra .avb__alt{color:#CFE5D6;border:1px solid rgba(207,229,214,.35)}'
+        + '#admin-volver-barra .avb__back{background:#fff;color:#173427}'
+        + '@media(max-width:600px){#admin-volver-barra{justify-content:center;text-align:center}}';
+      document.head.appendChild(st);
+    }
+    const comoMiembro = new URLSearchParams(location.search).get('como') === 'user';
+    const barra = document.createElement('div');
+    barra.id = 'admin-volver-barra';
+    barra.setAttribute('role', 'region');
+    barra.setAttribute('aria-label', 'Vista de administrador');
+    let dia = '';
+    try { if (comoMiembro && typeof calcularDiasMembresia === 'function') dia = ' · día ' + calcularDiasMembresia() + ' de membresía'; } catch (e) { dia = ''; }
+    barra.innerHTML = '<span><strong>' + (comoMiembro ? 'Vista previa como miembro VIP' : 'Vista de administrador') + '</strong>'
+      + '<span class="avb__sub">' + (comoMiembro ? ' · así lo ve un miembro' + dia : ' · ves todo desbloqueado') + '</span></span>'
+      + '<span class="avb__acc"><a class="avb__alt" href="' + (comoMiembro ? 'vip-panel.html' : 'vip-panel.html?como=user') + '">' + (comoMiembro ? 'Ver como administrador' : 'Ver como miembro VIP') + '</a>'
+      + '<a class="avb__back" href="vip-admin.html">← Volver al panel de administrador</a></span>';
+    document.body.insertBefore(barra, document.body.firstChild);
+    // También en el menú lateral y en el menú móvil, junto a "Cerrar sesión"
+    const lateral = document.getElementById('btn-logout');
+    if (lateral && !document.getElementById('btn-volver-admin')) {
+      const a = document.createElement('a');
+      a.className = 'nav-item'; a.id = 'btn-volver-admin'; a.href = 'vip-admin.html';
+      a.innerHTML = '<svg class="ic"><use href="#i-shield-check"/></svg>Volver al panel de administrador';
+      lateral.parentNode.insertBefore(a, lateral);
+    }
+    const movil = document.getElementById('drawer-logout-btn');
+    if (movil && !document.getElementById('drawer-volver-admin')) {
+      const a = document.createElement('a');
+      a.className = 'mobile-drawer__item'; a.id = 'drawer-volver-admin'; a.href = 'vip-admin.html';
+      a.innerHTML = '<svg class="ic"><use href="#i-shield-check"/></svg>Volver al panel de administrador';
+      movil.parentNode.insertBefore(a, movil);
+    }
+  };
 
   // ═══════════════════════════════════════════════════════════════
   // 📊 PROGRESO POR USUARIO · localStorage (Sprint 7)

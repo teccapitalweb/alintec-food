@@ -1176,6 +1176,46 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 :root[data-theme="night"] .news-template-picker{background:#101B27;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2A39;border-color:rgba(112,175,204,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style id="admin-movil">
+/* Barra superior: botón de cerrar sesión solo en teléfono y tableta (en computadora está en el menú lateral) */
+.topbar .topbar__salir{display:none}
+.topbar .topbar__salir{color:#DC2626}
+/* Menú "Más" */
+.mobile-drawer{display:none}
+@media (max-width:880px){
+  .topbar .topbar__salir{display:flex;width:38px;height:38px;padding:0;align-items:center;justify-content:center;border-radius:12px}
+  .topbar__right{display:flex;align-items:center;gap:8px}
+  .mobile-nav__item{flex:1 1 0;min-width:0;padding:5px 2px;font-size:9px;letter-spacing:.1px;white-space:nowrap}
+  .mobile-nav__item.is-active{background:color-mix(in srgb,var(--primary) 12%,transparent)}
+  .mobile-nav__item#mobile-nav-more{cursor:pointer}
+}
+@media (max-width:360px){
+  .mobile-nav__item{font-size:8.5px;letter-spacing:0}
+  .mobile-nav__item .ic{width:17px;height:17px}
+}
+@media (max-width:880px){
+  .mobile-drawer{display:block;position:fixed;inset:0;z-index:9500;visibility:hidden;pointer-events:none}
+  .mobile-drawer.is-open{visibility:visible;pointer-events:auto}
+  .mobile-drawer__overlay{position:absolute;inset:0;background:rgba(7,11,18,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .3s ease}
+  .mobile-drawer.is-open .mobile-drawer__overlay{opacity:1}
+  .mobile-drawer__panel{position:absolute;top:0;right:0;bottom:0;width:88%;max-width:360px;background:var(--surface);border-left:1px solid var(--border-2);transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.8,.25,1);display:flex;flex-direction:column;box-shadow:-24px 0 60px rgba(0,0,0,.35)}
+  .mobile-drawer.is-open .mobile-drawer__panel{transform:translateX(0)}
+  .mobile-drawer__header{display:flex;align-items:center;justify-content:space-between;padding:calc(16px + env(safe-area-inset-top)) 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .mobile-drawer__brand{display:flex;align-items:center;gap:11px}
+  .mobile-drawer__close{width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border-2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .mobile-drawer__close .ic{width:18px;height:18px}
+  .mobile-drawer__sections{flex:1;overflow-y:auto;padding:12px 12px calc(28px + env(safe-area-inset-bottom))}
+  .mobile-drawer__label{margin:16px 0 4px;padding:0 12px;font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-3)}
+  .mobile-drawer__label:first-child{margin-top:4px}
+  .mobile-drawer__item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;color:var(--text-2);font-size:14px;font-weight:500;cursor:pointer;text-decoration:none}
+  .mobile-drawer__item .ic{width:18px;height:18px;flex-shrink:0;color:var(--text-3)}
+  .mobile-drawer__item:active{background:var(--surface-2)}
+  .mobile-drawer__item.is-active{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);font-weight:700}
+  .mobile-drawer__item.is-active .ic{color:var(--primary)}
+  .mobile-drawer__item .nav-item__badge{margin-left:auto}
+  .mobile-drawer__item--salir,.mobile-drawer__item--salir .ic{color:#EF4444}
+}
+</style>
 </head>
 <body style="visibility:hidden">
 
@@ -1279,6 +1319,7 @@ window.__signOut = async () => {
 <symbol id="i-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
 <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
 <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></symbol>
 <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.3A7.85 7.85 0 0 0 12.05 4a7.94 7.94 0 0 0-6.88 11.9L4 20l4.2-1.1a7.93 7.93 0 0 0 3.84.98h.01c4.38 0 7.94-3.56 7.94-7.94c0-2.12-.82-4.11-2.39-5.61zm-5.55 12.21h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14l-2.5.65l.67-2.44l-.16-.25a6.59 6.59 0 0 1-1.01-3.51c0-3.64 2.96-6.6 6.6-6.6a6.59 6.59 0 0 1 6.6 6.6c0 3.64-2.96 6.6-6.6 6.6zm3.62-4.94c-.2-.1-1.17-.58-1.35-.64c-.18-.07-.31-.1-.45.1c-.13.2-.51.64-.63.78c-.12.13-.23.15-.43.05c-.2-.1-.84-.31-1.61-.99c-.6-.53-1-1.19-1.12-1.39c-.12-.2-.01-.31.09-.41c.09-.09.2-.23.3-.35c.1-.12.13-.2.2-.33c.07-.13.03-.25-.02-.35c-.05-.1-.45-1.09-.62-1.5c-.16-.39-.33-.34-.45-.34c-.12-.01-.25-.01-.38-.01c-.13 0-.35.05-.53.25c-.18.2-.69.68-.69 1.65c0 .97.71 1.92.81 2.05c.1.13 1.4 2.13 3.39 2.99c.47.2.84.32 1.13.41c.48.15.91.13 1.26.08c.38-.06 1.17-.48 1.34-.94c.16-.46.16-.86.12-.94c-.05-.08-.18-.13-.38-.23z"/></symbol>
 <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8A4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></symbol>
 </defs>
@@ -1333,6 +1374,7 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Cuenta</div>
       <a class="nav-item" data-section="config"><svg class="ic"><use href="#i-settings"/></svg>Configuración</a>
+      <a class="nav-item" data-section="verpanel"><svg class="ic"><use href="#i-eye"/></svg>Ver panel de usuario</a>
       <a class="nav-item" id="btn-logout"><svg class="ic"><use href="#i-logout"/></svg>Cerrar sesión</a>
     </div>
   </aside>
@@ -1343,6 +1385,7 @@ window.__signOut = async () => {
       <span class="topbar__pill">Modo administrador</span>
       <div class="topbar__right">
         <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <button class="icon-btn topbar__salir" id="btn-logout-top" type="button" aria-label="Cerrar sesión" title="Cerrar sesión"><svg class="ic"><use href="#i-logout"/></svg></button>
         <div class="avatar">
           <div class="avatar__pic">TC</div>
           <div>
@@ -1360,10 +1403,26 @@ window.__signOut = async () => {
   <nav class="mobile-nav">
     <a class="mobile-nav__item is-active" data-section="dashboard"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
     <a class="mobile-nav__item" data-section="cursos"><svg class="ic"><use href="#i-book"/></svg>Cursos</a>
-    <a class="mobile-nav__item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Vivo</a>
+    <a class="mobile-nav__item" data-section="metricas" data-sections="encuestas metricas pruebas"><svg class="ic"><use href="#i-chart-bar"/></svg>Marketing</a>
     <a class="mobile-nav__item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros</a>
     <a class="mobile-nav__item" data-section="config"><svg class="ic"><use href="#i-settings"/></svg>Config</a>
+    <a class="mobile-nav__item" id="mobile-nav-more" role="button" tabindex="0" aria-haspopup="dialog"><svg class="ic"><use href="#i-menu"/></svg>Más</a>
   </nav>
+
+  <!-- MENÚ "MÁS" (teléfono y tableta): se arma al abrirlo con las mismas secciones del menú lateral -->
+  <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <div class="mobile-drawer__overlay" id="mobile-drawer-overlay"></div>
+    <div class="mobile-drawer__panel" role="dialog" aria-label="Todas las secciones">
+      <div class="mobile-drawer__header">
+        <div class="mobile-drawer__brand">
+          <div style="width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid var(--border)"><img src="assets/img/alintec-logo.png" alt="Alintec Food" style="width:100%;height:100%;object-fit:contain;display:block"></div>
+          <div><div style="font:800 16px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.3px;line-height:1.1">Alintec Food</div><div style="margin-top:3px;font:700 9px 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3)">Modo administrador</div></div>
+        </div>
+        <button class="mobile-drawer__close" id="mobile-drawer-close" type="button" aria-label="Cerrar"><svg class="ic"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="mobile-drawer__sections" id="mobile-drawer-sections"></div>
+    </div>
+  </div>
 
 </div>
 
@@ -6371,6 +6430,21 @@ const Pages={
     }
   },
 
+  // ─────────── VER PANEL DE USUARIO · revisar cómo lo ve un miembro sin cambiar de cuenta ───────────
+  verpanel(p){
+    p.innerHTML = '<div class="fade-up">'
+      + '<div class="sec-hero"><span class="sec-hero__eyebrow">Cuenta</span><h1 class="sec-hero__title">Ver panel de usuario</h1>'
+      + '<p class="sec-hero__sub">Entra al panel que ven tus miembros con tu misma cuenta, sin cerrar sesión ni cambiar de correo. Sirve para comprobar que un curso, un material o una clase se subió bien. En el panel de usuario siempre tendrás a la vista el botón para volver aquí.</p></div>'
+      + '<div class="dash-grid">'
+      + '<div class="dash-card"><div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-eye"/></svg>Verlo todo abierto</div></div>'
+      + '<p style="font-size:13px;color:var(--text-2);line-height:1.6;margin:0 0 14px">Ves el panel con <strong>todos los cursos desbloqueados</strong>, como administrador. Es lo más útil para revisar que un curso nuevo quedó bien: títulos, videos, materiales y orden de las clases.</p>'
+      + '<a class="btn btn--accent" href="vip-panel.html">Abrir el panel de usuario<svg class="ic"><use href="#i-arrow-right"/></svg></a></div>'
+      + '<div class="dash-card"><div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-user"/></svg>Verlo como un miembro VIP</div></div>'
+      + '<p style="font-size:13px;color:var(--text-2);line-height:1.6;margin:0 0 14px">Ves el panel <strong>tal como lo vería un miembro</strong>, con los cursos que se van desbloqueando por fechas. Sirve para comprobar el calendario de desbloqueo y qué ve realmente la gente.</p>'
+      + '<a class="btn btn--ghost" href="vip-panel.html?como=user">Abrir como miembro VIP<svg class="ic"><use href="#i-arrow-right"/></svg></a></div>'
+      + '</div></div>';
+  },
+
   // ─────────── NOTICIAS Y DATOS CURIOSOS · publicar noticias y administrar el banco ───────────
   noticias(p){
     const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -7045,7 +7119,7 @@ function dirAdminCargar(){
 // ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
 // de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
 window.__CLASES_EN_VIVO_ACTIVAS = false;
-const SECCIONES_VALIDAS = ['dashboard','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
+const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
@@ -7059,6 +7133,7 @@ function navigate(section, opts){
   if(section!=='directorio' && typeof _dirAdminUnsub==='function'){ _dirAdminUnsub(); _dirAdminUnsub=null; }
   document.querySelectorAll('.nav-item, .mobile-nav__item').forEach(n=>n.classList.remove('is-active'));
   document.querySelectorAll(`[data-section="${section}"]`).forEach(n=>n.classList.add('is-active'));
+  document.querySelectorAll('.mobile-nav__item[data-sections]').forEach(n=>{ if((' '+n.dataset.sections+' ').includes(' '+section+' ')) n.classList.add('is-active'); else if(n.dataset.section!==section) n.classList.remove('is-active'); });
   const p=document.getElementById('page');
   const fn=Pages[section]||Pages.dashboard;
   fn(p);
@@ -7359,11 +7434,46 @@ window.AdminStore = AdminStore;
 document.addEventListener('DOMContentLoaded',()=>{
   Theme.init();
   document.getElementById('theme-toggle').addEventListener('click',()=>Theme.toggle());
+  function cerrarSesionAdmin(){ if(confirm('¿Cerrar sesión?')){AdminStore.destroy();if(window.__signOut)window.__signOut();else Toast.info('Cerrando…');} }
   document.querySelectorAll('.nav-item, .mobile-nav__item').forEach(b=>b.addEventListener('click',e=>{
     e.preventDefault();
-    if(b.id==='btn-logout'){if(confirm('¿Cerrar sesión?')){AdminStore.destroy();if(window.__signOut)window.__signOut();else Toast.info('Cerrando…');}return;}
+    if(b.id==='btn-logout'){cerrarSesionAdmin();return;}
     if(b.dataset.section)navigate(b.dataset.section);
   }));
+  document.getElementById('btn-logout-top')?.addEventListener('click',cerrarSesionAdmin);
+
+  // ── Menú "Más" del teléfono: reúne todas las secciones del menú lateral ──
+  const cajon = document.getElementById('mobile-drawer');
+  const cajonSecciones = document.getElementById('mobile-drawer-sections');
+  function cerrarCajon(){ if(!cajon)return; cajon.classList.remove('is-open'); cajon.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+  function abrirCajon(){
+    if(!cajon||!cajonSecciones)return;
+    const activa = (document.querySelector('.nav-item.is-active[data-section]')||{dataset:{}}).dataset.section;
+    cajonSecciones.innerHTML = '';
+    document.querySelectorAll('.sidebar .nav-section').forEach(sec=>{
+      const rotulo = sec.querySelector('.nav-label');
+      if(rotulo){ const l=document.createElement('div'); l.className='mobile-drawer__label'; l.textContent=rotulo.textContent; cajonSecciones.appendChild(l); }
+      sec.querySelectorAll('.nav-item').forEach(it=>{
+        const a=document.createElement('a');
+        a.className='mobile-drawer__item'+(it.id==='btn-logout'?' mobile-drawer__item--salir':'')+(it.dataset.section&&it.dataset.section===activa?' is-active':'');
+        a.setAttribute('role','button'); a.setAttribute('tabindex','0');
+        a.innerHTML = it.innerHTML; // icono, texto y contador actuales (los ids se quitan para no duplicarlos)
+        a.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+        a.addEventListener('click',e=>{
+          e.preventDefault(); cerrarCajon();
+          if(it.id==='btn-logout'){ setTimeout(cerrarSesionAdmin,200); return; }
+          if(it.dataset.section) navigate(it.dataset.section);
+        });
+        cajonSecciones.appendChild(a);
+      });
+    });
+    cajon.classList.add('is-open'); cajon.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+  }
+  document.getElementById('mobile-nav-more')?.addEventListener('click',e=>{e.preventDefault();abrirCajon();});
+  document.getElementById('mobile-nav-more')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirCajon();}});
+  document.getElementById('mobile-drawer-overlay')?.addEventListener('click',cerrarCajon);
+  document.getElementById('mobile-drawer-close')?.addEventListener('click',cerrarCajon);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cajon&&cajon.classList.contains('is-open'))cerrarCajon();});
   document.getElementById('modal-close').addEventListener('click',()=>Modal.close());
   document.getElementById('modal-backdrop').addEventListener('click',e=>{if(e.target.id==='modal-backdrop')Modal.close();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')Modal.close();});
