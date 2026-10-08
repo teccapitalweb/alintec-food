@@ -1401,8 +1401,12 @@ document.getElementById('btn-register').addEventListener('click', async () => {
       let enviadoPorBackend = false;
       try {
         const tk = await cred.user.getIdToken();
+        // Origen del primer contacto (p. ej. Facebook): el servidor lo asocia a la cuenta nueva para las métricas
+        let origen = null;
+        try { origen = JSON.parse(sessionStorage.getItem('alintec_origen_v1') || localStorage.getItem('alintec_origen_v1') || 'null'); } catch (_) { origen = null; }
         const rv = await fetch('https://alintec-webhook-production.up.railway.app/api/v2/auth/send-verification', {
-          method: 'POST', headers: { 'Authorization': 'Bearer ' + tk }
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' },
+          body: JSON.stringify(origen ? { origen } : {})
         });
         enviadoPorBackend = rv.ok;
       } catch (_) { /* se usa el respaldo */ }
@@ -1638,6 +1642,6 @@ document.getElementById('forgot-link').addEventListener('click', async (e) => {
 })();
 </script>
   <script src="assets/js/cookie-consent.js" defer></script>
-  <script src="assets/js/visitas.js?v=20261007-1" data-pagina="acceso" defer></script>
+  <script src="assets/js/visitas.js?v=20261007-2" data-pagina="acceso" defer></script>
 </body>
 </html>

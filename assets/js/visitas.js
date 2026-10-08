@@ -4,6 +4,9 @@
    - No cuenta pruebas locales (solo alitecfood.com) ni a quien activó "No rastrear".
    - En el panel solo se envía cuando hay una sesión iniciada; así el administrador
      ve qué miembros entraron. Las personas sin sesión se cuentan en la página de acceso.
+   - Origen de los miembros: se recuerda por qué enlace llegó la persona (p. ej. Facebook).
+     Mientras dura la pestaña se guarda en sessionStorage; en el dispositivo solo se conserva
+     si aceptó las cookies de medición. Al crear la cuenta, el servidor lo asocia a esa cuenta.
    Uso:  <script src="assets/js/visitas.js" data-pagina="landing" defer></script>
          (páginas: landing, acceso, panel; el panel detecta solo el modo demo)
 */
@@ -17,6 +20,8 @@
 
   var URL_API = 'https://alintec-webhook-production.up.railway.app/api/v2/visita';
   var VENTANA_MS = 30 * 60 * 1000;
+  var CLAVE_ORIGEN = 'alintec_origen_v1';
+  var CLAVE_COOKIES = 'alintec_cookies_v1';
   var etiqueta = document.currentScript && document.currentScript.getAttribute('data-pagina');
   var params = new URLSearchParams(location.search);
   var pagina = etiqueta === 'panel' && params.get('modo') === 'demo' ? 'demo' : etiqueta;
@@ -32,16 +37,53 @@
     try { sessionStorage.setItem('alintec_vis_' + pagina, String(Date.now())); } catch (e) { /* modo privado */ }
   }
 
+  // ── Origen del primer contacto ──
+  function medicionAceptada() {
+    try { var c = JSON.parse(localStorage.getItem(CLAVE_COOKIES) || 'null'); return !!(c && c.medicion === true); } catch (e) { return false; }
+  }
+  function leerOrigen() {
+    var crudo = null;
+    try { crudo = localStorage.getItem(CLAVE_ORIGEN); } catch (e) { /* bloqueado */ }
+    if (!crudo) { try { crudo = sessionStorage.getItem(CLAVE_ORIGEN); } catch (e) { /* bloqueado */ } }
+    try { var o = JSON.parse(crudo || 'null'); return o && typeof o === 'object' ? o : null; } catch (e) { return null; }
+  }
+  function guardarOrigen(o) {
+    var texto = JSON.stringify(o);
+    try { sessionStorage.setItem(CLAVE_ORIGEN, texto); } catch (e) { /* modo privado */ }
+    if (medicionAceptada()) { try { localStorage.setItem(CLAVE_ORIGEN, texto); } catch (e) { /* modo privado */ } }
+  }
+  function capturarOrigen() {
+    if (leerOrigen()) return;
+    var ref = document.referrer || '';
+    var utm = (params.get('utm_source') || '').slice(0, 40);
+    // Venir de otra página del propio sitio no es un origen: se espera al primer contacto externo
+    var interno = false;
+    try { interno = !!ref && /(^|\.)alitecfood\.com$/i.test(new URL(ref).hostname); } catch (e) { interno = false; }
+    if (interno && !utm) return;
+    guardarOrigen({ ref: ref.slice(0, 300), utm: utm, ua: (navigator.userAgent || '').slice(0, 300), t: Date.now() });
+  }
+  // Si acepta las cookies de medición más tarde, el origen ya capturado pasa a quedarse en el dispositivo
+  document.addEventListener('alintec-cookies', function (e) {
+    if (e && e.detail && e.detail.medicion === true) {
+      var o = leerOrigen();
+      if (o) { try { localStorage.setItem(CLAVE_ORIGEN, JSON.stringify(o)); } catch (err) { /* modo privado */ } }
+    }
+  });
+
   function enviar(token) {
     if (yaContada()) return;
     marcar();
     var cabeceras = { 'Content-Type': 'application/json' };
     if (token) cabeceras.Authorization = 'Bearer ' + token;
     var cuerpo = { pagina: pagina, ref: document.referrer || '', utm: params.get('utm_source') || '' };
+    // Solo las visitas con sesión llevan el origen: es lo que se asocia a la cuenta
+    if (token) { var origen = leerOrigen(); if (origen) cuerpo.origen = origen; }
     try {
       fetch(URL_API, { method: 'POST', headers: cabeceras, body: JSON.stringify(cuerpo), keepalive: true }).catch(function () {});
     } catch (e) { /* las métricas nunca deben estorbar */ }
   }
+
+  if (pagina !== 'panel') capturarOrigen();
 
   if (pagina === 'panel') {
     // Espera a que Firebase confirme la sesión (hasta ~12 s) para identificar al miembro

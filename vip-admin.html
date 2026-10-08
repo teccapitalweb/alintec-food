@@ -1771,340 +1771,413 @@ const Pages={
   },
 
   // ─── Pruebas gratuitas: cuántos eligen curso, cuáles y cuántos terminan pagando ───
-  // ─────────── MÉTRICAS DE VISITAS · cuánta gente entra, qué días, desde dónde y quiénes ───────────
+  // ─────────── MÉTRICAS DE VISITAS · tráfico, origen de los miembros, países e historial ───────────
   metricas(p){
     const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     const num = n => (Number(n) || 0).toLocaleString('es-MX');
     const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     const NOMBRE_PAGINA = { landing: 'Página principal', acceso: 'Inicio de sesión', panel: 'Panel de miembros', demo: 'Demo gratuita' };
-    const NOMBRE_FUENTE = { directo: 'Directo (escribió la dirección)', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
+    const NOMBRE_FUENTE = { directo: 'Directo', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
+    const COLOR_FUENTE = { directo: '#94A3B8', interno: '#CBD5E1', google: '#4285F4', bing: '#00809D', duckduckgo: '#DE5833', yahoo: '#7E1FFF', facebook: '#1877F2', instagram: '#E1306C', whatsapp: '#25D366', linkedin: '#0A66C2', x: '#64748B', youtube: '#FF0000', tiktok: '#14B8A6', correo: '#F59E0B', otros: '#A8A29E' };
     const NOMBRE_DISP = { movil: 'Teléfono', tablet: 'Tableta', computadora: 'Computadora' };
     const COLOR_DISP = { movil: '#58B71B', tablet: '#F7941D', computadora: '#3B82F6' };
-    const REDES_SOCIALES = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'linkedin', 'x'];
+    const VERDE = '#58B71B', VERDE_OSC = '#2F7D32', AZUL = '#3B82F6';
+    const RANGOS = [['semana', 'Semana'], ['30', '30 días'], ['90', '90 días'], ['365', '12 meses'], ['todo', 'Todo']];
     const nombresPaises = (() => { try { return new Intl.DisplayNames(['es'], { type: 'region' }); } catch (e) { return { of: c => c }; } })();
     const nombrePais = c => (c === 'ZZ' ? 'No identificado' : (nombresPaises.of(c) || c));
 
-    if (!document.getElementById('mx-estilos')) {
+    // Gráficas anteriores de esta pantalla (si se vuelve a entrar) se destruyen para no acumularlas
+    (Pages._mxCharts || []).forEach(c => { try { c.destroy(); } catch (e) {} });
+    Pages._mxCharts = [];
+
+    if (!document.getElementById('mx2-estilos')) {
       const st = document.createElement('style');
-      st.id = 'mx-estilos';
+      st.id = 'mx2-estilos';
       st.textContent = `
-.mx-bar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.mx-nav{display:flex;align-items:center;gap:8px}
-.mx-nav button{width:38px;height:38px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:16px;font-weight:700;transition:.15s}
-.mx-nav button:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
-.mx-nav button:disabled{opacity:.35;cursor:default}
-.mx-nav__sem{min-width:196px;text-align:center;font:700 14px 'Plus Jakarta Sans','Inter',sans-serif}
-.mx-nav__sem small{display:block;margin-top:2px;font:600 11px 'JetBrains Mono',monospace;color:var(--text-3);letter-spacing:.4px}
-.mx-chip{border:1px solid var(--border);background:var(--surface);color:var(--text-2);border-radius:999px;padding:8px 14px;font:700 12px Inter,sans-serif;cursor:pointer}
-.mx-chip:hover{border-color:var(--primary);color:var(--primary)}
-.mx-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px 22px}
-.mx-card h3{margin:0;font:700 15px 'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:-.2px}
-.mx-card .mx-sub{margin:4px 0 16px;font-size:12px;color:var(--text-3);line-height:1.5}
-.mx-grid{display:grid;gap:16px;margin-top:16px}
-.mx-grid--2{grid-template-columns:1.6fr 1fr}
-.mx-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.mx-delta{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:2px 8px;border-radius:999px;font:700 11px 'JetBrains Mono',monospace}
-.mx-delta--up{background:color-mix(in srgb,#10B981 16%,transparent);color:#0E9F6E}
-.mx-delta--down{background:color-mix(in srgb,#EF4444 14%,transparent);color:#DC2626}
-.mx-delta--eq{background:var(--surface-2);color:var(--text-3)}
-.mx-legend{display:flex;gap:16px;margin:0 0 14px;font-size:12px;color:var(--text-2);flex-wrap:wrap}
-.mx-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.mx-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end;height:250px;padding-top:6px;border-bottom:1px solid var(--border)}
-.mx-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;border-radius:12px;padding:0 2px;transition:background .15s}
-.mx-col:hover{background:color-mix(in srgb,var(--primary) 6%,transparent)}
-.mx-col__bars{display:flex;align-items:flex-end;justify-content:center;gap:5px;width:100%;height:calc(100% - 22px)}
-.mx-bar{position:relative;flex:1 1 0;max-width:30px;min-height:3px;height:0;border-radius:8px 8px 3px 3px;transition:height .7s cubic-bezier(.2,.8,.25,1)}
-.mx-bar--v{background:linear-gradient(180deg,#7BD33A,#3E8F18)}
-.mx-bar--u{background:linear-gradient(180deg,#60A5FA,#2563EB)}
-.mx-bar b{position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);font:700 11px 'JetBrains Mono',monospace;color:var(--text-2);white-space:nowrap}
-.mx-col--hoy .mx-col__dia{color:var(--primary);font-weight:800}
-.mx-col--futuro{opacity:.4}
-.mx-xs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-top:8px}
-.mx-xs div{text-align:center;font:600 12px Inter,sans-serif;color:var(--text-3);line-height:1.3}
-.mx-xs div b{display:block;font-size:12.5px;color:var(--text)}
-.mx-xs .mx-col--hoy{color:var(--primary)}.mx-xs .mx-col--hoy b{color:var(--primary)}
-.mx-best{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);font:700 12px Inter,sans-serif}
-.mx-hist{display:flex;align-items:flex-end;gap:6px;height:120px}
-.mx-hist button{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;border:0;background:none;padding:0;cursor:pointer}
-.mx-hist i{display:block;width:100%;min-height:3px;border-radius:7px 7px 3px 3px;background:color-mix(in srgb,var(--primary) 30%,var(--surface-2));transition:height .6s cubic-bezier(.2,.8,.25,1),background .15s}
-.mx-hist button:hover i{background:color-mix(in srgb,var(--primary) 60%,var(--surface-2))}
-.mx-hist button.is-sel i{background:linear-gradient(180deg,#7BD33A,#3E8F18)}
-.mx-hist span{font:600 10px 'JetBrains Mono',monospace;color:var(--text-3);text-align:center;white-space:nowrap}
-.mx-hist button.is-sel span{color:var(--primary);font-weight:800}
-.mx-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;margin-bottom:12px}
-.mx-row__t{font-size:13px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mx-row__n{font:700 12px 'JetBrains Mono',monospace;color:var(--text-2)}
-.mx-row__b{grid-column:1/-1;height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
-.mx-row__b i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#58B71B,#9CCC65);transition:width .7s cubic-bezier(.2,.8,.25,1)}
-.mx-dona{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
-.mx-dona__aro{position:relative;width:132px;height:132px;border-radius:50%;flex:none}
-.mx-dona__aro::after{content:'';position:absolute;inset:24px;border-radius:50%;background:var(--surface)}
-.mx-dona__c{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 20px 'Plus Jakarta Sans',sans-serif}
-.mx-dona__c small{font:600 10px 'JetBrains Mono',monospace;color:var(--text-3);letter-spacing:.5px}
-.mx-dona__lg{display:flex;flex-direction:column;gap:9px;font-size:13px}
-.mx-dona__lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
-.mx-horas{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px}
-.mx-horas i{display:block;aspect-ratio:1/1.5;border-radius:5px;background:var(--surface-2)}
-.mx-horas-lbl{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));margin-top:6px;font:600 10px 'JetBrains Mono',monospace;color:var(--text-3)}
-.mx-quien{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
-.mx-quien:last-child{border-bottom:0}
-.mx-quien__av{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;color:#fff;font:800 13px Inter,sans-serif;background:linear-gradient(135deg,#58B71B,#2F7D32)}
-.mx-quien__m{flex:1;min-width:0}
-.mx-quien__n{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mx-quien__e{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mx-quien__d{display:flex;gap:3px}
-.mx-quien__d i{width:9px;height:9px;border-radius:3px;background:var(--surface-2);border:1px solid var(--border)}
-.mx-quien__d i.on{background:var(--primary);border-color:var(--primary)}
-.mx-quien__u{text-align:right;font:600 11px 'JetBrains Mono',monospace;color:var(--text-3);min-width:94px}
-.mx-vacio{padding:34px 16px;text-align:center;color:var(--text-3);font-size:13px;line-height:1.6}
-@media(max-width:900px){.mx-grid--2,.mx-grid--3{grid-template-columns:1fr}.mx-chart{gap:6px;height:210px}.mx-bar b{font-size:10px}.mx-quien__d{display:none}}
-@media(max-width:520px){.mx-nav__sem{min-width:150px;font-size:13px}.mx-quien{flex-wrap:wrap}.mx-quien__u{min-width:0;width:100%;text-align:left;padding-left:50px}}
+.mx2{--mx-g:#58B71B;--mx-line:var(--border);max-width:1240px}
+.mx2 *{box-sizing:border-box}
+.mx2-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.mx2-hero h1{margin:0;font:800 30px/1.1 'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:-.8px}
+.mx2-hero p{margin:8px 0 0;max-width:640px;font-size:13.5px;line-height:1.6;color:var(--text-2)}
+.mx2-eyebrow{display:block;margin-bottom:8px;font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:1.6px;text-transform:uppercase;color:var(--primary)}
+.mx2-estado{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font:600 12px Inter,sans-serif;color:var(--text-2)}
+.mx2-estado i{width:9px;height:9px;border-radius:50%;background:#94A3B8}
+.mx2-estado.ok i{background:#22C55E;box-shadow:0 0 0 4px rgba(34,197,94,.18)}
+.mx2-estado.error i{background:#EF4444;box-shadow:0 0 0 4px rgba(239,68,68,.16)}
+.mx2-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:10px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+.mx2-seg{display:flex;gap:4px;padding:4px;border-radius:13px;background:var(--surface-2);flex-wrap:wrap}
+.mx2-seg button{border:0;background:transparent;color:var(--text-2);padding:8px 15px;border-radius:10px;font:700 12.5px Inter,sans-serif;cursor:pointer;transition:.18s}
+.mx2-seg button:hover{color:var(--text)}
+.mx2-seg button.on{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.09)}
+.mx2-semnav{display:flex;align-items:center;gap:8px}
+.mx2-semnav button{width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:17px;font-weight:700;cursor:pointer}
+.mx2-semnav button:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.mx2-semnav button:disabled{opacity:.35;cursor:default}
+.mx2-semnav span{min-width:150px;text-align:center;font:700 13px 'Plus Jakarta Sans',Inter,sans-serif}
+.mx2-semnav small{display:block;font:600 10px 'JetBrains Mono',monospace;color:var(--text-3);letter-spacing:.6px}
+.mx2-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);padding:9px 14px;border-radius:11px;font:700 12.5px Inter,sans-serif;cursor:pointer}
+.mx2-btn:hover{border-color:var(--primary);color:var(--primary)}
+.mx2-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px;margin-bottom:16px}
+.mx2-kpi{position:relative;overflow:hidden;padding:18px 20px 14px;border:1px solid var(--border);border-radius:20px;background:var(--surface)}
+.mx2-kpi::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--c)}
+.mx2-kpi__l{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3)}
+.mx2-kpi__v{margin-top:8px;font:800 34px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-1px}
+.mx2-kpi__s{margin-top:6px;font-size:12px;color:var(--text-3)}
+.mx2-kpi svg{display:block;width:100%;height:34px;margin-top:10px}
+.mx2-d{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:2px 9px;border-radius:999px;font:700 11px 'JetBrains Mono',monospace}
+.mx2-d.up{background:rgba(16,185,129,.14);color:#0E9F6E}.mx2-d.down{background:rgba(239,68,68,.13);color:#DC2626}.mx2-d.eq{background:var(--surface-2);color:var(--text-3)}
+.mx2-grid{display:grid;gap:16px;margin-bottom:16px}
+.mx2-g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.mx2-g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mx2-card{min-width:0;padding:20px 22px;border:1px solid var(--border);border-radius:22px;background:var(--surface)}
+.mx2-card h3{margin:0;font:700 16px 'Plus Jakarta Sans',Inter,sans-serif;letter-spacing:-.3px}
+.mx2-sub{margin:5px 0 14px;font-size:12.5px;line-height:1.55;color:var(--text-3)}
+.mx2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mx2-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-2)}
+.mx2-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.mx2-cv{position:relative;width:100%}
+.mx2-hero-card{border-color:color-mix(in srgb,var(--primary) 35%,var(--border));background:linear-gradient(150deg,color-mix(in srgb,var(--primary) 7%,var(--surface)),var(--surface) 60%)}
+.mx2-top{display:flex;align-items:center;gap:14px;margin:4px 0 16px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+.mx2-top b{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;flex:none;color:#fff;font:800 18px Inter,sans-serif}
+.mx2-top div{font-size:13px;line-height:1.5;color:var(--text-2)}
+.mx2-top strong{color:var(--text);font-size:15px}
+.mx2-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px}
+.mx2-tbl th{padding:6px 8px;text-align:right;font:700 10px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);border-bottom:1px solid var(--border)}
+.mx2-tbl th:first-child,.mx2-tbl td:first-child{text-align:left}
+.mx2-tbl td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.mx2-tbl tr:last-child td{border-bottom:0}
+.mx2-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:9px;vertical-align:-1px}
+.mx2-pill{display:inline-block;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);font:700 11px 'JetBrains Mono',monospace}
+.mx2-heat{display:grid;grid-template-columns:36px repeat(24,minmax(0,1fr));gap:3px;align-items:center}
+.mx2-heat span{font:600 10px 'JetBrains Mono',monospace;color:var(--text-3)}
+.mx2-heat i{display:block;aspect-ratio:1/1;border-radius:4px;background:var(--surface-2)}
+.mx2-hl{display:grid;grid-template-columns:36px repeat(24,minmax(0,1fr));gap:3px;margin-top:8px;font:600 10px 'JetBrains Mono',monospace;color:var(--text-3)}
+.mx2-hl span{white-space:nowrap;overflow:visible}
+.mx2-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:center;margin-bottom:12px}
+.mx2-row__t{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx2-row__n{font:700 12px 'JetBrains Mono',monospace;color:var(--text-2)}
+.mx2-row__b{grid-column:1/-1;height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.mx2-row__b i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#58B71B,#9CCC65);transition:width .8s cubic-bezier(.2,.8,.25,1)}
+.mx2-q{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.mx2-q:last-child{border-bottom:0}
+.mx2-q__av{width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;color:#fff;font:800 13px Inter,sans-serif;background:linear-gradient(135deg,#58B71B,#2F7D32)}
+.mx2-q__m{flex:1;min-width:0}
+.mx2-q__n{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx2-q__e{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx2-q__tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.mx2-q__tag{padding:1px 8px;border-radius:999px;font:700 10px 'JetBrains Mono',monospace;background:var(--surface-2);color:var(--text-2)}
+.mx2-q__tag.vip{background:rgba(247,148,29,.16);color:#C26A00}
+.mx2-q__u{text-align:right;font:600 11px 'JetBrains Mono',monospace;color:var(--text-3);min-width:96px}
+.mx2-empty{padding:34px 16px;text-align:center;color:var(--text-3);font-size:13px;line-height:1.6}
+.mx2-empty b{display:block;margin-bottom:4px;font:700 15px 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+.mx2-big{padding:56px 20px}
+@media(max-width:480px){.mx2-tbl th,.mx2-tbl td{padding:8px 3px;font-size:12px}.mx2-tbl th{font-size:9px;letter-spacing:.4px}.mx2-heat{grid-template-columns:30px repeat(24,minmax(0,1fr));gap:2px}.mx2-hl{grid-template-columns:30px repeat(24,minmax(0,1fr));gap:2px}}
+@media(max-width:700px){.mx2-hero h1{font-size:25px}.mx2-q{flex-wrap:wrap}.mx2-q__u{min-width:0;width:100%;text-align:left;padding-left:52px}.mx2-card{padding:18px 16px}.mx2-bar{padding:8px}.mx2-seg button{padding:7px 11px}}
 `;
       document.head.appendChild(st);
     }
 
-    p.innerHTML = `
-      <div class="fade-up">
-        <div class="sec-hero">
-          <span class="sec-hero__eyebrow">Análisis</span>
-          <h1 class="sec-hero__title">Métricas de visitas</h1>
-          <p class="sec-hero__sub">Cuánta gente entra a Alintec Food, qué días y a qué hora, desde qué dispositivo y de dónde llega. El conteo es anónimo y sin cookies; solo los miembros con sesión iniciada aparecen con su nombre.</p>
-        </div>
-        <div id="mx-cuerpo"><div class="mx-vacio">Cargando métricas…</div></div>
-      </div>`;
-    const cuerpo = p.querySelector('#mx-cuerpo');
+    p.innerHTML = `<div class="mx2 fade-up"><div id="mx2-raiz"><div class="mx2-empty"><b>Cargando métricas…</b>Un momento.</div></div></div>`;
+    const raiz = p.querySelector('#mx2-raiz');
 
+    // ── Utilidades de fechas (claves AAAA-MM-DD en hora de México) ──
     const sumarDias = (clave, n) => { const [a, m, d] = clave.split('-').map(Number); return new Date(Date.UTC(a, m - 1, d + n)).toISOString().slice(0, 10); };
-    const lunesDe = clave => { const [a, m, d] = clave.split('-').map(Number); return sumarDias(clave, -((new Date(Date.UTC(a, m - 1, d)).getUTCDay() + 6) % 7)); };
+    const dow = clave => { const [a, m, d] = clave.split('-').map(Number); return (new Date(Date.UTC(a, m - 1, d)).getUTCDay() + 6) % 7; };
+    const lunesDe = clave => sumarDias(clave, -dow(clave));
     const corta = clave => { const [, m, d] = clave.split('-').map(Number); return d + ' ' + MESES[m - 1]; };
-    const larga = clave => { const [a, m, d] = clave.split('-').map(Number); return d + ' de ' + ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][m - 1] + ' de ' + a; };
+    const mesDe = clave => { const [a, m] = clave.split('-').map(Number); return MESES[m - 1] + ' ' + String(a).slice(2); };
+    const lista = (desde, hasta) => { const r = []; for (let c = desde; c <= hasta; c = sumarDias(c, 1)) r.push(c); return r; };
 
-    const cargar = async () => {
+    const cargar = async dias => {
       const token = await Pages._getAuthToken();
-      const r = await fetch(Pages._webhookUrl + '/api/admin/metricas?dias=84', { headers: { 'Authorization': 'Bearer ' + token } });
+      const r = await fetch(Pages._webhookUrl + '/api/admin/metricas?dias=' + dias, { headers: { 'Authorization': 'Bearer ' + token } });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'No se pudieron cargar las métricas');
       return d;
     };
 
     const pintar = datos => {
-      const porDia = {};
-      datos.dias.forEach(d => { porDia[d.dia] = d; });
+      const estado = { rango: 'semana', semana: 0 };
+      let diasCargados = datos.dias.length;
       const hoy = datos.hoy;
-      const primeraSemana = lunesDe(datos.dias[0].dia);
-      const semanas = [];
-      for (let l = lunesDe(hoy); l >= primeraSemana; l = sumarDias(l, -7)) semanas.unshift(l);
-      const ultimas = semanas.slice(-12);
-      const hayDatos = datos.dias.some(d => d.total > 0);
-      let sel = ultimas.length - 1;
+      const cero = clave => ({ dia: clave, total: 0, unicos: 0, miembros: 0, dispositivos: {}, paginas: {}, fuentes: {}, paises: {}, horas: {} });
+      let porDia = {};
+      const indexar = () => { porDia = {}; datos.dias.forEach(d => { porDia[d.dia] = d; }); };
+      indexar();
+      const dato = clave => porDia[clave] || cero(clave);
+      const origenes = () => (datos.origenes || []).map(o => ({ ...o, dia: o.creada ? String(o.creada).slice(0, 10) : null }));
+      // 'creada' viene en UTC; el día que importa es el de México
+      const diaMx = iso => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: datos.zona, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso)); } catch (e) { return String(iso).slice(0, 10); } };
+      const cuentas = () => (datos.origenes || []).map(o => ({ ...o, dia: o.creada ? diaMx(o.creada) : null })).filter(o => o.dia);
 
-      const semana = lunes => Array.from({ length: 7 }, (_, i) => {
-        const clave = sumarDias(lunes, i);
-        const dato = porDia[clave];
-        return { clave, futuro: clave > hoy, esHoy: clave === hoy, d: dato || { total: 0, unicos: 0, miembros: 0, dispositivos: {}, paginas: {}, fuentes: {}, horas: {} } };
-      });
-      const totalSemana = dias => dias.reduce((t, x) => ({ total: t.total + x.d.total, unicos: t.unicos + x.d.unicos, miembros: t.miembros + x.d.miembros }), { total: 0, unicos: 0, miembros: 0 });
-      const sumarCampo = (dias, campo, claves) => Object.fromEntries(claves.map(k => [k, dias.reduce((t, x) => t + (Number((x.d[campo] || {})[k]) || 0), 0)]));
-      const delta = (ahora, antes, parcial) => {
-        if (!antes && !ahora) return '<span class="mx-delta mx-delta--eq">— sin cambio</span>';
-        if (!antes) return '<span class="mx-delta mx-delta--up">▲ nuevo</span>';
-        const pct = Math.round((ahora - antes) / antes * 100);
-        if (pct === 0) return '<span class="mx-delta mx-delta--eq">= igual que antes</span>';
-        return '<span class="mx-delta ' + (pct > 0 ? 'mx-delta--up">▲ +' : 'mx-delta--down">▼ ') + Math.abs(pct) + '% vs ' + (parcial ? 'mismos días de la semana anterior' : 'semana anterior') + '</span>';
+      // ── Rango activo: periodo actual y el anterior (para comparar) ──
+      const rangoActual = () => {
+        const primerDia = datos.dias[0].dia;
+        if (estado.rango === 'semana') {
+          const lunes = sumarDias(lunesDe(hoy), -7 * estado.semana);
+          const hasta = sumarDias(lunes, 6);
+          const parcial = hasta > hoy;
+          const finVisto = parcial ? hoy : hasta;
+          const largo = lista(lunes, finVisto).length;
+          const pLunes = sumarDias(lunes, -7);
+          return { desde: lunes, hasta: finVisto, completo: hasta, prev: lista(pLunes, sumarDias(pLunes, largo - 1)), parcial, titulo: corta(lunes) + ' – ' + corta(hasta) };
+        }
+        if (estado.rango === 'todo') {
+          const con = datos.dias.find(d => d.total > 0);
+          const desde = con ? con.dia : sumarDias(hoy, -29);
+          return { desde, hasta: hoy, prev: [], titulo: 'Todo el historial' };
+        }
+        const n = Number(estado.rango);
+        const desde = sumarDias(hoy, -(n - 1));
+        const pDesde = sumarDias(desde, -n);
+        return { desde: desde < primerDia && n > diasCargados ? primerDia : desde, hasta: hoy, prev: lista(pDesde, sumarDias(desde, -1)), titulo: 'Últimos ' + (n === 365 ? '12 meses' : n + ' días') };
       };
 
+      const suma = (claves, campo) => claves.reduce((t, c) => t + (dato(c)[campo] || 0), 0);
+      const sumaMapa = (claves, campo) => { const o = {}; claves.forEach(c => Object.entries(dato(c)[campo] || {}).forEach(([k, v]) => { o[k] = (o[k] || 0) + v; })); return o; };
+      const delta = (ahora, antes, hayPrev) => {
+        if (!hayPrev) return '';
+        if (!antes && !ahora) return '<span class="mx2-d eq">— sin cambio</span>';
+        if (!antes) return '<span class="mx2-d up">▲ nuevo</span>';
+        const pct = Math.round((ahora - antes) / antes * 100);
+        if (pct === 0) return '<span class="mx2-d eq">= igual que antes</span>';
+        return '<span class="mx2-d ' + (pct > 0 ? 'up">▲ +' : 'down">▼ ') + Math.abs(pct) + '% vs periodo anterior</span>';
+      };
+      const spark = (vals, color) => {
+        const max = Math.max(1, ...vals), w = 200, h = 34;
+        if (vals.length < 2) return '';
+        const pts = vals.map((v, i) => [i / (vals.length - 1) * w, h - 3 - v / max * (h - 8)]);
+        const d = pts.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' ');
+        const id = 'sp' + Math.random().toString(36).slice(2, 7);
+        return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".35"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${d} L${w} ${h} L0 ${h} Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+      };
+      const filas = (obj, nombres, color) => {
+        const orden = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+        const max = Math.max(1, ...orden.map(o => o[1]));
+        return orden.length ? orden.map(([k, v]) => `<div class="mx2-row"><span class="mx2-row__t">${esc(nombres[k] || k)}</span><span class="mx2-row__n">${num(v)}</span><div class="mx2-row__b"><i data-w="${Math.round(v / max * 100)}"${color ? ' style="background:' + color(k) + '"' : ''}></i></div></div>`).join('')
+          : '<div class="mx2-empty">Sin datos en este periodo</div>';
+      };
+
+      // ── Estilo común de Chart.js ──
+      const colorTexto = () => (getComputedStyle(document.body).getPropertyValue('--text-3').trim() || '#6b7280');
+      const colorLinea = () => (getComputedStyle(document.body).getPropertyValue('--border').trim() || 'rgba(0,0,0,.08)');
+      const crear = (canvas, config) => {
+        if (!canvas || typeof Chart === 'undefined') return null;
+        Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+        Chart.defaults.font.size = 12;
+        const c = new Chart(canvas, config);
+        Pages._mxCharts.push(c);
+        return c;
+      };
+      const tooltip = { backgroundColor: '#10231A', titleColor: '#fff', bodyColor: '#E5F2E8', padding: 12, cornerRadius: 12, boxPadding: 5, titleFont: { weight: '700', size: 13 }, bodyFont: { size: 12 } };
+      const degradado = (color, alto) => ctx => {
+        const area = ctx.chart.chartArea; if (!area) return color + '33';
+        const g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+        g.addColorStop(0, color + '59'); g.addColorStop(1, color + '00'); return g;
+      };
+      const ejes = (extra) => ({
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: colorTexto(), maxRotation: 0, autoSkipPadding: 14 } },
+        y: { beginAtZero: true, grid: { color: colorLinea(), drawTicks: false }, border: { display: false }, ticks: { color: colorTexto(), precision: 0, padding: 8 }, ...(extra || {}) }
+      });
+
       const dibujar = () => {
-        const lunes = ultimas[sel];
-        const dias = semana(lunes);
-        const previa = semana(sumarDias(lunes, -7));
-        const esActual = sel === ultimas.length - 1;
-        const transcurridos = dias.filter(x => !x.futuro).length || 1;
-        // En la semana en curso se compara con los mismos días de la semana anterior (no con la semana completa)
-        const previaCmp = esActual ? previa.slice(0, transcurridos) : previa;
-        const t = totalSemana(dias), tPrev = totalSemana(previaCmp);
-        const promedio = Math.round(t.total / transcurridos);
-        const maxV = Math.max(1, ...dias.map(x => x.d.total));
-        const mejor = dias.filter(x => !x.futuro).reduce((a, x) => (x.d.total > (a ? a.d.total : 0) ? x : a), null);
-        const disp = sumarCampo(dias, 'dispositivos', ['movil', 'tablet', 'computadora']);
+        (Pages._mxCharts || []).forEach(c => { try { c.destroy(); } catch (e) {} });
+        Pages._mxCharts = [];
+        const R = rangoActual();
+        const claves = lista(R.desde, R.hasta);
+        const hayPrev = R.prev.length > 0 && suma(R.prev, 'total') + suma(R.prev, 'unicos') > 0;
+        const total = suma(claves, 'total'), unicos = suma(claves, 'unicos');
+        const totalPrev = suma(R.prev, 'total'), unicosPrev = suma(R.prev, 'unicos');
+        const todasCuentas = cuentas();
+        const enRango = lista0 => todasCuentas.filter(o => lista0.includes(o.dia));
+        const nuevas = enRango(claves), nuevasPrev = enRango(R.prev);
+        const vipNuevos = nuevas.filter(o => o.vip).length;
+        const promedio = Math.round(total / Math.max(1, claves.length));
+        const hayAlgo = datos.dias.some(d => d.total > 0) || (datos.miembros || []).length || todasCuentas.length;
+        const est = datos.estado || null;
+        const estadoHtml = est ? (est.errores > 0 && !est.ultimoOk ? `<span class="mx2-estado error" title="${esc((est.ultimoError && est.ultimoError.mensaje) || '')}"><i></i>El contador tuvo errores</span>`
+          : est.ultimoOk ? `<span class="mx2-estado ok"><i></i>Contador activo · última visita ${esc(new Date(est.ultimoOk).toLocaleString('es-MX', { timeZone: datos.zona, day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}</span>`
+          : '<span class="mx2-estado"><i></i>Contador activo · esperando la primera visita</span>') : '';
+
+        const barra = `
+          <div class="mx2-bar">
+            <div class="mx2-seg" role="tablist">${RANGOS.map(([k, t]) => `<button type="button" role="tab" data-r="${k}" class="${estado.rango === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+            ${estado.rango === 'semana' ? `<div class="mx2-semnav"><button type="button" id="mx2-ant" aria-label="Semana anterior" ${estado.semana >= 51 ? 'disabled' : ''}>‹</button><span>${esc(R.titulo)}<small>${estado.semana === 0 ? 'ESTA SEMANA' : 'HACE ' + estado.semana + (estado.semana === 1 ? ' SEMANA' : ' SEMANAS')}</small></span><button type="button" id="mx2-sig" aria-label="Semana siguiente" ${estado.semana === 0 ? 'disabled' : ''}>›</button></div>` : `<span style="font:700 13px 'Plus Jakarta Sans',Inter,sans-serif">${esc(R.titulo)}</span>`}
+            <button type="button" class="mx2-btn" id="mx2-csv"><svg class="ic" width="15" height="15"><use href="#i-download"/></svg>Descargar historial (CSV)</button>
+          </div>`;
+
+        const cab = `
+          <div class="mx2-hero">
+            <div><span class="mx2-eyebrow">Análisis</span><h1>Métricas de visitas</h1>
+            <p>Cuánta gente visita Alintec Food, desde dónde llega y de qué red social salen tus miembros. Conteo anónimo y sin cookies; todo se guarda día a día para que consultes el historial.</p></div>
+            ${estadoHtml}
+          </div>`;
+
+        if (!hayAlgo) {
+          raiz.innerHTML = cab + `<div class="mx2-card"><div class="mx2-empty mx2-big"><b>Todavía no hay visitas registradas</b>El contador ya está encendido. En cuanto entre la primera persona al sitio verás aquí las gráficas, y el historial se irá guardando solo, día tras día.</div></div>`;
+          return;
+        }
+
+        // ── Serie del gráfico principal ──
+        let serie;
+        if (estado.rango === 'semana') {
+          const lunes = R.desde;
+          serie = { tipo: 'barras', etiquetas: DIAS, visitas: DIAS.map((_, i) => { const c = sumarDias(lunes, i); return c > hoy ? null : dato(c).total; }), unicos: DIAS.map((_, i) => { const c = sumarDias(lunes, i); return c > hoy ? null : dato(c).unicos; }) };
+        } else if (estado.rango === '30' || estado.rango === '90') {
+          serie = { tipo: 'linea', etiquetas: claves.map(corta), visitas: claves.map(c => dato(c).total), unicos: claves.map(c => dato(c).unicos), previa: R.prev.map(c => dato(c).total) };
+        } else {
+          const meses = {};
+          claves.forEach(c => { const k = c.slice(0, 7); meses[k] = meses[k] || { v: 0, u: 0 }; meses[k].v += dato(c).total; meses[k].u += dato(c).unicos; });
+          const ks = Object.keys(meses).sort();
+          serie = { tipo: 'barras', etiquetas: ks.map(k => mesDe(k + '-01')), visitas: ks.map(k => meses[k].v), unicos: ks.map(k => meses[k].u) };
+        }
+
+        // ── Origen de los miembros ──
+        const porOrigen = {};
+        nuevas.forEach(o => { const k = o.origen || 'directo'; porOrigen[k] = porOrigen[k] || { n: 0, vip: 0 }; porOrigen[k].n += 1; if (o.vip) porOrigen[k].vip += 1; });
+        const ordenOrigen = Object.entries(porOrigen).sort((a, b) => b[1].n - a[1].n);
+        const ganador = ordenOrigen[0];
+        const sinDato = Number(datos.sinOrigen) || 0;
+
+        // ── Datos de apoyo ──
+        const disp = sumaMapa(claves, 'dispositivos');
         const totDisp = Object.values(disp).reduce((a, b) => a + b, 0);
-        const pags = sumarCampo(dias, 'paginas', Object.keys(NOMBRE_PAGINA));
-        const fuentes = sumarCampo(dias, 'fuentes', Object.keys(NOMBRE_FUENTE));
-        const sociales = Object.fromEntries(REDES_SOCIALES.map(k => [k, fuentes[k] || 0]));
-        const totSociales = Object.values(sociales).reduce((a, b) => a + b, 0);
-        const totFuentes = Object.values(fuentes).reduce((a, b) => a + b, 0);
-        const paisesTot = {};
-        dias.forEach(x => Object.entries(x.d.paises || {}).forEach(([k, v]) => { paisesTot[k] = (paisesTot[k] || 0) + v; }));
-        const totPaises = Object.values(paisesTot).reduce((a, b) => a + b, 0);
-        const topPaises = Object.entries(paisesTot).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        const nombresTop = Object.fromEntries(topPaises.map(([k, v]) => [k, nombrePais(k) + ' · ' + Math.round(v / totPaises * 100) + '%']));
-        const fueraMx = totPaises - (paisesTot.MX || 0) - (paisesTot.ZZ || 0);
-        const horas = Array.from({ length: 24 }, (_, h) => dias.reduce((s, x) => s + (Number((x.d.horas || {})[String(h).padStart(2, '0')]) || 0), 0));
-        const maxH = Math.max(1, ...horas);
-        const horaPico = horas.indexOf(Math.max(...horas));
-        const rango = corta(lunes) + ' – ' + corta(sumarDias(lunes, 6));
-
-        // Historial de semanas
-        const totales = ultimas.map(l => totalSemana(semana(l)).total);
-        const maxS = Math.max(1, ...totales);
-
-        // Promedio por día de la semana (últimas 12 semanas con datos)
-        const pasados = datos.dias.filter(d => d.dia <= hoy);
-        const porSemDia = DIAS.map((_, i) => {
-          const lista = pasados.filter(d => (((new Date(d.dia + 'T00:00:00Z').getUTCDay()) + 6) % 7) === i);
-          return lista.length ? lista.reduce((s, d) => s + d.total, 0) / lista.length : 0;
-        });
-        const maxPD = Math.max(1, ...porSemDia);
+        const paises = sumaMapa(claves, 'paises');
+        const totPaises = Object.values(paises).reduce((a, b) => a + b, 0);
+        const topPaises = Object.entries(paises).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const fueraMx = totPaises - (paises.MX || 0) - (paises.ZZ || 0);
+        const fuentes = sumaMapa(claves, 'fuentes');
+        const ordenFuentes = Object.entries(fuentes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+        const totFuentes = ordenFuentes.reduce((a, [, v]) => a + v, 0);
+        const pags = sumaMapa(claves, 'paginas');
+        const porSemDia = DIAS.map((_, i) => { const l = claves.filter(c => dow(c) === i); return l.length ? l.reduce((s, c) => s + dato(c).total, 0) / l.length : 0; });
         const diaFuerte = porSemDia.indexOf(Math.max(...porSemDia));
+        const mapa = DIAS.map(() => Array(24).fill(0));
+        claves.forEach(c => { const h = dato(c).horas || {}; for (let i = 0; i < 24; i++) mapa[dow(c)][i] += Number(h[String(i).padStart(2, '0')]) || 0; });
+        const maxMapa = Math.max(1, ...mapa.flat());
+        const horaPico = (() => { const t = Array(24).fill(0); mapa.forEach(f => f.forEach((v, i) => { t[i] += v; })); const m = Math.max(...t); return m ? t.indexOf(m) : -1; })();
+        const quienes = (datos.miembros || []).map(m => ({ ...m, enRango: claves.reduce((s, c) => s + ((m.dias || {})[c] || 0), 0), act: claves.map(c => (m.dias || {})[c] || 0) })).filter(m => m.enRango > 0).sort((a, b) => b.enRango - a.enRango).slice(0, 15);
+        const origenDe = new Map((datos.origenes || []).map(o => [o.uid, o]));
+        const anonimos = Math.max(0, unicos - (datos.miembros || []).filter(m => claves.some(c => (m.dias || {})[c])).length);
 
-        // Quiénes (miembros con sesión) de la semana seleccionada
-        const clavesSem = dias.map(x => x.clave);
-        const quienes = datos.miembros.map(m => ({ ...m, enSem: clavesSem.map(c => (m.dias || {})[c] || 0) }))
-          .filter(m => m.enSem.some(v => v > 0))
-          .sort((a, b) => b.enSem.reduce((s, v) => s + v, 0) - a.enSem.reduce((s, v) => s + v, 0));
-        const clavesPrev = previaCmp.map(x => x.clave);
-        const quienesPrev = datos.miembros.filter(m => clavesPrev.some(c => (m.dias || {})[c]));
-        const anonimos = Math.max(0, t.unicos - quienes.length);
-
-        const filas = (obj, nombres) => {
-          const orden = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-          const max = Math.max(1, ...orden.map(o => o[1]));
-          return orden.length ? orden.map(([k, v]) => `<div class="mx-row"><span class="mx-row__t">${esc(nombres[k] || k)}</span><span class="mx-row__n">${num(v)}</span><div class="mx-row__b"><i data-w="${Math.round(v / max * 100)}"></i></div></div>`).join('')
-            : '<div class="mx-vacio">Sin datos esta semana</div>';
-        };
-
-        let acum = 0;
-        const gradiente = totDisp ? Object.keys(NOMBRE_DISP).map(k => { const ini = acum; acum += disp[k] / totDisp * 360; return COLOR_DISP[k] + ' ' + ini + 'deg ' + acum + 'deg'; }).join(',') : 'var(--surface-2) 0 360deg';
-
-        cuerpo.innerHTML = `
-          <div class="mx-bar-top">
-            <div class="mx-nav">
-              <button type="button" id="mx-ant" aria-label="Semana anterior" ${sel === 0 ? 'disabled' : ''}>‹</button>
-              <div class="mx-nav__sem">${esc(rango)}<small>${esActual ? 'ESTA SEMANA' : 'HACE ' + (ultimas.length - 1 - sel) + (ultimas.length - 1 - sel === 1 ? ' SEMANA' : ' SEMANAS')}</small></div>
-              <button type="button" id="mx-sig" aria-label="Semana siguiente" ${esActual ? 'disabled' : ''}>›</button>
-            </div>
-            ${esActual ? '' : '<button type="button" class="mx-chip" id="mx-hoy">Volver a esta semana</button>'}
+        raiz.innerHTML = cab + barra + `
+          <div class="mx2-kpis">
+            <div class="mx2-kpi" style="--c:${VERDE}"><div class="mx2-kpi__l">Visitas</div><div class="mx2-kpi__v">${num(total)}</div><div class="mx2-kpi__s">Páginas vistas</div>${delta(total, totalPrev, hayPrev)}${spark(claves.map(c => dato(c).total), VERDE)}</div>
+            <div class="mx2-kpi" style="--c:${AZUL}"><div class="mx2-kpi__l">Personas distintas</div><div class="mx2-kpi__v">${num(unicos)}</div><div class="mx2-kpi__s">Visitantes únicos por día, sumados</div>${delta(unicos, unicosPrev, hayPrev)}${spark(claves.map(c => dato(c).unicos), AZUL)}</div>
+            <div class="mx2-kpi" style="--c:#F7941D"><div class="mx2-kpi__l">Cuentas nuevas</div><div class="mx2-kpi__v">${num(nuevas.length)}</div><div class="mx2-kpi__s">${vipNuevos ? num(vipNuevos) + ' ya son VIP' : 'Personas que crearon su cuenta'}</div>${delta(nuevas.length, nuevasPrev.length, hayPrev && nuevasPrev.length > 0)}${spark(claves.map(c => todasCuentas.filter(o => o.dia === c).length), '#F7941D')}</div>
+            <div class="mx2-kpi" style="--c:#8B5CF6"><div class="mx2-kpi__l">Promedio por día</div><div class="mx2-kpi__v">${num(promedio)}</div><div class="mx2-kpi__s">${horaPico >= 0 ? 'Hora pico: ' + (horaPico % 12 || 12) + (horaPico < 12 ? ' a. m.' : ' p. m.') : 'Aún sin visitas'}</div>${spark(claves.map(c => dato(c).total), '#8B5CF6')}</div>
           </div>
 
-          <div class="kpi-grid">
-            <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
-              <div class="kpi-card__label">Visitas</div>
-              <div class="kpi-card__value">${num(t.total)}</div>
-              <div class="kpi-card__sub">Páginas vistas en la semana</div>${delta(t.total, tPrev.total, esActual)}
-            </div>
-            <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
-              <div class="kpi-card__label">Personas distintas</div>
-              <div class="kpi-card__value">${num(t.unicos)}</div>
-              <div class="kpi-card__sub">Visitantes únicos por día, sumados</div>${delta(t.unicos, tPrev.unicos, esActual)}
-            </div>
-            <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
-              <div class="kpi-card__label">Miembros que entraron</div>
-              <div class="kpi-card__value">${num(quienes.length)}</div>
-              <div class="kpi-card__sub">Con sesión iniciada en el panel</div>${delta(quienes.length, quienesPrev.length, esActual)}
-            </div>
-            <div class="kpi-card" style="--c1:#8B5CF6;--c2:#A78BFA;">
-              <div class="kpi-card__label">Promedio por día</div>
-              <div class="kpi-card__value">${num(promedio)}</div>
-              <div class="kpi-card__sub">${mejor && mejor.d.total ? 'Mejor día: ' + DIAS[dias.indexOf(mejor)] + ' (' + num(mejor.d.total) + ')' : 'Aún sin visitas'}</div>
-            </div>
+          <div class="mx2-card" style="margin-bottom:16px">
+            <div class="mx2-head"><div><h3>${estado.rango === 'semana' ? 'Visitas por día de la semana' : estado.rango === '365' || estado.rango === 'todo' ? 'Visitas por mes' : 'Visitas día a día'}</h3><p class="mx2-sub" style="margin-bottom:6px">${estado.rango === 'semana' ? 'De lunes a domingo; los días que aún no pasan quedan vacíos.' : serie.previa && hayPrev ? 'La línea punteada es el periodo anterior, para comparar.' : 'Evolución del periodo seleccionado.'}</p></div>
+              <div class="mx2-leg"><span><i style="background:${VERDE}"></i>Visitas</span><span><i style="background:${AZUL}"></i>Personas distintas</span>${serie.previa && hayPrev ? '<span><i style="background:#94A3B8"></i>Periodo anterior</span>' : ''}</div></div>
+            <div class="mx2-cv" style="height:300px"><canvas id="mx2-principal"></canvas></div>
           </div>
 
-          <div class="mx-grid mx-grid--2" style="margin-top:0">
-            <div class="mx-card">
-              <h3>Visitas por día de la semana</h3>
-              <p class="mx-sub">Cada día de lunes a domingo. Los días futuros aparecen atenuados.</p>
-              <div class="mx-legend"><span><i style="background:#3E8F18"></i>Visitas</span><span><i style="background:#2563EB"></i>Personas distintas</span></div>
-              <div class="mx-chart" id="mx-chart">
-                ${dias.map(x => `<div class="mx-col${x.esHoy ? ' mx-col--hoy' : ''}${x.futuro ? ' mx-col--futuro' : ''}" title="${esc(larga(x.clave))}: ${x.d.total} visitas · ${x.d.unicos} personas">
-                  <div class="mx-col__bars">
-                    <div class="mx-bar mx-bar--v" data-h="${Math.round(x.d.total / maxV * 100)}">${x.d.total ? '<b>' + num(x.d.total) + '</b>' : ''}</div>
-                    <div class="mx-bar mx-bar--u" data-h="${Math.round(x.d.unicos / maxV * 100)}">${x.d.unicos ? '<b>' + num(x.d.unicos) + '</b>' : ''}</div>
-                  </div></div>`).join('')}
-              </div>
-              <div class="mx-xs">${dias.map((x, i) => `<div class="${x.esHoy ? 'mx-col--hoy' : ''}"><b>${DIAS[i]}</b>${x.clave.slice(8).replace(/^0/, '')}</div>`).join('')}</div>
-              ${mejor && mejor.d.total ? `<div class="mx-best">★ Día más fuerte: ${DIAS[dias.indexOf(mejor)]} ${esc(corta(mejor.clave))} · ${num(mejor.d.total)} visitas</div>` : ''}
-            </div>
-            <div class="mx-card">
-              <h3>Dispositivos</h3>
-              <p class="mx-sub">Desde qué aparato entra la gente (personas distintas).</p>
-              <div class="mx-dona">
-                <div class="mx-dona__aro" style="background:conic-gradient(${gradiente})"><div class="mx-dona__c">${num(totDisp)}<small>PERSONAS</small></div></div>
-                <div class="mx-dona__lg">${Object.keys(NOMBRE_DISP).map(k => `<div><i style="background:${COLOR_DISP[k]}"></i>${NOMBRE_DISP[k]} <b>${totDisp ? Math.round(disp[k] / totDisp * 100) : 0}%</b></div>`).join('')}</div>
-              </div>
-              <h3 style="margin-top:22px">Páginas más vistas</h3>
-              <p class="mx-sub">Dónde entra la gente.</p>
-              ${filas(pags, NOMBRE_PAGINA)}
-            </div>
+          <div class="mx2-card mx2-hero-card" style="margin-bottom:16px">
+            <h3>¿De dónde vienen tus miembros?</h3>
+            <p class="mx2-sub">Cuentas creadas en este periodo, según la red social o el enlace por el que llegaron${sinDato ? ' · ' + num(sinDato) + ' cuentas anteriores al contador no tienen origen' : ''}.</p>
+            ${ordenOrigen.length ? `
+              <div class="mx2-top"><b style="background:${COLOR_FUENTE[ganador[0]] || '#64748B'}">${esc((NOMBRE_FUENTE[ganador[0]] || ganador[0]).slice(0, 1))}</b><div><strong>${esc(NOMBRE_FUENTE[ganador[0]] || ganador[0])}</strong> es de donde más miembros llegaron: <strong>${num(ganador[1].n)}</strong> de ${num(nuevas.length)} cuentas nuevas (${Math.round(ganador[1].n / nuevas.length * 100)}%)${ganador[1].vip ? ', y <strong>' + num(ganador[1].vip) + '</strong> ya son VIP' : ''}.</div></div>
+              <div class="mx2-g2" style="display:grid;gap:18px;align-items:start">
+                <div class="mx2-cv" style="height:${Math.max(180, ordenOrigen.length * 46 + 40)}px"><canvas id="mx2-origen"></canvas></div>
+                <table class="mx2-tbl"><thead><tr><th>Origen</th><th>Cuentas</th><th>VIP</th><th>Conversión</th></tr></thead><tbody>
+                  ${ordenOrigen.map(([k, v]) => `<tr><td><span class="mx2-dot" style="background:${COLOR_FUENTE[k] || '#64748B'}"></span>${esc(NOMBRE_FUENTE[k] || k)}</td><td>${num(v.n)}</td><td>${num(v.vip)}</td><td><span class="mx2-pill">${Math.round(v.vip / v.n * 100)}%</span></td></tr>`).join('')}
+                </tbody></table>
+              </div>` : `<div class="mx2-empty"><b>Aún no hay cuentas con origen en este periodo</b>Desde que se publicó el contador, cada cuenta nueva guarda por dónde llegó (Facebook, Instagram, Google, WhatsApp…). Cuando alguien se registre lo verás aquí.</div>`}
           </div>
 
-          <div class="mx-grid mx-grid--2">
-            <div class="mx-card">
-              <h3>Historial · últimas ${ultimas.length} semanas</h3>
-              <p class="mx-sub">Visitas por semana. Toca una barra para ver esa semana.</p>
-              <div class="mx-hist" id="mx-hist">${ultimas.map((l, i) => `<button type="button" data-i="${i}" class="${i === sel ? 'is-sel' : ''}" title="Semana del ${esc(corta(l))}: ${totales[i]} visitas"><i data-h="${Math.round(totales[i] / maxS * 100)}"></i><span>${esc(corta(l))}</span></button>`).join('')}</div>
-            </div>
-            <div class="mx-card">
-              <h3>¿Qué día entra más gente?</h3>
-              <p class="mx-sub">Promedio de visitas por día de la semana, con todo el historial.</p>
-              ${DIAS.map((n, i) => `<div class="mx-row"><span class="mx-row__t">${n}${i === diaFuerte && porSemDia[i] > 0 ? ' ★' : ''}</span><span class="mx-row__n">${porSemDia[i] ? porSemDia[i].toFixed(1) : '0'}</span><div class="mx-row__b"><i data-w="${Math.round(porSemDia[i] / maxPD * 100)}"></i></div></div>`).join('')}
-            </div>
+          <div class="mx2-grid mx2-g2">
+            <div class="mx2-card"><h3>¿Qué día entra más gente?</h3><p class="mx2-sub">Promedio de visitas por día de la semana en el periodo.${porSemDia[diaFuerte] > 0 ? ' El más fuerte: <strong>' + DIAS[diaFuerte] + '</strong>.' : ''}</p><div class="mx2-cv" style="height:250px"><canvas id="mx2-semana"></canvas></div></div>
+            <div class="mx2-card"><h3>Mapa de calor · día y hora</h3><p class="mx2-sub">Cuándo entra la gente (hora de México). Más oscuro = más visitas.</p>
+              <div class="mx2-heat">${DIAS.map((n, d) => `<span>${n}</span>` + mapa[d].map((v, h) => `<i title="${n} ${h}:00 · ${v} visitas" style="background:${v ? 'color-mix(in srgb,#58B71B ' + Math.max(15, Math.round(v / maxMapa * 100)) + '%,var(--surface-2))' : 'var(--surface-2)'}"></i>`).join('')).join('')}</div>
+              <div class="mx2-hl"><span></span>${Array.from({ length: 24 }, (_, h) => `<span>${h % 6 === 0 ? (h % 12 || 12) + (h < 12 ? 'a' : 'p') : ''}</span>`).join('')}</div></div>
           </div>
 
-          <div class="mx-grid mx-grid--2">
-            <div class="mx-card">
-              <h3>Horas con más visitas</h3>
-              <p class="mx-sub">${horas.some(v => v) ? 'Hora pico de la semana: <strong>' + (horaPico % 12 || 12) + (horaPico < 12 ? ' a. m.' : ' p. m.') + '</strong> (hora de México).' : 'Aún sin visitas esta semana.'}</p>
-              <div class="mx-horas">${horas.map((v, h) => `<i title="${h}:00 · ${v} visitas" style="background:${v ? 'color-mix(in srgb,#58B71B ' + Math.max(18, Math.round(v / maxH * 100)) + '%,var(--surface-2))' : 'var(--surface-2)'}"></i>`).join('')}</div>
-              <div class="mx-horas-lbl"><span>12 a. m.</span><span>3 a. m.</span><span>6 a. m.</span><span>9 a. m.</span><span>12 p. m.</span><span>3 p. m.</span><span>6 p. m.</span><span>9 p. m.</span></div>
-            </div>
-            <div class="mx-card">
-              <h3>¿Cómo llegaron al sitio?</h3>
-              <p class="mx-sub">Por dónde entró cada persona en su primera visita del día.</p>
-              ${filas(fuentes, NOMBRE_FUENTE)}
-            </div>
+          <div class="mx2-grid mx2-g3">
+            <div class="mx2-card"><h3>Países</h3><p class="mx2-sub">${totPaises ? (fueraMx > 0 ? 'Hubo <strong>' + num(fueraMx) + '</strong> persona' + (fueraMx === 1 ? '' : 's') + ' de fuera de México.' : 'Por ahora todas las visitas identificadas son de México.') : 'Aún sin visitas.'}</p><div class="mx2-cv" style="height:${Math.max(160, topPaises.length * 36 + 30)}px"><canvas id="mx2-paises"></canvas></div></div>
+            <div class="mx2-card"><h3>Dispositivos</h3><p class="mx2-sub">Desde qué aparato entra la gente.</p><div class="mx2-cv" style="height:210px"><canvas id="mx2-disp"></canvas></div>
+              <div class="mx2-leg" style="justify-content:center;margin-top:12px">${Object.keys(NOMBRE_DISP).map(k => `<span><i style="background:${COLOR_DISP[k]};border-radius:50%"></i>${NOMBRE_DISP[k]} <b>${totDisp ? Math.round((disp[k] || 0) / totDisp * 100) : 0}%</b></span>`).join('')}</div></div>
+            <div class="mx2-card"><h3>Cómo llegan al sitio</h3><p class="mx2-sub">Por dónde entró cada persona en su primera visita del día.</p>${ordenFuentes.length ? `<div class="mx2-cv" style="height:210px"><canvas id="mx2-fuentes"></canvas></div>
+              <div class="mx2-leg" style="margin-top:12px">${ordenFuentes.slice(0, 6).map(([k, v]) => `<span><i style="background:${COLOR_FUENTE[k] || '#64748B'};border-radius:50%"></i>${esc(NOMBRE_FUENTE[k] || k)} <b>${Math.round(v / totFuentes * 100)}%</b></span>`).join('')}</div>` : '<div class="mx2-empty">Sin datos en este periodo</div>'}</div>
           </div>
 
-          <div class="mx-grid mx-grid--2">
-            <div class="mx-card">
-              <h3>¿Desde qué país nos visitan?</h3>
-              <p class="mx-sub">${totPaises ? (fueraMx > 0 ? 'Hubo <strong>' + num(fueraMx) + '</strong> persona' + (fueraMx === 1 ? '' : 's') + ' de fuera de México esta semana.' : 'Por ahora todas las visitas identificadas son de México.') : 'Aún sin visitas esta semana.'} El país se detecta a partir de la conexión, sin guardar la dirección IP.</p>
-              ${filas(Object.fromEntries(topPaises), nombresTop)}
+          <div class="mx2-grid mx2-g2">
+            <div class="mx2-card"><h3>Páginas más vistas</h3><p class="mx2-sub">Dónde entra la gente.</p>${filas(pags, NOMBRE_PAGINA)}</div>
+            <div class="mx2-card"><h3>Quiénes entraron al panel</h3><p class="mx2-sub">Miembros con sesión iniciada en el periodo${anonimos ? '. Además hubo <strong>' + num(anonimos) + '</strong> visitantes anónimos que no se identifican' : ''}.</p>
+              ${quienes.length ? quienes.map(m => {
+                const ini = (m.nombre || m.email || '?').trim().slice(0, 2).toUpperCase();
+                const o = origenDe.get(m.uid);
+                const ult = m.ultima ? new Date(m.ultima).toLocaleString('es-MX', { timeZone: datos.zona, day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+                return `<div class="mx2-q"><div class="mx2-q__av">${esc(ini)}</div><div class="mx2-q__m"><div class="mx2-q__n">${esc(m.nombre || 'Sin nombre')}</div><div class="mx2-q__e">${esc(m.email)}</div><div class="mx2-q__tags">${o ? '<span class="mx2-q__tag">' + esc(NOMBRE_FUENTE[o.origen] || o.origen) + '</span>' : ''}${o && o.vip ? '<span class="mx2-q__tag vip">VIP</span>' : ''}</div></div><div class="mx2-q__u">${num(m.enRango)} visita${m.enRango === 1 ? '' : 's'}<br>${esc(ult)}</div></div>`;
+              }).join('') : '<div class="mx2-empty">Ningún miembro entró al panel en este periodo.</div>'}
             </div>
-            <div class="mx-card">
-              <h3>Redes sociales</h3>
-              <p class="mx-sub">${totSociales ? '<strong>' + num(totSociales) + '</strong> de ' + num(totFuentes) + ' personas llegaron desde una red social.' : 'Nadie llegó desde una red social esta semana.'} Para medir una publicación en concreto, agrega al enlace <code>?utm_source=facebook</code> (o <code>instagram</code>, <code>tiktok</code>…).</p>
-              ${filas(sociales, NOMBRE_FUENTE)}
-            </div>
-          </div>
+          </div>`;
 
-          <div class="mx-card" style="margin-top:16px">
-            <h3>Quiénes entraron al panel</h3>
-            <p class="mx-sub">Miembros con sesión iniciada esta semana. Los cuadritos marcan los días (lun–dom) en que entraron.${anonimos ? ' Además hubo <strong>' + num(anonimos) + '</strong> visitante' + (anonimos === 1 ? '' : 's') + ' anónimo' + (anonimos === 1 ? '' : 's') + ' (sin cuenta o sin sesión), que no se identifican.' : ''}</p>
-            ${quienes.length ? quienes.map(m => {
-              const ini = (m.nombre || m.email || '?').trim().slice(0, 2).toUpperCase();
-              const ult = m.ultima ? new Date(m.ultima).toLocaleString('es-MX', { timeZone: datos.zona, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
-              return `<div class="mx-quien"><div class="mx-quien__av">${esc(ini)}</div><div class="mx-quien__m"><div class="mx-quien__n">${esc(m.nombre || 'Sin nombre')}</div><div class="mx-quien__e">${esc(m.email)}</div></div><div class="mx-quien__d" title="Días en que entró">${m.enSem.map(v => '<i class="' + (v ? 'on' : '') + '"></i>').join('')}</div><div class="mx-quien__u">${num(m.enSem.reduce((s, v) => s + v, 0))} visita${m.enSem.reduce((s, v) => s + v, 0) === 1 ? '' : 's'}<br>${esc(ult)}</div></div>`;
-            }).join('') : '<div class="mx-vacio">Ningún miembro entró al panel esta semana.</div>'}
-          </div>
-          ${hayDatos ? '' : '<div class="mx-card" style="margin-top:16px"><div class="mx-vacio">Todavía no hay visitas registradas. El contador empieza a funcionar en cuanto se publique este cambio; aquí verás los números en cuanto entre la primera persona al sitio.</div></div>'}
-        `;
+        // ── Gráficas ──
+        const ej = ejes();
+        if (serie.tipo === 'linea') {
+          crear(raiz.querySelector('#mx2-principal'), { type: 'line', data: { labels: serie.etiquetas, datasets: [
+            { label: 'Visitas', data: serie.visitas, borderColor: VERDE, backgroundColor: degradado(VERDE), fill: true, tension: .38, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#fff', pointHoverBorderColor: VERDE, pointHoverBorderWidth: 3 },
+            { label: 'Personas distintas', data: serie.unicos, borderColor: AZUL, backgroundColor: degradado(AZUL), fill: true, tension: .38, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#fff', pointHoverBorderColor: AZUL, pointHoverBorderWidth: 3 },
+            ...(hayPrev ? [{ label: 'Periodo anterior', data: serie.previa, borderColor: '#94A3B8', borderDash: [6, 6], borderWidth: 1.8, pointRadius: 0, pointHoverRadius: 0, fill: false, tension: .38 }] : [])
+          ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, tooltip }, scales: ej } });
+        } else {
+          crear(raiz.querySelector('#mx2-principal'), { type: 'bar', data: { labels: serie.etiquetas, datasets: [
+            { label: 'Visitas', data: serie.visitas, backgroundColor: ctx => { const a = ctx.chart.chartArea; if (!a) return VERDE; const g = ctx.chart.ctx.createLinearGradient(0, a.top, 0, a.bottom); g.addColorStop(0, '#7BD33A'); g.addColorStop(1, VERDE_OSC); return g; }, borderRadius: 10, borderSkipped: false, maxBarThickness: 38 },
+            { label: 'Personas distintas', data: serie.unicos, backgroundColor: ctx => { const a = ctx.chart.chartArea; if (!a) return AZUL; const g = ctx.chart.ctx.createLinearGradient(0, a.top, 0, a.bottom); g.addColorStop(0, '#60A5FA'); g.addColorStop(1, '#2563EB'); return g; }, borderRadius: 10, borderSkipped: false, maxBarThickness: 38 }
+          ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, tooltip }, scales: ej } });
+        }
+        if (ordenOrigen.length) {
+          crear(raiz.querySelector('#mx2-origen'), { type: 'bar', data: { labels: ordenOrigen.map(([k]) => NOMBRE_FUENTE[k] || k), datasets: [
+            { label: 'Cuentas creadas', data: ordenOrigen.map(([, v]) => v.n), backgroundColor: ordenOrigen.map(([k]) => COLOR_FUENTE[k] || '#64748B'), borderRadius: 8, borderSkipped: false, barThickness: 20 },
+            { label: 'Ya son VIP', data: ordenOrigen.map(([, v]) => v.vip), backgroundColor: ordenOrigen.map(([k]) => (COLOR_FUENTE[k] || '#64748B') + '55'), borderColor: ordenOrigen.map(([k]) => COLOR_FUENTE[k] || '#64748B'), borderWidth: 1.5, borderRadius: 8, borderSkipped: false, barThickness: 12 }
+          ] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, color: colorTexto() } }, tooltip }, scales: { x: { beginAtZero: true, grid: { color: colorLinea() }, border: { display: false }, ticks: { precision: 0, color: colorTexto() } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: colorTexto(), font: { weight: '600' } } } } } });
+        }
+        crear(raiz.querySelector('#mx2-semana'), { type: 'bar', data: { labels: DIAS, datasets: [{ label: 'Visitas por día (promedio)', data: porSemDia.map(v => Math.round(v * 10) / 10), backgroundColor: porSemDia.map((v, i) => (i === diaFuerte && v > 0 ? VERDE : VERDE + '66')), borderRadius: 10, borderSkipped: false, maxBarThickness: 34 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip }, scales: ej } });
+        if (topPaises.length) {
+          crear(raiz.querySelector('#mx2-paises'), { type: 'bar', data: { labels: topPaises.map(([k]) => nombrePais(k)), datasets: [{ label: 'Personas', data: topPaises.map(([, v]) => v), backgroundColor: topPaises.map(([k], i) => (k === 'MX' ? VERDE : AZUL + (i % 2 ? 'AA' : 'CC'))), borderRadius: 8, borderSkipped: false, barThickness: 18 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip }, scales: { x: { beginAtZero: true, grid: { color: colorLinea() }, border: { display: false }, ticks: { precision: 0, color: colorTexto() } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: colorTexto(), font: { weight: '600' } } } } } });
+        }
+        const centro = texto => ({ id: 'centro', afterDraw(c) { const { ctx, chartArea: a } = c; ctx.save(); ctx.textAlign = 'center'; ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#111'; ctx.font = "800 28px 'Plus Jakarta Sans',Inter,sans-serif"; ctx.fillText(texto, (a.left + a.right) / 2, (a.top + a.bottom) / 2 + 4); ctx.fillStyle = colorTexto(); ctx.font = "600 10px 'JetBrains Mono',monospace"; ctx.fillText('PERSONAS', (a.left + a.right) / 2, (a.top + a.bottom) / 2 + 22); ctx.restore(); } });
+        crear(raiz.querySelector('#mx2-disp'), { type: 'doughnut', data: { labels: Object.values(NOMBRE_DISP), datasets: [{ data: Object.keys(NOMBRE_DISP).map(k => disp[k] || 0), backgroundColor: Object.keys(NOMBRE_DISP).map(k => COLOR_DISP[k]), borderWidth: 0, hoverOffset: 6, borderRadius: 6, spacing: 3 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip } }, plugins: [centro(num(totDisp))] });
+        if (ordenFuentes.length) {
+          crear(raiz.querySelector('#mx2-fuentes'), { type: 'doughnut', data: { labels: ordenFuentes.map(([k]) => NOMBRE_FUENTE[k] || k), datasets: [{ data: ordenFuentes.map(([, v]) => v), backgroundColor: ordenFuentes.map(([k]) => COLOR_FUENTE[k] || '#64748B'), borderWidth: 0, hoverOffset: 6, borderRadius: 6, spacing: 3 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip } }, plugins: [centro(num(totFuentes))] });
+        }
+        requestAnimationFrame(() => requestAnimationFrame(() => raiz.querySelectorAll('[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; })));
 
-        // Las barras crecen con animación
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          cuerpo.querySelectorAll('[data-h]').forEach(el => { el.style.height = el.dataset.h + '%'; });
-          cuerpo.querySelectorAll('[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; });
+        // ── Interacciones ──
+        raiz.querySelectorAll('.mx2-seg button').forEach(b => b.addEventListener('click', async () => {
+          const r = b.dataset.r;
+          estado.rango = r; estado.semana = 0;
+          if ((r === 'todo' || r === '365') && diasCargados < 730 && !pintar._pidio) {
+            pintar._pidio = true;
+            raiz.querySelectorAll('.mx2-seg button').forEach(x => { x.disabled = true; });
+            try { const mas = await cargar(730); datos.dias = mas.dias; datos.miembros = mas.miembros; datos.origenes = mas.origenes; datos.sinOrigen = mas.sinOrigen; diasCargados = mas.dias.length; indexar(); } catch (e) { /* se queda con lo cargado */ }
+          }
+          dibujar();
         }));
-        cuerpo.querySelector('#mx-ant')?.addEventListener('click', () => { if (sel > 0) { sel--; dibujar(); } });
-        cuerpo.querySelector('#mx-sig')?.addEventListener('click', () => { if (sel < ultimas.length - 1) { sel++; dibujar(); } });
-        cuerpo.querySelector('#mx-hoy')?.addEventListener('click', () => { sel = ultimas.length - 1; dibujar(); });
-        cuerpo.querySelectorAll('#mx-hist button').forEach(b => b.addEventListener('click', () => { sel = Number(b.dataset.i); dibujar(); }));
+        raiz.querySelector('#mx2-ant')?.addEventListener('click', () => { estado.semana += 1; dibujar(); });
+        raiz.querySelector('#mx2-sig')?.addEventListener('click', () => { if (estado.semana > 0) { estado.semana -= 1; dibujar(); } });
+        raiz.querySelector('#mx2-csv')?.addEventListener('click', () => {
+          const fuentesCols = Object.keys(NOMBRE_FUENTE);
+          const filasCsv = [['fecha', 'visitas', 'personas_distintas', 'miembros_que_entraron', 'telefono', 'tableta', 'computadora', ...fuentesCols.map(k => 'origen_' + k), 'paises', 'cuentas_nuevas']];
+          const todos = lista(datos.dias[0].dia, hoy);
+          todos.forEach(c => { const d = dato(c); filasCsv.push([c, d.total, d.unicos, d.miembros, d.dispositivos.movil || 0, d.dispositivos.tablet || 0, d.dispositivos.computadora || 0, ...fuentesCols.map(k => (d.fuentes || {})[k] || 0), Object.entries(d.paises || {}).map(([k, v]) => k + ':' + v).join('|'), todasCuentas.filter(o => o.dia === c).length]); });
+          const csv = '﻿' + filasCsv.map(f => f.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+          a.download = 'historial-visitas-alintec-' + hoy + '.csv';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        });
       };
       dibujar();
     };
 
-    cargar().then(pintar).catch(err => {
-      cuerpo.innerHTML = `<div class="mx-card"><div class="mx-vacio">No se pudieron cargar las métricas: ${esc(err.message)}.<br><button type="button" class="mx-chip" id="mx-reintentar" style="margin-top:12px">Reintentar</button></div></div>`;
-      cuerpo.querySelector('#mx-reintentar')?.addEventListener('click', () => Pages.metricas(p));
+    cargar(400).then(pintar).catch(err => {
+      raiz.innerHTML = `<div class="mx2-card"><div class="mx2-empty"><b>No se pudieron cargar las métricas</b>${esc(err.message)}<br><button type="button" class="mx2-btn" id="mx2-reintentar" style="margin-top:14px">Reintentar</button></div></div>`;
+      raiz.querySelector('#mx2-reintentar')?.addEventListener('click', () => Pages.metricas(p));
     });
   },
 
