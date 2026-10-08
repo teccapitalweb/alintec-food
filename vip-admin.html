@@ -1043,7 +1043,7 @@ body::before{
 .nav-item[data-section="pdfs"] .ic{color:var(--warning)}
 .nav-item[data-section="certificados"] .ic{color:var(--accent)}
 .nav-item[data-section="notificaciones"] .ic,.nav-item[data-section="miembros"] .ic,.nav-item[data-section="foro"] .ic,.nav-item[data-section="directorio"] .ic{color:var(--info)}
-.nav-item[data-section="encuestas"] .ic{color:var(--primary)}
+.nav-item[data-section="encuestas"] .ic,.nav-item[data-section="metricas"] .ic{color:var(--primary)}
 .nav-item[data-section="noticias"] .ic{color:var(--warning)}
 .nav-item.is-active .ic{color:var(--primary)}
 /* Micro-transiciones premium */
@@ -1300,6 +1300,7 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Resumen</div>
       <a class="nav-item is-active" data-section="dashboard"><svg class="ic"><use href="#i-home"/></svg>Dashboard</a>
+      <a class="nav-item" data-section="metricas"><svg class="ic"><use href="#i-trend"/></svg>Métricas</a>
     </div>
 
     <div class="nav-section">
@@ -1770,6 +1771,343 @@ const Pages={
   },
 
   // ─── Pruebas gratuitas: cuántos eligen curso, cuáles y cuántos terminan pagando ───
+  // ─────────── MÉTRICAS DE VISITAS · cuánta gente entra, qué días, desde dónde y quiénes ───────────
+  metricas(p){
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    const num = n => (Number(n) || 0).toLocaleString('es-MX');
+    const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const NOMBRE_PAGINA = { landing: 'Página principal', acceso: 'Inicio de sesión', panel: 'Panel de miembros', demo: 'Demo gratuita' };
+    const NOMBRE_FUENTE = { directo: 'Directo (escribió la dirección)', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
+    const NOMBRE_DISP = { movil: 'Teléfono', tablet: 'Tableta', computadora: 'Computadora' };
+    const COLOR_DISP = { movil: '#58B71B', tablet: '#F7941D', computadora: '#3B82F6' };
+    const REDES_SOCIALES = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'linkedin', 'x'];
+    const nombresPaises = (() => { try { return new Intl.DisplayNames(['es'], { type: 'region' }); } catch (e) { return { of: c => c }; } })();
+    const nombrePais = c => (c === 'ZZ' ? 'No identificado' : (nombresPaises.of(c) || c));
+
+    if (!document.getElementById('mx-estilos')) {
+      const st = document.createElement('style');
+      st.id = 'mx-estilos';
+      st.textContent = `
+.mx-bar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.mx-nav{display:flex;align-items:center;gap:8px}
+.mx-nav button{width:38px;height:38px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:16px;font-weight:700;transition:.15s}
+.mx-nav button:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.mx-nav button:disabled{opacity:.35;cursor:default}
+.mx-nav__sem{min-width:196px;text-align:center;font:700 14px 'Plus Jakarta Sans','Inter',sans-serif}
+.mx-nav__sem small{display:block;margin-top:2px;font:600 11px 'JetBrains Mono',monospace;color:var(--text-3);letter-spacing:.4px}
+.mx-chip{border:1px solid var(--border);background:var(--surface);color:var(--text-2);border-radius:999px;padding:8px 14px;font:700 12px Inter,sans-serif;cursor:pointer}
+.mx-chip:hover{border-color:var(--primary);color:var(--primary)}
+.mx-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px 22px}
+.mx-card h3{margin:0;font:700 15px 'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:-.2px}
+.mx-card .mx-sub{margin:4px 0 16px;font-size:12px;color:var(--text-3);line-height:1.5}
+.mx-grid{display:grid;gap:16px;margin-top:16px}
+.mx-grid--2{grid-template-columns:1.6fr 1fr}
+.mx-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mx-delta{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:2px 8px;border-radius:999px;font:700 11px 'JetBrains Mono',monospace}
+.mx-delta--up{background:color-mix(in srgb,#10B981 16%,transparent);color:#0E9F6E}
+.mx-delta--down{background:color-mix(in srgb,#EF4444 14%,transparent);color:#DC2626}
+.mx-delta--eq{background:var(--surface-2);color:var(--text-3)}
+.mx-legend{display:flex;gap:16px;margin:0 0 14px;font-size:12px;color:var(--text-2);flex-wrap:wrap}
+.mx-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.mx-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end;height:250px;padding-top:6px;border-bottom:1px solid var(--border)}
+.mx-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;border-radius:12px;padding:0 2px;transition:background .15s}
+.mx-col:hover{background:color-mix(in srgb,var(--primary) 6%,transparent)}
+.mx-col__bars{display:flex;align-items:flex-end;justify-content:center;gap:5px;width:100%;height:calc(100% - 22px)}
+.mx-bar{position:relative;flex:1 1 0;max-width:30px;min-height:3px;height:0;border-radius:8px 8px 3px 3px;transition:height .7s cubic-bezier(.2,.8,.25,1)}
+.mx-bar--v{background:linear-gradient(180deg,#7BD33A,#3E8F18)}
+.mx-bar--u{background:linear-gradient(180deg,#60A5FA,#2563EB)}
+.mx-bar b{position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);font:700 11px 'JetBrains Mono',monospace;color:var(--text-2);white-space:nowrap}
+.mx-col--hoy .mx-col__dia{color:var(--primary);font-weight:800}
+.mx-col--futuro{opacity:.4}
+.mx-xs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-top:8px}
+.mx-xs div{text-align:center;font:600 12px Inter,sans-serif;color:var(--text-3);line-height:1.3}
+.mx-xs div b{display:block;font-size:12.5px;color:var(--text)}
+.mx-xs .mx-col--hoy{color:var(--primary)}.mx-xs .mx-col--hoy b{color:var(--primary)}
+.mx-best{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);font:700 12px Inter,sans-serif}
+.mx-hist{display:flex;align-items:flex-end;gap:6px;height:120px}
+.mx-hist button{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;border:0;background:none;padding:0;cursor:pointer}
+.mx-hist i{display:block;width:100%;min-height:3px;border-radius:7px 7px 3px 3px;background:color-mix(in srgb,var(--primary) 30%,var(--surface-2));transition:height .6s cubic-bezier(.2,.8,.25,1),background .15s}
+.mx-hist button:hover i{background:color-mix(in srgb,var(--primary) 60%,var(--surface-2))}
+.mx-hist button.is-sel i{background:linear-gradient(180deg,#7BD33A,#3E8F18)}
+.mx-hist span{font:600 10px 'JetBrains Mono',monospace;color:var(--text-3);text-align:center;white-space:nowrap}
+.mx-hist button.is-sel span{color:var(--primary);font-weight:800}
+.mx-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;margin-bottom:12px}
+.mx-row__t{font-size:13px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-row__n{font:700 12px 'JetBrains Mono',monospace;color:var(--text-2)}
+.mx-row__b{grid-column:1/-1;height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.mx-row__b i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#58B71B,#9CCC65);transition:width .7s cubic-bezier(.2,.8,.25,1)}
+.mx-dona{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.mx-dona__aro{position:relative;width:132px;height:132px;border-radius:50%;flex:none}
+.mx-dona__aro::after{content:'';position:absolute;inset:24px;border-radius:50%;background:var(--surface)}
+.mx-dona__c{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 20px 'Plus Jakarta Sans',sans-serif}
+.mx-dona__c small{font:600 10px 'JetBrains Mono',monospace;color:var(--text-3);letter-spacing:.5px}
+.mx-dona__lg{display:flex;flex-direction:column;gap:9px;font-size:13px}
+.mx-dona__lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+.mx-horas{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px}
+.mx-horas i{display:block;aspect-ratio:1/1.5;border-radius:5px;background:var(--surface-2)}
+.mx-horas-lbl{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));margin-top:6px;font:600 10px 'JetBrains Mono',monospace;color:var(--text-3)}
+.mx-quien{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.mx-quien:last-child{border-bottom:0}
+.mx-quien__av{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;color:#fff;font:800 13px Inter,sans-serif;background:linear-gradient(135deg,#58B71B,#2F7D32)}
+.mx-quien__m{flex:1;min-width:0}
+.mx-quien__n{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-quien__e{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-quien__d{display:flex;gap:3px}
+.mx-quien__d i{width:9px;height:9px;border-radius:3px;background:var(--surface-2);border:1px solid var(--border)}
+.mx-quien__d i.on{background:var(--primary);border-color:var(--primary)}
+.mx-quien__u{text-align:right;font:600 11px 'JetBrains Mono',monospace;color:var(--text-3);min-width:94px}
+.mx-vacio{padding:34px 16px;text-align:center;color:var(--text-3);font-size:13px;line-height:1.6}
+@media(max-width:900px){.mx-grid--2,.mx-grid--3{grid-template-columns:1fr}.mx-chart{gap:6px;height:210px}.mx-bar b{font-size:10px}.mx-quien__d{display:none}}
+@media(max-width:520px){.mx-nav__sem{min-width:150px;font-size:13px}.mx-quien{flex-wrap:wrap}.mx-quien__u{min-width:0;width:100%;text-align:left;padding-left:50px}}
+`;
+      document.head.appendChild(st);
+    }
+
+    p.innerHTML = `
+      <div class="fade-up">
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Análisis</span>
+          <h1 class="sec-hero__title">Métricas de visitas</h1>
+          <p class="sec-hero__sub">Cuánta gente entra a Alintec Food, qué días y a qué hora, desde qué dispositivo y de dónde llega. El conteo es anónimo y sin cookies; solo los miembros con sesión iniciada aparecen con su nombre.</p>
+        </div>
+        <div id="mx-cuerpo"><div class="mx-vacio">Cargando métricas…</div></div>
+      </div>`;
+    const cuerpo = p.querySelector('#mx-cuerpo');
+
+    const sumarDias = (clave, n) => { const [a, m, d] = clave.split('-').map(Number); return new Date(Date.UTC(a, m - 1, d + n)).toISOString().slice(0, 10); };
+    const lunesDe = clave => { const [a, m, d] = clave.split('-').map(Number); return sumarDias(clave, -((new Date(Date.UTC(a, m - 1, d)).getUTCDay() + 6) % 7)); };
+    const corta = clave => { const [, m, d] = clave.split('-').map(Number); return d + ' ' + MESES[m - 1]; };
+    const larga = clave => { const [a, m, d] = clave.split('-').map(Number); return d + ' de ' + ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][m - 1] + ' de ' + a; };
+
+    const cargar = async () => {
+      const token = await Pages._getAuthToken();
+      const r = await fetch(Pages._webhookUrl + '/api/admin/metricas?dias=84', { headers: { 'Authorization': 'Bearer ' + token } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'No se pudieron cargar las métricas');
+      return d;
+    };
+
+    const pintar = datos => {
+      const porDia = {};
+      datos.dias.forEach(d => { porDia[d.dia] = d; });
+      const hoy = datos.hoy;
+      const primeraSemana = lunesDe(datos.dias[0].dia);
+      const semanas = [];
+      for (let l = lunesDe(hoy); l >= primeraSemana; l = sumarDias(l, -7)) semanas.unshift(l);
+      const ultimas = semanas.slice(-12);
+      const hayDatos = datos.dias.some(d => d.total > 0);
+      let sel = ultimas.length - 1;
+
+      const semana = lunes => Array.from({ length: 7 }, (_, i) => {
+        const clave = sumarDias(lunes, i);
+        const dato = porDia[clave];
+        return { clave, futuro: clave > hoy, esHoy: clave === hoy, d: dato || { total: 0, unicos: 0, miembros: 0, dispositivos: {}, paginas: {}, fuentes: {}, horas: {} } };
+      });
+      const totalSemana = dias => dias.reduce((t, x) => ({ total: t.total + x.d.total, unicos: t.unicos + x.d.unicos, miembros: t.miembros + x.d.miembros }), { total: 0, unicos: 0, miembros: 0 });
+      const sumarCampo = (dias, campo, claves) => Object.fromEntries(claves.map(k => [k, dias.reduce((t, x) => t + (Number((x.d[campo] || {})[k]) || 0), 0)]));
+      const delta = (ahora, antes, parcial) => {
+        if (!antes && !ahora) return '<span class="mx-delta mx-delta--eq">— sin cambio</span>';
+        if (!antes) return '<span class="mx-delta mx-delta--up">▲ nuevo</span>';
+        const pct = Math.round((ahora - antes) / antes * 100);
+        if (pct === 0) return '<span class="mx-delta mx-delta--eq">= igual que antes</span>';
+        return '<span class="mx-delta ' + (pct > 0 ? 'mx-delta--up">▲ +' : 'mx-delta--down">▼ ') + Math.abs(pct) + '% vs ' + (parcial ? 'mismos días de la semana anterior' : 'semana anterior') + '</span>';
+      };
+
+      const dibujar = () => {
+        const lunes = ultimas[sel];
+        const dias = semana(lunes);
+        const previa = semana(sumarDias(lunes, -7));
+        const esActual = sel === ultimas.length - 1;
+        const transcurridos = dias.filter(x => !x.futuro).length || 1;
+        // En la semana en curso se compara con los mismos días de la semana anterior (no con la semana completa)
+        const previaCmp = esActual ? previa.slice(0, transcurridos) : previa;
+        const t = totalSemana(dias), tPrev = totalSemana(previaCmp);
+        const promedio = Math.round(t.total / transcurridos);
+        const maxV = Math.max(1, ...dias.map(x => x.d.total));
+        const mejor = dias.filter(x => !x.futuro).reduce((a, x) => (x.d.total > (a ? a.d.total : 0) ? x : a), null);
+        const disp = sumarCampo(dias, 'dispositivos', ['movil', 'tablet', 'computadora']);
+        const totDisp = Object.values(disp).reduce((a, b) => a + b, 0);
+        const pags = sumarCampo(dias, 'paginas', Object.keys(NOMBRE_PAGINA));
+        const fuentes = sumarCampo(dias, 'fuentes', Object.keys(NOMBRE_FUENTE));
+        const sociales = Object.fromEntries(REDES_SOCIALES.map(k => [k, fuentes[k] || 0]));
+        const totSociales = Object.values(sociales).reduce((a, b) => a + b, 0);
+        const totFuentes = Object.values(fuentes).reduce((a, b) => a + b, 0);
+        const paisesTot = {};
+        dias.forEach(x => Object.entries(x.d.paises || {}).forEach(([k, v]) => { paisesTot[k] = (paisesTot[k] || 0) + v; }));
+        const totPaises = Object.values(paisesTot).reduce((a, b) => a + b, 0);
+        const topPaises = Object.entries(paisesTot).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        const nombresTop = Object.fromEntries(topPaises.map(([k, v]) => [k, nombrePais(k) + ' · ' + Math.round(v / totPaises * 100) + '%']));
+        const fueraMx = totPaises - (paisesTot.MX || 0) - (paisesTot.ZZ || 0);
+        const horas = Array.from({ length: 24 }, (_, h) => dias.reduce((s, x) => s + (Number((x.d.horas || {})[String(h).padStart(2, '0')]) || 0), 0));
+        const maxH = Math.max(1, ...horas);
+        const horaPico = horas.indexOf(Math.max(...horas));
+        const rango = corta(lunes) + ' – ' + corta(sumarDias(lunes, 6));
+
+        // Historial de semanas
+        const totales = ultimas.map(l => totalSemana(semana(l)).total);
+        const maxS = Math.max(1, ...totales);
+
+        // Promedio por día de la semana (últimas 12 semanas con datos)
+        const pasados = datos.dias.filter(d => d.dia <= hoy);
+        const porSemDia = DIAS.map((_, i) => {
+          const lista = pasados.filter(d => (((new Date(d.dia + 'T00:00:00Z').getUTCDay()) + 6) % 7) === i);
+          return lista.length ? lista.reduce((s, d) => s + d.total, 0) / lista.length : 0;
+        });
+        const maxPD = Math.max(1, ...porSemDia);
+        const diaFuerte = porSemDia.indexOf(Math.max(...porSemDia));
+
+        // Quiénes (miembros con sesión) de la semana seleccionada
+        const clavesSem = dias.map(x => x.clave);
+        const quienes = datos.miembros.map(m => ({ ...m, enSem: clavesSem.map(c => (m.dias || {})[c] || 0) }))
+          .filter(m => m.enSem.some(v => v > 0))
+          .sort((a, b) => b.enSem.reduce((s, v) => s + v, 0) - a.enSem.reduce((s, v) => s + v, 0));
+        const clavesPrev = previaCmp.map(x => x.clave);
+        const quienesPrev = datos.miembros.filter(m => clavesPrev.some(c => (m.dias || {})[c]));
+        const anonimos = Math.max(0, t.unicos - quienes.length);
+
+        const filas = (obj, nombres) => {
+          const orden = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+          const max = Math.max(1, ...orden.map(o => o[1]));
+          return orden.length ? orden.map(([k, v]) => `<div class="mx-row"><span class="mx-row__t">${esc(nombres[k] || k)}</span><span class="mx-row__n">${num(v)}</span><div class="mx-row__b"><i data-w="${Math.round(v / max * 100)}"></i></div></div>`).join('')
+            : '<div class="mx-vacio">Sin datos esta semana</div>';
+        };
+
+        let acum = 0;
+        const gradiente = totDisp ? Object.keys(NOMBRE_DISP).map(k => { const ini = acum; acum += disp[k] / totDisp * 360; return COLOR_DISP[k] + ' ' + ini + 'deg ' + acum + 'deg'; }).join(',') : 'var(--surface-2) 0 360deg';
+
+        cuerpo.innerHTML = `
+          <div class="mx-bar-top">
+            <div class="mx-nav">
+              <button type="button" id="mx-ant" aria-label="Semana anterior" ${sel === 0 ? 'disabled' : ''}>‹</button>
+              <div class="mx-nav__sem">${esc(rango)}<small>${esActual ? 'ESTA SEMANA' : 'HACE ' + (ultimas.length - 1 - sel) + (ultimas.length - 1 - sel === 1 ? ' SEMANA' : ' SEMANAS')}</small></div>
+              <button type="button" id="mx-sig" aria-label="Semana siguiente" ${esActual ? 'disabled' : ''}>›</button>
+            </div>
+            ${esActual ? '' : '<button type="button" class="mx-chip" id="mx-hoy">Volver a esta semana</button>'}
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
+              <div class="kpi-card__label">Visitas</div>
+              <div class="kpi-card__value">${num(t.total)}</div>
+              <div class="kpi-card__sub">Páginas vistas en la semana</div>${delta(t.total, tPrev.total, esActual)}
+            </div>
+            <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
+              <div class="kpi-card__label">Personas distintas</div>
+              <div class="kpi-card__value">${num(t.unicos)}</div>
+              <div class="kpi-card__sub">Visitantes únicos por día, sumados</div>${delta(t.unicos, tPrev.unicos, esActual)}
+            </div>
+            <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
+              <div class="kpi-card__label">Miembros que entraron</div>
+              <div class="kpi-card__value">${num(quienes.length)}</div>
+              <div class="kpi-card__sub">Con sesión iniciada en el panel</div>${delta(quienes.length, quienesPrev.length, esActual)}
+            </div>
+            <div class="kpi-card" style="--c1:#8B5CF6;--c2:#A78BFA;">
+              <div class="kpi-card__label">Promedio por día</div>
+              <div class="kpi-card__value">${num(promedio)}</div>
+              <div class="kpi-card__sub">${mejor && mejor.d.total ? 'Mejor día: ' + DIAS[dias.indexOf(mejor)] + ' (' + num(mejor.d.total) + ')' : 'Aún sin visitas'}</div>
+            </div>
+          </div>
+
+          <div class="mx-grid mx-grid--2" style="margin-top:0">
+            <div class="mx-card">
+              <h3>Visitas por día de la semana</h3>
+              <p class="mx-sub">Cada día de lunes a domingo. Los días futuros aparecen atenuados.</p>
+              <div class="mx-legend"><span><i style="background:#3E8F18"></i>Visitas</span><span><i style="background:#2563EB"></i>Personas distintas</span></div>
+              <div class="mx-chart" id="mx-chart">
+                ${dias.map(x => `<div class="mx-col${x.esHoy ? ' mx-col--hoy' : ''}${x.futuro ? ' mx-col--futuro' : ''}" title="${esc(larga(x.clave))}: ${x.d.total} visitas · ${x.d.unicos} personas">
+                  <div class="mx-col__bars">
+                    <div class="mx-bar mx-bar--v" data-h="${Math.round(x.d.total / maxV * 100)}">${x.d.total ? '<b>' + num(x.d.total) + '</b>' : ''}</div>
+                    <div class="mx-bar mx-bar--u" data-h="${Math.round(x.d.unicos / maxV * 100)}">${x.d.unicos ? '<b>' + num(x.d.unicos) + '</b>' : ''}</div>
+                  </div></div>`).join('')}
+              </div>
+              <div class="mx-xs">${dias.map((x, i) => `<div class="${x.esHoy ? 'mx-col--hoy' : ''}"><b>${DIAS[i]}</b>${x.clave.slice(8).replace(/^0/, '')}</div>`).join('')}</div>
+              ${mejor && mejor.d.total ? `<div class="mx-best">★ Día más fuerte: ${DIAS[dias.indexOf(mejor)]} ${esc(corta(mejor.clave))} · ${num(mejor.d.total)} visitas</div>` : ''}
+            </div>
+            <div class="mx-card">
+              <h3>Dispositivos</h3>
+              <p class="mx-sub">Desde qué aparato entra la gente (personas distintas).</p>
+              <div class="mx-dona">
+                <div class="mx-dona__aro" style="background:conic-gradient(${gradiente})"><div class="mx-dona__c">${num(totDisp)}<small>PERSONAS</small></div></div>
+                <div class="mx-dona__lg">${Object.keys(NOMBRE_DISP).map(k => `<div><i style="background:${COLOR_DISP[k]}"></i>${NOMBRE_DISP[k]} <b>${totDisp ? Math.round(disp[k] / totDisp * 100) : 0}%</b></div>`).join('')}</div>
+              </div>
+              <h3 style="margin-top:22px">Páginas más vistas</h3>
+              <p class="mx-sub">Dónde entra la gente.</p>
+              ${filas(pags, NOMBRE_PAGINA)}
+            </div>
+          </div>
+
+          <div class="mx-grid mx-grid--2">
+            <div class="mx-card">
+              <h3>Historial · últimas ${ultimas.length} semanas</h3>
+              <p class="mx-sub">Visitas por semana. Toca una barra para ver esa semana.</p>
+              <div class="mx-hist" id="mx-hist">${ultimas.map((l, i) => `<button type="button" data-i="${i}" class="${i === sel ? 'is-sel' : ''}" title="Semana del ${esc(corta(l))}: ${totales[i]} visitas"><i data-h="${Math.round(totales[i] / maxS * 100)}"></i><span>${esc(corta(l))}</span></button>`).join('')}</div>
+            </div>
+            <div class="mx-card">
+              <h3>¿Qué día entra más gente?</h3>
+              <p class="mx-sub">Promedio de visitas por día de la semana, con todo el historial.</p>
+              ${DIAS.map((n, i) => `<div class="mx-row"><span class="mx-row__t">${n}${i === diaFuerte && porSemDia[i] > 0 ? ' ★' : ''}</span><span class="mx-row__n">${porSemDia[i] ? porSemDia[i].toFixed(1) : '0'}</span><div class="mx-row__b"><i data-w="${Math.round(porSemDia[i] / maxPD * 100)}"></i></div></div>`).join('')}
+            </div>
+          </div>
+
+          <div class="mx-grid mx-grid--2">
+            <div class="mx-card">
+              <h3>Horas con más visitas</h3>
+              <p class="mx-sub">${horas.some(v => v) ? 'Hora pico de la semana: <strong>' + (horaPico % 12 || 12) + (horaPico < 12 ? ' a. m.' : ' p. m.') + '</strong> (hora de México).' : 'Aún sin visitas esta semana.'}</p>
+              <div class="mx-horas">${horas.map((v, h) => `<i title="${h}:00 · ${v} visitas" style="background:${v ? 'color-mix(in srgb,#58B71B ' + Math.max(18, Math.round(v / maxH * 100)) + '%,var(--surface-2))' : 'var(--surface-2)'}"></i>`).join('')}</div>
+              <div class="mx-horas-lbl"><span>12 a. m.</span><span>3 a. m.</span><span>6 a. m.</span><span>9 a. m.</span><span>12 p. m.</span><span>3 p. m.</span><span>6 p. m.</span><span>9 p. m.</span></div>
+            </div>
+            <div class="mx-card">
+              <h3>¿Cómo llegaron al sitio?</h3>
+              <p class="mx-sub">Por dónde entró cada persona en su primera visita del día.</p>
+              ${filas(fuentes, NOMBRE_FUENTE)}
+            </div>
+          </div>
+
+          <div class="mx-grid mx-grid--2">
+            <div class="mx-card">
+              <h3>¿Desde qué país nos visitan?</h3>
+              <p class="mx-sub">${totPaises ? (fueraMx > 0 ? 'Hubo <strong>' + num(fueraMx) + '</strong> persona' + (fueraMx === 1 ? '' : 's') + ' de fuera de México esta semana.' : 'Por ahora todas las visitas identificadas son de México.') : 'Aún sin visitas esta semana.'} El país se detecta a partir de la conexión, sin guardar la dirección IP.</p>
+              ${filas(Object.fromEntries(topPaises), nombresTop)}
+            </div>
+            <div class="mx-card">
+              <h3>Redes sociales</h3>
+              <p class="mx-sub">${totSociales ? '<strong>' + num(totSociales) + '</strong> de ' + num(totFuentes) + ' personas llegaron desde una red social.' : 'Nadie llegó desde una red social esta semana.'} Para medir una publicación en concreto, agrega al enlace <code>?utm_source=facebook</code> (o <code>instagram</code>, <code>tiktok</code>…).</p>
+              ${filas(sociales, NOMBRE_FUENTE)}
+            </div>
+          </div>
+
+          <div class="mx-card" style="margin-top:16px">
+            <h3>Quiénes entraron al panel</h3>
+            <p class="mx-sub">Miembros con sesión iniciada esta semana. Los cuadritos marcan los días (lun–dom) en que entraron.${anonimos ? ' Además hubo <strong>' + num(anonimos) + '</strong> visitante' + (anonimos === 1 ? '' : 's') + ' anónimo' + (anonimos === 1 ? '' : 's') + ' (sin cuenta o sin sesión), que no se identifican.' : ''}</p>
+            ${quienes.length ? quienes.map(m => {
+              const ini = (m.nombre || m.email || '?').trim().slice(0, 2).toUpperCase();
+              const ult = m.ultima ? new Date(m.ultima).toLocaleString('es-MX', { timeZone: datos.zona, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+              return `<div class="mx-quien"><div class="mx-quien__av">${esc(ini)}</div><div class="mx-quien__m"><div class="mx-quien__n">${esc(m.nombre || 'Sin nombre')}</div><div class="mx-quien__e">${esc(m.email)}</div></div><div class="mx-quien__d" title="Días en que entró">${m.enSem.map(v => '<i class="' + (v ? 'on' : '') + '"></i>').join('')}</div><div class="mx-quien__u">${num(m.enSem.reduce((s, v) => s + v, 0))} visita${m.enSem.reduce((s, v) => s + v, 0) === 1 ? '' : 's'}<br>${esc(ult)}</div></div>`;
+            }).join('') : '<div class="mx-vacio">Ningún miembro entró al panel esta semana.</div>'}
+          </div>
+          ${hayDatos ? '' : '<div class="mx-card" style="margin-top:16px"><div class="mx-vacio">Todavía no hay visitas registradas. El contador empieza a funcionar en cuanto se publique este cambio; aquí verás los números en cuanto entre la primera persona al sitio.</div></div>'}
+        `;
+
+        // Las barras crecen con animación
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          cuerpo.querySelectorAll('[data-h]').forEach(el => { el.style.height = el.dataset.h + '%'; });
+          cuerpo.querySelectorAll('[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; });
+        }));
+        cuerpo.querySelector('#mx-ant')?.addEventListener('click', () => { if (sel > 0) { sel--; dibujar(); } });
+        cuerpo.querySelector('#mx-sig')?.addEventListener('click', () => { if (sel < ultimas.length - 1) { sel++; dibujar(); } });
+        cuerpo.querySelector('#mx-hoy')?.addEventListener('click', () => { sel = ultimas.length - 1; dibujar(); });
+        cuerpo.querySelectorAll('#mx-hist button').forEach(b => b.addEventListener('click', () => { sel = Number(b.dataset.i); dibujar(); }));
+      };
+      dibujar();
+    };
+
+    cargar().then(pintar).catch(err => {
+      cuerpo.innerHTML = `<div class="mx-card"><div class="mx-vacio">No se pudieron cargar las métricas: ${esc(err.message)}.<br><button type="button" class="mx-chip" id="mx-reintentar" style="margin-top:12px">Reintentar</button></div></div>`;
+      cuerpo.querySelector('#mx-reintentar')?.addEventListener('click', () => Pages.metricas(p));
+    });
+  },
+
   pruebas(p){
     p.innerHTML = `
       <div class="fade-up">
@@ -6557,7 +6895,7 @@ function dirAdminCargar(){
 // ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
 // de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
 window.__CLASES_EN_VIVO_ACTIVAS = false;
-const SECCIONES_VALIDAS = ['dashboard','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
+const SECCIONES_VALIDAS = ['dashboard','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
