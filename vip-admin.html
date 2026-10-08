@@ -1300,7 +1300,6 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Resumen</div>
       <a class="nav-item is-active" data-section="dashboard"><svg class="ic"><use href="#i-home"/></svg>Dashboard</a>
-      <a class="nav-item" data-section="metricas"><svg class="ic"><use href="#i-trend"/></svg>Métricas</a>
     </div>
 
     <div class="nav-section">
@@ -1319,6 +1318,7 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Marketing</div>
       <a class="nav-item" data-section="encuestas"><svg class="ic"><use href="#i-chart-bar"/></svg>Encuestas</a>
+      <a class="nav-item" data-section="metricas"><svg class="ic"><use href="#i-trend"/></svg>Métricas</a>
       <a class="nav-item" data-section="pruebas"><svg class="ic"><use href="#i-trend"/></svg>Pruebas gratuitas</a>
     </div>
 
@@ -2009,7 +2009,7 @@ const Pages={
 
         const cab = `
           <div class="mx2-hero">
-            <div><span class="mx2-eyebrow">Análisis</span><h1>Métricas de visitas</h1>
+            <div><span class="mx2-eyebrow">Marketing</span><h1>Métricas de visitas</h1>
             <p>Cuánta gente visita Alintec Food, desde dónde llega y de qué red social salen tus miembros. Conteo anónimo y sin cookies; todo se guarda día a día para que consultes el historial.</p></div>
             ${estadoHtml}
           </div>`;
@@ -2033,6 +2033,12 @@ const Pages={
           serie = { tipo: 'barras', etiquetas: ks.map(k => mesDe(k + '-01')), visitas: ks.map(k => meses[k].v), unicos: ks.map(k => meses[k].u) };
         }
 
+        // Los mismos grupos de la gráfica principal (días o meses), para repartir las redes sociales en el tiempo
+        let grupos;
+        if (estado.rango === 'semana') grupos = DIAS.map((_, i) => { const c = sumarDias(R.desde, i); return c > hoy ? [] : [c]; });
+        else if (estado.rango === '30' || estado.rango === '90') grupos = claves.map(c => [c]);
+        else { const m = {}; claves.forEach(c => { (m[c.slice(0, 7)] = m[c.slice(0, 7)] || []).push(c); }); grupos = Object.keys(m).sort().map(k => m[k]); }
+
         // ── Origen de los miembros ──
         const porOrigen = {};
         nuevas.forEach(o => { const k = o.origen || 'directo'; porOrigen[k] = porOrigen[k] || { n: 0, vip: 0 }; porOrigen[k].n += 1; if (o.vip) porOrigen[k].vip += 1; });
@@ -2050,6 +2056,11 @@ const Pages={
         const fuentes = sumaMapa(claves, 'fuentes');
         const ordenFuentes = Object.entries(fuentes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
         const totFuentes = ordenFuentes.reduce((a, [, v]) => a + v, 0);
+        const REDES = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'linkedin', 'x'];
+        const sociales = REDES.map(k => ({ k, total: fuentes[k] || 0 })).filter(x => x.total > 0).sort((a, b) => b.total - a.total);
+        const totSociales = sociales.reduce((a, x) => a + x.total, 0);
+        const serieRedes = sociales.slice(0, 5).map(x => ({ k: x.k, datos: grupos.map(g => g.reduce((t, c) => t + (((dato(c).fuentes || {})[x.k]) || 0), 0)) }));
+        const redesVacio = '<div class="mx2-empty"><b>Todavía nadie ha llegado desde una red social</b>Aquí verás cuántas personas llegan desde cada una. Comparte tus enlaces con <code>?utm_source=facebook</code> o <code>?utm_source=instagram</code> para medirlo con exactitud.<div class="mx2-leg" style="justify-content:center;margin-top:14px">' + REDES.map(k => `<span><i style="background:${COLOR_FUENTE[k]};border-radius:50%"></i>${NOMBRE_FUENTE[k]} <b>0</b></span>`).join('') + '</div></div>';
         const pags = sumaMapa(claves, 'paginas');
         const porSemDia = DIAS.map((_, i) => { const l = claves.filter(c => dow(c) === i); return l.length ? l.reduce((s, c) => s + dato(c).total, 0) / l.length : 0; });
         const diaFuerte = porSemDia.indexOf(Math.max(...porSemDia));
@@ -2086,6 +2097,15 @@ const Pages={
                   ${ordenOrigen.map(([k, v]) => `<tr><td><span class="mx2-dot" style="background:${COLOR_FUENTE[k] || '#64748B'}"></span>${esc(NOMBRE_FUENTE[k] || k)}</td><td>${num(v.n)}</td><td>${num(v.vip)}</td><td><span class="mx2-pill">${Math.round(v.vip / v.n * 100)}%</span></td></tr>`).join('')}
                 </tbody></table>
               </div>` : `<div class="mx2-empty"><b>Aún no hay cuentas con origen en este periodo</b>Desde que se publicó el contador, cada cuenta nueva guarda por dónde llegó (Facebook, Instagram, Google, WhatsApp…). Cuando alguien se registre lo verás aquí.</div>`}
+          </div>
+
+          <div class="mx2-grid mx2-g2">
+            <div class="mx2-card"><h3>Redes sociales · ¿cuánta gente llega de cada una?</h3>
+              <p class="mx2-sub">${totSociales ? '<strong>' + num(totSociales) + '</strong> de ' + num(totFuentes) + ' personas (' + Math.round(totSociales / Math.max(1, totFuentes) * 100) + '%) llegaron desde una red social. La más fuerte: <strong>' + esc(NOMBRE_FUENTE[sociales[0].k]) + '</strong>.' : 'Personas que llegaron desde Facebook, Instagram, WhatsApp, TikTok y más.'}</p>
+              ${sociales.length ? `<div class="mx2-cv" style="height:${Math.max(170, sociales.length * 44 + 30)}px"><canvas id="mx2-redes"></canvas></div>` : redesVacio}</div>
+            <div class="mx2-card"><h3>Redes sociales a lo largo del tiempo</h3>
+              <p class="mx2-sub">Cuántas personas llegaron de cada red ${estado.rango === '365' || estado.rango === 'todo' ? 'mes a mes' : 'día a día'}.</p>
+              ${sociales.length ? `<div class="mx2-cv" style="height:${Math.max(220, sociales.length * 44 + 30)}px"><canvas id="mx2-redes-tiempo"></canvas></div>` : redesVacio}</div>
           </div>
 
           <div class="mx2-grid mx2-g2">
@@ -2134,6 +2154,10 @@ const Pages={
             { label: 'Cuentas creadas', data: ordenOrigen.map(([, v]) => v.n), backgroundColor: ordenOrigen.map(([k]) => COLOR_FUENTE[k] || '#64748B'), borderRadius: 8, borderSkipped: false, barThickness: 20 },
             { label: 'Ya son VIP', data: ordenOrigen.map(([, v]) => v.vip), backgroundColor: ordenOrigen.map(([k]) => (COLOR_FUENTE[k] || '#64748B') + '55'), borderColor: ordenOrigen.map(([k]) => COLOR_FUENTE[k] || '#64748B'), borderWidth: 1.5, borderRadius: 8, borderSkipped: false, barThickness: 12 }
           ] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, color: colorTexto() } }, tooltip }, scales: { x: { beginAtZero: true, grid: { color: colorLinea() }, border: { display: false }, ticks: { precision: 0, color: colorTexto() } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: colorTexto(), font: { weight: '600' } } } } } });
+        }
+        if (sociales.length) {
+          crear(raiz.querySelector('#mx2-redes'), { type: 'bar', data: { labels: sociales.map(x => NOMBRE_FUENTE[x.k]), datasets: [{ label: 'Personas', data: sociales.map(x => x.total), backgroundColor: sociales.map(x => COLOR_FUENTE[x.k]), borderRadius: 10, borderSkipped: false, barThickness: 22 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ...tooltip, callbacks: { label: c => ' ' + num(c.parsed.x) + ' personas (' + Math.round(c.parsed.x / Math.max(1, totSociales) * 100) + '% de las redes)' } } }, scales: { x: { beginAtZero: true, grid: { color: colorLinea() }, border: { display: false }, ticks: { precision: 0, color: colorTexto() } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: colorTexto(), font: { weight: '600' } } } } } });
+          crear(raiz.querySelector('#mx2-redes-tiempo'), { type: 'bar', data: { labels: serie.etiquetas, datasets: serieRedes.map(s => ({ label: NOMBRE_FUENTE[s.k], data: s.datos, backgroundColor: COLOR_FUENTE[s.k], borderRadius: 4, borderSkipped: false, maxBarThickness: 30 })) }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, color: colorTexto() } }, tooltip }, scales: { x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: colorTexto(), maxRotation: 0, autoSkipPadding: 14 } }, y: { stacked: true, beginAtZero: true, grid: { color: colorLinea(), drawTicks: false }, border: { display: false }, ticks: { color: colorTexto(), precision: 0, padding: 8 } } } } });
         }
         crear(raiz.querySelector('#mx2-semana'), { type: 'bar', data: { labels: DIAS, datasets: [{ label: 'Visitas por día (promedio)', data: porSemDia.map(v => Math.round(v * 10) / 10), backgroundColor: porSemDia.map((v, i) => (i === diaFuerte && v > 0 ? VERDE : VERDE + '66')), borderRadius: 10, borderSkipped: false, maxBarThickness: 34 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip }, scales: ej } });
         if (topPaises.length) {
