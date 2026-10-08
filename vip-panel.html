@@ -3708,7 +3708,7 @@ if (window.__isDemoMode) {
             if (window.__showWelcomeSplash) window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
             await pausa(500);
             await esperarSin('splash-bienvenida', 1200);
-            try { window.__maybeAskName && window.__maybeAskName(); } catch(e){}
+            try { window.__maybeAskName && window.__maybeAskName({ forzar: true }); } catch(e){}
             await pausa(400);
             await esperarSin('name-modal', 2400);
           } finally { window.__bienvenidaPendiente = false; }
@@ -14487,9 +14487,22 @@ function openPasswordResetModal(){
 // genérico, ofrecemos editarlo; si no, igual avisamos con qué nombre
 // se emitirán los certificados.
 // ═══════════════════════════════════════════════════════════════════
-window.__maybeAskName = function(){
+// La tarjeta se muestra UNA vez por cuenta (no por navegador). Las cuentas nuevas siempre la ven,
+// aunque en ese navegador ya la hubiera contestado otra persona o una cuenta de prueba.
+window.__maybeAskName = function(opts){
   try {
-    if (localStorage.getItem('alintec_name_confirmed') === '1') return;
+    const S0 = window.UserState || {};
+    const claveCuenta = 'alintec_name_confirmed_' + (S0.uid || '');
+    if (S0.uid && localStorage.getItem(claveCuenta) === '1') return;
+    // Cuenta nueva = recién creada (menos de 7 días) o que está recibiendo su bienvenida
+    let reciente = false;
+    try {
+      const creada = Date.parse(window.__currentUser && window.__currentUser.metadata && window.__currentUser.metadata.creationTime);
+      reciente = Number.isFinite(creada) && Date.now() - creada < 7 * 24 * 60 * 60 * 1000;
+    } catch (e) { reciente = false; }
+    const esNueva = (opts && opts.forzar === true) || reciente;
+    // Cuentas antiguas: se respeta la marca anterior de este navegador para no volver a preguntarles
+    if (!esNueva && localStorage.getItem('alintec_name_confirmed') === '1') return;
     if (document.getElementById('name-modal')) return;
     const S = window.UserState || {};
     const email = S.email || '';
@@ -14564,6 +14577,7 @@ window.__maybeAskName = function(){
       window.UserState.iniciales = (window.calcIniciales ? window.calcIniciales(val) : val.slice(0,2).toUpperCase());
       try { const ls=JSON.parse(localStorage.getItem('alintec_profile')||'{}'); ls.nombre=val; localStorage.setItem('alintec_profile',JSON.stringify(ls)); } catch(e){}
       localStorage.setItem('alintec_name_confirmed','1');
+      if (S0.uid) localStorage.setItem(claveCuenta,'1');
       if (typeof window.__applyUserState==='function') window.__applyUserState();
       if (window.Toast) Toast.success('Nombre guardado', val);
       ov.remove();
@@ -14574,6 +14588,7 @@ window.__maybeAskName = function(){
       // No volver a molestar, pero NO marcamos como "confirmado" para que el
       // perfil siga sugiriendo completarlo. Marcamos solo "preguntado".
       localStorage.setItem('alintec_name_confirmed','1');
+      if (S0.uid) localStorage.setItem(claveCuenta,'1');
       ov.remove();
       if (window.Toast) Toast.info('Puedes cambiarlo luego', 'Mi perfil → Nombre completo');
     });

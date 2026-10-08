@@ -1171,6 +1171,9 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  getAdditionalUserInfo,
+  deleteUser,
+  signOut,
   sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
@@ -1301,16 +1304,23 @@ async function ensureMiembroDoc(user, displayName, origen) {
 }
 
 /* Si ya está logueado, redirige inmediatamente · pero PRIMERO asegura el doc */
+/* Entrar al panel: asegura el documento del miembro, recuerda quién entró y redirige */
+async function continuarSesion(user) {
+  // Asegurar que existe el doc (si entró por login y no tenía uno, lo creamos)
+  await ensureMiembroDoc(user, user.displayName, 'login-web');
+  // Recordar quién entró (para el "Hola de nuevo" si cierra sesión)
+  try { localStorage.setItem('alintec_last_user', JSON.stringify({ email:user.email||'', nombre:user.displayName||'' })); } catch(e){}
+  const isAdmin = ADMINS.includes((user.email || "").toLowerCase());
+  window.location.href = isAdmin ? "vip-admin.html" : "vip-panel.html";
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     // Durante el registro con correo, el flujo de registro envía la verificación y redirige
     if (window.__registrando) return;
-    // Asegurar que existe el doc (si entró por login y no tenía uno, lo creamos)
-    await ensureMiembroDoc(user, user.displayName, 'login-web');
-    // Recordar quién entró (para el "Hola de nuevo" si cierra sesión)
-    try { localStorage.setItem('alintec_last_user', JSON.stringify({ email:user.email||'', nombre:user.displayName||'' })); } catch(e){}
-    const isAdmin = ADMINS.includes((user.email || "").toLowerCase());
-    window.location.href = isAdmin ? "vip-admin.html" : "vip-panel.html";
+    // Durante el acceso con Google se decide primero si la cuenta ya existía (ver más abajo)
+    if (window.__googleLogin) return;
+    await continuarSesion(user);
   } else {
     // No hay sesión · bajar el gate y mostrar el formulario normal
     revealAuthShell();
@@ -1467,13 +1477,30 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 document.querySelectorAll('[data-google]').forEach(btn => {
   btn.addEventListener('click', async () => {
     clearAlert();
+    // Desde "Iniciar sesión" solo se entra con una cuenta que YA existe; crear una cuenta es en "Crear cuenta"
+    const soloEntrar = !!btn.closest('#pane-login');
     btn.disabled = true;
+    window.__googleLogin = true; // onAuthStateChanged espera a que se decida qué hacer con esta cuenta
     try {
-      // El popup hace login/registro · onAuthStateChanged se encarga de
-      // crear el doc en miembros/{uid} (con el nombre de Google) y redirigir.
-      await signInWithPopup(auth, googleProvider);
+      // Google hace login y registro en un solo paso: si la cuenta no existía, el popup la CREA.
+      const cred = await signInWithPopup(auth, googleProvider);
+      const esNueva = !!(getAdditionalUserInfo(cred) && getAdditionalUserInfo(cred).isNewUser);
+      if (soloEntrar && esNueva) {
+        // La persona solo quería entrar y no tenía cuenta: se deshace la cuenta recién creada
+        // (aún no se creó nada en miembros/) y se le lleva a "Crear cuenta".
+        try { await deleteUser(cred.user); }
+        catch (errBorrar) { try { await signOut(auth); } catch (errSalir) { /* sin sesión de todos modos */ } console.warn('No se pudo borrar la cuenta recién creada:', errBorrar && errBorrar.code); }
+        window.__googleLogin = false;
+        btn.disabled = false;
+        document.querySelector('[data-tab="register"]')?.click();
+        showAlert('error', 'No encontramos tu cuenta', 'Ese correo de Google todavía no está registrado. Crea tu cuenta con «Registrarte con Google». Si ya eras miembro, usa ese mismo botón con el mismo correo.');
+        return;
+      }
+      window.__googleLogin = false;
       showAlert('success', '¡Listo!', 'Entrando con Google…');
+      await continuarSesion(cred.user);
     } catch (e) {
+      window.__googleLogin = false;
       btn.disabled = false;
       // Si el usuario solo cerró el popup, no lo regañamos
       if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
