@@ -6557,7 +6557,6 @@ const Pages={
           <p class="sec-hero__sub">Precios de membresía Stripe, datos de contacto, emails admin y claves de servicios externos.</p>
         </div>
 
-        <div class="dash-card" id="estado-servicios" style="margin-bottom:18px"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Revisando los servicios…</div></div>
 
         <div class="dash-grid">
           <div class="dash-card">
@@ -6599,16 +6598,7 @@ const Pages={
             <div style="display:flex;gap:8px;"><input type="email" class="input" id="cfg-new-admin" placeholder="nuevo@email.com"><button class="btn btn--ghost btn--sm" id="add-admin"><svg class="ic"><use href="#i-plus"/></svg>Agregar</button></div>
           </div>
 
-          <div class="dash-card">
-            <div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-bolt"/></svg>Estado de servicios</div></div>
-            <div class="mini-list">
-              <div class="mini-row" style="--c1:#34D399;"><div class="mini-row__dot"><svg class="ic"><use href="#i-shield-check"/></svg></div><div class="mini-row__body"><div class="mini-row__title">Firebase Auth</div><div class="mini-row__meta">alintec-vip · Funcionando</div></div><span class="tag tag--success">OK</span></div>
-              <div class="mini-row" style="--c1:#34D399;"><div class="mini-row__dot"><svg class="ic"><use href="#i-shield-check"/></svg></div><div class="mini-row__body"><div class="mini-row__title">Firestore</div><div class="mini-row__meta">us-central1 · Reglas v1</div></div><span class="tag tag--success">OK</span></div>
-              <div class="mini-row" style="--c1:#34D399;"><div class="mini-row__dot"><svg class="ic"><use href="#i-bolt"/></svg></div><div class="mini-row__body"><div class="mini-row__title">Stripe LIVE</div><div class="mini-row__meta">Webhook conectado</div></div><span class="tag tag--success">OK</span></div>
-              <div class="mini-row" style="--c1:#34D399;"><div class="mini-row__dot"><svg class="ic"><use href="#i-refresh"/></svg></div><div class="mini-row__body"><div class="mini-row__title">Railway Cron (noticias)</div><div class="mini-row__meta">Última: ${c.cronUltima}</div></div><span class="tag tag--success">OK</span></div>
-              <div class="mini-row" style="--c1:#34D399;"><div class="mini-row__dot"><svg class="ic"><use href="#i-mail"/></svg></div><div class="mini-row__body"><div class="mini-row__title">Resend · Certificados y correos</div><div class="mini-row__meta">Configurado y funcionando</div></div><span class="tag tag--success">OK</span></div>
-            </div>
-          </div>
+          <div class="dash-card" id="estado-servicios" style="grid-column:1/-1"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Revisando los servicios…</div></div>
         </div>
       </div>
     `;
