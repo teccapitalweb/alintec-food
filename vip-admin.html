@@ -1889,7 +1889,15 @@ const Pages={
     const mesDe = clave => { const [a, m] = clave.split('-').map(Number); return MESES[m - 1] + ' ' + String(a).slice(2); };
     const lista = (desde, hasta) => { const r = []; for (let c = desde; c <= hasta; c = sumarDias(c, 1)) r.push(c); return r; };
 
+    // Al recargar la página directamente en esta sección, Firebase tarda un instante en confirmar la sesión
+    const esperarSesion = async () => {
+      for (let i = 0; i < 60; i++) {
+        if (window._fb && window._fb.auth && window._fb.auth.currentUser) return;
+        await new Promise(r => setTimeout(r, 250));
+      }
+    };
     const cargar = async dias => {
+      await esperarSesion();
       const token = await Pages._getAuthToken();
       const r = await fetch(Pages._webhookUrl + '/api/admin/metricas?dias=' + dias, { headers: { 'Authorization': 'Bearer ' + token } });
       const d = await r.json().catch(() => ({}));
