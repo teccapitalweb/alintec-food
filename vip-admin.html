@@ -6557,6 +6557,8 @@ const Pages={
           <p class="sec-hero__sub">Precios de membresía Stripe, datos de contacto, emails admin y claves de servicios externos.</p>
         </div>
 
+        <div class="dash-card" id="estado-servicios" style="margin-bottom:18px"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Revisando los servicios…</div></div>
+
         <div class="dash-grid">
           <div class="dash-card">
             <div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-dollar"/></svg>Precios de la membresía VIP</div></div>
@@ -6610,6 +6612,59 @@ const Pages={
         </div>
       </div>
     `;
+    // ── Estado de servicios: semáforo de Stripe, base de datos, correos, videos y contador ──
+    (function estadoServicios(){
+      const caja = p.querySelector('#estado-servicios');
+      if (!caja) return;
+      const escE = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+      const COLOR = { ok: '#16A34A', aviso: '#F59E0B', error: '#EF4444' };
+      const ROTULO = { ok: 'Todo en orden', aviso: 'Revisa los avisos', error: 'Hay algo que corregir' };
+      const ETIQ = { ok: 'OK', aviso: 'AVISO', error: 'ERROR' };
+      if (!document.getElementById('es-estilos')) {
+        const st = document.createElement('style');
+        st.id = 'es-estilos';
+        st.textContent = '.es-fila{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}.es-fila:last-child{border-bottom:0}.es-pt{flex:none;width:12px;height:12px;margin-top:4px;border-radius:50%}.es-fila b{display:block;font-size:13.5px}.es-fila span.es-d{display:block;margin-top:2px;font-size:12.5px;line-height:1.5;color:var(--text-2)}.es-tag{flex:none;margin-left:auto;padding:2px 9px;border-radius:999px;font:700 10px "JetBrains Mono",monospace;letter-spacing:.6px}';
+        document.head.appendChild(st);
+      }
+      let ultimo = null;
+      const pintar = d => {
+        ultimo = d;
+        const hora = new Date(d.generado).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+        caja.innerHTML = `
+          <div class="dash-card__header" style="flex-wrap:wrap;gap:10px">
+            <div class="dash-card__title"><svg class="ic"><use href="#i-shield-check"/></svg>Estado de servicios
+              <span style="margin-left:8px;padding:3px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif;background:${COLOR[d.resumen]}22;color:${COLOR[d.resumen]}">${ROTULO[d.resumen]}</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn--ghost" id="es-copiar" type="button">Copiar reporte</button>
+              <button class="btn btn--accent" id="es-revisar" type="button">Revisar ahora<svg class="ic"><use href="#i-refresh"/></svg></button>
+            </div>
+          </div>
+          <p style="margin:0 0 6px;font-size:12.5px;color:var(--text-3);line-height:1.5">Comprueba que los cobros, los correos, los videos y la base de datos respondan, sin entrar a Stripe ni a ningún otro sitio. Es solo lectura: no cobra ni envía nada. Última revisión: ${escE(hora)}</p>
+          ${d.servicios.map(s => `<div class="es-fila"><span class="es-pt" style="background:${COLOR[s.estado]}"></span><div style="min-width:0"><b>${escE(s.nombre)}</b><span class="es-d">${escE(s.detalle)}</span></div><span class="es-tag" style="background:${COLOR[s.estado]}22;color:${COLOR[s.estado]}">${ETIQ[s.estado]}</span></div>`).join('')}`;
+        caja.querySelector('#es-revisar').addEventListener('click', revisar);
+        caja.querySelector('#es-copiar').addEventListener('click', async () => {
+          const texto = 'Estado de servicios · Alintec Food · ' + hora + '\n' + ROTULO[d.resumen] + '\n\n' + d.servicios.map(s => '[' + ETIQ[s.estado] + '] ' + s.nombre + ': ' + s.detalle).join('\n');
+          try { await navigator.clipboard.writeText(texto); Toast.success('Reporte copiado. Pégalo en un mensaje para pedir ayuda.'); } catch (e) { Toast.error('No se pudo copiar'); }
+        });
+      };
+      const revisar = async () => {
+        const boton = caja.querySelector('#es-revisar');
+        if (boton) { boton.disabled = true; boton.textContent = 'Revisando…'; }
+        try {
+          for (let i = 0; i < 60 && !(window._fb && window._fb.auth && window._fb.auth.currentUser); i++) await new Promise(r => setTimeout(r, 250));
+          const token = await Pages._getAuthToken();
+          const r = await fetch(Pages._webhookUrl + '/api/admin/estado', { headers: { 'Authorization': 'Bearer ' + token } });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.error || 'No se pudo revisar');
+          pintar(d);
+        } catch (err) {
+          caja.innerHTML = `<div style="padding:22px;text-align:center;font-size:13px;color:var(--text-2)"><b style="display:block;margin-bottom:4px;color:#EF4444">No se pudo revisar el estado</b>${escE(err.message)}<br>Si el servidor está caído, esto también sirve de aviso.<br><button class="btn btn--accent" id="es-reintentar" type="button" style="margin-top:12px">Reintentar</button></div>`;
+          caja.querySelector('#es-reintentar').addEventListener('click', revisar);
+        }
+      };
+      revisar();
+    })();
+
     // MODIFICADO: al entrar, cargar los precios REALES desde Firestore (config/club)
     cargarPreciosClub().then(()=>{
       const iM=document.getElementById('cfg-mens'), iA=document.getElementById('cfg-anual');
