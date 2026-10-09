@@ -2146,7 +2146,10 @@ const Pages={
         const recientes = (datos.recientes || []).map(r => {
           const d = new Date(r.t);
           const ok = !Number.isNaN(d.getTime());
+          const p = r.pistas || {};
+          const pistas = [p.ref ? 'viene de ' + p.ref : '', p.utm ? 'etiqueta ' + p.utm : '', p.app ? 'app de ' + (NOMBRE_FUENTE[p.app] || p.app) : '', p.fbclid ? 'anuncio de Meta' : ''].filter(Boolean);
           return { ...r,
+            pistaTxt: pistas.length ? pistas.join(' · ') : 'sin pistas del origen',
             hora: ok ? d.toLocaleTimeString('es-MX', { timeZone: datos.zona, hour: 'numeric', minute: '2-digit' }) : '',
             fecha: ok ? d.toLocaleDateString('es-MX', { timeZone: datos.zona, day: 'numeric', month: 'short' }) : '' };
         });
@@ -2172,7 +2175,7 @@ const Pages={
             <div class="mx2-head"><div><h3>Últimas visitas registradas</h3>
               <p class="mx2-sub" style="margin-bottom:6px">Cada visita aparece aquí en cuanto se registra, sin datos personales. Sirve para comprobar que el contador funciona: entra a tu página desde tu celular y pulsa "Actualizar".</p></div>
               <button type="button" class="mx2-btn" id="mx2-rec-actualizar">Actualizar</button></div>
-            ${recientes.length ? recientes.map(r => `<div class="mx2-rec"><span class="mx2-rec__t">${esc(r.hora)}<br>${esc(r.fecha)}</span><span class="mx2-rec__o"><i style="background:${COLOR_FUENTE[r.fuente] || '#64748B'}"></i>${esc(NOMBRE_FUENTE[r.fuente] || r.fuente)}</span><span>${esc(NOMBRE_PAGINA[r.pagina] || r.pagina)}</span><span>${esc(nombrePais(r.pais))}<br><small>${esc(NOMBRE_DISP[r.dispositivo] || '')}</small></span><span>${r.nuevo ? '<span class="mx2-nuevo">PRIMERA DEL DÍA</span>' : ''}</span></div>`).join('') : '<div class="mx2-empty"><b>Aún no hay visitas registradas</b>En cuanto alguien entre a tu página, aparecerá aquí.</div>'}
+            ${recientes.length ? recientes.map(r => `<div class="mx2-rec"><span class="mx2-rec__t">${esc(r.hora)}<br>${esc(r.fecha)}</span><span><span class="mx2-rec__o"><i style="background:${COLOR_FUENTE[r.fuente] || '#64748B'}"></i>${esc(NOMBRE_FUENTE[r.fuente] || r.fuente)}</span><br><small>${esc(r.pistaTxt)}</small></span><span>${esc(NOMBRE_PAGINA[r.pagina] || r.pagina)}</span><span>${esc(nombrePais(r.pais))}<br><small>${esc(NOMBRE_DISP[r.dispositivo] || '')}</small></span><span>${r.nuevo ? '<span class="mx2-nuevo">PRIMERA DEL DÍA</span>' : ''}</span></div>`).join('') : '<div class="mx2-empty"><b>Aún no hay visitas registradas</b>En cuanto alguien entre a tu página, aparecerá aquí.</div>'}
           </div>
 
           <div class="mx2-card mx2-hero-card" style="margin-bottom:16px">
