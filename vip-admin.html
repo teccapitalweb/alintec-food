@@ -1965,6 +1965,28 @@ const Pages={
 .mx2-r2__m{color:var(--text-2)}
 .mx2-r2__p{grid-column:2/-1;font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:700px){.mx2-per__k{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mx2-per__k b{font-size:17px}.mx2-r2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.mx2-r2__m,.mx2-r2__p{grid-column:1/-1}}
+.mx2-trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:18px;margin-bottom:6px}
+.mx2-mini h4{margin:0 0 8px;font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text-3)}
+.mx2-mr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center;margin-bottom:9px;font-size:13px}
+.mx2-mr__t{display:flex;align-items:center;gap:8px;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx2-mr__t i{width:9px;height:9px;border-radius:50%;flex:none}
+.mx2-mr b{font:700 12px 'JetBrains Mono',monospace;color:var(--text-2)}
+.mx2-mr__b{grid-column:1/-1;height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.mx2-mr__b u{display:block;height:100%;border-radius:99px;text-decoration:none}
+.mx2-mr__v{font-size:12.5px;color:var(--text-3)}
+.mx2-det__top h4{margin:0;font:700 14px 'Plus Jakarta Sans',Inter,sans-serif}
+.mx2-det__top{display:flex;align-items:center;gap:10px}
+.mx2-det__lista .mx2-r2:nth-child(n+6){display:none}
+.mx2-det__lista{max-height:none;overflow:visible;margin-top:8px;padding-right:0}
+.mx2-det__lista.abierta{max-height:340px;overflow-y:auto;padding-right:4px}
+.mx2-det__lista.abierta .mx2-r2:nth-child(n+6){display:grid}
+.mx2-mas{margin-top:10px;width:100%;border:1px dashed var(--border);background:transparent;color:var(--primary);border-radius:12px;padding:9px;font:700 12.5px Inter,sans-serif;cursor:pointer}
+.mx2-mas:hover{background:color-mix(in srgb,var(--primary) 8%,transparent)}
+.mx2-r2__m strong{color:var(--text)}
+.mx2-log{max-height:430px;overflow-y:auto;padding-right:4px}
+.mx2-log .mx2-r2:first-child{padding-top:2px}
+.mx2-log__pie{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3)}
+@media(max-width:700px){.mx2-trio{gap:12px;margin-bottom:0}.mx2-mr{margin-bottom:6px}.mx2-mr__b{display:none}.mx2-mini .mx2-mr:nth-child(n+5){display:none}.mx2-mini h4{margin-bottom:5px}}
 .mx2-empty{padding:34px 16px;text-align:center;color:var(--text-3);font-size:13px;line-height:1.6}
 .mx2-empty b{display:block;margin-bottom:4px;font:700 15px 'Plus Jakarta Sans',sans-serif;color:var(--text)}
 .mx2-big{padding:56px 20px}
@@ -2186,43 +2208,30 @@ const Pages={
         const origenDe = new Map((datos.origenes || []).map(o => [o.uid, o]));
         const anonimos = Math.max(0, unicos - (datos.miembros || []).filter(m => claves.some(c => (m.dias || {})[c])).length);
 
-        // ── Tarjeta "Visitas por periodo": resumen compacto y, plegado, el detalle de las últimas visitas ──
+        // ── Tarjeta "Visitas por periodo": el registro de visitas (guardado en el servidor) por Hoy, Ayer, 7 y 30 días ──
         const PERIODOS = [['hoy', 'Hoy'], ['ayer', 'Ayer'], ['7', '7 días'], ['30', '30 días']];
         if (!estado.periodo) estado.periodo = 'hoy';
+        if (!estado.visibles) estado.visibles = 10;
         const clavesPeriodo = k => k === 'hoy' ? [hoy] : k === 'ayer' ? [sumarDias(hoy, -1)] : lista(sumarDias(hoy, -(Number(k) - 1)), hoy);
-        const htmlPeriodo = k => {
-          const cl = clavesPeriodo(k);
-          const v = suma(cl, 'total'), u = suma(cl, 'unicos');
-          if (!v) return '<div class="mx2-empty" style="padding:22px 10px">Sin visitas en este periodo.</div>';
-          const orig = Object.entries(sumaMapa(cl, 'fuentes')).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 6);
-          const pais = Object.entries(sumaMapa(cl, 'paises')).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1])[0];
-          let vals, etq, tit;
-          if (cl.length === 1) {
-            const h = dato(cl[0]).horas || {};
-            vals = Array.from({ length: 8 }, (_, i) => [0, 1, 2].reduce((s, j) => s + (Number(h[String(i * 3 + j).padStart(2, '0')]) || 0), 0));
-            etq = ['12a', '3a', '6a', '9a', '12p', '3p', '6p', '9p'];
-            tit = vals.map((n, i) => etq[i] + ' a ' + (etq[i + 1] || '12a') + ': ' + n + ' visitas');
-          } else {
-            vals = cl.map(c => dato(c).total);
-            etq = cl.map((c, i) => (cl.length <= 7 ? DIAS[dow(c)] : (i % 7 === 0 ? corta(c) : '')));
-            tit = cl.map(c => corta(c) + ': ' + dato(c).total + ' visitas');
-          }
-          const max = Math.max(1, ...vals);
-          return '<div class="mx2-per__k"><div><b>' + num(v) + '</b><span>visitas</span></div><div><b>' + num(u) + '</b><span>personas</span></div>'
-            + '<div><b>' + esc(pais ? nombrePais(pais[0]) : '—') + '</b><span>país principal</span></div></div>'
-            + '<div class="mx2-mb">' + vals.map((n, i) => '<div title="' + esc(tit[i]) + '"><i style="height:' + Math.max(3, Math.round(n / max * 100)) + '%"></i><span>' + esc(etq[i]) + '</span></div>').join('') + '</div>'
-            + '<div class="mx2-chips">' + orig.map(([o, n]) => '<span class="mx2-chip"><i style="background:' + (COLOR_FUENTE[o] || '#64748B') + '"></i>' + esc(NOMBRE_FUENTE[o] || o) + ' <b>' + num(n) + '</b></span>').join('') + '</div>';
+        const enriquecerVisita = r => {
+          const d = new Date(r.t);
+          const ok = !Number.isNaN(d.getTime());
+          const p = r.pistas || {};
+          const pistas = [p.ref ? 'viene de ' + p.ref : '', p.utm ? 'etiqueta ' + p.utm : '', p.app ? 'app de ' + (NOMBRE_FUENTE[p.app] || p.app) : '', p.fbclid ? 'enlace con marca de Meta' : '', p.igshid ? 'enlace compartido desde Instagram' : ''].filter(Boolean);
+          return { ...r, pistaTxt: pistas.length ? pistas.join(' · ') : 'sin pistas del origen',
+            hora: ok ? d.toLocaleTimeString('es-MX', { timeZone: datos.zona, hour: 'numeric', minute: '2-digit' }) : '',
+            fecha: ok ? d.toLocaleDateString('es-MX', { timeZone: datos.zona, day: 'numeric', month: 'short' }) : '' };
         };
+        const filaVisita = r => '<div class="mx2-r2"><span class="mx2-rec__t">' + esc(r.hora) + ' · ' + esc(r.fecha) + '</span>'
+          + '<span class="mx2-rec__o"><i style="background:' + (COLOR_FUENTE[r.fuente] || '#64748B') + '"></i>' + esc(NOMBRE_FUENTE[r.fuente] || r.fuente) + '</span>'
+          + '<span class="mx2-r2__m"><strong>' + esc(nombrePais(r.pais)) + '</strong> · ' + esc(NOMBRE_DISP[r.dispositivo] || '') + (r.nuevo ? ' · primera del día' : '') + '</span>'
+          + '<span class="mx2-r2__p" title="' + esc(r.pistaTxt) + '">' + esc(r.pistaTxt) + '</span></div>';
         const tarjetaVisitas = '<div class="mx2-card" style="margin-bottom:16px" id="mx2-per">'
-          + '<div class="mx2-head"><div><h3>Visitas por periodo</h3><p class="mx2-sub" style="margin-bottom:10px">Un resumen rápido de la gente que visita tu página.</p></div>'
+          + '<div class="mx2-head"><div><h3>Visitas por periodo</h3><p class="mx2-sub" style="margin-bottom:6px" id="mx2-per-resumen">&nbsp;</p></div>'
           + '<div class="mx2-seg2" role="tablist">' + PERIODOS.map(([k, t]) => '<button type="button" role="tab" data-per="' + k + '" class="' + (estado.periodo === k ? 'on' : '') + '">' + t + '</button>').join('') + '</div></div>'
-          + '<div id="mx2-per-cuerpo">' + htmlPeriodo(estado.periodo) + '</div>'
-          + '<details class="mx2-det"><summary>Últimas visitas registradas<span class="mx2-nuevo">' + recientes.length + '</span></summary>'
-          + '<div class="mx2-det__top"><p class="mx2-sub">Cada visita aparece en cuanto se registra, sin datos personales. Para comprobar una visita tuya, entra a tu página y pulsa "Actualizar".</p><button type="button" class="mx2-btn" id="mx2-rec-actualizar">Actualizar</button></div>'
-          + '<div class="mx2-det__lista">' + (recientes.length ? recientes.map(r => '<div class="mx2-r2"><span class="mx2-rec__t">' + esc(r.hora) + ' · ' + esc(r.fecha) + '</span>'
-            + '<span class="mx2-rec__o"><i style="background:' + (COLOR_FUENTE[r.fuente] || '#64748B') + '"></i>' + esc(NOMBRE_FUENTE[r.fuente] || r.fuente) + '</span>'
-            + '<span class="mx2-r2__m">' + esc(nombrePais(r.pais)) + ' · ' + esc(NOMBRE_DISP[r.dispositivo] || '') + (r.nuevo ? ' · primera del día' : '') + '</span>'
-            + '<span class="mx2-r2__p" title="' + esc(r.pistaTxt) + '">' + esc(r.pistaTxt) + '</span></div>').join('') : '<div class="mx2-empty" style="padding:18px 10px">Aún no hay visitas registradas.</div>') + '</div></details></div>';
+          + '<div class="mx2-log" id="mx2-log"><div class="mx2-empty" style="padding:22px 10px">Cargando visitas…</div></div>'
+          + '<button type="button" class="mx2-mas" id="mx2-log-mas" style="display:none"></button>'
+          + '<div class="mx2-log__pie"><span id="mx2-log-hora">Cada visita se guarda sola al ocurrir, sin datos personales.</span><button type="button" class="mx2-btn" id="mx2-rec-actualizar">Actualizar</button></div></div>';
 
         raiz.innerHTML = cab + barra + `
           <div class="mx2-kpis">
@@ -2335,22 +2344,57 @@ const Pages={
           }
           dibujar();
         }));
+        // Registro de visitas por periodo: se pide al servidor, se guarda en memoria un momento y se actualiza solo cada minuto
+        const cacheLog = estado.cacheLog || (estado.cacheLog = {});
+        const pintarLog = () => {
+          const cuerpoLog = raiz.querySelector('#mx2-log');
+          if (!cuerpoLog) return;
+          const cl = clavesPeriodo(estado.periodo);
+          const resumen = raiz.querySelector('#mx2-per-resumen');
+          if (resumen) resumen.innerHTML = '<strong>' + num(suma(cl, 'total')) + '</strong> visitas · <strong>' + num(suma(cl, 'unicos')) + '</strong> personas en este periodo';
+          const c = cacheLog[estado.periodo];
+          const mas = raiz.querySelector('#mx2-log-mas');
+          if (!c) { cuerpoLog.innerHTML = '<div class="mx2-empty" style="padding:22px 10px">Cargando visitas…</div>'; if (mas) mas.style.display = 'none'; return; }
+          const visibles = estado.visibles;
+          cuerpoLog.innerHTML = c.items.length ? c.items.slice(0, visibles).map(filaVisita).join('') : '<div class="mx2-empty" style="padding:22px 10px">Sin visitas registradas en este periodo.</div>';
+          const faltan = c.items.length - visibles;
+          if (mas) { mas.style.display = faltan > 0 ? '' : 'none'; mas.textContent = 'Ver más (' + faltan + ' restantes)'; }
+          const pie = raiz.querySelector('#mx2-log-hora');
+          if (pie) pie.textContent = 'Se guarda cada visita sola, sin datos personales · actualizado ' + new Date(c.t).toLocaleTimeString('es-MX', { timeZone: datos.zona, hour: 'numeric', minute: '2-digit' });
+        };
+        const cargarLog = async (k, silencioso) => {
+          try {
+            await esperarSesion();
+            const token = await Pages._getAuthToken();
+            const r = await fetch(Pages._webhookUrl + '/api/admin/visitas?periodo=' + k, { headers: { 'Authorization': 'Bearer ' + token } });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(d.error || 'No se pudo cargar');
+            cacheLog[k] = { items: (d.items || []).map(enriquecerVisita), t: Date.now() };
+            if (estado.periodo === k) pintarLog();
+          } catch (e) {
+            if (!silencioso) { const c = raiz.querySelector('#mx2-log'); if (c) c.innerHTML = '<div class="mx2-empty" style="padding:22px 10px">No se pudo cargar el registro: ' + esc(e.message) + '</div>'; }
+          }
+        };
+        pintarLog();
+        if (!cacheLog[estado.periodo] || Date.now() - cacheLog[estado.periodo].t > 20000) cargarLog(estado.periodo);
+        if (Pages._mxTimer) clearInterval(Pages._mxTimer);
+        Pages._mxTimer = setInterval(() => {
+          if (!document.getElementById('mx2-log')) { clearInterval(Pages._mxTimer); return; }
+          if (document.hidden) return;
+          cargarLog(estado.periodo, true);
+        }, 60000);
+        raiz.querySelector('#mx2-log-mas')?.addEventListener('click', () => { estado.visibles += 20; pintarLog(); });
         raiz.querySelectorAll('.mx2-seg2 button').forEach(b => b.addEventListener('click', () => {
           estado.periodo = b.dataset.per;
+          estado.visibles = 10;
           raiz.querySelectorAll('.mx2-seg2 button').forEach(x => x.classList.toggle('on', x === b));
-          const cuerpo = raiz.querySelector('#mx2-per-cuerpo');
-          if (cuerpo) cuerpo.innerHTML = htmlPeriodo(estado.periodo);
+          pintarLog();
+          if (!cacheLog[estado.periodo] || Date.now() - cacheLog[estado.periodo].t > 20000) cargarLog(estado.periodo);
         }));
         raiz.querySelector('#mx2-rec-actualizar')?.addEventListener('click', async (ev) => {
           const b = ev.currentTarget; b.disabled = true; b.textContent = 'Actualizando…';
-          try {
-            const nuevo = await cargar(Math.max(400, diasCargados));
-            datos.dias = nuevo.dias; datos.miembros = nuevo.miembros; datos.origenes = nuevo.origenes; datos.sinOrigen = nuevo.sinOrigen; datos.recientes = nuevo.recientes; datos.estado = nuevo.estado;
-            diasCargados = nuevo.dias.length; indexar();
-          } catch (e) { /* se queda con lo que ya había */ }
-          dibujar();
-          const detalle = raiz.querySelector('.mx2-det');
-          if (detalle) detalle.open = true; // se queda abierto para ver la visita recién registrada
+          await cargarLog(estado.periodo);
+          b.disabled = false; b.textContent = 'Actualizar';
         });
         raiz.querySelector('#mx2-ant')?.addEventListener('click', () => { estado.semana += 1; dibujar(); });
         raiz.querySelector('#mx2-sig')?.addEventListener('click', () => { if (estado.semana > 0) { estado.semana -= 1; dibujar(); } });
