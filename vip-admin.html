@@ -1928,6 +1928,14 @@ const Pages={
 .mx2-q__tag{padding:1px 8px;border-radius:999px;font:700 10px 'JetBrains Mono',monospace;background:var(--surface-2);color:var(--text-2)}
 .mx2-q__tag.vip{background:rgba(247,148,29,.16);color:#C26A00}
 .mx2-q__u{text-align:right;font:600 11px 'JetBrains Mono',monospace;color:var(--text-3);min-width:96px}
+.mx2-rec{display:grid;grid-template-columns:70px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr);gap:6px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.mx2-rec:last-child{border-bottom:0}
+.mx2-rec__t{font:600 11px 'JetBrains Mono',monospace;color:var(--text-3)}
+.mx2-rec__o{display:inline-flex;align-items:center;gap:7px;font-weight:700;min-width:0}
+.mx2-rec__o i{width:9px;height:9px;border-radius:50%;flex:none}
+.mx2-rec small{color:var(--text-3);font-size:11px;font-weight:600}
+.mx2-nuevo{display:inline-block;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);font:700 10px 'JetBrains Mono',monospace}
+@media(max-width:700px){.mx2-rec{grid-template-columns:62px minmax(0,1fr) minmax(0,1fr)}.mx2-rec>:nth-child(n+4){grid-column:2/-1}}
 .mx2-empty{padding:34px 16px;text-align:center;color:var(--text-3);font-size:13px;line-height:1.6}
 .mx2-empty b{display:block;margin-bottom:4px;font:700 15px 'Plus Jakarta Sans',sans-serif;color:var(--text)}
 .mx2-big{padding:56px 20px}
@@ -2135,6 +2143,13 @@ const Pages={
         claves.forEach(c => { const h = dato(c).horas || {}; for (let i = 0; i < 24; i++) mapa[dow(c)][i] += Number(h[String(i).padStart(2, '0')]) || 0; });
         const maxMapa = Math.max(1, ...mapa.flat());
         const horaPico = (() => { const t = Array(24).fill(0); mapa.forEach(f => f.forEach((v, i) => { t[i] += v; })); const m = Math.max(...t); return m ? t.indexOf(m) : -1; })();
+        const recientes = (datos.recientes || []).map(r => {
+          const d = new Date(r.t);
+          const ok = !Number.isNaN(d.getTime());
+          return { ...r,
+            hora: ok ? d.toLocaleTimeString('es-MX', { timeZone: datos.zona, hour: 'numeric', minute: '2-digit' }) : '',
+            fecha: ok ? d.toLocaleDateString('es-MX', { timeZone: datos.zona, day: 'numeric', month: 'short' }) : '' };
+        });
         const quienes = (datos.miembros || []).map(m => ({ ...m, enRango: claves.reduce((s, c) => s + ((m.dias || {})[c] || 0), 0), act: claves.map(c => (m.dias || {})[c] || 0) })).filter(m => m.enRango > 0).sort((a, b) => b.enRango - a.enRango).slice(0, 15);
         const origenDe = new Map((datos.origenes || []).map(o => [o.uid, o]));
         const anonimos = Math.max(0, unicos - (datos.miembros || []).filter(m => claves.some(c => (m.dias || {})[c])).length);
@@ -2151,6 +2166,13 @@ const Pages={
             <div class="mx2-head"><div><h3>${estado.rango === 'semana' ? 'Visitas por día de la semana' : estado.rango === '365' || estado.rango === 'todo' ? 'Visitas por mes' : 'Visitas día a día'}</h3><p class="mx2-sub" style="margin-bottom:6px">${estado.rango === 'semana' ? 'De lunes a domingo; los días que aún no pasan quedan vacíos.' : serie.previa && hayPrev ? 'La línea punteada es el periodo anterior, para comparar.' : 'Evolución del periodo seleccionado.'}</p></div>
               <div class="mx2-leg"><span><i style="background:${VERDE}"></i>Visitas</span><span><i style="background:${AZUL}"></i>Personas distintas</span>${serie.previa && hayPrev ? '<span><i style="background:#94A3B8"></i>Periodo anterior</span>' : ''}</div></div>
             <div class="mx2-cv" style="height:300px"><canvas id="mx2-principal"></canvas></div>
+          </div>
+
+          <div class="mx2-card" style="margin-bottom:16px">
+            <div class="mx2-head"><div><h3>Últimas visitas registradas</h3>
+              <p class="mx2-sub" style="margin-bottom:6px">Cada visita aparece aquí en cuanto se registra, sin datos personales. Sirve para comprobar que el contador funciona: entra a tu página desde tu celular y pulsa "Actualizar".</p></div>
+              <button type="button" class="mx2-btn" id="mx2-rec-actualizar">Actualizar</button></div>
+            ${recientes.length ? recientes.map(r => `<div class="mx2-rec"><span class="mx2-rec__t">${esc(r.hora)}<br>${esc(r.fecha)}</span><span class="mx2-rec__o"><i style="background:${COLOR_FUENTE[r.fuente] || '#64748B'}"></i>${esc(NOMBRE_FUENTE[r.fuente] || r.fuente)}</span><span>${esc(NOMBRE_PAGINA[r.pagina] || r.pagina)}</span><span>${esc(nombrePais(r.pais))}<br><small>${esc(NOMBRE_DISP[r.dispositivo] || '')}</small></span><span>${r.nuevo ? '<span class="mx2-nuevo">PRIMERA DEL DÍA</span>' : ''}</span></div>`).join('') : '<div class="mx2-empty"><b>Aún no hay visitas registradas</b>En cuanto alguien entre a tu página, aparecerá aquí.</div>'}
           </div>
 
           <div class="mx2-card mx2-hero-card" style="margin-bottom:16px">
@@ -2248,6 +2270,15 @@ const Pages={
           }
           dibujar();
         }));
+        raiz.querySelector('#mx2-rec-actualizar')?.addEventListener('click', async (ev) => {
+          const b = ev.currentTarget; b.disabled = true; b.textContent = 'Actualizando…';
+          try {
+            const nuevo = await cargar(Math.max(400, diasCargados));
+            datos.dias = nuevo.dias; datos.miembros = nuevo.miembros; datos.origenes = nuevo.origenes; datos.sinOrigen = nuevo.sinOrigen; datos.recientes = nuevo.recientes; datos.estado = nuevo.estado;
+            diasCargados = nuevo.dias.length; indexar();
+          } catch (e) { /* se queda con lo que ya había */ }
+          dibujar();
+        });
         raiz.querySelector('#mx2-ant')?.addEventListener('click', () => { estado.semana += 1; dibujar(); });
         raiz.querySelector('#mx2-sig')?.addEventListener('click', () => { if (estado.semana > 0) { estado.semana -= 1; dibujar(); } });
         raiz.querySelector('#mx2-csv')?.addEventListener('click', () => {
