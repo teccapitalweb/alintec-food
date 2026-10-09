@@ -60,7 +60,7 @@
     var interno = false;
     try { interno = !!ref && /(^|\.)alitecfood\.com$/i.test(new URL(ref).hostname); } catch (e) { interno = false; }
     if (interno && !utm) return;
-    guardarOrigen({ ref: ref.slice(0, 300), utm: utm, ua: (navigator.userAgent || '').slice(0, 300), t: Date.now(), fb: params.has('fbclid') });
+    guardarOrigen({ ref: ref.slice(0, 300), utm: utm, ua: (navigator.userAgent || '').slice(0, 300), t: Date.now(), fb: params.has('fbclid'), ig: params.has('igshid') || params.has('igsh') });
   }
   // Si acepta las cookies de medición más tarde, el origen ya capturado pasa a quedarse en el dispositivo
   document.addEventListener('alintec-cookies', function (e) {
@@ -78,6 +78,8 @@
     var cuerpo = { pagina: pagina, ref: document.referrer || '', utm: params.get('utm_source') || '' };
     // Facebook e Instagram agregan "fbclid" a los enlaces de sus anuncios: sirve de pista del origen
     if (params.has('fbclid')) cuerpo.fbclid = true;
+    // Instagram agrega "igshid" o "igsh" a los enlaces que se comparten desde la app
+    if (params.has('igshid') || params.has('igsh')) cuerpo.igshid = true;
     // Solo las visitas con sesión llevan el origen: es lo que se asocia a la cuenta
     if (token) { var origen = leerOrigen(); if (origen) cuerpo.origen = origen; }
     try {

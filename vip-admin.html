@@ -1837,8 +1837,8 @@ const Pages={
     const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     const NOMBRE_PAGINA = { landing: 'Página principal', acceso: 'Inicio de sesión', panel: 'Panel de miembros', demo: 'Demo gratuita' };
-    const NOMBRE_FUENTE = { directo: 'Directo', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
-    const COLOR_FUENTE = { directo: '#94A3B8', interno: '#CBD5E1', google: '#4285F4', bing: '#00809D', duckduckgo: '#DE5833', yahoo: '#7E1FFF', facebook: '#1877F2', instagram: '#E1306C', whatsapp: '#25D366', linkedin: '#0A66C2', x: '#64748B', youtube: '#FF0000', tiktok: '#14B8A6', correo: '#F59E0B', otros: '#A8A29E' };
+    const NOMBRE_FUENTE = { directo: 'Directo', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', meta: 'Meta (Facebook o Instagram)', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
+    const COLOR_FUENTE = { directo: '#94A3B8', interno: '#CBD5E1', google: '#4285F4', bing: '#00809D', duckduckgo: '#DE5833', yahoo: '#7E1FFF', facebook: '#1877F2', instagram: '#E1306C', meta: '#6366F1', whatsapp: '#25D366', linkedin: '#0A66C2', x: '#64748B', youtube: '#FF0000', tiktok: '#14B8A6', correo: '#F59E0B', otros: '#A8A29E' };
     const NOMBRE_DISP = { movil: 'Teléfono', tablet: 'Tableta', computadora: 'Computadora' };
     const COLOR_DISP = { movil: '#58B71B', tablet: '#F7941D', computadora: '#3B82F6' };
     const VERDE = '#58B71B', VERDE_OSC = '#2F7D32', AZUL = '#3B82F6';
@@ -2131,7 +2131,7 @@ const Pages={
         const fuentes = sumaMapa(claves, 'fuentes');
         const ordenFuentes = Object.entries(fuentes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
         const totFuentes = ordenFuentes.reduce((a, [, v]) => a + v, 0);
-        const REDES = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'linkedin', 'x'];
+        const REDES = ['facebook', 'instagram', 'meta', 'whatsapp', 'tiktok', 'youtube', 'linkedin', 'x'];
         const sociales = REDES.map(k => ({ k, total: fuentes[k] || 0 })).filter(x => x.total > 0).sort((a, b) => b.total - a.total);
         const totSociales = sociales.reduce((a, x) => a + x.total, 0);
         const serieRedes = sociales.slice(0, 5).map(x => ({ k: x.k, datos: grupos.map(g => g.reduce((t, c) => t + (((dato(c).fuentes || {})[x.k]) || 0), 0)) }));
@@ -2147,7 +2147,7 @@ const Pages={
           const d = new Date(r.t);
           const ok = !Number.isNaN(d.getTime());
           const p = r.pistas || {};
-          const pistas = [p.ref ? 'viene de ' + p.ref : '', p.utm ? 'etiqueta ' + p.utm : '', p.app ? 'app de ' + (NOMBRE_FUENTE[p.app] || p.app) : '', p.fbclid ? 'anuncio de Meta' : ''].filter(Boolean);
+          const pistas = [p.ref ? 'viene de ' + p.ref : '', p.utm ? 'etiqueta ' + p.utm : '', p.app ? 'app de ' + (NOMBRE_FUENTE[p.app] || p.app) : '', p.fbclid ? 'enlace con marca de Meta' : '', p.igshid ? 'enlace compartido desde Instagram' : ''].filter(Boolean);
           return { ...r,
             pistaTxt: pistas.length ? pistas.join(' · ') : 'sin pistas del origen',
             hora: ok ? d.toLocaleTimeString('es-MX', { timeZone: datos.zona, hour: 'numeric', minute: '2-digit' }) : '',
