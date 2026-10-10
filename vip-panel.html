@@ -8777,6 +8777,11 @@ const Sections = (function(){
       // luego los próximos a desbloquearse en orden de turno. Así nunca se desordena.
       const da=cursoDesbloqueado(0,a), db=cursoDesbloqueado(0,b);
       if(da!==db) return da?-1:1;
+      // El orden de los candados sigue la fecha real de desbloqueo que guarda el servidor (la misma de "Restan X días");
+      // el turno calculado en el navegador solo se usa si el servidor aún no mandó fecha.
+      const ta=a.desbloqueoEn?new Date(a.desbloqueoEn).getTime():Infinity;
+      const tb=b.desbloqueoEn?new Date(b.desbloqueoEn).getTime():Infinity;
+      if(ta!==tb) return ta<tb?-1:1;
       return (a._unlockDay||0)-(b._unlockDay||0);
     });
     if(items.length===0){
