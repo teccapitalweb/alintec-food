@@ -8475,8 +8475,8 @@ const Sections = (function(){
     const dias = diasParaDesbloquear(idx, c);
     let titulo, texto;
     if (dias === null) {
-      titulo = 'Termina primero tu curso de prueba';
-      texto = 'Cuando completes tu curso de prueba y obtengas su certificado empieza tu <strong>día 0</strong> y los demás cursos se van desbloqueando.';
+      titulo = 'Este curso se abrirá pronto';
+      texto = 'Todavía no tiene fecha de apertura. En cuanto la tenga, te lo mostramos aquí.';
     } else {
       const cr = cuentaRegresivaCurso(c, dias);
       titulo = (cr.singular ? 'Falta ' : 'Faltan ') + cr.corto + ' para su desbloqueo';
@@ -11727,10 +11727,10 @@ const Sections = (function(){
           if (Toast) {
             Toast.info(
               Number.isNaN(dias)
-                ? 'Completa primero el curso inicial'
+                ? 'Este curso se abrirá pronto'
                 : (dias === 1 ? 'Disponible mañana' : `Disponible en ${dias} días`),
               Number.isNaN(dias)
-                ? 'Al obtener su certificado comenzará tu día 0 VIP'
+                ? 'Sigue avanzando con tus cursos disponibles'
                 : 'Este material se desbloqueará junto con su curso · sigue avanzando'
             );
           }
