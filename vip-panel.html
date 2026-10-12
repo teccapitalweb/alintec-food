@@ -3710,6 +3710,8 @@ if (window.__isDemoMode) {
             if (window.__showWelcomeSplash) window.__showWelcomeSplash({ tipo: 'bienvenida_gratis' });
             await pausa(500);
             await esperarSin('splash-bienvenida', 1200);
+            // Regalo de bienvenida en XP (el servidor decide si corresponde; solo una vez y solo a cuentas nuevas)
+            try { if (window.__regaloBienvenida) await window.__regaloBienvenida(); } catch(e){}
             try { window.__maybeAskName && window.__maybeAskName({ forzar: true }); } catch(e){}
             await pausa(400);
             await esperarSin('name-modal', 2400);
@@ -3717,7 +3719,11 @@ if (window.__isDemoMode) {
         })();
       } else {
         // Cuentas que no reciben bienvenida: el nombre se pide como siempre
-        setTimeout(() => { try { window.__maybeAskName && window.__maybeAskName(); } catch(e){} }, 900);
+        setTimeout(async () => {
+          // Cuentas nuevas que no pasan por la bienvenida gratuita (por ejemplo, las que pagan de inmediato): también reciben su regalo
+          try { if (window.__regaloBienvenida) await window.__regaloBienvenida(); } catch(e){}
+          try { window.__maybeAskName && window.__maybeAskName(); } catch(e){}
+        }, 900);
       }
     }
 
@@ -7702,7 +7708,14 @@ const Sections = (function(){
           }
           cola.shift(); setProgresoPendiente(cola);
           // La felicitación es un EVENTO (paso de "en curso" a "completado"), no un estado
-          if (data.completado && curso && !yaCompletado) mostrarSplashCompletado(curso);
+          if (data.completado && curso && !yaCompletado) {
+            if (data.bono && Number(data.bono.xp) > 0 && typeof window.__mostrarPremioXp === 'function') {
+              window.__mostrarPremioXp({ tipo: 'curso', xp: data.bono.xp, ordinal: data.bono.ordinal, curso })
+                .then(() => mostrarSplashCompletado(curso), () => mostrarSplashCompletado(curso));
+            } else {
+              mostrarSplashCompletado(curso);
+            }
+          }
         } catch (e) {
           // Rechazo definitivo del servidor (quiz sin aprobar, clase bloqueada, orden):
           // se descarta esa operación para que no bloquee el resto de la cola y se
@@ -7803,6 +7816,111 @@ const Sections = (function(){
     await sincronizarProgresoPendiente();
   }
   window.emitirCertificadoFirestore = emitirCertificadoFirestore;
+
+  // ═══════════════════════════════════════════════════════════════
+  // ⭐ Tarjetas de premio en XP: regalo de bienvenida y premio por cada curso completado
+  // El XP lo calcula y guarda el servidor; aquí solo se celebra. Devuelve una promesa que
+  // se cumple cuando la persona cierra la tarjeta (así el orden de avisos es: premio → certificado).
+  // ═══════════════════════════════════════════════════════════════
+  window.__mostrarPremioXp = function (opts) {
+    opts = opts || {};
+    return new Promise(resolve => {
+      try {
+        if (document.getElementById('premio-xp')) document.getElementById('premio-xp').remove();
+        if (!document.getElementById('premio-xp-css')) {
+          const st = document.createElement('style');
+          st.id = 'premio-xp-css';
+          st.textContent = '#premio-xp{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:20px;animation:pxFade .3s ease}'
+            + '@keyframes pxFade{from{opacity:0}to{opacity:1}}@keyframes pxPop{0%{transform:scale(.86) translateY(14px);opacity:0}100%{transform:none;opacity:1}}@keyframes pxFlota{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}'
+            + '#premio-xp .px-ov{position:absolute;inset:0;background:rgba(10,18,14,.74);backdrop-filter:blur(5px)}'
+            + '#premio-xp .px-box{position:relative;width:100%;max-width:420px;padding:30px 26px 24px;text-align:center;border-radius:26px;background:linear-gradient(160deg,var(--surface,#fff),color-mix(in srgb,var(--primary,#43A047) 7%,var(--surface,#fff)));border:1px solid color-mix(in srgb,var(--primary,#43A047) 30%,var(--border-2,#ddd));box-shadow:0 30px 70px rgba(0,0,0,.35);animation:pxPop .45s cubic-bezier(.2,.9,.3,1.2)}'
+            + '#premio-xp .px-ic{display:grid;place-items:center;width:78px;height:78px;margin:0 auto 12px;border-radius:50%;font-size:38px;background:linear-gradient(135deg,#FFE08A,#F5B83D);box-shadow:0 12px 30px rgba(245,184,61,.45);animation:pxFlota 2.6s ease-in-out infinite}'
+            + '#premio-xp .px-k{font:700 10.5px "JetBrains Mono",monospace;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-3,#888)}'
+            + '#premio-xp .px-xp{margin:6px 0 4px;font:800 54px/1 "Plus Jakarta Sans",sans-serif;letter-spacing:-2px;color:var(--primary,#2E7D32)}'
+            + '#premio-xp .px-xp small{font-size:22px;letter-spacing:0;margin-left:4px}'
+            + '#premio-xp .px-t{margin:0 0 6px;font:800 19px/1.25 "Plus Jakarta Sans",sans-serif;color:var(--text,#111)}'
+            + '#premio-xp .px-d{margin:0 0 16px;font-size:13.5px;line-height:1.6;color:var(--text-2,#555)}'
+            + '#premio-xp .px-ruta{display:flex;justify-content:center;gap:5px;margin:0 0 6px}'
+            + '#premio-xp .px-ruta i{flex:1 1 0;max-width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:700 9px "JetBrains Mono",monospace;font-style:normal;background:var(--surface-2,#eee);color:var(--text-3,#999);border:1px solid var(--border,#ddd)}'
+            + '#premio-xp .px-ruta i.hecho{background:color-mix(in srgb,var(--primary,#43A047) 18%,transparent);color:var(--primary,#2E7D32);border-color:color-mix(in srgb,var(--primary,#43A047) 40%,transparent)}'
+            + '#premio-xp .px-ruta i.ahora{background:var(--primary,#43A047);color:#fff;border-color:transparent;transform:scale(1.12)}'
+            + '#premio-xp .px-ruta i.meta{background:linear-gradient(135deg,#FFE08A,#F5B83D);color:#5B3B00;border-color:transparent}'
+            + '#premio-xp .px-ruta-t{margin:0 0 16px;font-size:11.5px;color:var(--text-3,#888)}'
+            + '#premio-xp .px-nivel{margin:0 0 18px;text-align:left}'
+            + '#premio-xp .px-nivel__f{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2px 10px;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--text-2,#555)}'
+            + '#premio-xp .px-barra{height:10px;border-radius:99px;background:var(--surface-2,#eee);overflow:hidden}'
+            + '#premio-xp .px-barra i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#58B71B,#9CCC65);transition:width 1.1s cubic-bezier(.2,.8,.25,1)}'
+            + '#premio-xp .px-btn{width:100%;padding:14px;border:0;border-radius:14px;cursor:pointer;font:800 14px Inter,sans-serif;color:#fff;background:linear-gradient(135deg,var(--primary,#43A047),var(--highlight,#9CCC65))}'
+            + '#premio-xp .px-btn:active{transform:translateY(1px)}';
+          document.head.appendChild(st);
+        }
+        const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const xp = Math.max(0, Math.round(Number(opts.xp) || 0));
+        const esCurso = opts.tipo === 'curso';
+        // Ruta de los 10 cursos: solo muestra cuántos lleva; nunca cuánto se ganará en los siguientes (es una sorpresa)
+        const pos = esCurso ? (((Math.max(1, Number(opts.ordinal) || 1) - 1) % 10) + 1) : 0;
+        const ruta = Array.from({ length: 10 }, (_, i) => '<i class="' + (i + 1 < pos ? 'hecho' : (i + 1 === pos ? 'ahora' : (i === 9 ? 'meta' : ''))) + '" title="Curso ' + (i + 1) + (i === 9 ? ' · premio especial' : '') + '">' + (i === 9 ? '★' : (i + 1)) + '</i>').join('');
+        const titulo = esCurso ? '¡Premio por tu curso!' : '¡Un regalo para empezar!';
+        const kicker = esCurso ? 'Curso completado' : 'Regalo de bienvenida';
+        const desc = esCurso
+          ? 'Completaste tu curso número <strong>' + esc(opts.ordinal || '') + '</strong>' + (opts.curso && opts.curso.titulo ? ' (<strong>' + esc(opts.curso.titulo) + '</strong>)' : '') + ' y ganaste XP para subir de nivel. Sigue así: cada curso que termines suma más.'
+          : 'Por ser nuevo en Alintec Food te regalamos XP para que empieces tu camino con ventaja. Cada curso que completes te dará más.';
+        const rutaHtml = esCurso
+          ? '<div class="px-ruta" aria-label="Ruta de 10 cursos">' + ruta + '</div><p class="px-ruta-t">' + (pos === 10 ? '¡Completaste los 10 cursos y ganaste el premio especial!' : 'Llevas <strong>' + pos + ' de 10</strong> cursos. ¡Al décimo te espera un premio especial!') + '</p>'
+          : '<div class="px-ruta" aria-label="Ruta de 10 cursos">' + ruta + '</div><p class="px-ruta-t">Completa cursos para ganar más XP: ¡en el décimo te espera un premio especial!</p>';
+        const caja = document.createElement('div');
+        caja.id = 'premio-xp';
+        caja.setAttribute('role', 'dialog');
+        caja.setAttribute('aria-modal', 'true');
+        caja.setAttribute('aria-label', kicker);
+        caja.innerHTML = '<div class="px-ov"></div><div class="px-box"><div class="px-ic" aria-hidden="true">' + (esCurso ? '🏆' : '🎁') + '</div>'
+          + '<div class="px-k">' + kicker + '</div><div class="px-xp">+' + xp + '<small>XP</small></div><h2 class="px-t">' + titulo + '</h2><p class="px-d">' + desc + '</p>'
+          + rutaHtml + '<div class="px-nivel" id="px-nivel" hidden></div>'
+          + '<button type="button" class="px-btn" id="px-seguir">' + (esCurso ? 'Ver mi certificado →' : '¡Gracias! Continuar →') + '</button></div>';
+        document.body.appendChild(caja);
+        let cerrada = false;
+        const cerrar = () => { if (cerrada) return; cerrada = true; document.removeEventListener('keydown', alTeclear); caja.remove(); resolve(); };
+        const alTeclear = e => { if (e.key === 'Escape') cerrar(); };
+        document.addEventListener('keydown', alTeclear);
+        caja.querySelector('#px-seguir').addEventListener('click', cerrar);
+        caja.querySelector('.px-ov').addEventListener('click', cerrar);
+        setTimeout(() => { try { caja.querySelector('#px-seguir').focus(); } catch (e) {} }, 150);
+        // Avance hacia el siguiente nivel (con el XP real que calcula el servidor); si falla, la tarjeta se ve igual sin la barra
+        (async () => {
+          try {
+            if (!window.__currentUser) return;
+            const token = await window.__currentUser.getIdToken();
+            const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/premios', { headers: { 'Authorization': 'Bearer ' + token } });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok || !d.nivel || cerrada) return;
+            const caja2 = document.getElementById('px-nivel');
+            if (!caja2) return;
+            const desde = d.nivel.desde, hasta = d.xpSiguiente;
+            const txt = hasta ? 'Te faltan <strong>' + Math.max(0, hasta - d.xp).toLocaleString('es-MX') + ' XP</strong> para el siguiente nivel' : 'Nivel máximo alcanzado';
+            caja2.innerHTML = '<div class="px-nivel__f"><span>Nivel ' + esc(d.nivel.nombre) + ' · ' + Number(d.xp).toLocaleString('es-MX') + ' XP</span><span>' + txt + '</span></div>'
+              + (hasta ? '<div class="px-barra"><i></i></div>' : '');
+            caja2.hidden = false;
+            if (hasta) requestAnimationFrame(() => requestAnimationFrame(() => { const b = caja2.querySelector('.px-barra i'); if (b) b.style.width = Math.max(4, Math.min(100, Math.round((d.xp - desde) / (hasta - desde) * 100))) + '%'; }));
+          } catch (e) { /* sin barra de nivel */ }
+        })();
+      } catch (e) { console.warn('Tarjeta de premio:', e); resolve(); }
+    });
+  };
+
+  // Regalo de bienvenida: el servidor decide si corresponde (cuenta nueva y solo una vez)
+  window.__regaloBienvenida = async function () {
+    try {
+      if (!window.__currentUser || window.UserState?.isAdmin || window.__isDemoMode === true) return;
+      // Una vez que el servidor respondió (lo entregó, ya lo había entregado o la cuenta no es nueva) no se vuelve a preguntar en este navegador
+      const clave = 'alintec_regalo_xp_' + (window.__currentUser.uid || window.UserState?.uid || '');
+      try { if (localStorage.getItem(clave) === '1') return; } catch (e) { /* sin almacenamiento: se pregunta al servidor */ }
+      const token = await window.__currentUser.getIdToken();
+      const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/bono/bienvenida', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok === true) { try { localStorage.setItem(clave, '1'); } catch (e) { /* modo privado */ } }
+      if (r.ok && d.otorgado === true && Number(d.xp) > 0) await window.__mostrarPremioXp({ tipo: 'bienvenida', xp: d.xp });
+    } catch (e) { console.warn('Regalo de bienvenida:', e.message); }
+  };
 
   function mostrarSplashCompletado(curso) {
     // Cerrar visor si está abierto
@@ -8492,11 +8610,11 @@ const Sections = (function(){
   const certificados = []; // legado · los certificados reales salen de getCertificadosReales()
 
   const niveles = [
-    {id:1,nombre:'Aprendiz',desde:0,hasta:300},
-    {id:2,nombre:'Técnico',desde:300,hasta:1200},
-    {id:3,nombre:'Profesional',desde:1200,hasta:2500},
-    {id:4,nombre:'Líder',desde:2500,hasta:4500},
-    {id:5,nombre:'Maestro',desde:4500,hasta:99999}
+    {id:1,nombre:'Aprendiz',desde:0,hasta:450},
+    {id:2,nombre:'Técnico',desde:450,hasta:1800},
+    {id:3,nombre:'Profesional',desde:1800,hasta:3500},
+    {id:4,nombre:'Líder',desde:3500,hasta:6500},
+    {id:5,nombre:'Maestro',desde:6500,hasta:99999}
   ];
 
   // ── LOGROS · todos con criterio MEDIBLE con datos reales de la plataforma
@@ -10017,7 +10135,7 @@ const Sections = (function(){
         + '<div class="premio-tier__status">' + chip + '</div></article>';
     };
     const xp = premios ? premios.xp : xpLocal;
-    const filas = [['Profesional', 1200, '1 curso antes de tiempo'], ['Maestro', 4500, '1 curso más antes de tiempo']].map((p, i) => {
+    const filas = [['Profesional', 1800, '1 curso antes de tiempo'], ['Maestro', 6500, '1 curso más antes de tiempo']].map((p, i) => {
       const dato = premios && premios.premios ? premios.premios[i] : null;
       const estado = dato ? dato.estado : 'bloqueado';
       const titulo = dato && dato.cursoId ? ((cursos.find(c => c.id === dato.cursoId) || {}).titulo || 'un curso') : '';
