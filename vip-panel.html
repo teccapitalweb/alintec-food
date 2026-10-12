@@ -1980,11 +1980,11 @@ body::after{
 .pc--blanca .pc-cont .pc-ic{color:#2E7D32}
 
 /* Directorio y "Mi tarjeta" */
-.dir-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))!important;gap:22px!important}
+.dir-grid{grid-template-columns:repeat(auto-fill,minmax(300px,340px))!important;justify-content:start;gap:22px!important}
 .dir-pc{cursor:pointer;position:relative;transition:transform .18s}
 .dir-pc:hover{transform:translateY(-3px)}
 .dir-pc__mia{position:absolute;top:8px;right:8px;z-index:3;background:#fff;color:#1F5130;font:700 11px Inter,sans-serif;border-radius:999px;padding:3px 10px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
-.dir-mia{display:grid;grid-template-columns:minmax(0,380px) 1fr;gap:22px;align-items:center;margin:0 0 22px;padding:18px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+.dir-mia{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:26px;align-items:center;margin:0 0 26px;padding:20px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
 .dir-mia__estado{display:inline-block;font:700 12px Inter,sans-serif;padding:4px 11px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}
 .dir-mia__estado.is-pub{background:color-mix(in srgb,var(--primary) 16%,transparent);color:var(--primary)}
 .dir-mia__info p{font-size:13.5px;color:var(--text-2);line-height:1.55;margin:10px 0 14px}
@@ -1992,8 +1992,10 @@ body::after{
 .dir-plantillas{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin:6px 0 12px}
 .dir-plantillas button{border:1.5px solid var(--border-2,var(--border));background:var(--surface-2);color:var(--text);border-radius:10px;padding:8px 6px;font:600 12px Inter,sans-serif;cursor:pointer}
 .dir-plantillas button.is-on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
-.dir-form__vista{margin:0 0 16px}
-@media(max-width:700px){.dir-mia{grid-template-columns:1fr}.dir-grid{grid-template-columns:1fr!important}}
+.dir-form__vista{margin:0 auto 16px;max-width:340px}
+.dir-seccion{font:800 18px 'Plus Jakarta Sans',Inter,sans-serif;color:var(--text);margin:6px 2px 12px}
+.pc-vacio{opacity:.55;font-style:italic}
+@media(max-width:700px){.dir-mia{grid-template-columns:1fr}.dir-mia>div:first-child{max-width:340px}.dir-grid{grid-template-columns:minmax(0,340px)!important}}
 .dir-card__badge-mia{position:absolute;top:12px;right:12px;z-index:2;background:var(--primary);color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:999px}
 .dir-card__top{position:relative;z-index:1;margin-bottom:14px}
 .dir-card__foto{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 6px 18px rgba(0,0,0,.18);background:var(--surface-2);display:block}
@@ -12539,15 +12541,15 @@ const Sections = (function(){
           <p class="sec-hero__sub">Conecta con la comunidad Alintec Food. Crea tu tarjeta profesional y descubre a otros profesionales y especialistas del sector alimentario.</p>
         </div>
 
+        <div id="dir-mia"></div>
+
+        <h2 class="dir-seccion">Miembros del directorio</h2>
         <div class="dir-bar">
           <div class="dir-search">
             <svg class="ic"><use href="#i-search"/></svg>
             <input type="text" id="dir-buscar" placeholder="Buscar por nombre, empresa o especialidad…">
           </div>
-          ${esVip?`<button class="btn btn--accent" id="dir-mi-tarjeta"><svg class="ic"><use href="#i-edit"/></svg>Mi tarjeta</button>`:''}
         </div>
-
-        <div id="dir-mia"></div>
 
         <div class="dir-chips" id="dir-chips">
           <button class="dir-chip is-active" data-sector="todos">Todos</button>
@@ -12573,8 +12575,6 @@ const Sections = (function(){
       });
     });
     // Mi tarjeta
-    if (esVip) container.querySelector('#dir-mi-tarjeta').addEventListener('click', dirEditarMiTarjeta);
-
     dirPintarMia();
     dirSuscribir();
   }
@@ -12604,12 +12604,15 @@ const Sections = (function(){
   ];
   function dirPlantillaValida(id){ return DIR_PLANTILLAS.some(p => p.id === id) ? id : 'panel'; }
 
-  function dirTarjetaHTML(c, plantilla){
+  function dirTarjetaHTML(c, plantilla, opciones){
     const t = dirPlantillaValida(plantilla || (c && c.plantilla));
     c = c || {};
+    const pistas = !!(opciones && opciones.pistas);
     const nombre = escapeHtml(c.nombre || 'Tu nombre');
-    const puesto = c.puesto ? `<div class="pc-puesto">${escapeHtml(c.puesto)}</div>` : '';
-    const empresa = c.empresa ? `<div class="pc-empresa">${escapeHtml(c.empresa)}</div>` : '';
+    const puesto = c.puesto ? `<div class="pc-puesto">${escapeHtml(c.puesto)}</div>`
+      : (pistas ? '<div class="pc-puesto pc-vacio">Tu puesto o cargo</div>' : '');
+    const empresa = c.empresa ? `<div class="pc-empresa">${escapeHtml(c.empresa)}</div>`
+      : (pistas ? '<div class="pc-empresa pc-vacio">Tu empresa</div>' : '');
     const palabras = String(c.nombre || '?').trim().split(/\s+/).filter(Boolean);
     const iniciales = escapeHtml((palabras.slice(0, 2).map(p => p.charAt(0)).join('') || '?').toUpperCase());
     const foto = c.foto
@@ -12622,6 +12625,7 @@ const Sections = (function(){
     if (c.whatsapp) filas.push(`<div class="pc-row">${icTel}<span>${escapeHtml(c.whatsapp)}</span></div>`);
     if (c.email) filas.push(`<div class="pc-row">${icMail}<span>${escapeHtml(c.email)}</span></div>`);
     if (c.ubicacion) filas.push(`<div class="pc-row">${icPin}<span>${escapeHtml(c.ubicacion)}</span></div>`);
+    else if (pistas) filas.push(`<div class="pc-row pc-vacio">${icPin}<span>Tu ciudad</span></div>`);
     const cont = `<div class="pc-cont">${filas.slice(0, 3).join('')}</div>`;
     let interior = '';
     if (t === 'ejecutiva') {
@@ -12659,28 +12663,18 @@ const Sections = (function(){
     const pub = existe && c.publicado === true && c.visible !== false;
     cont.innerHTML = `
       <div class="dir-mia">
-        <div>${dirTarjetaHTML(c, c.plantilla)}</div>
+        <div>${dirTarjetaHTML(c, c.plantilla, { pistas: !pub })}</div>
         <div class="dir-mia__info">
           <span class="dir-mia__estado${pub ? ' is-pub' : ''}">${pub ? 'Publicada · visible para los miembros' : 'Privada · solo tú la ves'}</span>
           <p>${pub
-            ? 'Los miembros del club ya pueden ver tu tarjeta y contactarte. Puedes editarla o dejar de publicarla cuando quieras.'
-            : 'Esta es tu tarjeta profesional. Nadie la ve hasta que tú decidas publicarla. Edítala con tus datos y elige una plantilla.'}</p>
+            ? 'Los miembros del club ya pueden ver tu tarjeta y contactarte. Al editarla puedes cambiar tus datos o dejar de publicarla.'
+            : 'Esta es tu tarjeta profesional. Nadie la ve hasta que tú decidas publicarla. Al editarla eliges tus datos, la plantilla y si quieres publicarla.'}</p>
           <div class="dir-mia__acc">
-            <button class="btn btn--accent" id="dir-mia-editar">${pub ? 'Editar mi tarjeta' : 'Editar y publicar'}</button>
-            ${pub ? '<button class="btn btn--ghost" id="dir-mia-despublicar">Dejar de publicar</button>' : ''}
+            <button class="btn btn--accent" id="dir-mia-editar">Editar</button>
           </div>
         </div>
       </div>`;
     const ed = cont.querySelector('#dir-mia-editar'); if (ed) ed.addEventListener('click', dirEditarMiTarjeta);
-    const dp = cont.querySelector('#dir-mia-despublicar');
-    if (dp) dp.addEventListener('click', async () => {
-      dp.disabled = true;
-      try {
-        await fs.setDoc(fs.doc(fs.db, 'directorio', uid), { publicado: false, updatedAt: fs.serverTimestamp() }, { merge: true });
-        Toast.success('Tarjeta privada', 'Ya no aparece en el directorio');
-        dirPintarMia();
-      } catch (e) { console.error(e); Toast.error('No se pudo actualizar', e.message || ''); dp.disabled = false; }
-    });
   }
   window.__dirPintarMia = dirPintarMia;
 
@@ -12857,7 +12851,7 @@ const Sections = (function(){
       email: (document.getElementById('dirf-email')||{}).value || '',
       foto: _dirFotoTmp !== undefined ? _dirFotoTmp : (data.foto || '')
     });
-    const refrescarVista = () => { const v = document.getElementById('dirf-vista'); if (v) v.innerHTML = dirTarjetaHTML(leerTarjeta(), plantillaElegida); };
+    const refrescarVista = () => { const v = document.getElementById('dirf-vista'); if (v) v.innerHTML = dirTarjetaHTML(leerTarjeta(), plantillaElegida, { pistas: true }); };
     refrescarVista();
     document.querySelectorAll('#dirf-plantillas [data-plantilla]').forEach(b => b.addEventListener('click', () => {
       plantillaElegida = dirPlantillaValida(b.dataset.plantilla);
