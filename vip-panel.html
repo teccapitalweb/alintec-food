@@ -10142,13 +10142,14 @@ const Sections = (function(){
       const falta = estado === 'bloqueado' ? 'Te faltan ' + Math.max(0, p[1] - xp).toLocaleString('es-MX') + ' XP' : '';
       return fila(p[0], p[1], p[2], estado, estado === 'usado' ? titulo : falta);
     }).join('');
+    const disponibles = premios && Number(premios.disponibles) > 0 ? Number(premios.disponibles) : 0;
     const boton = premios && premios.disponibles > 0
       ? '<button class="btn btn--accent" id="premio-elegir" style="margin-top:14px;"><svg class="ic"><use href="#i-trophy"/></svg>Elegir mi curso</button>' : '';
     return '<section class="premios-card">'
       + '<div class="premios-card__hero"><div class="premios-card__trophy"><svg class="ic"><use href="#i-trophy"/></svg><i></i></div>'
       + '<div class="premios-card__intro"><span>Premios por nivel · Recompensas de trayectoria</span><h2>Tu progreso también <em>abre puertas.</em></h2>'
       + '<p>Alcanza <strong>Profesional</strong> y <strong>Maestro</strong> para adelantar el curso bloqueado que tú elijas.</p></div>'
-      + '<div class="premios-card__count"><b>2</b><span>premios<br>disponibles</span></div></div>'
+      + '<div class="premios-card__count"><b>' + disponibles + '</b><span>' + (disponibles === 1 ? 'premio<br>disponible' : 'premios<br>disponibles') + '</span></div></div>'
       + '<div class="premios-card__body"><div class="premios-card__tiers">' + filas + '</div>' + boton + '</div></section>';
   }
 
@@ -10238,7 +10239,7 @@ const Sections = (function(){
     const nivelActual=getNivel(usuario.xp);
     const pct=Math.round(((usuario.xp-nivelActual.desde)/(nivelActual.hasta-nivelActual.desde))*100);
     const pctSeguro=Math.max(0,Math.min(100,Number.isFinite(pct)?pct:100));
-    const xpRest=nivelActual.hasta-usuario.xp;
+    const xpRest=nivelActual.hasta===99999?0:nivelActual.hasta-usuario.xp;
     const proxNivel=niveles[nivelActual.id]?.nombre||'Maestro';
     const trayectoriaPct=nivelActual.id>=niveles.length?100:Math.round((((nivelActual.id-1)+pctSeguro/100)/(niveles.length-1))*100);
     const ganados=logros.filter(l=>l.unlock).length;
@@ -10266,7 +10267,7 @@ const Sections = (function(){
             <div class="logro-hero__racha">
               <svg class="ic" style="width:14px;height:14px;color:var(--primary);"><use href="#i-bolt"/></svg>
               <span class="logro-hero__racha-num">${usuario.racha}</span>
-              <span class="logro-hero__racha-lbl">días</span>
+              <span class="logro-hero__racha-lbl">${usuario.racha === 1 ? 'día' : 'días'}</span>
             </div>
           </div>
           <div class="logro-journey" aria-label="Trayectoria profesional: nivel ${nivelActual.id} de ${niveles.length}">
@@ -10291,7 +10292,7 @@ const Sections = (function(){
             <div class="logro-orbit__copy">
               <span class="logro-orbit__eyebrow">Siguiente rango</span>
               <strong>${xpRest>0?proxNivel:'Nivel máximo alcanzado'}</strong>
-              <p>${xpRest>0?`Te faltan <b>${xpRest} XP</b>. Cada insignia y reto completado acerca tu perfil al siguiente rango.`:'Has completado toda la trayectoria de niveles disponible.'}</p>
+              <p>${xpRest>0?`Te faltan <b>${xpRest} XP</b> para llegar a <b>${nivelActual.hasta} XP</b>. Cada insignia y reto completado acerca tu perfil al siguiente rango.`:'Has completado toda la trayectoria de niveles disponible.'}</p>
               <div class="logro-orbit__numbers"><span><b>${usuario.xp}</b> XP actuales</span><span><b>${nivelActual.hasta===99999?'∞':nivelActual.hasta}</b> XP objetivo</span></div>
             </div>
           </div>
