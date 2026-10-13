@@ -1903,99 +1903,49 @@ body::after{
 .dir-card::before{content:"";position:absolute;top:0;left:0;right:0;height:64px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 22%,transparent),color-mix(in srgb,var(--highlight) 14%,transparent));z-index:0}
 .dir-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--primary) 45%,transparent);box-shadow:0 20px 45px color-mix(in srgb,var(--primary) 15%,rgba(0,0,0,.12))}
 .dir-card--mia{border-color:color-mix(in srgb,var(--primary) 50%,transparent)}
-/* Tarjeta profesional del directorio (formato 3.5 x 2 in). Las medidas {{px}} escalan con el ancho de la tarjeta (cqw). */
-.pc-box{container-type:inline-size;width:100%;aspect-ratio:1.75/1;position:relative}
-.pc{position:absolute;inset:0;border-radius:2.38cqw;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.08),0 12px 26px rgba(20,40,30,.14);font-family:Inter,system-ui,sans-serif;text-align:left}
-.pc *{box-sizing:border-box}
-.pc-ic{width:3.33cqw;height:3.33cqw;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.pc-row{display:flex;align-items:center;gap:1.9cqw;font-size:2.62cqw;line-height:1.35;white-space:nowrap;overflow:hidden}
-.pc-row span{overflow:hidden;text-overflow:ellipsis}
-.pc-nombre{font-family:'Plus Jakarta Sans',Inter,sans-serif;font-weight:700;line-height:1.15;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-.pc-puesto{line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-.pc-empresa{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pc-cont{display:grid;gap:1.43cqw;min-width:0;padding-top:1.9cqw}
-.pc-foto{border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',Inter,sans-serif;font-weight:700;flex:none}
-
-/* Ejecutiva */
-.pc--ejecutiva{background:#17211C;color:#fff}
-.pc--ejecutiva .pc-franja{position:absolute;left:0;top:0;bottom:0;width:1.67cqw;background:#C9A24B}
-.pc--ejecutiva .pc-cuerpo{position:absolute;left:8.57cqw;top:7.14cqw;right:7.14cqw;bottom:6.19cqw;display:flex;flex-direction:column;min-width:0}
-.pc--ejecutiva .pc-marca{font-size:2.14cqw;font-weight:700;letter-spacing:.28em;color:#C9A24B}
-.pc--ejecutiva .pc-nombre{font-size:5.48cqw;margin-top:5.24cqw;max-width:62%}
-.pc--ejecutiva .pc-puesto{font-size:2.38cqw;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#C9A24B;margin-top:1.9cqw;max-width:60%}
-.pc--ejecutiva .pc-empresa{font-size:2.86cqw;color:#CBD3CE;margin-top:1.43cqw;max-width:62%}
-.pc--ejecutiva .pc-cont{margin-top:auto;color:#E4E9E5}
-.pc--ejecutiva .pc-cont .pc-ic{color:#C9A24B}
-.pc--ejecutiva .pc-foto{position:absolute;right:7.14cqw;top:7.14cqw;width:17.62cqw;height:17.62cqw;border:1.5px solid #C9A24B;color:#C9A24B;font-size:5.71cqw}
-
-/* Panel verde */
-.pc--panel{background:#fff;display:grid;grid-template-columns:31.43cqw 1fr}
-.pc--panel .pc-lado{background:#1F5130;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6.19cqw 3.33cqw;color:#fff}
-.pc--panel .pc-marca{font-size:2.14cqw;font-weight:700;letter-spacing:.24em;text-align:center;line-height:1.7;color:#CFE5D6}
-.pc--panel .pc-foto{width:20cqw;height:20cqw;background:#9CCC65;color:#1F4D2B;font-size:6.67cqw;border:3px solid rgba(255,255,255,.35)}
-.pc--panel .pc-der{padding:6.67cqw 6.19cqw 5.24cqw;display:flex;flex-direction:column;min-width:0}
-.pc--panel .pc-nombre{font-size:5cqw;color:#12261A}
-.pc--panel .pc-puesto{font-size:2.86cqw;color:#2E7D32;font-weight:600;margin-top:1.43cqw}
-.pc--panel .pc-empresa{font-size:2.86cqw;color:#4C5E52;margin-top:0.71cqw}
-.pc--panel .pc-linea{height:1px;background:#DDE5DD;margin:3.33cqw 0 2.86cqw}
-.pc--panel .pc-cont{color:#12261A}
-.pc--panel .pc-cont .pc-ic{color:#2E7D32}
-
-/* Editorial */
-.pc--editorial{background:#F7F4EC;color:#26231C}
-.pc--editorial .pc-marco{position:absolute;inset:2.86cqw;border:1px solid #CFC6AE;border-radius:1.43cqw}
-.pc--editorial .pc-sello{position:absolute;right:9.05cqw;top:8.1cqw;font-size:2.14cqw;font-weight:600;letter-spacing:.2em;color:#7A6F55;text-align:right;line-height:1.6}
-.pc--editorial .pc-cuerpo{position:absolute;inset:8.1cqw 9.05cqw 7.14cqw;display:flex;flex-direction:column;min-width:0}
-.pc--editorial .pc-nombre{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:6.19cqw;letter-spacing:-.01em;max-width:62%}
-.pc--editorial .pc-puesto{font-size:2.26cqw;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#7A6F55;margin-top:2.38cqw;max-width:70%}
-.pc--editorial .pc-empresa{font-size:2.86cqw;margin-top:1.19cqw;max-width:70%}
-.pc--editorial .pc-cont{margin-top:auto;color:#4B4535}
-.pc--editorial .pc-cont .pc-ic{color:#7A6F55}
-
-/* Verde moderno */
-.pc--moderno{background:#0F3D2E;color:#fff}
-.pc--moderno::before{content:"";position:absolute;right:-16.67cqw;top:-21.43cqw;width:61.9cqw;height:61.9cqw;border-radius:50%;background:#14543F}
-.pc--moderno::after{content:"";position:absolute;right:-13.33cqw;bottom:-22.86cqw;width:46.67cqw;height:46.67cqw;border-radius:50%;background:#9CCC65}
-.pc--moderno .pc-cuerpo{position:absolute;left:7.14cqw;top:7.14cqw;bottom:6.19cqw;right:35.71cqw;display:flex;flex-direction:column;z-index:2;min-width:0}
-.pc--moderno .pc-marca{font-size:2.14cqw;font-weight:700;letter-spacing:.26em;color:#9CCC65}
-.pc--moderno .pc-nombre{font-weight:800;font-size:5.48cqw;margin-top:3.3cqw}
-.pc--moderno .pc-puesto{font-size:2.86cqw;color:#BFE3A4;margin-top:1.9cqw;font-weight:500}
-.pc--moderno .pc-empresa{font-size:2.86cqw;color:#E4EFE8;margin-top:0.71cqw}
-.pc--moderno .pc-cont{margin-top:auto;color:#E4EFE8}
-.pc--moderno .pc-cont .pc-ic{color:#9CCC65}
-.pc--moderno .pc-foto{position:absolute;right:8.1cqw;top:10.48cqw;width:20.48cqw;height:20.48cqw;background:#fff;color:#0F3D2E;font-size:6.67cqw;z-index:2;border:4px solid #9CCC65}
-
-/* Blanca */
-.pc--blanca{background:#fff}
-.pc--blanca .pc-barra{position:absolute;left:0;right:0;top:0;height:2.38cqw;background:#2E7D32}
-.pc--blanca .pc-cuerpo{position:absolute;left:7.62cqw;top:8.57cqw;right:7.62cqw;bottom:5.71cqw;display:flex;flex-direction:column;min-width:0}
-.pc--blanca .pc-cab{display:flex;align-items:center;gap:3.81cqw;min-width:0}
-.pc--blanca .pc-cab>div{min-width:0}
-.pc--blanca .pc-foto{width:15.24cqw;height:15.24cqw;background:#E6F0E7;color:#1F5130;font-size:5cqw}
-.pc--blanca .pc-nombre{font-size:5cqw;color:#12261A}
-.pc--blanca .pc-puesto{font-size:2.86cqw;color:#4C5E52;margin-top:0.95cqw}
-.pc--blanca .pc-empresa{margin-top:3.33cqw;font-size:2.86cqw;font-weight:600;color:#1F5130}
-.pc--blanca .pc-sector{display:inline-block;margin-top:1.43cqw;font-size:2.38cqw;font-weight:600;letter-spacing:.06em;color:#1F5130;background:#E6F0E7;border-radius:999px;padding:0.71cqw 2.38cqw;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pc--blanca .pc-cont{margin-top:auto;color:#12261A}
-.pc--blanca .pc-cont .pc-ic{color:#2E7D32}
-
+/* Directorio · tarjetas al estilo IMFRA: portada de color, sello de verificado y estado profesional */
+.dir-card.dir-card--vip{flex-direction:column;align-items:center;text-align:center;border-color:color-mix(in srgb,#e0a83a 55%,transparent);box-shadow:0 10px 28px color-mix(in srgb,#e0a83a 12%,rgba(0,0,0,.05));cursor:pointer}
+.dir-card--vip::before{display:none}
+.dir-card--vip:hover{border-color:#e0a83a;box-shadow:0 20px 45px color-mix(in srgb,#e0a83a 22%,rgba(0,0,0,.1))}
+.dir-vip__cover{position:absolute;top:0;left:0;right:0;height:64px;z-index:0;border-radius:19px 19px 0 0;background:linear-gradient(135deg,#d3eedd,#5cb88a);background-size:cover;background-position:center}
+.dir-vip__badge{position:absolute;top:12px;left:12px;z-index:2;display:inline-flex;align-items:center;gap:4px;padding:4px 9px 4px 7px;border-radius:999px;background:rgba(255,255,255,.94);color:#a8740e;font:800 9.5px/1 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.dir-vip__badge .ic{width:12px;height:12px}
+.dir-card--vip .dir-card__badge-mia{z-index:2}
+.dir-card--vip .dir-card__top{position:relative;z-index:1}
+.dir-vip__avatar{position:relative;display:inline-block;padding:3px;border-radius:50%;background:linear-gradient(135deg,#f6cf72,#c98a16)}
+.dir-card--vip .dir-vip__avatar .dir-card__foto{width:84px;height:84px;border:3px solid var(--surface);box-shadow:0 6px 18px rgba(0,0,0,.14);object-fit:cover}
+.dir-vip__seal{position:absolute;right:0;bottom:2px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#f6cf72,#c98a16);color:#2a1a04;border:3px solid var(--surface)}
+.dir-vip__seal .ic{width:12px;height:12px;stroke-width:3}
+.dir-vip__estado{display:inline-flex;align-items:center;gap:6px;margin-bottom:9px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.dir-vip__estado i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 22%,transparent);animation:pulseDotSmall 2.2s ease-in-out infinite}
+.dir-vip__estado--ok{background:color-mix(in srgb,var(--success) 12%,transparent);color:var(--success)}
+.dir-vip__estado--info{background:rgba(47,111,221,.1);color:#2f6fdd}
+:root[data-theme="night"] .dir-vip__estado--info{color:#7cb4ff}
+.dir-card--vip .dir-card__ctas{justify-content:center}
+.dir-card--vip .dir-card__ubic{display:flex;align-items:center;gap:5px;justify-content:center;font-size:12px;color:var(--text-3);margin-bottom:8px}
+.dir-card--vip .dir-card__ubic .ic{width:12px;height:12px}
+@media(max-width:600px){
+  .dir-card.dir-card--vip{padding:26px 18px 18px;gap:0}
+  .dir-card--vip .dir-card__top{margin-bottom:12px}
+  .dir-card--vip .dir-card__body-m{align-items:center}
+  .dir-card--vip .dir-card__bio{text-align:center}
+  .dir-card--vip .dir-vip__avatar .dir-card__foto{width:76px;height:76px}
+}
+.pc-vacio{opacity:.55;font-style:italic}
 /* Directorio y "Mi tarjeta" */
-.dir-grid{grid-template-columns:repeat(auto-fill,minmax(300px,340px))!important;justify-content:start;gap:22px!important}
-.dir-pc{cursor:pointer;position:relative;transition:transform .18s}
-.dir-pc:hover{transform:translateY(-3px)}
-.dir-pc__mia{position:absolute;top:8px;right:8px;z-index:3;background:#fff;color:#1F5130;font:700 11px Inter,sans-serif;border-radius:999px;padding:3px 10px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
-.dir-mia{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:26px;align-items:center;margin:0 0 26px;padding:20px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+.dir-grid{grid-template-columns:repeat(auto-fill,minmax(250px,300px))!important;justify-content:start;gap:20px!important}
+.dir-mia{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:26px;align-items:center;margin:0 0 26px;padding:20px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
 .dir-mia__estado{display:inline-block;font:700 12px Inter,sans-serif;padding:4px 11px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}
 .dir-mia__estado.is-pub{background:color-mix(in srgb,var(--primary) 16%,transparent);color:var(--primary)}
 .dir-mia__info p{font-size:13.5px;color:var(--text-2);line-height:1.55;margin:10px 0 14px}
 .dir-mia__acc{display:flex;gap:10px;flex-wrap:wrap}
-.dir-plantillas{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin:6px 0 12px}
-.dir-plantillas button{border:1.5px solid var(--border-2,var(--border));background:var(--surface-2);color:var(--text);border-radius:10px;padding:8px 6px;font:600 12px Inter,sans-serif;cursor:pointer}
-.dir-plantillas button.is-on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
-.dir-form__vista{width:100%;max-width:340px;margin:0 auto 16px}
+.dir-portadas{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 12px}
+.dir-portada{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border-2,var(--border));cursor:pointer;padding:0;transition:transform .12s}
+.dir-portada:hover{transform:scale(1.1)}
+.dir-portada.is-on{box-shadow:0 0 0 2.5px var(--primary)}
+.dir-form__vista{width:100%;max-width:300px;margin:0 auto 16px}
 .dir-seccion{font:800 18px 'Plus Jakarta Sans',Inter,sans-serif;color:var(--text);margin:6px 2px 12px}
-.pc-vacio{opacity:.55;font-style:italic}
-@media(max-width:700px){.dir-mia{grid-template-columns:1fr}.dir-mia>div:first-child{max-width:340px}.dir-grid{grid-template-columns:minmax(0,340px)!important}}
+@media(max-width:700px){.dir-mia{grid-template-columns:1fr}.dir-mia>div:first-child{max-width:300px}.dir-grid{grid-template-columns:minmax(0,320px)!important}}
 .dir-card__badge-mia{position:absolute;top:12px;right:12px;z-index:2;background:var(--primary);color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:999px}
 .dir-card__top{position:relative;z-index:1;margin-bottom:14px}
 .dir-card__foto{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 6px 18px rgba(0,0,0,.18);background:var(--surface-2);display:block}
@@ -6454,6 +6404,8 @@ function navigateToSection(section, opts){
   // las reglas de Firestore solo dejan leer el contenido real a miembros activos.
   document.querySelectorAll('.nav-item, .mobile-nav__item, .mobile-drawer__item').forEach(n=>n.classList.remove('is-active'));
   document.querySelectorAll(`[data-section="${section}"]`).forEach(ni => ni.classList.add('is-active'));
+  // El panel derecho (clases en vivo, comunidad, descuento, actividad) solo se muestra en Inicio
+  try { document.body.setAttribute('data-seccion', section); } catch(e) {}
 
   // Reflejar la sección en la URL · replaceState al restaurar/volver para no
   // ensuciar el historial con entradas duplicadas.
@@ -12603,53 +12555,76 @@ const Sections = (function(){
     }, (err)=>{ console.error('dir snap',err); const g=document.getElementById('dir-grid'); if(g) g.innerHTML='<div class="foro-empty">No se pudo cargar el directorio.</div>'; });
   }
 
-  // ── Tarjeta profesional (formato tarjeta de presentación) con 5 plantillas ──
-  const DIR_PLANTILLAS = [
-    { id: 'ejecutiva', nombre: 'Ejecutiva' },
-    { id: 'panel', nombre: 'Panel verde' },
-    { id: 'editorial', nombre: 'Editorial' },
-    { id: 'moderno', nombre: 'Verde moderno' },
-    { id: 'blanca', nombre: 'Blanca' }
-  ];
-  function dirPlantillaValida(id){ return DIR_PLANTILLAS.some(p => p.id === id) ? id : 'panel'; }
+  // ── Tarjeta del directorio (estilo IMFRA): portada de color, sello de verificado y estado profesional ──
+  const DIR_PORTADAS = {
+    verde: { label: 'Verde', bg: 'linear-gradient(135deg,#d3eedd,#5cb88a)' },
+    lima: { label: 'Lima', bg: 'linear-gradient(135deg,#e5f3c9,#9CCC65)' },
+    azul: { label: 'Cielo', bg: 'linear-gradient(135deg,#cfe0f5,#6f9fd8)' },
+    marino: { label: 'Marino', bg: 'linear-gradient(135deg,#1e3a5f,#2f6fa3)' },
+    dorado: { label: 'Dorado', bg: 'linear-gradient(135deg,#f6e2b3,#e8c071)' },
+    terracota: { label: 'Terracota', bg: 'linear-gradient(135deg,#f6d2bd,#d9784a)' },
+    vino: { label: 'Vino', bg: 'linear-gradient(135deg,#6b1d33,#a8324f)' },
+    grafito: { label: 'Grafito', bg: 'linear-gradient(135deg,#3a3f47,#1f2329)' }
+  };
+  const DIR_ESTADOS = {
+    proyectos: { label: 'Disponible para proyectos', cls: 'ok' },
+    empleo: { label: 'Busco empleo', cls: 'info' }
+  };
+  function dirPortadaValida(id){ return DIR_PORTADAS[id] ? id : 'verde'; }
 
-  function dirTarjetaHTML(c, plantilla, opciones){
-    const t = dirPlantillaValida(plantilla || (c && c.plantilla));
+  function dirEnlace(v){
+    const t = String(v || '').trim();
+    if (!t) return '';
+    return /^https?:\/\//i.test(t) ? t : 'https://' + t.replace(/^[a-z]+:\/\//i, '');
+  }
+
+  function dirCtasHtml(c){
+    const out = [];
+    const wa = String(c.whatsapp || '').replace(/[^0-9]/g, '');
+    if (wa) out.push(`<a class="dir-cta dir-cta--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener" title="WhatsApp"><svg class="ic"><use href="#i-whatsapp"/></svg></a>`);
+    if (c.email) out.push(`<button type="button" class="dir-cta dir-cta--mail" data-email="${escapeHtml(c.email)}" title="Copiar correo: ${escapeHtml(c.email)}"><svg class="ic"><use href="#i-mail"/></svg></button>`);
+    if (c.linkedin) out.push(`<a class="dir-cta dir-cta--li" href="${escapeHtml(dirEnlace(c.linkedin))}" target="_blank" rel="noopener" title="LinkedIn"><svg class="ic"><use href="#i-linkedin"/></svg></a>`);
+    if (c.web) out.push(`<a class="dir-cta" href="${escapeHtml(dirEnlace(c.web))}" target="_blank" rel="noopener" title="Sitio web"><svg class="ic"><use href="#i-link"/></svg></a>`);
+    if (c.instagram) out.push(`<a class="dir-cta" href="https://instagram.com/${encodeURIComponent(String(c.instagram).replace(/^@+/, ''))}" target="_blank" rel="noopener" title="Instagram"><svg class="ic"><use href="#i-instagram"/></svg></a>`);
+    return out.length ? `<div class="dir-card__ctas">${out.join('')}</div>` : '<div class="dir-card__sincontacto">Sin datos de contacto</div>';
+  }
+
+  // opciones: { esMia, id, pistas } · pistas = textos en gris para una tarjeta aún incompleta
+  function dirCardHtml(c, opciones){
     c = c || {};
-    const pistas = !!(opciones && opciones.pistas);
-    const nombre = escapeHtml(c.nombre || 'Tu nombre');
-    const puesto = c.puesto ? `<div class="pc-puesto">${escapeHtml(c.puesto)}</div>`
-      : (pistas ? '<div class="pc-puesto pc-vacio">Tu puesto o cargo</div>' : '');
-    const empresa = c.empresa ? `<div class="pc-empresa">${escapeHtml(c.empresa)}</div>`
-      : (pistas ? '<div class="pc-empresa pc-vacio">Tu empresa</div>' : '');
+    const o = opciones || {};
+    const pistas = o.pistas === true;
+    const portada = DIR_PORTADAS[dirPortadaValida(c.portadaColor)].bg;
+    const estado = DIR_ESTADOS[c.estado];
     const palabras = String(c.nombre || '?').trim().split(/\s+/).filter(Boolean);
     const iniciales = escapeHtml((palabras.slice(0, 2).map(p => p.charAt(0)).join('') || '?').toUpperCase());
+    const color = colorSeguro(c.color || dirColorFor(c.uid || c.id || ''));
     const foto = c.foto
-      ? `<img class="pc-foto" src="${srcSeguro(c.foto)}" alt="">`
-      : `<span class="pc-foto">${iniciales}</span>`;
-    const icTel = '<svg class="pc-ic" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>';
-    const icMail = '<svg class="pc-ic" viewBox="0 0 24 24"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>';
-    const icPin = '<svg class="pc-ic" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
-    const filas = [];
-    if (c.whatsapp) filas.push(`<div class="pc-row">${icTel}<span>${escapeHtml(c.whatsapp)}</span></div>`);
-    if (c.email) filas.push(`<div class="pc-row">${icMail}<span>${escapeHtml(c.email)}</span></div>`);
-    if (c.ubicacion) filas.push(`<div class="pc-row">${icPin}<span>${escapeHtml(c.ubicacion)}</span></div>`);
-    else if (pistas) filas.push(`<div class="pc-row pc-vacio">${icPin}<span>Tu ciudad</span></div>`);
-    const cont = `<div class="pc-cont">${filas.slice(0, 3).join('')}</div>`;
-    let interior = '';
-    if (t === 'ejecutiva') {
-      interior = `<i class="pc-franja"></i><div class="pc-cuerpo"><div class="pc-marca">ALINTEC FOOD</div><div class="pc-nombre">${nombre}</div>${puesto}${empresa}${cont}</div>${foto}`;
-    } else if (t === 'panel') {
-      interior = `<div class="pc-lado"><div class="pc-marca">ALINTEC<br>FOOD</div>${foto}<div class="pc-marca">VIP</div></div><div class="pc-der"><div class="pc-nombre">${nombre}</div>${puesto}${empresa}<div class="pc-linea"></div>${cont}</div>`;
-    } else if (t === 'editorial') {
-      interior = `<div class="pc-marco"></div><div class="pc-sello">ALINTEC FOOD<br>MIEMBRO VIP</div><div class="pc-cuerpo"><div class="pc-nombre">${nombre}</div>${puesto}${empresa}${cont}</div>`;
-    } else if (t === 'moderno') {
-      interior = `<div class="pc-cuerpo"><div class="pc-marca">ALINTEC FOOD</div><div class="pc-nombre">${nombre}</div>${puesto}${empresa}${cont}</div>${foto}`;
-    } else {
-      const sector = c.sector ? `<div class="pc-sector">${escapeHtml(c.sector)}</div>` : '';
-      interior = `<div class="pc-barra"></div><div class="pc-cuerpo"><div class="pc-cab">${foto}<div><div class="pc-nombre">${nombre}</div>${puesto}</div></div>${empresa}${sector}${cont}</div>`;
-    }
-    return `<div class="pc-box"><div class="pc pc--${t}">${interior}</div></div>`;
+      ? `<img src="${srcSeguro(c.foto)}" alt="${escapeHtml(c.nombre || '')}" class="dir-card__foto" loading="lazy">`
+      : `<div class="dir-card__foto dir-card__foto--ini" style="background:linear-gradient(135deg,${color},${color}aa);">${iniciales}</div>`;
+    const puesto = c.puesto ? `<div class="dir-card__puesto">${escapeHtml(c.puesto)}</div>`
+      : (pistas ? '<div class="dir-card__puesto pc-vacio">Tu puesto o cargo</div>' : '');
+    const empresa = c.empresa ? `<div class="dir-card__empresa"><svg class="ic"><use href="#i-briefcase"/></svg>${escapeHtml(c.empresa)}</div>`
+      : (pistas ? '<div class="dir-card__empresa pc-vacio"><svg class="ic"><use href="#i-briefcase"/></svg>Tu empresa</div>' : '');
+    const ubic = c.ubicacion ? `<div class="dir-card__ubic"><svg class="ic"><use href="#i-pin"/></svg>${escapeHtml(c.ubicacion)}</div>`
+      : (pistas ? '<div class="dir-card__ubic pc-vacio"><svg class="ic"><use href="#i-pin"/></svg>Tu ciudad</div>' : '');
+    const ctas = (c.whatsapp || c.email || c.linkedin || c.web || c.instagram) ? dirCtasHtml(c)
+      : (pistas ? '<div class="dir-card__sincontacto pc-vacio">Aquí irán tus datos de contacto</div>' : dirCtasHtml(c));
+    return `
+      <article class="dir-card dir-card--vip${o.esMia ? ' dir-card--mia' : ''}"${o.id ? ` data-dircard="${escapeHtml(o.id)}"` : ''}>
+        <div class="dir-vip__cover" style="background:${portada}" aria-hidden="true"></div>
+        <span class="dir-vip__badge"><svg class="ic"><use href="#i-crown"/></svg>VIP</span>
+        ${o.esMia ? '<span class="dir-card__badge-mia">Tú</span>' : ''}
+        <div class="dir-card__top"><div class="dir-vip__avatar">${foto}<span class="dir-vip__seal" title="Miembro VIP"><svg class="ic"><use href="#i-check"/></svg></span></div></div>
+        <div class="dir-card__body-m">
+          <div class="dir-card__name">${escapeHtml(c.nombre || (pistas ? 'Tu nombre' : 'Miembro VIP'))}</div>
+          ${puesto}${empresa}${ubic}
+          ${estado ? `<span class="dir-vip__estado dir-vip__estado--${estado.cls}"><i></i>${estado.label}</span>` : ''}
+          ${c.sector ? `<span class="dir-card__sector">${escapeHtml(c.sector)}</span>` : ''}
+          ${c.bio ? `<div class="dir-card__bio">${escapeHtml(c.bio)}</div>` : ''}
+          ${ctas}
+        </div>
+      </article>`;
   }
 
   // "Mi tarjeta": todos tienen una. Si aún no la han guardado, se arma con los datos que ya se tienen y es privada.
@@ -12658,7 +12633,7 @@ const Sections = (function(){
     return {
       uid: S.uid, nombre: S.nombre || S.displayName || '', puesto: '', empresa: S.empresa || M.empresa || '',
       whatsapp: S.whatsapp || S.telefono || M.whatsapp || '', email: S.email || '', ubicacion: '', sector: '',
-      plantilla: 'panel', publicado: false
+      portadaColor: 'verde', estado: '', publicado: false
     };
   }
 
@@ -12672,12 +12647,12 @@ const Sections = (function(){
     const pub = existe && c.publicado === true && c.visible !== false;
     cont.innerHTML = `
       <div class="dir-mia">
-        <div>${dirTarjetaHTML(c, c.plantilla, { pistas: !pub })}</div>
+        <div>${dirCardHtml(c, { pistas: !pub })}</div>
         <div class="dir-mia__info">
           <span class="dir-mia__estado${pub ? ' is-pub' : ''}">${pub ? 'Publicada · visible para los miembros' : 'Privada · solo tú la ves'}</span>
           <p>${pub
             ? 'Los miembros del club ya pueden ver tu tarjeta y contactarte. Al editarla puedes cambiar tus datos o dejar de publicarla.'
-            : 'Esta es tu tarjeta profesional. Nadie la ve hasta que tú decidas publicarla. Al editarla eliges tus datos, la plantilla y si quieres publicarla.'}</p>
+            : 'Esta es tu tarjeta profesional. Nadie la ve hasta que tú decidas publicarla. Al editarla eliges tus datos, el color de tu portada y si quieres publicarla.'}</p>
           <div class="dir-mia__acc">
             <button class="btn btn--accent" id="dir-mia-editar">Editar</button>
           </div>
@@ -12702,7 +12677,7 @@ const Sections = (function(){
     const uid = window.UserState?.uid;
     grid.innerHTML = cards.map(c=>{
       const esMia = c.id===uid;
-      return `<article class="dir-pc" data-dircard="${c.id}">${esMia?'<span class="dir-pc__mia">Tú</span>':''}${dirTarjetaHTML(c, c.plantilla)}</article>`;
+      return dirCardHtml(c, { esMia, id: c.id });
     }).join('');
 
     // Clic en la tarjeta → abre el detalle (sin disparar al tocar un botón de contacto)
@@ -12782,7 +12757,8 @@ const Sections = (function(){
     let data = dirBorradorInicial(), tarjetaExiste = false;
     try { const ds = await fs.getDoc(fs.doc(fs.db,'directorio',uid)); if (ds.exists()) { data = Object.assign(dirBorradorInicial(), ds.data()); tarjetaExiste = true; } } catch(e){}
     const yaPublicada = tarjetaExiste && data.publicado === true && data.visible !== false;
-    let plantillaElegida = dirPlantillaValida(data.plantilla);
+    let portadaElegida = dirPortadaValida(data.portadaColor);
+    let estadoElegido = DIR_ESTADOS[data.estado] ? data.estado : '';
     const esMiembro = window.UserState?.modo==='vip' || esAdminReal();
     _dirFotoTmp = undefined;
 
@@ -12790,8 +12766,13 @@ const Sections = (function(){
     const body = `
       <div class="dir-form">
         <div class="dir-form__vista" id="dirf-vista"></div>
-        <label class="dir-form__lbl">Plantilla</label>
-        <div class="dir-plantillas" id="dirf-plantillas">${DIR_PLANTILLAS.map(p=>`<button type="button" data-plantilla="${p.id}" class="${p.id===plantillaElegida?'is-on':''}">${p.nombre}</button>`).join('')}</div>
+        <label class="dir-form__lbl">Color de tu portada</label>
+        <div class="dir-portadas" id="dirf-portadas">${Object.keys(DIR_PORTADAS).map(id=>`<button type="button" data-portada="${id}" title="${DIR_PORTADAS[id].label}" aria-label="${DIR_PORTADAS[id].label}" class="dir-portada${id===portadaElegida?' is-on':''}" style="background:${DIR_PORTADAS[id].bg}"></button>`).join('')}</div>
+        <label class="dir-form__lbl">Estado profesional <span class="dir-form__opt">(opcional)</span></label>
+        <select class="dir-form__in" id="dirf-estado">
+          <option value="">Sin estado</option>
+          ${Object.keys(DIR_ESTADOS).map(id=>`<option value="${id}" ${id===estadoElegido?'selected':''}>${DIR_ESTADOS[id].label}</option>`).join('')}
+        </select>
         <div class="dir-form__foto-wrap">
           <div class="dir-form__foto" id="dirf-foto-prev">
             ${fotoActual ? `<img src="${fotoActual}" alt="">` : `<svg class="ic"><use href="#i-user"/></svg>`}
@@ -12849,7 +12830,7 @@ const Sections = (function(){
       </div>`;
     const m = Modal.open({id:'dir-form', title:'Mi tarjeta profesional', subtitle: yaPublicada ? 'Publicada en el Directorio VIP' : 'Privada · solo tú la ves hasta que la publiques', icon:'i-user', size:'md', body, footer});
 
-    // Vista previa en vivo con la plantilla elegida
+    // Vista previa en vivo de la tarjeta
     const leerTarjeta = () => ({
       nombre: (document.getElementById('dirf-nombre')||{}).value || '',
       puesto: (document.getElementById('dirf-puesto')||{}).value || '',
@@ -12858,15 +12839,20 @@ const Sections = (function(){
       sector: (document.getElementById('dirf-sector')||{}).value || '',
       whatsapp: (document.getElementById('dirf-wa')||{}).value || '',
       email: (document.getElementById('dirf-email')||{}).value || '',
+      bio: (document.getElementById('dirf-bio')||{}).value || '',
+      portadaColor: portadaElegida,
+      estado: estadoElegido,
       foto: _dirFotoTmp !== undefined ? _dirFotoTmp : (data.foto || '')
     });
-    const refrescarVista = () => { const v = document.getElementById('dirf-vista'); if (v) v.innerHTML = dirTarjetaHTML(leerTarjeta(), plantillaElegida, { pistas: true }); };
+    const refrescarVista = () => { const v = document.getElementById('dirf-vista'); if (v) v.innerHTML = dirCardHtml(leerTarjeta(), { pistas: true }); };
     refrescarVista();
-    document.querySelectorAll('#dirf-plantillas [data-plantilla]').forEach(b => b.addEventListener('click', () => {
-      plantillaElegida = dirPlantillaValida(b.dataset.plantilla);
-      document.querySelectorAll('#dirf-plantillas [data-plantilla]').forEach(x => x.classList.toggle('is-on', x === b));
+    document.querySelectorAll('#dirf-portadas [data-portada]').forEach(b => b.addEventListener('click', () => {
+      portadaElegida = dirPortadaValida(b.dataset.portada);
+      document.querySelectorAll('#dirf-portadas [data-portada]').forEach(x => x.classList.toggle('is-on', x === b));
       refrescarVista();
     }));
+    const selEstado = document.getElementById('dirf-estado');
+    if (selEstado) selEstado.addEventListener('change', () => { estadoElegido = DIR_ESTADOS[selEstado.value] ? selEstado.value : ''; refrescarVista(); });
     document.querySelectorAll('.dir-form input.dir-form__in, .dir-form select.dir-form__in').forEach(el => { el.addEventListener('input', refrescarVista); el.addEventListener('change', refrescarVista); });
 
     // Eliminar tarjeta · confirmación integrada en el modal (sin confirm() nativo del navegador)
@@ -12927,7 +12913,8 @@ const Sections = (function(){
         cedulaVisible: document.getElementById('dirf-cedula-visible').checked,
         visible: true,
         publicado: publicar === true,
-        plantilla: plantillaElegida,
+        portadaColor: portadaElegida,
+        estado: estadoElegido,
         color: dirColorFor(uid),
         updatedAt: fs.serverTimestamp()
       };
@@ -13480,6 +13467,79 @@ const Sections = (function(){
       </div>
     `;
   }
+
+  /* ============================ CAJÓN LATERAL DEL PERFIL ============================ */
+  // Al tocar el avatar de la barra superior se abre un cajón por el lado derecho (como "Tu espacio" de Visión Pecuaria)
+  // en lugar de llevar a otra página. Muestra tu resumen y accesos rápidos.
+  window.__abrirCajonPerfil = function(){
+    if (document.getElementById('cajon-perfil')) return;
+    const S = window.UserState || {};
+    const nombre = S.nombre || S.displayName || 'Ingeniero';
+    const planClave = String(S.plan || (window.memberData && window.memberData.plan) || '').toLowerCase();
+    const esVip = tieneAccesoVipCompleto();
+    const plan = esVip ? (esAdminReal() ? 'Administrador' : (planClave === 'anual' ? 'VIP Anual' : (planClave === 'mensual' ? 'VIP Mensual' : 'VIP'))) : 'Sin membresía';
+    const conAv = !!(S.avatar && window.AlintecAvatares && window.AlintecAvatares.valido(S.avatar));
+    const ini = escapeHtml(S.iniciales || (nombre.trim().split(/\s+/).slice(0, 2).map(p => p.charAt(0)).join('') || 'IN').toUpperCase());
+    let clases = 0, cursosOk = 0;
+    try {
+      const prog = getProgreso();
+      (Array.isArray(cursos) ? cursos : []).forEach(c => {
+        const p = prog[c.id] || {};
+        clases += Array.isArray(p.clasesVistas) ? p.clasesVistas.length : 0;
+        if (p.completado === true) cursosOk++;
+      });
+    } catch (e) {}
+    const I = {
+      x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+      regalo: '<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8C9.5 8 8 7 8 5.5S9.5 3 12 8zM12 8c2.5 0 4-1 4-2.5S14.5 3 12 8z"/></svg>',
+      perfil: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+      logros: '<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM5 5H3v2a3 3 0 0 0 3 3M19 5h2v2a3 3 0 0 1-3 3"/></svg>',
+      cert: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M9 21l3-3 3 3"/></svg>',
+      plan: '<svg viewBox="0 0 24 24"><path d="M3 8l4 4 5-7 5 7 4-4v10H3z"/></svg>',
+      salir: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>'
+    };
+    const vel = document.createElement('div');
+    vel.id = 'cajon-perfil-vel';
+    const caj = document.createElement('aside');
+    caj.id = 'cajon-perfil';
+    caj.setAttribute('role', 'dialog'); caj.setAttribute('aria-modal', 'true'); caj.setAttribute('aria-label', 'Tu perfil');
+    caj.innerHTML = '<div class="cp-cab"><button type="button" class="cp-x" aria-label="Cerrar">' + I.x + '</button>'
+      + '<div class="cp-kick">Tu espacio Alintec Food</div>'
+      + '<div class="cp-id"><div class="cp-foto">' + (conAv ? AlintecAvatares.html(S.avatar, 64) : ini) + '</div>'
+      + '<div><h2>' + escapeHtml(nombre) + '</h2><p>' + escapeHtml(S.email || '') + '</p><span class="cp-plan">' + escapeHtml(plan) + '</span></div></div></div>'
+      + '<div class="cp-cuerpo">'
+      + '<div class="cp-stats"><div><b id="cp-xp">—</b><span>XP</span></div><div><b>' + clases + '</b><span>Clases</span></div><div><b>' + cursosOk + '</b><span>Cursos</span></div></div>'
+      + '<button type="button" class="cp-recomp" data-ir="logros"><span class="cp-ic">' + I.regalo + '</span><span><small>Premios</small><strong>Explora tus beneficios</strong><span class="t">Niveles, premios por curso y retos.</span></span></button>'
+      + '<div class="cp-atajos">'
+      + '<button type="button" class="cp-atajo" data-ir="perfil"><span class="cp-ic">' + I.perfil + '</span><span><b>Mi perfil</b><small>Datos y tarjeta</small></span></button>'
+      + '<button type="button" class="cp-atajo" data-ir="logros"><span class="cp-ic">' + I.logros + '</span><span><b>Mis logros</b><small>Nivel y medallas</small></span></button>'
+      + '<button type="button" class="cp-atajo" data-ir="certificados"><span class="cp-ic">' + I.cert + '</span><span><b>Certificados</b><small>Descarga los tuyos</small></span></button>'
+      + '<button type="button" class="cp-atajo" data-ir="suscripcion"><span class="cp-ic">' + I.plan + '</span><span><b>Membresía</b><small>Plan y renovación</small></span></button>'
+      + '</div>'
+      + '<div class="cp-tip"><b>Tu siguiente avance empieza aquí.</b>Cada clase, reto o aporte a la comunidad suma a tu progreso.</div>'
+      + '<div class="cp-salir"><button type="button" data-salir>' + I.salir + 'Cerrar sesión</button></div>'
+      + '</div>';
+    document.body.appendChild(vel);
+    document.body.appendChild(caj);
+    const previoFoco = document.activeElement;
+    const cerrar = (despues) => {
+      document.removeEventListener('keydown', alTeclado);
+      vel.classList.remove('is-on'); caj.classList.remove('is-on');
+      setTimeout(() => { vel.remove(); caj.remove(); try { if (previoFoco && previoFoco.focus) previoFoco.focus(); } catch (e) {} if (typeof despues === 'function') despues(); }, 260);
+    };
+    const alTeclado = (e) => { if (e.key === 'Escape') cerrar(); };
+    document.addEventListener('keydown', alTeclado);
+    vel.addEventListener('click', () => cerrar());
+    caj.querySelector('.cp-x').addEventListener('click', () => cerrar());
+    caj.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => { const dest = b.dataset.ir; cerrar(() => navigateToSection(dest)); }));
+    caj.querySelector('[data-salir]').addEventListener('click', () => cerrar(() => { if (typeof openLogoutModal === 'function') openLogoutModal(); }));
+    requestAnimationFrame(() => requestAnimationFrame(() => { vel.classList.add('is-on'); caj.classList.add('is-on'); try { caj.querySelector('.cp-x').focus(); } catch (e) {} }));
+    // XP real del servidor (si responde)
+    Promise.resolve().then(() => cargarPremios()).then(p => {
+      const el = document.getElementById('cp-xp');
+      if (el && p && Number.isFinite(Number(p.xp))) el.textContent = Number(p.xp).toLocaleString('es-MX');
+    }).catch(() => {});
+  };
 
   /* ============================ MI PERFIL ============================ */
   function renderPerfil(container){
@@ -15879,7 +15939,7 @@ function initNav(){
     Toast.success('Abriendo WhatsApp','Solicitando tu 20% de descuento');
   });
   document.getElementById('btn-notif')?.addEventListener('click',(e)=>{e.stopPropagation();toggleNotifDropdown();});
-  document.getElementById('btn-avatar')?.addEventListener('click',()=>navigateToSection('perfil'));
+  document.getElementById('btn-avatar')?.addEventListener('click',()=>{ if (typeof window.__abrirCajonPerfil === 'function') window.__abrirCajonPerfil(); else navigateToSection('perfil'); });
 
   // ─── Calendario .ics (widget panel derecho) · ahora dinámico ───
   // Usa event delegation porque el widget se re-renderea con el webinar real
@@ -16940,6 +17000,65 @@ body::before{animation:none;filter:none;background:radial-gradient(circle at 56%
 @media(max-width:1180px){.app{grid-template-columns:218px minmax(0,1fr)}.aside{display:none}.main{padding-right:24px}}
 /* Teléfono: una sola columna (sin esto el contenido quedaba apretado en 218px y el resto de la pantalla vacío) */
 @media(max-width:880px){.app{grid-template-columns:minmax(0,1fr)}}
+/* ── Cajón lateral del perfil ("Tu espacio") ── */
+#cajon-perfil-vel{position:fixed;inset:0;z-index:9000;background:rgba(10,20,14,.52);opacity:0;transition:opacity .25s ease}
+#cajon-perfil-vel.is-on{opacity:1}
+#cajon-perfil{position:fixed;top:0;right:0;bottom:0;z-index:9001;width:min(420px,100%);display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--text);box-shadow:-30px 0 80px rgba(10,30,20,.28);transform:translateX(104%);transition:transform .3s cubic-bezier(.2,.8,.25,1)}
+#cajon-perfil.is-on{transform:none}
+#cajon-perfil .cp-cab{position:relative;overflow:hidden;background:#0F3D2E;color:#fff;padding:22px 22px 24px;flex:none;padding-top:calc(22px + env(safe-area-inset-top))}
+#cajon-perfil .cp-cab::before{content:"";position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;background:#14543F}
+#cajon-perfil .cp-cab>*{position:relative;z-index:1}
+#cajon-perfil .cp-kick{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#B7E08A}
+#cajon-perfil .cp-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:2;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+#cajon-perfil .cp-x:hover{background:rgba(255,255,255,.28)}
+#cajon-perfil .cp-x svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+#cajon-perfil .cp-id{display:flex;align-items:center;gap:14px;margin-top:16px;padding-right:30px}
+#cajon-perfil .cp-foto{width:64px;height:64px;border-radius:50%;flex:none;background:#9CCC65;color:#1F4D2B;border:3px solid #fff;display:flex;align-items:center;justify-content:center;overflow:hidden;font:800 22px 'Plus Jakarta Sans',sans-serif}
+#cajon-perfil .cp-id h2{margin:0;font:800 20px/1.15 'Plus Jakarta Sans',sans-serif;color:#fff;word-break:break-word}
+#cajon-perfil .cp-id p{margin:3px 0 8px;font-size:13px;color:#CFE5D6;word-break:break-all}
+#cajon-perfil .cp-plan{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:4px 11px;font:800 10.5px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+#cajon-perfil .cp-cuerpo{padding:16px 18px calc(20px + env(safe-area-inset-bottom));overflow:auto;flex:1;min-height:0}
+#cajon-perfil .cp-stats{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+#cajon-perfil .cp-stats div{padding:12px 6px;text-align:center;border-left:1px solid var(--border)}
+#cajon-perfil .cp-stats div:first-child{border-left:0}
+#cajon-perfil .cp-stats b{display:block;font:800 22px 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+#cajon-perfil .cp-stats span{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+#cajon-perfil .cp-recomp,#cajon-perfil .cp-atajo{font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+#cajon-perfil .cp-recomp{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 14px;border:1.5px solid color-mix(in srgb,var(--primary) 35%,transparent);border-radius:14px;background:color-mix(in srgb,var(--primary) 8%,var(--surface))}
+#cajon-perfil .cp-ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--primary);color:#fff}
+#cajon-perfil .cp-ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#cajon-perfil .cp-recomp small{display:block;font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--primary)}
+#cajon-perfil .cp-recomp strong{display:block;font-size:14.5px}
+#cajon-perfil .cp-recomp span.t{font-size:12px;color:var(--text-2)}
+#cajon-perfil .cp-atajos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+#cajon-perfil .cp-atajo{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+#cajon-perfil .cp-atajo:hover{border-color:var(--primary)}
+#cajon-perfil .cp-atajo .cp-ic{width:34px;height:34px;border-radius:10px;background:var(--surface-2);color:var(--primary)}
+#cajon-perfil .cp-atajo b{display:block;font:700 13px Inter,sans-serif}
+#cajon-perfil .cp-atajo small{font-size:11px;color:var(--text-3)}
+#cajon-perfil .cp-tip{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--surface-2);font-size:12.5px;color:var(--text-2);line-height:1.5}
+#cajon-perfil .cp-tip b{display:block;color:var(--text);margin-bottom:2px}
+#cajon-perfil .cp-salir{display:flex;justify-content:center;margin-top:14px}
+#cajon-perfil .cp-salir button{background:none;border:0;color:var(--danger,#C0392B);font:700 13.5px Inter,sans-serif;cursor:pointer;display:flex;gap:8px;align-items:center}
+#cajon-perfil .cp-salir svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(prefers-reduced-motion:reduce){#cajon-perfil,#cajon-perfil-vel{transition:none}}
+/* ── Panel derecho solo en Inicio · sin hueco a la derecha en tabletas ──
+   Antes, entre 1181 y 1280 px la tercera columna quedaba reservada y vacía y el contenido se apretaba a ~590 px.
+   Fuera de Inicio no hay panel derecho: el contenido usa todo el ancho. En Inicio, en pantallas medianas
+   y chicas el panel baja debajo del contenido en una cuadrícula. */
+body[data-seccion]:not([data-seccion="inicio"]) .aside{display:none!important}
+body[data-seccion]:not([data-seccion="inicio"]) .app{grid-template-columns:224px minmax(0,1fr)!important}
+@media(max-width:1180px){body[data-seccion]:not([data-seccion="inicio"]) .app{grid-template-columns:218px minmax(0,1fr)!important}}
+@media(max-width:880px){body[data-seccion]:not([data-seccion="inicio"]) .app{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:1280px){
+  body:not([data-seccion]) .app,body[data-seccion="inicio"] .app{grid-template-columns:224px minmax(0,1fr)!important}
+  body:not([data-seccion]) .aside,body[data-seccion="inicio"] .aside{display:grid!important;grid-column:2;position:static;height:auto;overflow:visible;border-left:none;border-top:1px solid var(--border);padding:20px 24px 36px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;align-items:start}
+}
+@media(max-width:1180px){body:not([data-seccion]) .app,body[data-seccion="inicio"] .app{grid-template-columns:218px minmax(0,1fr)!important}}
+@media(max-width:880px){
+  body:not([data-seccion]) .app,body[data-seccion="inicio"] .app{grid-template-columns:minmax(0,1fr)!important}
+  body:not([data-seccion]) .aside,body[data-seccion="inicio"] .aside{grid-column:1;grid-template-columns:1fr;padding:16px 14px calc(120px + env(safe-area-inset-bottom))}
+}
 @media(max-width:760px){
   .main{padding:14px 14px calc(92px + env(safe-area-inset-bottom));gap:17px}
   .topbar{top:8px;border-radius:15px;padding:7px 8px 7px 12px}
