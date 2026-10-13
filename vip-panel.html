@@ -17737,6 +17737,8 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 
 /* Hoja compacta de la cuadrícula: misma huella que la antigua portada, sin lomo ni efecto de libro. */
 .hojas--tarjetas .hoja--tarjeta{aspect-ratio:3/4.15;min-width:0;overflow:hidden;border-radius:4px 14px 14px 4px}
+/* Las hojas nunca pasan de 340 px de ancho: en una columna de 400–900 px (pantalla mediana con menú lateral) quedaba una hoja de 600–830 px de alto con un hueco enorme debajo del texto. */
+.hojas.hojas--tarjetas .hoja--tarjeta{max-width:340px;width:100%;justify-self:center}
 .hojas--tarjetas .hoja--tarjeta .hj-paper{height:100%;padding:13px;gap:8px;overflow:hidden;border-radius:inherit;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto 118px minmax(0,1fr) auto!important;grid-template-areas:"top" "mast" "fig" "body" "foot"!important}
 .hojas--tarjetas .hoja--tarjeta .hj-top{font-size:8px;padding-bottom:4px}
 .hojas--tarjetas .hoja--tarjeta .hj-mast{padding:9px 10px!important;background:var(--hj)!important;color:var(--hj-on)!important;text-align:left!important}

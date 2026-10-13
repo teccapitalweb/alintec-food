@@ -6805,21 +6805,6 @@ const Pages={
             <div class="form-actions"><button class="btn btn--accent" data-save="contacto">Guardar contacto<svg class="ic"><use href="#i-check"/></svg></button></div>
           </div>
 
-          <div class="dash-card">
-            <div class="dash-card__header"><div class="dash-card__title"><svg class="ic"><use href="#i-shield-check"/></svg>Administradores</div></div>
-            <p style="font-size:12.5px;color:var(--text-2);line-height:1.55;margin-bottom:14px;">Los emails registrados aquí pueden acceder al panel admin. <strong style="color:var(--danger);">No elimines <code style="font-family:JetBrains Mono,monospace;color:var(--primary);">teccapitalweb@gmail.com</code> bajo ningún motivo.</strong></p>
-            <div id="adm-list" class="adm-list" style="margin-bottom:14px;">
-              ${c.admins.map((e,i)=>`
-                <div class="adm-row" style="padding:11px 14px;">
-                  <div class="adm-row__thumb" style="--c1:#43A047;"><svg class="ic"><use href="#i-shield-check"/></svg></div>
-                  <div class="adm-row__body"><div class="adm-row__title" style="font-size:13px;">${e}</div></div>
-                  ${e==='teccapitalweb@gmail.com'?'<span class="tag tag--primary">Superadmin</span>':`<button class="icon-action icon-action--danger" data-rm-admin="${i}"><svg class="ic"><use href="#i-trash"/></svg></button>`}
-                </div>
-              `).join('')}
-            </div>
-            <div style="display:flex;gap:8px;"><input type="email" class="input" id="cfg-new-admin" placeholder="nuevo@email.com"><button class="btn btn--ghost btn--sm" id="add-admin"><svg class="ic"><use href="#i-plus"/></svg>Agregar</button></div>
-          </div>
-
           <div class="dash-card" id="estado-servicios" style="grid-column:1/-1"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Revisando los servicios…</div></div>
           <div class="dash-card" id="bitacora-servidor" style="grid-column:1/-1"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Cargando el historial del servidor…</div></div>
         </div>
@@ -6997,16 +6982,6 @@ const Pages={
         }catch(e){Toast.error('Error al guardar precios',e.message);}
       }
       else if(type==='contacto'){c.whatsapp=document.getElementById('cfg-wa').value;c.instagram=document.getElementById('cfg-ig').value;c.emailContacto=document.getElementById('cfg-em').value;Toast.success('Contacto actualizado');}
-    }));
-    document.getElementById('add-admin').addEventListener('click',()=>{
-      const e=document.getElementById('cfg-new-admin').value.trim();
-      if(!e||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){Toast.error('Email inválido');return;}
-      if(c.admins.includes(e)){Toast.error('Ya existe');return;}
-      c.admins.push(e);Toast.success('Admin agregado',e);Pages.config(p);
-    });
-    p.querySelectorAll('[data-rm-admin]').forEach(b=>b.addEventListener('click',()=>{
-      const i=+b.dataset.rmAdmin;
-      if(confirm('¿Eliminar este administrador?')){c.admins.splice(i,1);Toast.success('Admin eliminado');Pages.config(p);}
     }));
   },
 
