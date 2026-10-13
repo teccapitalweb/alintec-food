@@ -18727,6 +18727,11 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   .hojas--tarjetas .hoja--tarjeta .hj-fig{height:140px}
 }
 /* Fin del desplazamiento: una sola página, menús independientes y solo el espacio que ocupa la barra móvil. */
+/* Los beneficios de Inicio permanecen ocultos hasta confirmar una membresía VIP. */
+:root:not([data-mode="vip"]) .aside{display:none!important}
+:root:not([data-mode="vip"]) .app{grid-template-columns:224px minmax(0,1fr)!important}
+@media(max-width:1180px){:root:not([data-mode="vip"]) .app{grid-template-columns:218px minmax(0,1fr)!important}}
+@media(max-width:880px){:root:not([data-mode="vip"]) .app{grid-template-columns:minmax(0,1fr)!important}}
 html,body{overscroll-behavior-y:none}
 .app{min-height:100dvh;align-items:start}
 .main{align-self:start;overflow-x:clip;overflow-y:visible;padding-bottom:16px}
@@ -18743,6 +18748,7 @@ html,body{overscroll-behavior-y:none}
   .main{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
   body:not([data-seccion]) .main,body[data-seccion="inicio"] .main{padding-bottom:16px!important}
   body:not([data-seccion]) .aside,body[data-seccion="inicio"] .aside{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
+  :root:not([data-mode="vip"]) .main{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
 }
 </style>
 <script>
