@@ -258,14 +258,20 @@ service cloud.firestore {
 
     match /directorio/{uid} {
       // Una tarjeta es privada hasta que su dueño la publica (publicado == true).
-      // Los miembros solo leen las publicadas; el dueño siempre lee la suya.
+      // Cualquier cuenta con sesión lee las publicadas; el dueño siempre lee la suya.
+      // El contacto (WhatsApp, correo…) NO va en la tarjeta: vive en "directorioContacto", que solo lee el servidor
+      // y entrega únicamente a miembros VIP.
       allow read: if isAdmin()
         || own(uid)
-        || (activeMember() && resource.data.publicado == true);
-      // Cualquier cuenta puede guardar su tarjeta en privado; publicarla requiere membresía vigente.
+        || (signedIn() && resource.data.publicado == true);
+      // Cualquier cuenta puede guardar y publicar su tarjeta; la tarjeta pública no puede llevar datos de contacto.
       allow create, update: if own(uid)
         && request.resource.data.uid == request.auth.uid
-        && (request.resource.data.get('publicado', false) != true || activeMember())
+        && request.resource.data.get('whatsapp', '') == ''
+        && request.resource.data.get('email', '') == ''
+        && request.resource.data.get('linkedin', '') == ''
+        && request.resource.data.get('web', '') == ''
+        && request.resource.data.get('instagram', '') == ''
         && (!('nombre' in request.resource.data)
           || (request.resource.data.nombre is string
             && request.resource.data.nombre.size() < 120))

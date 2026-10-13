@@ -1945,6 +1945,23 @@ body::after{
 .dir-portada.is-on{box-shadow:0 0 0 2.5px var(--primary)}
 .dir-form__vista{width:100%;max-width:300px;margin:0 auto 16px}
 .dir-seccion{font:800 18px 'Plus Jakarta Sans',Inter,sans-serif;color:var(--text);margin:6px 2px 12px}
+.dir-group-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 -2px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.dir-group-head span{display:inline-flex;align-items:center;gap:8px;font:700 11px/1 'JetBrains Mono',monospace;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-2)}
+.dir-group-head small{font:700 11px/1 'JetBrains Mono',monospace;color:var(--text-3)}
+.dir-group-head--vip{border-bottom-color:color-mix(in srgb,#e0a83a 40%,transparent)}
+.dir-group-head--vip span{color:#c08a1d}
+.dir-group-head--vip .ic{width:15px;height:15px}
+.dir-group-head:not(:first-child){margin-top:18px}
+.dir-cta-lock{display:inline-flex;align-items:center;gap:7px;margin-top:auto;padding:9px 14px;border-radius:11px;border:1px dashed var(--border-2);background:transparent;color:var(--text-2);font:600 12px/1 Inter,sans-serif;cursor:pointer;transition:.15s}
+.dir-cta-lock .ic{width:14px;height:14px}
+.dir-cta-lock:hover{border-style:solid;border-color:var(--primary);color:var(--primary)}
+.dir-vip__certs{display:inline-flex;align-items:center;gap:5px;margin-bottom:12px;padding:4px 11px;border-radius:999px;border:1px solid color-mix(in srgb,var(--success) 35%,transparent);background:color-mix(in srgb,var(--success) 8%,transparent);color:var(--text-2);font-size:11px;font-weight:700}
+.dir-vip__certs .ic{width:12px;height:12px;color:var(--success);stroke-width:3}
+.dir-card--vip .dir-cta-lock{border-color:color-mix(in srgb,#e0a83a 60%,transparent);color:#a8740e}
+:root[data-theme="night"] .dir-card--vip .dir-cta-lock{color:#f1c46a}
+.dir-form__vip{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px;border-radius:999px;background:#FFF3D6;color:#8a5d08;font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.dir-form__vip .ic{width:11px;height:11px}
+.dir-portadas.is-locked{opacity:.5;pointer-events:none}
 @media(max-width:700px){.dir-mia{grid-template-columns:1fr}.dir-mia>div:first-child{max-width:300px}.dir-grid{grid-template-columns:minmax(0,320px)!important}}
 .dir-card__badge-mia{position:absolute;top:12px;right:12px;z-index:2;background:var(--primary);color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:999px}
 .dir-card__top{position:relative;z-index:1;margin-bottom:14px}
@@ -12493,7 +12510,8 @@ const Sections = (function(){
 
   function renderDirectorio(container){
     const esVip = window.UserState?.modo==='vip' || esAdminReal();
-    if (!esVip) return renderDirectorioVistaPrevia(container);
+    // Todas las cuentas con sesión ven el directorio; el contacto y las funciones VIP los decide el servidor.
+    if (window.__isDemoMode === true) return renderDirectorioVistaPrevia(container);
     container.innerHTML = `
       <div class="fade-up">
         <div class="sec-hero">
@@ -12551,7 +12569,7 @@ const Sections = (function(){
       snap.forEach(d=>{ const x=d.data(); x.id=d.id; if(x.visible!==false && x.publicado===true) _dirCards.push(x); });
       const ms = v => (v && v.toMillis ? v.toMillis() : 0);
       _dirCards.sort((a,b)=> ms(b.updatedAt) - ms(a.updatedAt));
-      dirPintar();
+      dirCargarMeta().then(() => dirPintar());
     }, (err)=>{ console.error('dir snap',err); const g=document.getElementById('dir-grid'); if(g) g.innerHTML='<div class="foro-empty">No se pudo cargar el directorio.</div>'; });
   }
 
@@ -12589,13 +12607,16 @@ const Sections = (function(){
     return out.length ? `<div class="dir-card__ctas">${out.join('')}</div>` : '<div class="dir-card__sincontacto">Sin datos de contacto</div>';
   }
 
-  // opciones: { esMia, id, pistas } · pistas = textos en gris para una tarjeta aún incompleta
+  // opciones: { esMia, id, pistas, vip, bloqueado, certs }
+  //  · vip (por omisión sí): tarjeta VIP con portada, sello y estado; si es false, tarjeta básica de la comunidad
+  //  · bloqueado: el contacto no se muestra y aparece "Contactar · solo VIP"
+  //  · certs: número de certificados reales (solo se muestra en tarjetas VIP)
+  //  · pistas: textos en gris para una tarjeta aún incompleta
   function dirCardHtml(c, opciones){
     c = c || {};
     const o = opciones || {};
     const pistas = o.pistas === true;
-    const portada = DIR_PORTADAS[dirPortadaValida(c.portadaColor)].bg;
-    const estado = DIR_ESTADOS[c.estado];
+    const esVipCard = o.vip !== false;
     const palabras = String(c.nombre || '?').trim().split(/\s+/).filter(Boolean);
     const iniciales = escapeHtml((palabras.slice(0, 2).map(p => p.charAt(0)).join('') || '?').toUpperCase());
     const color = colorSeguro(c.color || dirColorFor(c.uid || c.id || ''));
@@ -12608,23 +12629,98 @@ const Sections = (function(){
       : (pistas ? '<div class="dir-card__empresa pc-vacio"><svg class="ic"><use href="#i-briefcase"/></svg>Tu empresa</div>' : '');
     const ubic = c.ubicacion ? `<div class="dir-card__ubic"><svg class="ic"><use href="#i-pin"/></svg>${escapeHtml(c.ubicacion)}</div>`
       : (pistas ? '<div class="dir-card__ubic pc-vacio"><svg class="ic"><use href="#i-pin"/></svg>Tu ciudad</div>' : '');
-    const ctas = (c.whatsapp || c.email || c.linkedin || c.web || c.instagram) ? dirCtasHtml(c)
-      : (pistas ? '<div class="dir-card__sincontacto pc-vacio">Aquí irán tus datos de contacto</div>' : dirCtasHtml(c));
-    return `
-      <article class="dir-card dir-card--vip${o.esMia ? ' dir-card--mia' : ''}"${o.id ? ` data-dircard="${escapeHtml(o.id)}"` : ''}>
-        <div class="dir-vip__cover" style="background:${portada}" aria-hidden="true"></div>
-        <span class="dir-vip__badge"><svg class="ic"><use href="#i-crown"/></svg>VIP</span>
-        ${o.esMia ? '<span class="dir-card__badge-mia">Tú</span>' : ''}
-        <div class="dir-card__top"><div class="dir-vip__avatar">${foto}<span class="dir-vip__seal" title="Miembro VIP"><svg class="ic"><use href="#i-check"/></svg></span></div></div>
+    const hayContacto = !!(c.whatsapp || c.email || c.linkedin || c.web || c.instagram);
+    const ctas = o.bloqueado === true
+      ? '<button type="button" class="dir-cta-lock" data-dirlock><svg class="ic"><use href="#i-lock"/></svg>Contactar · solo VIP</button>'
+      : (hayContacto ? dirCtasHtml(c) : (pistas ? '<div class="dir-card__sincontacto pc-vacio">Aquí irán tus datos de contacto</div>' : dirCtasHtml(c)));
+    const nombre = escapeHtml(c.nombre || (pistas ? 'Tu nombre' : (esVipCard ? 'Miembro VIP' : 'Miembro')));
+    const sector = c.sector ? `<span class="dir-card__sector">${escapeHtml(c.sector)}</span>` : '';
+    const bio = c.bio ? `<div class="dir-card__bio">${escapeHtml(c.bio)}</div>` : '';
+    const mia = o.esMia ? ' dir-card--mia' : '';
+    const idAttr = o.id ? ` data-dircard="${escapeHtml(o.id)}"` : '';
+    const badgeMia = o.esMia ? '<span class="dir-card__badge-mia">Tú</span>' : '';
+
+    // Tarjeta básica de la comunidad (cuentas sin membresía VIP): sin portada propia, sello ni estado
+    if (!esVipCard) {
+      return `
+      <article class="dir-card${mia}"${idAttr}>
+        ${badgeMia}
+        <div class="dir-card__top">${foto}</div>
         <div class="dir-card__body-m">
-          <div class="dir-card__name">${escapeHtml(c.nombre || (pistas ? 'Tu nombre' : 'Miembro VIP'))}</div>
-          ${puesto}${empresa}${ubic}
-          ${estado ? `<span class="dir-vip__estado dir-vip__estado--${estado.cls}"><i></i>${estado.label}</span>` : ''}
-          ${c.sector ? `<span class="dir-card__sector">${escapeHtml(c.sector)}</span>` : ''}
-          ${c.bio ? `<div class="dir-card__bio">${escapeHtml(c.bio)}</div>` : ''}
+          <div class="dir-card__name">${nombre}</div>
+          ${puesto}${empresa}${ubic}${sector}${bio}
           ${ctas}
         </div>
       </article>`;
+    }
+
+    const portada = DIR_PORTADAS[dirPortadaValida(c.portadaColor)].bg;
+    const estado = DIR_ESTADOS[c.estado];
+    const certs = Number(o.certs) > 0
+      ? `<span class="dir-vip__certs" title="Certificados emitidos por Alintec Food"><svg class="ic"><use href="#i-check"/></svg>${Number(o.certs)} certificado${Number(o.certs) !== 1 ? 's' : ''} Alintec Food</span>`
+      : '';
+    return `
+      <article class="dir-card dir-card--vip${mia}"${idAttr}>
+        <div class="dir-vip__cover" style="background:${portada}" aria-hidden="true"></div>
+        <span class="dir-vip__badge"><svg class="ic"><use href="#i-crown"/></svg>VIP</span>
+        ${badgeMia}
+        <div class="dir-card__top"><div class="dir-vip__avatar">${foto}<span class="dir-vip__seal" title="Miembro VIP verificado"><svg class="ic"><use href="#i-check"/></svg></span></div></div>
+        <div class="dir-card__body-m">
+          <div class="dir-card__name">${nombre}</div>
+          ${puesto}${empresa}${ubic}
+          ${estado ? `<span class="dir-vip__estado dir-vip__estado--${estado.cls}"><i></i>${estado.label}</span>` : ''}
+          ${sector}${certs}${bio}
+          ${ctas}
+        </div>
+      </article>`;
+  }
+
+  // ── Lo que decide el servidor: quién es VIP, certificados reales y contacto (solo para VIP) ──
+  let _dirMeta = { cargado: false, cargando: null, viewerVip: false, vip: new Set(), certificados: {}, contactos: {}, miContacto: {} };
+  const DIR_CAMPOS_CONTACTO = ['whatsapp', 'email', 'linkedin', 'web', 'instagram'];
+  function dirViewerEsVip(){
+    return _dirMeta.cargado ? _dirMeta.viewerVip : (window.UserState?.modo === 'vip' || esAdminReal());
+  }
+  function dirEsVip(id){
+    return _dirMeta.vip.has(id) || (id === window.UserState?.uid && dirViewerEsVip());
+  }
+  // Devuelve la tarjeta con el contacto que le toca ver a quien mira (el suyo propio siempre)
+  function dirConContacto(c){
+    const copia = Object.assign({}, c);
+    DIR_CAMPOS_CONTACTO.forEach(k => { copia[k] = ''; });
+    const mio = c.id === window.UserState?.uid || c.uid === window.UserState?.uid;
+    const fuente = mio ? _dirMeta.miContacto : (dirViewerEsVip() ? (_dirMeta.contactos[c.id] || {}) : {});
+    DIR_CAMPOS_CONTACTO.forEach(k => { if (fuente && fuente[k]) copia[k] = fuente[k]; });
+    return copia;
+  }
+  async function dirCargarMeta(){
+    if (_dirMeta.cargando) return _dirMeta.cargando;
+    _dirMeta.cargando = (async () => {
+      try {
+        if (!window.__currentUser) throw new Error('sin sesión');
+        const token = await window.__currentUser.getIdToken();
+        const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/directorio/meta', { headers: { 'Authorization': 'Bearer ' + token } });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.ok !== true) throw new Error(d.error || 'No se pudo cargar el directorio');
+        _dirMeta = Object.assign(_dirMeta, { cargado: true, viewerVip: d.viewerVip === true, vip: new Set(d.vip || []), certificados: d.certificados || {}, contactos: d.contactos || {}, miContacto: d.miContacto || {} });
+      } catch (e) {
+        console.warn('Directorio:', e.message);
+        _dirMeta.cargado = true;
+        _dirMeta.viewerVip = window.UserState?.modo === 'vip' || esAdminReal();
+        _dirMeta.vip = new Set();
+      } finally { _dirMeta.cargando = null; }
+    })();
+    return _dirMeta.cargando;
+  }
+  async function dirGuardarContacto(contacto){
+    const token = await window.__currentUser.getIdToken();
+    const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/directorio/contacto', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(contacto)
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.ok !== true) throw new Error(d.error || 'No se pudo guardar tu contacto');
+    _dirMeta.miContacto = d.contacto || contacto;
+    return _dirMeta.miContacto;
   }
 
   // "Mi tarjeta": todos tienen una. Si aún no la han guardado, se arma con los datos que ya se tienen y es privada.
@@ -12641,13 +12737,15 @@ const Sections = (function(){
     const cont = document.getElementById('dir-mia'); if (!cont) return;
     const fs = window.__fs, uid = window.UserState?.uid;
     let c = dirBorradorInicial(), existe = false;
+    try { await dirCargarMeta(); } catch (e) {}
     try {
       if (fs && uid) { const ds = await fs.getDoc(fs.doc(fs.db, 'directorio', uid)); if (ds.exists()) { c = Object.assign(dirBorradorInicial(), ds.data()); existe = true; } }
     } catch (e) { /* sin lectura: se muestra el borrador */ }
+    c = Object.assign({}, c, _dirMeta.miContacto || {});
     const pub = existe && c.publicado === true && c.visible !== false;
     cont.innerHTML = `
       <div class="dir-mia">
-        <div>${dirCardHtml(c, { pistas: !pub })}</div>
+        <div>${dirCardHtml(c, { pistas: !pub, vip: dirViewerEsVip() })}</div>
         <div class="dir-mia__info">
           <span class="dir-mia__estado${pub ? ' is-pub' : ''}">${pub ? 'Publicada · visible para los miembros' : 'Privada · solo tú la ves'}</span>
           <p>${pub
@@ -12675,15 +12773,29 @@ const Sections = (function(){
       return;
     }
     const uid = window.UserState?.uid;
-    grid.innerHTML = cards.map(c=>{
-      const esMia = c.id===uid;
-      return dirCardHtml(c, { esMia, id: c.id });
-    }).join('');
+    const propiaPrimero = (a, b) => (b.id === uid) - (a.id === uid);
+    const vipCards = cards.filter(c => dirEsVip(c.id)).sort(propiaPrimero);
+    const resto = cards.filter(c => !dirEsVip(c.id)).sort(propiaPrimero);
+    const bloqueado = !dirViewerEsVip();
+    const cabecera = (titulo, n, esVip) => `<div class="dir-group-head ${esVip ? 'dir-group-head--vip' : ''}"><span>${esVip ? '<svg class="ic"><use href="#i-crown"/></svg>' : ''}${titulo}</span><small>${n}</small></div>`;
+    const pintar = (c, esVip) => dirCardHtml(dirConContacto(c), {
+      esMia: c.id === uid, id: c.id, vip: esVip, bloqueado: bloqueado && c.id !== uid,
+      certs: esVip ? (_dirMeta.certificados[c.id] || 0) : 0
+    });
+    let html = '';
+    if (vipCards.length) html += (resto.length ? cabecera('Miembros VIP verificados', vipCards.length, true) : '') + vipCards.map(c => pintar(c, true)).join('');
+    if (resto.length) html += (vipCards.length ? cabecera('Comunidad Alintec Food', resto.length, false) : '') + resto.map(c => pintar(c, false)).join('');
+    grid.innerHTML = html;
 
+    // Contacto bloqueado: lleva a hacerse VIP
+    grid.querySelectorAll('[data-dirlock]').forEach(b => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      comunidadRequiereVIP('contactar a otros miembros del directorio');
+    }));
     // Clic en la tarjeta → abre el detalle (sin disparar al tocar un botón de contacto)
     grid.querySelectorAll('[data-dircard]').forEach(card=>{
       card.addEventListener('click', (e)=>{
-        if (e.target.closest('.dir-cta')) return; // dejó pasar los enlaces de contacto
+        if (e.target.closest('.dir-cta,.dir-cta-lock')) return; // dejó pasar los enlaces de contacto
         dirVerDetalle(card.dataset.dircard);
       });
     });
@@ -12697,9 +12809,11 @@ const Sections = (function(){
   }
 
   function dirVerDetalle(id){
-    const c = _dirCards.find(x=>x.id===id); if(!c) return;
+    const c0 = _dirCards.find(x=>x.id===id); if(!c0) return;
+    const c = dirConContacto(c0);
     const uid = window.UserState?.uid;
     const esMia = c.id===uid;
+    const contactoBloqueado = !dirViewerEsVip() && !esMia;
     const inicial = (c.nombre||'?').trim().slice(0,2).toUpperCase();
     const foto = c.foto
       ? `<img src="${srcSeguro(c.foto)}" alt="" class="dir-det__foto">`
@@ -12722,6 +12836,7 @@ const Sections = (function(){
           ${c.sector?`<span class="dir-det__sector">${escapeHtml(c.sector)}</span>`:''}
         </div>
         ${c.bio?`<div class="dir-det__bio">${escapeHtml(c.bio)}</div>`:''}
+        ${contactoBloqueado ? '<div class="dir-det__sincontacto">El contacto está disponible solo para miembros VIP.</div>' : ''}
         <div class="dir-det__rows">
           ${row('i-whatsapp','WhatsApp',c.whatsapp, waNum?`https://wa.me/${waNum}`:'', 'dir-det__row--wa')}
           ${c.email?`<button class="dir-det__row dir-det__row--mail" data-detmail="${escapeHtml(c.email)}">
@@ -12732,7 +12847,7 @@ const Sections = (function(){
           ${row('i-link','Sitio web',c.web, c.web?(c.web.startsWith('http')?c.web:'https://'+c.web):'')}
           ${row('i-instagram','Instagram',c.instagram?('@'+c.instagram.replace(/^@+/,'')):'', c.instagram?('https://instagram.com/'+c.instagram.replace(/^@+/,'')):'')}
         </div>
-        ${(!c.whatsapp&&!c.email&&!c.linkedin&&!c.web&&!c.instagram)?'<div class="dir-det__sincontacto">Este miembro no agregó datos de contacto.</div>':''}
+        ${(!contactoBloqueado&&!c.whatsapp&&!c.email&&!c.linkedin&&!c.web&&!c.instagram)?'<div class="dir-det__sincontacto">Este miembro no agregó datos de contacto.</div>':''}
       </div>
     `;
     const footer = document.createElement('div');
@@ -12756,6 +12871,9 @@ const Sections = (function(){
     // Cargar tarjeta existente
     let data = dirBorradorInicial(), tarjetaExiste = false;
     try { const ds = await fs.getDoc(fs.doc(fs.db,'directorio',uid)); if (ds.exists()) { data = Object.assign(dirBorradorInicial(), ds.data()); tarjetaExiste = true; } } catch(e){}
+    try { await dirCargarMeta(); } catch(e){}
+    Object.assign(data, _dirMeta.miContacto || {});
+    const esVipEd = dirViewerEsVip();
     const yaPublicada = tarjetaExiste && data.publicado === true && data.visible !== false;
     let portadaElegida = dirPortadaValida(data.portadaColor);
     let estadoElegido = DIR_ESTADOS[data.estado] ? data.estado : '';
@@ -12766,10 +12884,10 @@ const Sections = (function(){
     const body = `
       <div class="dir-form">
         <div class="dir-form__vista" id="dirf-vista"></div>
-        <label class="dir-form__lbl">Color de tu portada</label>
-        <div class="dir-portadas" id="dirf-portadas">${Object.keys(DIR_PORTADAS).map(id=>`<button type="button" data-portada="${id}" title="${DIR_PORTADAS[id].label}" aria-label="${DIR_PORTADAS[id].label}" class="dir-portada${id===portadaElegida?' is-on':''}" style="background:${DIR_PORTADAS[id].bg}"></button>`).join('')}</div>
-        <label class="dir-form__lbl">Estado profesional <span class="dir-form__opt">(opcional)</span></label>
-        <select class="dir-form__in" id="dirf-estado">
+        <label class="dir-form__lbl">Color de tu portada ${esVipEd?'':'<span class="dir-form__vip"><svg class="ic"><use href="#i-crown"/></svg>Solo VIP</span>'}</label>
+        <div class="dir-portadas${esVipEd?'':' is-locked'}" id="dirf-portadas">${Object.keys(DIR_PORTADAS).map(id=>`<button type="button" data-portada="${id}" title="${DIR_PORTADAS[id].label}" aria-label="${DIR_PORTADAS[id].label}" class="dir-portada${id===portadaElegida?' is-on':''}" style="background:${DIR_PORTADAS[id].bg}"></button>`).join('')}</div>
+        <label class="dir-form__lbl">Estado profesional ${esVipEd?'<span class="dir-form__opt">(opcional)</span>':'<span class="dir-form__vip"><svg class="ic"><use href="#i-crown"/></svg>Solo VIP</span>'}</label>
+        <select class="dir-form__in" id="dirf-estado" ${esVipEd?'':'disabled'}>
           <option value="">Sin estado</option>
           ${Object.keys(DIR_ESTADOS).map(id=>`<option value="${id}" ${id===estadoElegido?'selected':''}>${DIR_ESTADOS[id].label}</option>`).join('')}
         </select>
@@ -12798,7 +12916,7 @@ const Sections = (function(){
         </select>
         <label class="dir-form__lbl">Bio breve <span class="dir-form__opt">(opcional)</span></label>
         <textarea class="dir-form__in" id="dirf-bio" maxlength="160" rows="2" placeholder="Una línea sobre tu experiencia…">${escapeHtml(data.bio||'')}</textarea>
-        <div class="dir-form__sep">Contacto <span class="dir-form__opt">(todos opcionales)</span></div>
+        <div class="dir-form__sep">Contacto <span class="dir-form__opt">(opcional · solo lo ven los miembros VIP)</span></div>
         <label class="dir-form__lbl">WhatsApp</label>
         <input class="dir-form__in" id="dirf-wa" maxlength="20" value="${(data.whatsapp||'').replace(/"/g,'&quot;')}" placeholder="Ej. 52 238 123 4567">
         <label class="dir-form__lbl">Correo</label>
@@ -12892,7 +13010,6 @@ const Sections = (function(){
     async function guardarTarjeta(publicar, boton){
       const nombre = document.getElementById('dirf-nombre').value.trim();
       if (nombre.length<3){ Toast.error('Falta tu nombre','Escribe tu nombre completo'); return; }
-      if (publicar && !esMiembro){ comunidadRequiereVIP('publicar tu tarjeta en el directorio'); return; }
       const textoOriginal = boton.textContent;
       footer.querySelectorAll('button').forEach(b=>{ b.disabled = true; });
       boton.textContent = 'Guardando…';
@@ -12903,24 +13020,28 @@ const Sections = (function(){
         empresa: document.getElementById('dirf-empresa').value.trim(),
         sector: document.getElementById('dirf-sector').value,
         bio: document.getElementById('dirf-bio').value.trim(),
-        whatsapp: document.getElementById('dirf-wa').value.trim(),
-        email: document.getElementById('dirf-email').value.trim(),
-        linkedin: document.getElementById('dirf-linkedin').value.trim(),
-        web: document.getElementById('dirf-web').value.trim(),
-        instagram: document.getElementById('dirf-instagram').value.trim().replace(/^@+/,''),
+        whatsapp: '', email: '', linkedin: '', web: '', instagram: '', // el contacto se guarda aparte, en el servidor
         ubicacion: document.getElementById('dirf-ubicacion').value.trim(),
         cedula: document.getElementById('dirf-cedula').value.trim(),
         cedulaVisible: document.getElementById('dirf-cedula-visible').checked,
         visible: true,
         publicado: publicar === true,
-        portadaColor: portadaElegida,
-        estado: estadoElegido,
         color: dirColorFor(uid),
         updatedAt: fs.serverTimestamp()
+      };
+      // Portada de color y estado profesional: solo para VIP
+      if (esVipEd) { payload.portadaColor = portadaElegida; payload.estado = estadoElegido; }
+      const nuevoContacto = {
+        whatsapp: document.getElementById('dirf-wa').value.trim(),
+        email: document.getElementById('dirf-email').value.trim(),
+        linkedin: document.getElementById('dirf-linkedin').value.trim(),
+        web: document.getElementById('dirf-web').value.trim(),
+        instagram: document.getElementById('dirf-instagram').value.trim().replace(/^@+/,'')
       };
       if (_dirFotoTmp !== undefined) payload.foto = _dirFotoTmp; // string o null
       else if (data.foto) payload.foto = data.foto; // conservar
       try {
+        await dirGuardarContacto(nuevoContacto);
         await fs.setDoc(fs.doc(fs.db,'directorio',uid), payload, { merge:true });
         Toast.success(publicar ? 'Tarjeta publicada' : 'Tarjeta guardada', publicar ? 'Ya apareces en el directorio' : 'Sigue privada: solo tú la ves');
         m.close();
