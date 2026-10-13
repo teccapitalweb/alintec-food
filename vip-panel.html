@@ -2237,6 +2237,15 @@ button.dir-det__row{background:var(--surface-2);border:1px solid var(--border-2)
 }
 .wa-stat__num{font-size:22px;font-weight:600;letter-spacing:-.5px;color:var(--whatsapp);font-feature-settings:"tnum" 1}
 .wa-stat__lbl{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.wa-social{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px 20px;margin:0 0 16px;text-align:center}
+.wa-social__title{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px}
+.wa-social__links{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.wa-social__btn{flex:1 1 150px;max-width:240px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 16px;border-radius:14px;color:#fff;font:700 14px Inter,sans-serif;text-decoration:none;transition:transform .15s,filter .15s}
+.wa-social__btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.wa-social__btn svg{width:20px;height:20px;flex:none}
+.wa-social__btn--fb{background:#1877F2}
+.wa-social__btn--ig{background:#C13584;background:linear-gradient(135deg,#F58529,#DD2A7B 55%,#8134AF)}
+.wa-social__btn--ig svg{fill:none;stroke:currentColor;stroke-width:2}
 .wa-rules{
   background:var(--surface);
   border:0.5px solid var(--border);
@@ -13435,6 +13444,20 @@ const Sections = (function(){
           ${toolEsVIP() ? '' : '<p style="margin:14px 0 0;font-size:12.5px;opacity:.85;">Para unirte al canal necesitas tu membresía VIP activa.</p>'}
         </section>
 
+        <section class="wa-social" aria-label="Síguenos en redes sociales">
+          <div class="wa-social__title">Síguenos también en redes</div>
+          <div class="wa-social__links">
+            <a class="wa-social__btn wa-social__btn--fb" href="https://www.facebook.com/share/1DKzBrgL9H/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5H16l.5-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.5V4.4A21 21 0 0 0 14.3 4c-2.3 0-3.8 1.4-3.8 3.9v1.6H8v3h2.5V21z"/></svg>
+              <span>Facebook</span>
+            </a>
+            <a class="wa-social__btn wa-social__btn--ig" href="https://instagram.com/alintecfood" target="_blank" rel="noopener noreferrer">
+              <svg class="ic" aria-hidden="true"><use href="#i-instagram"/></svg>
+              <span>Instagram</span>
+            </a>
+          </div>
+        </section>
+
         <div class="wa-rules">
           <div class="wa-rules__title">Reglas de la comunidad</div>
           <div class="wa-rule">
@@ -18293,6 +18316,7 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
 .canal-view .wa-hero__sub{max-width:520px;margin:11px auto 0!important;color:#80605B!important;font-size:13.5px!important;line-height:1.55!important;text-wrap:balance}
 .wa-hero__actions{position:relative;z-index:1;display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:2px}.canal-view .wa-hero__actions .btn{min-height:39px;padding:9px 17px;border-radius:999px;font-size:11.5px}.canal-view .wa-hero__actions .btn--wa{border:1px solid #16A953;background:#16A953;color:#fff;box-shadow:none}.canal-view .wa-hero__actions .btn--ghost{border:1px solid #B8CEC0;background:rgba(255,255,255,.2);color:#7A5A54;box-shadow:none}.canal-view .wa-hero__actions .btn--ghost:hover{background:rgba(255,255,255,.65);color:#4C3834}
 .canal-view .wa-rules{margin:0;padding:20px 22px!important;border:1px solid rgba(111,92,87,.1)!important;border-radius:19px!important;background:#fff!important;box-shadow:0 10px 27px rgba(71,47,41,.045)!important}.canal-view .wa-rules__title{margin-bottom:10px;color:#9B817A;font-size:9px;letter-spacing:1.7px}.canal-view .wa-rule{gap:12px;padding:11px 0!important;border-bottom:1px solid #EEE7E4!important}.canal-view .wa-rule:last-child{border-bottom:0!important}.canal-view .wa-rule__check{width:24px;height:24px;background:#E5F6EC;color:#18A756}.canal-view .wa-rule__text{color:#80635D;font-size:12px;line-height:1.55}.canal-view .wa-rule__text strong{color:#342527}
+.canal-view .wa-social{margin:0 0 18px;padding:18px 22px;border:1px solid rgba(111,92,87,.1);border-radius:19px;background:#fff;box-shadow:0 10px 27px rgba(71,47,41,.04)}
 
 /* Materiales: filtro funcional por encima de la cuadrícula. */
 .toolbar:has(#pdf-area-trigger){position:relative;z-index:50;overflow:visible!important}
