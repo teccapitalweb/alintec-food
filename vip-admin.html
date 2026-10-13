@@ -6821,6 +6821,7 @@ const Pages={
           </div>
 
           <div class="dash-card" id="estado-servicios" style="grid-column:1/-1"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Revisando los servicios…</div></div>
+          <div class="dash-card" id="bitacora-servidor" style="grid-column:1/-1"><div style="padding:22px;text-align:center;color:var(--text-3);font-size:13px">Cargando el historial del servidor…</div></div>
         </div>
       </div>
     `;
@@ -6875,6 +6876,98 @@ const Pages={
         }
       };
       revisar();
+    })();
+
+    // ── Historial del servidor: caídas, reinicios y errores que el propio servidor deja anotados ──
+    (function historialServidor(){
+      const caja = p.querySelector('#bitacora-servidor');
+      if (!caja) return;
+      const escB = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+      const COLOR = { error: '#EF4444', aviso: '#F59E0B', info: '#94A3B8' };
+      const ETIQ = { caida: 'CAÍDA', reinicio: 'REINICIO', despliegue: 'NORMAL', error: 'ERROR', rechazo: 'FALLO', basedatos: 'BASE DE DATOS' };
+      const etiqueta = i => ETIQ[i.tipo] || 'DATO';
+      if (!document.getElementById('bi-estilos')) {
+        const st = document.createElement('style');
+        st.id = 'bi-estilos';
+        st.textContent = '.bi-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0 6px}.bi-dato{padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2,var(--surface))}.bi-dato b{display:block;font:800 20px "Plus Jakarta Sans",Inter,sans-serif;line-height:1.15}.bi-dato span{display:block;margin-top:3px;font-size:11.5px;color:var(--text-3);line-height:1.35}.bi-filtros{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:999px;margin:10px 0 4px}.bi-filtros button{border:0;background:transparent;padding:5px 13px;border-radius:999px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer}.bi-filtros button.on{background:var(--primary);color:#fff}.bi-fila{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}.bi-fila:last-child{border-bottom:0}.bi-pt{flex:none;width:12px;height:12px;margin-top:4px;border-radius:50%}.bi-fila b{display:block;font-size:13.5px;line-height:1.4}.bi-fila .bi-d{display:block;margin-top:2px;font-size:12.5px;line-height:1.5;color:var(--text-2)}.bi-fila .bi-h{display:block;margin-top:3px;font:600 11.5px "JetBrains Mono",monospace;color:var(--text-3)}.bi-fila .bi-c{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:var(--surface-2,rgba(0,0,0,.04));font:500 11px "JetBrains Mono",monospace;color:var(--text-2);word-break:break-word}.bi-tag{flex:none;margin-left:auto;padding:2px 9px;border-radius:999px;font:700 10px "JetBrains Mono",monospace;letter-spacing:.6px}.bi-vigilante{margin-top:14px;padding:13px 15px;border:1px dashed var(--border);border-radius:12px;font-size:12.5px;line-height:1.55;color:var(--text-2)}.bi-vigilante code{display:inline-block;margin:6px 0 0;padding:5px 9px;border-radius:8px;background:var(--surface-2,rgba(0,0,0,.05));font:600 12px "JetBrains Mono",monospace;color:var(--primary);word-break:break-all}@media(max-width:560px){.bi-fila{display:grid;grid-template-columns:12px minmax(0,1fr);column-gap:12px}.bi-tag{grid-column:2;justify-self:start;margin:6px 0 0}}';
+        document.head.appendChild(st);
+      }
+      let datos = null;
+      let filtro = 'problemas';
+      let todos = false;
+      const zona = 'America/Mexico_City';
+      const cuando = iso => iso ? new Date(iso).toLocaleString('es-MX', { timeZone: zona, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+      const dura = seg => {
+        const m = Math.round((seg || 0) / 60);
+        if (m < 1) return 'menos de 1 min';
+        if (m < 60) return m + ' min';
+        return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+      };
+      const activoDesde = seg => {
+        const d = Math.floor(seg / 86400); const h = Math.floor((seg % 86400) / 3600); const m = Math.floor((seg % 3600) / 60);
+        return d ? d + ' d ' + h + ' h' : h ? h + ' h ' + m + ' min' : m + ' min';
+      };
+      const pintar = () => {
+        const d = datos;
+        const r = d.resumen;
+        const mal = r.caidas + r.reinicios;
+        const chip = r.caidas ? { c: COLOR.error, t: r.caidas + (r.caidas === 1 ? ' caída' : ' caídas') + ' en ' + r.dias + ' días' }
+          : r.reinicios ? { c: COLOR.aviso, t: r.reinicios + (r.reinicios === 1 ? ' reinicio inesperado' : ' reinicios inesperados') }
+          : { c: '#16A34A', t: 'Sin caídas en ' + r.dias + ' días' };
+        const lista = d.incidentes.filter(i => filtro === 'todo' || i.nivel !== 'info');
+        const visibles = todos ? lista : lista.slice(0, 8);
+        const url = Pages._webhookUrl + '/salud';
+        caja.innerHTML = `
+          <div class="dash-card__header" style="flex-wrap:wrap;gap:10px">
+            <div class="dash-card__title"><svg class="ic"><use href="#i-shield-check"/></svg>Historial del servidor
+              <span style="margin-left:8px;padding:3px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif;background:${chip.c}22;color:${chip.c}">${escB(chip.t)}</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn--ghost" id="bi-copiar" type="button">Copiar reporte</button>
+              <button class="btn btn--accent" id="bi-actualizar" type="button">Actualizar<svg class="ic"><use href="#i-refresh"/></svg></button>
+            </div>
+          </div>
+          <p style="margin:0;font-size:12.5px;color:var(--text-3);line-height:1.5">El servidor anota solo cada caída, reinicio o error inesperado, con su hora (hora de México) y cuánto duró. Así, si algo falla de madrugada, aquí queda la causa aunque nadie estuviera mirando.</p>
+          <div class="bi-resumen">
+            <div class="bi-dato"><b>${escB(activoDesde(d.servidor.segundosActivo))}</b><span>Encendido sin interrupciones</span></div>
+            <div class="bi-dato"><b style="color:${r.caidas ? COLOR.error : 'inherit'}">${r.caidas}</b><span>Caídas en ${r.dias} días</span></div>
+            <div class="bi-dato"><b style="color:${r.reinicios ? COLOR.aviso : 'inherit'}">${r.reinicios}</b><span>Reinicios inesperados</span></div>
+            <div class="bi-dato"><b style="color:${r.errores ? COLOR.aviso : 'inherit'}">${r.errores}</b><span>Errores internos</span></div>
+          </div>
+          <div class="bi-filtros" role="tablist"><button type="button" role="tab" data-f="problemas" class="${filtro === 'problemas' ? 'on' : ''}">Solo problemas</button><button type="button" role="tab" data-f="todo" class="${filtro === 'todo' ? 'on' : ''}">Todo (con reinicios normales)</button></div>
+          ${visibles.length ? visibles.map(i => `<div class="bi-fila"><span class="bi-pt" style="background:${COLOR[i.nivel] || COLOR.info}"></span><div style="min-width:0"><b>${escB(i.titulo)}</b><span class="bi-d">${escB(i.detalle)}</span><span class="bi-h">${i.desde && i.hasta && i.duracionSeg != null ? escB(cuando(i.desde)) + ' → ' + escB(cuando(i.hasta)) + ' · ' + escB(dura(i.duracionSeg)) : escB(cuando(i.en))}</span>${i.causa ? '<span class="bi-c">' + escB(i.causa) + '</span>' : ''}</div><span class="bi-tag" style="background:${COLOR[i.nivel] || COLOR.info}22;color:${COLOR[i.nivel] || COLOR.info}">${etiqueta(i)}</span></div>`).join('')
+            : '<div style="padding:20px 0 6px;text-align:center;font-size:13px;color:var(--text-3)">' + (filtro === 'problemas' ? 'Sin caídas ni errores registrados. ✅' : 'Todavía no hay registros.') + '</div>'}
+          ${lista.length > 8 ? '<div style="text-align:center;margin-top:10px"><button class="btn btn--ghost" id="bi-mas" type="button">' + (todos ? 'Ver menos' : 'Ver los ' + lista.length + ' registros') + '</button></div>' : ''}
+          <div class="bi-vigilante"><b style="color:var(--text)">Para que te avise al momento:</b> agrega esta dirección en un vigilante gratuito (por ejemplo UptimeRobot) para que la revise cada 5 minutos y te escriba si deja de responder.<br><code>${escB(url)}</code> <button class="btn btn--ghost btn--sm" id="bi-url" type="button" style="margin-left:6px">Copiar</button></div>`;
+        caja.querySelector('#bi-actualizar').addEventListener('click', cargar);
+        caja.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { filtro = b.dataset.f; todos = false; pintar(); }));
+        const mas = caja.querySelector('#bi-mas');
+        if (mas) mas.addEventListener('click', () => { todos = !todos; pintar(); });
+        caja.querySelector('#bi-url').addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(url); Toast.success('Dirección copiada'); } catch (e) { Toast.error('No se pudo copiar'); }
+        });
+        caja.querySelector('#bi-copiar').addEventListener('click', async () => {
+          const filas = d.incidentes.slice(0, 20).map(i => '[' + (etiqueta(i)) + '] ' + cuando(i.desde || i.en) + ' · ' + i.titulo + (i.duracionSeg != null ? ' (' + dura(i.duracionSeg) + ')' : '') + ' — ' + i.detalle + (i.causa ? ' | ' + i.causa : ''));
+          const texto = 'Historial del servidor · Alintec Food · ' + cuando(d.generado) + '\n' + chip.t + '\n\n' + (filas.join('\n') || 'Sin registros');
+          try { await navigator.clipboard.writeText(texto); Toast.success('Reporte copiado. Pégalo en un mensaje para pedir ayuda.'); } catch (e) { Toast.error('No se pudo copiar'); }
+        });
+      };
+      const cargar = async () => {
+        const boton = caja.querySelector('#bi-actualizar');
+        if (boton) { boton.disabled = true; boton.textContent = 'Actualizando…'; }
+        try {
+          for (let i = 0; i < 60 && !(window._fb && window._fb.auth && window._fb.auth.currentUser); i++) await new Promise(r => setTimeout(r, 250));
+          const token = await Pages._getAuthToken();
+          const r = await fetch(Pages._webhookUrl + '/api/admin/incidentes', { headers: { 'Authorization': 'Bearer ' + token } });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || 'No se pudo leer el historial');
+          datos = j;
+          pintar();
+        } catch (err) {
+          caja.innerHTML = `<div style="padding:22px;text-align:center;font-size:13px;color:var(--text-2)"><b style="display:block;margin-bottom:4px;color:#EF4444">No se pudo leer el historial del servidor</b>${escB(err.message)}<br>Si el servidor está caído, esto también sirve de aviso.<br><button class="btn btn--accent" id="bi-reintentar" type="button" style="margin-top:12px">Reintentar</button></div>`;
+          caja.querySelector('#bi-reintentar').addEventListener('click', cargar);
+        }
+      };
+      cargar();
     })();
 
     // MODIFICADO: al entrar, cargar los precios REALES desde Firestore (config/club)
