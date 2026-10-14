@@ -3780,6 +3780,7 @@ if (window.__isDemoMode) {
             try { window.__maybeAskName && window.__maybeAskName({ forzar: true }); } catch(e){}
             await pausa(400);
             await esperarSin('name-modal', 2400);
+            await esperarSin('pfb-modal', 2400);
           } finally { window.__bienvenidaPendiente = false; }
         })();
       } else {
@@ -6540,6 +6541,9 @@ const Sections = (function(){
   // Array global de cursos cargados desde Firestore
   let cursos = [];
   let _cursosLoaded = false;
+  let _primerCursoRetos = null;      // { cursoId, progreso } mientras el primer curso siga cerrado (lo manda el servidor)
+  let _primerCursoRetosT = 0;
+  let _ultimoContinuar = null;
   let _cursosLoading = false;
   let _cursosLoadError = '';
 
@@ -8441,6 +8445,7 @@ const Sections = (function(){
       // "Continúa tu curso" se pintaba a los 0.4 s del arranque, casi siempre antes de que llegara el catálogo,
       // y no se volvía a pintar: se refresca en cuanto están los cursos y el progreso
       try { window.__actualizarContinuarWidget?.(); } catch (e) {}
+      try { primerCursoRetosCargar(); } catch (e) {}
       programarFlujoPrueba();
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
@@ -8698,7 +8703,7 @@ const Sections = (function(){
       // El recorrido todavía no se ha mostrado (ni terminado): se espera hasta 5 minutos a que lo haga
       const tourPendiente = tour && typeof tour.wasSeen === 'function' && !tour.wasSeen() && !tourVisto && Date.now() - inicio < 300000;
       const ocupado = tourPendiente
-        || document.getElementById('name-modal') || document.getElementById('splash-bienvenida')
+        || document.getElementById('name-modal') || document.getElementById('pfb-modal') || document.getElementById('splash-bienvenida')
         || document.body.classList.contains('membership-tour-open')
         || document.querySelector('.modal-backdrop');
       if (ocupado) { libreDesde = 0; }
@@ -9002,6 +9007,7 @@ const Sections = (function(){
   }
 
   function renderCursos(container){
+    primerCursoRetosCargar();
     const c=counts();
     container.innerHTML=`
       <div class="fade-up">
@@ -9109,7 +9115,7 @@ const Sections = (function(){
       const diasFalta = diasParaDesbloquear(cursoIdx, c);
       const portada = c.portada || PORTADA_DEFAULT;
       return `
-      <article class="curso-card ${tieneAccesoVipCompleto() && !desbloqueado?'curso-card--locked':''}" data-cid="${c.id}" tabindex="0" style="--area-color:${COLOR_AREA[c.area]||'#43A047'};">
+      <article class="curso-card ${tieneAccesoVipCompleto() && !desbloqueado?'curso-card--locked':''}${!desbloqueado && primerCursoRetosDe(c.id) ? ' curso-card--retos' : ''}" data-cid="${c.id}" tabindex="0" style="--area-color:${COLOR_AREA[c.area]||'#43A047'};">
         <div class="curso-card__cover" style="background-image:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55)),url('${portada}');background-size:cover;background-position:center;">
           <svg class="ic" style="opacity:.85;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));"><use href="#${ICON_AREA[c.area]||'i-book'}"/></svg>
           ${c.disponibleSiempre ? '<span class="curso-card__cover-badge" style="background:var(--success);color:#0A120C;">DISPONIBLE</span>' : ''}
@@ -9130,6 +9136,7 @@ const Sections = (function(){
             ${c.sesiones?.length ? `<span><svg class="ic"><use href="#i-book"/></svg>${c.sesiones.length} clase${c.sesiones.length!==1?'s':''}</span>` : ''}
             ${c.materiales?.length ? `<span><svg class="ic"><use href="#i-news"/></svg>${c.materiales.length} PDF${c.materiales.length!==1?'s':''}</span>` : ''}
           </div>
+          ${!desbloqueado && primerCursoRetosDe(c.id) ? primerCursoRetosHTML(primerCursoRetosDe(c.id), 'tira') : ''}
         </div>
         ${(() => { const pctTarjeta = progresoCursoPct(c.id, c.sesiones ? c.sesiones.length : 0); return pctTarjeta > 0 ? `<div class="curso-card__pbar" title="${pctTarjeta}% completado"><span style="width:${pctTarjeta}%"></span></div>` : ''; })()}
       </article>
@@ -9144,6 +9151,7 @@ const Sections = (function(){
   function openCursoDetalle(id){
     const c=cursos.find(x=>x.id===id);if(!c)return;
     if (pruebaPendiente()) { avisoSeleccionaPrueba(id); return; }
+    primerCursoRetosCargar();
     const cursoIdx = cursos.findIndex(x => x.id === id);
     const desbloqueado = cursoDesbloqueado(cursoIdx, c);
     const diasFalta = diasParaDesbloquear(cursoIdx, c);
@@ -9192,10 +9200,14 @@ const Sections = (function(){
       ? 'Termina primero tu curso de prueba'
       : (() => { const cr = cuentaRegresivaCurso(c, diasFalta); return (cr.singular ? 'Falta ' : 'Faltan ') + cr.corto + ' para su desbloqueo'; })();
     if (bloqueoCalendario) {
+      const prc = diasFalta !== null ? primerCursoRetosDe(c.id) : null;
       bodyContent += `
-        <div style="display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--primary) 10%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 40%,transparent);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
-          <svg class="ic" style="color:var(--primary);flex-shrink:0;width:20px;height:20px;"><use href="#i-lock"/></svg>
-          <div style="font-size:13px;line-height:1.45;color:var(--text-2);"><strong style="color:var(--primary);">${textoFalta}</strong>. Mientras tanto puedes ver de qué trata y qué clases incluye.</div>
+        <div style="background:color-mix(in srgb,var(--primary) 10%,var(--surface-2));border:1px solid color-mix(in srgb,var(--primary) 40%,transparent);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <svg class="ic" style="color:var(--primary);flex-shrink:0;width:20px;height:20px;"><use href="#i-lock"/></svg>
+            <div style="font-size:13px;line-height:1.45;color:var(--text-2);"><strong style="color:var(--primary);">${textoFalta}</strong>. ${prc ? 'Puedes abrirlo antes resolviendo ' + ((prc.progreso && prc.progreso.meta) || 15) + ' retos.' : 'Mientras tanto puedes ver de qué trata y qué clases incluye.'}</div>
+          </div>
+          ${prc ? primerCursoRetosHTML(prc, 'lista') : ''}
         </div>
       `;
     }
@@ -9606,6 +9618,8 @@ const Sections = (function(){
   // Sin curso que continuar (todo lo abierto ya está terminado): en vez de ocultar la tarjeta dice qué sigue,
   // es decir, cuándo se abre el próximo curso, o que ya terminó todos los disponibles.
   function pintarContinuarSinCurso(wrap, spacer) {
+    _ultimoContinuar = { wrap, spacer };
+    primerCursoRetosCargar();
     const ocultar = () => { wrap.classList.add('is-vacio'); wrap.classList.remove('is-espera'); if (spacer) spacer.style.display = ''; };
     const lista = Array.isArray(cursos) ? cursos : [];
     if (!lista.length) return ocultar();
@@ -9641,6 +9655,8 @@ const Sections = (function(){
         { small: 'DESPUÉS', icon: 'i-arrow-right', txt: 'Gana libros y sube de nivel superando retos' },
         { small: 'CUANDO SE ABRA', icon: 'i-trophy', txt: 'Podrás empezar «' + (c.titulo || 'tu siguiente curso') + '» desde Mis cursos' }
       ];
+      const prc = primerCursoRetosDe(c.id);
+      if (prc && prc.progreso) filas[0] = { small: 'AHORA', icon: 'i-bolt', txt: 'Ábrelo antes: resuelve ' + prc.progreso.meta + ' retos (' + prc.progreso.hechos + '/' + prc.progreso.meta + ')' };
     } else {
       setTxt('continuar-titulo', 'Completaste tus cursos.');
       setTxt('continuar-card-lbl', 'CURSOS TERMINADOS');
@@ -10235,7 +10251,65 @@ const Sections = (function(){
     if (window.__isDemoMode === true || !window.__currentUser) return null;
     const token = await window.__currentUser.getIdToken();
     const r = await fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/retos', { headers: { 'Authorization': 'Bearer ' + token } });
-    return r.ok ? await r.json() : null;
+    if (!r.ok) return null;
+    const datos = await r.json();
+    try { primerCursoRetosActualizar(datos && datos.primerCurso); } catch(e){}
+    return datos;
+  }
+
+  /* ============================ PRIMER CURSO · se abre antes con 15 retos ============================ */
+  // El servidor cuenta los retos del camino (mínimo 4 de cada tipo + 3 libres) y decide cuándo se abre; aquí solo se pinta.
+  // Solo adelanta ESE curso: los demás conservan su fecha y su cuenta de días.
+  const PRC_TIPOS = [['quiz', 'Quiz relámpago'], ['detective', 'Detective de inocuidad'], ['orden', 'Ordena el proceso']];
+  function primerCursoRetosDe(cursoId){
+    return _primerCursoRetos && _primerCursoRetos.cursoId === cursoId ? _primerCursoRetos : null;
+  }
+  function primerCursoRetosCargar(){
+    // Solo miembros con acceso completo: el resto de las cuentas no pide nada extra al servidor
+    if (!tieneAccesoVipCompleto() || Date.now() - _primerCursoRetosT < 30000) return;
+    _primerCursoRetosT = Date.now();
+    try { Promise.resolve(cargarEstadoRetos()).catch(() => {}); } catch(e){}
+  }
+  function primerCursoRetosHTML(d, variante){
+    const p = d.progreso || { tipos: {}, libres: { hechos: 0, meta: 3 }, hechos: 0, meta: 15 };
+    const meta = p.meta || 15;
+    const pct = Math.max(0, Math.min(100, Math.round((p.hechos || 0) / meta * 100)));
+    if (variante === 'tira') {
+      return '<div class="rt-tira"><div class="rt-tira__t"><span><svg class="ic"><use href="#i-bolt"/></svg>Ábrelo antes con ' + meta + ' retos</span><b>' + (p.hechos || 0) + '/' + meta + '</b></div><div class="rt-tira__bar"><span style="width:' + pct + '%"></span></div></div>';
+    }
+    const fila = (nombre, h, m, nota) => '<div class="rt-fila' + (h >= m ? ' is-ok' : '') + '"><div class="rt-fila__n"><b>' + nombre + '</b>' + (nota ? '<small>' + nota + '</small>' : '') + '</div>'
+      + '<div class="rt-fila__b"><span style="width:' + Math.min(100, Math.round(h / m * 100)) + '%"></span></div>'
+      + '<div class="rt-fila__c">' + (h >= m ? '<svg class="ic"><use href="#i-check"/></svg>' : h + '/' + m) + '</div></div>';
+    const filas = PRC_TIPOS.map(([id, nombre]) => { const t = (p.tipos || {})[id] || { hechos: 0, meta: 4 }; return fila(nombre, t.hechos, t.meta); }).join('')
+      + fila('Retos libres', p.libres.hechos, p.libres.meta, 'De cualquier tipo');
+    return '<div class="rt-caja' + (variante === 'caja' ? ' rt-caja--solo' : '') + '">'
+      + (variante === 'caja' ? '<div class="rt-caja__t"><svg class="ic"><use href="#i-bolt"/></svg>Abre tu primer curso antes resolviendo ' + meta + ' retos</div>' : '')
+      + '<div class="rt-lista">' + filas + '</div>'
+      + '<div class="rt-total"><span><b>' + (p.hechos || 0) + ' de ' + meta + '</b> retos</span>'
+      + (variante === 'caja' ? '' : '<button type="button" class="btn btn--accent btn--sm" onclick="window.__irARetosPrimerCurso()">Ir a los retos</button>') + '</div></div>';
+  }
+  window.__irARetosPrimerCurso = function(){
+    try { if (window.Modal && Modal.closeAll) Modal.closeAll(); } catch(e){}
+    try { navigateToSection('retos'); } catch(e){}
+  };
+  function primerCursoRetosPintarBloques(){
+    const caja = document.getElementById('rz-primer');
+    if (caja) caja.innerHTML = _primerCursoRetos ? primerCursoRetosHTML(_primerCursoRetos, 'caja') : '';
+  }
+  function primerCursoRetosActualizar(pc){
+    const antes = JSON.stringify(_primerCursoRetos);
+    _primerCursoRetos = pc && pc.aplica === true && pc.abierto !== true ? { cursoId: pc.cursoId, progreso: pc.progreso } : null;
+    if (pc && pc.abierto === true) {
+      try { Toast.success('🎉 ¡Tu primer curso está abierto!', 'Ya puedes empezar desde Mis cursos'); } catch(e){}
+      _cursosLoaded = false;
+      Promise.resolve(cargarCursosBackend()).then(() => { try { renderCursosList(); } catch(e){} }).catch(() => {});
+    } else if (JSON.stringify(_primerCursoRetos) !== antes) {
+      try { renderCursosList(); } catch(e){}
+      try {
+        if (_ultimoContinuar && _ultimoContinuar.wrap && document.body.contains(_ultimoContinuar.wrap)) pintarContinuarSinCurso(_ultimoContinuar.wrap, _ultimoContinuar.spacer);
+      } catch(e){}
+    }
+    primerCursoRetosPintarBloques();
   }
   async function cargarClasificacionRetos(){
     if (window.__isDemoMode === true || !window.__currentUser) return null;
@@ -10278,6 +10352,7 @@ const Sections = (function(){
         return null;
       }
       const datos = r.ok ? await r.json() : null;
+      if (datos) { try { primerCursoRetosActualizar(datos.primerCurso); } catch(e){} }
       window.__libroRetoRespuesta?.(datos);
       return datos;
     } catch(e){ return null; }
@@ -13055,6 +13130,287 @@ const Sections = (function(){
     footer.querySelector('#dirf-despues').addEventListener('click', (e)=> guardarTarjeta(false, e.currentTarget));
   }
 
+  /* ============================ TARJETA "COMPLETA TU PERFIL PROFESIONAL" ============================ */
+  // Sustituye a la tarjeta "¿Cómo quieres que aparezca tu nombre?" del recorrido de BIENVENIDA (window.__maybeAskName),
+  // solo para cuentas nuevas (creadas desde esta fecha). Las cuentas anteriores siguen viendo la tarjeta de siempre.
+  // La ventana que confirma el nombre al sacar el PRIMER CERTIFICADO (__confirmarNombreCertificado) NO cambia.
+  // Si algo impide mostrarla, __maybeAskName usa la tarjeta anterior: nadie se queda sin la pregunta de su nombre.
+  const PERFIL_TARJETA_DESDE_MS = Date.parse('2026-10-14T21:37:00Z'); // momento en que se publicó: solo cuentas creadas desde entonces
+  function cuentaNuevaParaTarjetaPerfil(){
+    try {
+      const t = Date.parse(window.__currentUser && window.__currentUser.metadata && window.__currentUser.metadata.creationTime);
+      return Number.isFinite(t) && t >= PERFIL_TARJETA_DESDE_MS;
+    } catch (e) { return false; }
+  }
+  window.__cuentaNuevaParaTarjetaPerfil = cuentaNuevaParaTarjetaPerfil;
+
+  // Devuelve true si la tarjeta se mostró y terminó (guardada u omitida) y false si no se pudo mostrar.
+  window.__tarjetaPerfilNueva = async function (opts) {
+    const o = opts || {};
+    const uid = window.UserState && window.UserState.uid;
+    const fs = window.__fs;
+    if (!uid || !fs || !window.__currentUser || window.__isDemoMode === true) return false;
+    if (document.getElementById('pfb-modal')) return true;
+
+    // Datos que ya se tienen: tarjeta del directorio (si existe), contacto guardado y datos de la cuenta
+    let data = dirBorradorInicial();
+    try { const ds = await fs.getDoc(fs.doc(fs.db, 'directorio', uid)); if (ds.exists()) data = Object.assign(data, ds.data()); } catch (e) {}
+    try { await dirCargarMeta(); } catch (e) {}
+    Object.assign(data, _dirMeta.miContacto || {});
+    const esVip = dirViewerEsVip();            // portada y estado profesional son solo para VIP
+    let portada = dirPortadaValida(data.portadaColor);
+    let estado = DIR_ESTADOS[data.estado] ? data.estado : '';
+    let foto = data.foto || '';
+    let fotoCambio = false;
+
+    if (!document.getElementById('pfb-css')) {
+      const st = document.createElement('style'); st.id = 'pfb-css';
+      st.textContent = [
+        '#pfb-modal{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:12px}',
+        '#pfb-modal *{box-sizing:border-box}',
+        '#pfb-modal .pfb-ov{position:absolute;inset:0;background:rgba(10,12,20,.72);backdrop-filter:blur(4px)}',
+        '#pfb-modal .pfb-box{position:relative;width:100%;max-width:560px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);background:var(--surface,#fff);border-radius:24px;box-shadow:0 34px 90px rgba(10,20,15,.45);overflow:hidden;display:flex;flex-direction:column;color:var(--text,#12261A);font-family:Inter,system-ui,sans-serif}',
+        '#pfb-modal .pfb-scroll{overflow-y:auto;overflow-x:hidden;min-height:0;flex:1}',
+        '#pfb-modal .pfb-portada{position:relative;overflow:hidden;padding:50px 26px 66px;color:#fff;background:linear-gradient(135deg,#0F3D2E,#1F6B4A)}',
+        '#pfb-modal .pfb-portada::after{content:"";position:absolute;right:-50px;top:-60px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.1)}',
+        '#pfb-modal .pfb-portada>*{position:relative;z-index:1}',
+        '#pfb-modal .pfb-kick{display:block;font:700 10.5px Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#B7E08A;margin:0 0 9px}',
+        '#pfb-modal .pfb-portada h2{font:800 25px/1.15 "Plus Jakarta Sans",sans-serif;margin:0 0 9px;letter-spacing:-.4px;max-width:80%;color:#fff}',
+        '#pfb-modal .pfb-portada p{margin:0;font-size:14.5px;line-height:1.55;color:#E6F2E9;max-width:84%}',
+        '#pfb-modal .pfb-x{position:absolute;top:14px;right:14px;z-index:5;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.16);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}',
+        '#pfb-modal .pfb-x svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}',
+        '#pfb-modal .pfb-colores{position:absolute;right:18px;bottom:12px;display:flex;gap:7px;z-index:2;align-items:center}',
+        '#pfb-modal .pfb-colores small{font:600 10px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-right:4px}',
+        '#pfb-modal .pfb-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.85);cursor:pointer;padding:0}',
+        '#pfb-modal .pfb-dot.on{box-shadow:0 0 0 2px #fff}',
+        '#pfb-modal .pfb-fila{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:end;padding:0 26px;margin-top:-46px;position:relative;z-index:3}',
+        '#pfb-modal .pfb-avatar{position:relative;width:92px;height:92px;border-radius:50%;padding:3px;background:linear-gradient(135deg,#f6cf72,#c98a16);box-shadow:0 10px 24px rgba(0,0,0,.18)}',
+        '#pfb-modal .pfb-foto{width:100%;height:100%;border-radius:50%;border:3px solid #fff;background:#9CCC65;color:#1F4D2B;display:flex;align-items:center;justify-content:center;font:800 28px "Plus Jakarta Sans",sans-serif;overflow:hidden}',
+        '#pfb-modal .pfb-foto img{width:100%;height:100%;object-fit:cover;display:block}',
+        '#pfb-modal .pfb-subir{position:absolute;left:-8px;right:-8px;bottom:-20px;text-align:center}',
+        '#pfb-modal .pfb-subir button{border:1px solid var(--border-2,#C9D6CC);background:var(--surface,#fff);border-radius:999px;padding:3px 10px;font:700 11px Inter,sans-serif;color:var(--text-2,#4C5E52);cursor:pointer;white-space:nowrap}',
+        '#pfb-modal .pfb-avance{padding-bottom:6px}',
+        '#pfb-modal .pfb-avance__f{display:flex;justify-content:space-between;font:700 12px Inter,sans-serif;color:var(--text-2,#4C5E52);margin:0 0 6px}',
+        '#pfb-modal .pfb-avance__f b{color:var(--primary,#2E7D32)}',
+        '#pfb-modal .pfb-barra{height:8px;border-radius:99px;background:var(--surface-2,#F3F6F3);overflow:hidden}',
+        '#pfb-modal .pfb-barra i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#2E7D32,#9CCC65);transition:width .35s}',
+        '#pfb-modal .pfb-form{padding:34px 26px 4px;display:grid;grid-template-columns:1fr 1fr;gap:12px}',
+        '#pfb-modal .pfb-form--sin-arriba{padding-top:0}',
+        '#pfb-modal .pfb-full{grid-column:1/3}',
+        '#pfb-modal .pfb-campo{min-width:0}',
+        '#pfb-modal .pfb-campo label{display:flex;align-items:center;gap:6px;font:700 12.5px Inter,sans-serif;margin-bottom:5px;color:var(--text,#12261A)}',
+        '#pfb-modal .pfb-campo label svg{width:14px;height:14px;fill:none;stroke:var(--text-3,#7C8F83);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
+        '#pfb-modal .pfb-campo input{width:100%;padding:12px 13px;border:1.5px solid var(--border-2,#DDE5DD);border-radius:11px;background:var(--surface-2,#FBFCFB);font:500 16px Inter,sans-serif;color:var(--text,#12261A);outline:none}',
+        '#pfb-modal .pfb-campo input:focus{border-color:var(--primary,#2E7D32);background:var(--surface,#fff)}',
+        '#pfb-modal .pfb-campo input.ok{border-color:#9CCC65}',
+        '#pfb-modal .pfb-ayuda{display:flex;gap:7px;align-items:flex-start;margin-top:7px;font:600 12px/1.4 Inter,sans-serif;color:var(--primary,#2E7D32);background:color-mix(in srgb,var(--primary,#2E7D32) 10%,transparent);border-radius:9px;padding:7px 10px}',
+        '#pfb-modal .pfb-ayuda svg{width:15px;height:15px;flex:none;margin-top:1px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
+        '#pfb-modal .pfb-estados{display:flex;gap:8px;flex-wrap:wrap}',
+        '#pfb-modal .pfb-estados button{border:1.5px solid var(--border-2,#C9D6CC);background:var(--surface,#fff);border-radius:999px;padding:8px 13px;font:700 12.5px Inter,sans-serif;color:var(--text-2,#4C5E52);cursor:pointer;display:flex;gap:7px;align-items:center}',
+        '#pfb-modal .pfb-estados button i{width:8px;height:8px;border-radius:50%;background:var(--border-2,#C9D6CC)}',
+        '#pfb-modal .pfb-estados button.on{border-color:var(--primary,#2E7D32);background:color-mix(in srgb,var(--primary,#2E7D32) 12%,transparent);color:var(--primary,#2E7D32)}',
+        '#pfb-modal .pfb-estados button.on i{background:var(--primary,#2E7D32)}',
+        '#pfb-modal .pfb-mas{margin:12px 26px 0;border-top:1px solid var(--border,#DDE5DD);padding-top:12px}',
+        '#pfb-modal .pfb-mas summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font:700 13px Inter,sans-serif;color:var(--primary,#2E7D32)}',
+        '#pfb-modal .pfb-mas summary::-webkit-details-marker{display:none}',
+        '#pfb-modal .pfb-mas summary em{font-style:normal;font-weight:500;color:var(--text-3,#7C8F83)}',
+        '#pfb-modal .pfb-mas summary .si::before{content:"+ "}#pfb-modal .pfb-mas summary .no{display:none}',
+        '#pfb-modal .pfb-mas[open] summary .si{display:none}#pfb-modal .pfb-mas[open] summary .no{display:inline}#pfb-modal .pfb-mas[open] summary .no::before{content:"– "}',
+        '#pfb-modal .pfb-mas .pfb-form{padding:14px 0 6px}',
+        '#pfb-modal .pfb-pie{padding:14px 26px 18px;border-top:1px solid var(--border,#DDE5DD);display:grid;gap:10px;background:var(--surface,#fff)}',
+        '#pfb-modal .pfb-hint{min-height:16px;margin:0;font-size:12.5px;color:#C0502B;text-align:center}',
+        '#pfb-modal .pfb-ok{width:100%;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#2E7D32,#9CCC65);color:#14301C;font:800 15px Inter,sans-serif;cursor:pointer}',
+        '#pfb-modal .pfb-ok[disabled]{opacity:.6;cursor:default}',
+        '#pfb-modal .pfb-nota{display:flex;gap:7px;align-items:center;justify-content:center;font-size:11.5px;color:var(--text-2,#4C5E52);margin:0;text-align:center}',
+        '#pfb-modal .pfb-nota svg{width:13px;height:13px;fill:none;stroke:var(--primary,#2E7D32);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}',
+        '@media(max-width:540px){#pfb-modal{padding:8px;align-items:flex-start}#pfb-modal .pfb-portada{padding:48px 18px 62px}#pfb-modal .pfb-portada h2{font-size:21px;max-width:100%}#pfb-modal .pfb-portada p{max-width:100%;font-size:13.5px}#pfb-modal .pfb-colores{right:12px;bottom:10px}#pfb-modal .pfb-colores small{display:none}#pfb-modal .pfb-fila{grid-template-columns:78px minmax(0,1fr);padding:0 18px;gap:12px;margin-top:-40px}#pfb-modal .pfb-avatar{width:78px;height:78px}#pfb-modal .pfb-foto{font-size:23px}#pfb-modal .pfb-form{padding:30px 18px 4px;grid-template-columns:1fr}#pfb-modal .pfb-form--sin-arriba{padding-top:0}#pfb-modal .pfb-full{grid-column:1}#pfb-modal .pfb-mas{margin:12px 18px 0}#pfb-modal .pfb-mas .pfb-form{padding-left:0;padding-right:0}#pfb-modal .pfb-pie{padding:12px 18px 14px}}'
+      ].join('\n');
+      document.head.appendChild(st);
+    }
+
+    const ICONOS = {
+      nombre: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+      puesto: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
+      empresa: '<path d="M4 21V8l8-4 8 4v13M9 21v-6h6v6"/>',
+      ubicacion: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+      whatsapp: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+      email: '<path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/>',
+      linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 11v6M8 7.5v.01M12 17v-6m0 3a3 3 0 0 1 6 0v3"/>',
+      instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/>',
+      web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+      cedula: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h6M7 14h4"/>'
+    };
+    // Un nombre vacío, igual al inicio del correo o genérico no se ofrece como sugerencia (igual que la tarjeta anterior)
+    const emailParte = String(((window.UserState && window.UserState.email) || '').split('@')[0] || '').toLowerCase();
+    const actual = String(o.nombre || data.nombre || (window.UserState && (window.UserState.nombre || window.UserState.displayName)) || '').trim();
+    const sugerido = (!actual || actual.toLowerCase() === emailParte || ['ingeniero', 'colega', 'invitado', 'doctor', 'usuario vip', 'usuario'].includes(actual.toLowerCase())) ? '' : actual;
+    const claveCuenta = 'alintec_name_confirmed_' + uid;
+    const BASE = [
+      { id: 'nombre', et: 'Nombre completo', ph: 'Nombre y apellidos', max: 38, full: true, ayuda: true, v: sugerido },
+      { id: 'puesto', et: 'Puesto o cargo', ph: 'Ej. Jefe de Calidad', max: 60, v: data.puesto || '' },
+      { id: 'empresa', et: 'Empresa o planta', ph: 'Ej. Alimentos del Valle', max: 60, v: data.empresa || '' },
+      { id: 'ubicacion', et: 'Ciudad', ph: 'Ej. Puebla, Puebla', max: 60, v: data.ubicacion || '' },
+      { id: 'whatsapp', et: 'WhatsApp', ph: 'Ej. 52 238 123 4567', max: 20, v: data.whatsapp || '' },
+      { id: 'email', et: 'Correo', ph: 'correo@ejemplo.com', max: 80, full: true, v: data.email || '' }
+    ];
+    const REDES = [
+      { id: 'linkedin', et: 'LinkedIn', ph: 'linkedin.com/in/tu-perfil', max: 120, v: data.linkedin || '' },
+      { id: 'instagram', et: 'Instagram', ph: '@tu_usuario', max: 60, v: data.instagram || '' },
+      { id: 'web', et: 'Sitio web', ph: 'tusitio.com', max: 120, v: data.web || '' },
+      { id: 'cedula', et: 'Cédula profesional', ph: '12345678', max: 20, v: data.cedula || '' }
+    ];
+    // Lo que ya venía precargado (por ejemplo el correo de la cuenta) no cuenta como "llenó su perfil"
+    const inicial = {};
+    BASE.concat(REDES).forEach(c => { inicial[c.id] = String(c.v || '').trim().replace(/\s+/g, ' '); });
+    const campoHTML = c => '<div class="pfb-campo' + (c.full ? ' pfb-full' : '') + '"><label for="pfb-' + c.id + '"><svg viewBox="0 0 24 24">' + (ICONOS[c.id] || '') + '</svg>' + c.et + '</label>'
+      + '<input id="pfb-' + c.id + '" data-c="' + c.id + '" maxlength="' + c.max + '" value="' + escapeHtml(c.v) + '" placeholder="' + escapeHtml(c.ph) + '" autocomplete="' + (c.id === 'nombre' ? 'name' : 'off') + '">'
+      + (c.ayuda ? '<div class="pfb-ayuda"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg><span>Este es el nombre que aparecerá en tus certificados. Revísalo y escríbelo completo.</span></div>' : '') + '</div>';
+
+    const ov = document.createElement('div');
+    ov.id = 'pfb-modal';
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'pfb-titulo');
+    ov.innerHTML = '<div class="pfb-ov"></div><div class="pfb-box">'
+      + '<button class="pfb-x" type="button" id="pfb-cerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+      + '<div class="pfb-scroll">'
+      +   '<div class="pfb-portada" id="pfb-portada"><span class="pfb-kick">Bienvenido a Alintec Food</span><h2 id="pfb-titulo">Completa tu perfil profesional</h2>'
+      +   '<p>Para que otros profesionales del sector alimentario te conozcan y puedan contactarte.</p>'
+      +   (esVip ? '<div class="pfb-colores" id="pfb-colores"><small>Tu portada</small>' + Object.keys(DIR_PORTADAS).map(k => '<button type="button" class="pfb-dot' + (k === portada ? ' on' : '') + '" data-p="' + k + '" aria-label="' + escapeHtml(DIR_PORTADAS[k].label) + '" style="background:' + DIR_PORTADAS[k].bg + '"></button>').join('') + '</div>' : '')
+      +   '</div>'
+      +   '<div class="pfb-fila"><div class="pfb-avatar"><div class="pfb-foto" id="pfb-foto"></div><div class="pfb-subir"><button type="button" id="pfb-subir">Subir foto</button><input type="file" id="pfb-file" accept="image/*" style="display:none"></div></div>'
+      +   '<div class="pfb-avance"><div class="pfb-avance__f"><span>Tu perfil</span><b id="pfb-pct"></b></div><div class="pfb-barra"><i id="pfb-barra"></i></div></div></div>'
+      +   '<div class="pfb-form">' + BASE.map(campoHTML).join('') + '</div>'
+      +   (esVip ? '<div class="pfb-form pfb-form--sin-arriba"><div class="pfb-campo pfb-full"><label>Estado profesional <span style="font-weight:500;color:var(--text-3,#7C8F83)">opcional</span></label><div class="pfb-estados" id="pfb-estados">'
+        + Object.keys(DIR_ESTADOS).map(k => '<button type="button" data-e="' + k + '" class="' + (k === estado ? 'on' : '') + '"><i></i>' + escapeHtml(DIR_ESTADOS[k].label) + '</button>').join('') + '</div></div></div>' : '')
+      +   '<details class="pfb-mas"><summary><span class="si">Ver más</span><span class="no">Ver menos</span> <em>redes sociales y sitio web (opcional)</em></summary><div class="pfb-form">' + REDES.map(campoHTML).join('') + '</div></details>'
+      +   '<div style="height:10px"></div>'
+      + '</div>'
+      + '<div class="pfb-pie"><p class="pfb-hint" id="pfb-hint" role="alert"></p><button class="pfb-ok" type="button" id="pfb-guardar">Guardar mi perfil</button>'
+      + '<p class="pfb-nota"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Nadie ve tus datos hasta que tú decidas publicarlos en el Directorio VIP.</span></p></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+
+    const $ = id => ov.querySelector('#' + id);
+    const val = id => String(($('pfb-' + id) || {}).value || '').trim().replace(/\s+/g, ' ');
+    const pintarPortada = () => { if (esVip && DIR_PORTADAS[portada]) $('pfb-portada').style.background = DIR_PORTADAS[portada].bg; };
+    const pintarFoto = () => {
+      const f = $('pfb-foto');
+      if (foto) { f.innerHTML = '<img src="' + foto + '" alt="">'; return; }
+      const p = val('nombre').split(' ').filter(Boolean);
+      f.textContent = (p.slice(0, 2).map(x => x.charAt(0)).join('') || '?').toUpperCase();
+    };
+    const refrescar = () => {
+      const llenos = BASE.filter(c => val(c.id)).length;
+      const pct = Math.round(llenos / BASE.length * 100);
+      $('pfb-barra').style.width = pct + '%';
+      $('pfb-pct').textContent = pct === 100 ? '¡Perfil completo!' : pct + '% completo';
+      ov.querySelectorAll('.pfb-campo input').forEach(i => i.classList.toggle('ok', !!i.value.trim()));
+      if (!foto) pintarFoto();
+    };
+    pintarPortada(); pintarFoto(); refrescar();
+
+    return new Promise(resolve => {
+      let guardando = false;
+      const cerrar = () => { try { document.removeEventListener('keydown', alTeclear, true); } catch (e) {} try { ov.remove(); } catch (e) {} resolve(true); };
+      const omitir = () => {
+        // No volver a molestar, pero tampoco se marca como confirmado: el perfil sigue sugiriendo completarlo
+        try { localStorage.setItem('alintec_name_confirmed', '1'); localStorage.setItem(claveCuenta, '1'); } catch (e) {}
+        try { if (window.Toast) Toast.info('Puedes completarlo luego', 'Mi perfil o Directorio VIP'); } catch (e) {}
+        cerrar();
+      };
+      const alTeclear = e => { if (e.key === 'Escape' && !guardando) { e.stopPropagation(); omitir(); } };
+      document.addEventListener('keydown', alTeclear, true);
+      $('pfb-cerrar').addEventListener('click', () => { if (!guardando) omitir(); });
+
+      ov.querySelectorAll('.pfb-campo input').forEach(i => i.addEventListener('input', refrescar));
+      // Aviso en vivo: si el nombre se acerca al límite que se ve bien en el certificado
+      $('pfb-nombre').addEventListener('input', () => {
+        const n = val('nombre').length;
+        $('pfb-hint').textContent = n >= 34 ? 'Es el máximo que se ve bien en el certificado. Usa nombre + 1 o 2 apellidos.' : (n >= 32 ? 'Procura que no sea más largo para que luzca bien.' : '');
+      });
+      const colores = $('pfb-colores');
+      if (colores) colores.addEventListener('click', e => {
+        const b = e.target.closest('.pfb-dot'); if (!b) return;
+        portada = dirPortadaValida(b.dataset.p); pintarPortada();
+        colores.querySelectorAll('.pfb-dot').forEach(d => d.classList.toggle('on', d === b));
+      });
+      const estados = $('pfb-estados');
+      if (estados) estados.addEventListener('click', e => {
+        const b = e.target.closest('button'); if (!b) return;
+        const ya = b.classList.contains('on');
+        estados.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+        if (!ya) b.classList.add('on');
+        estado = ya ? '' : (DIR_ESTADOS[b.dataset.e] ? b.dataset.e : '');
+      });
+      const archivo = $('pfb-file');
+      $('pfb-subir').addEventListener('click', () => archivo.click());
+      archivo.addEventListener('change', async e => {
+        const f = e.target.files && e.target.files[0]; if (!f) return;
+        if (!f.type.startsWith('image/')) { $('pfb-hint').textContent = 'Elige una imagen (JPG o PNG).'; return; }
+        try { foto = await dirComprimirFoto(f); fotoCambio = true; pintarFoto(); $('pfb-hint').textContent = ''; }
+        catch (err) { $('pfb-hint').textContent = 'No se pudo cargar la foto. Intenta con otra.'; }
+        archivo.value = '';
+      });
+
+      async function guardar() {
+        if (guardando) return;
+        const hint = $('pfb-hint');
+        let nombre = val('nombre');
+        if (/\d/.test(nombre)) { hint.textContent = 'Tu nombre no debe llevar números.'; $('pfb-nombre').focus(); return; }
+        if (nombre.length < 3 || !nombre.includes(' ')) { hint.textContent = 'Escribe tu nombre y al menos un apellido.'; $('pfb-nombre').focus(); return; }
+        if (nombre.length > 38) nombre = nombre.slice(0, 38).trim(); // tope duro estético para el certificado
+        hint.textContent = '';
+        guardando = true;
+        const boton = $('pfb-guardar');
+        boton.disabled = true; boton.textContent = 'Guardando…';
+        try {
+          // 1) El nombre va al perfil (igual que la tarjeta anterior). El certificado lo confirmará después, al sacar el primero.
+          await guardarPerfilSeguro({ nombre });
+          window.UserState = window.UserState || {};
+          window.UserState.nombre = nombre;
+          window.UserState.displayName = nombre;
+          window.UserState.iniciales = (window.calcIniciales ? window.calcIniciales(nombre) : nombre.slice(0, 2).toUpperCase());
+          try { const ls = JSON.parse(localStorage.getItem('alintec_profile') || '{}'); ls.nombre = nombre; localStorage.setItem('alintec_profile', JSON.stringify(ls)); } catch (e) {}
+          try { localStorage.setItem('alintec_name_confirmed', '1'); localStorage.setItem(claveCuenta, '1'); } catch (e) {}
+          if (typeof window.__applyUserState === 'function') window.__applyUserState();
+
+          // 2) El resto va a la tarjeta del directorio (privada) y al contacto (solo servidor).
+          //    Si solo escribió el nombre no se crea tarjeta: así no recibe sin querer el logro "Tarjeta del directorio".
+          const extras = ['puesto', 'empresa', 'ubicacion', 'whatsapp', 'email', 'linkedin', 'instagram', 'web', 'cedula'].some(k => val(k) !== inicial[k]) || fotoCambio || (esVip && (estado || portada !== dirPortadaValida(data.portadaColor)));
+          let perfilGuardado = true;
+          if (extras) {
+            try {
+              await dirGuardarContacto({
+                whatsapp: val('whatsapp'), email: val('email'), linkedin: val('linkedin'), web: val('web'),
+                instagram: val('instagram').replace(/^@+/, '')
+              });
+              const payload = {
+                uid, nombre, puesto: val('puesto'), empresa: val('empresa'), ubicacion: val('ubicacion'),
+                whatsapp: '', email: '', linkedin: '', web: '', instagram: '', // el contacto se guarda aparte, en el servidor
+                cedula: val('cedula'), visible: true, publicado: data.publicado === true,
+                color: dirColorFor(uid), updatedAt: fs.serverTimestamp()
+              };
+              if (esVip) { payload.portadaColor = portada; payload.estado = estado; }
+              if (fotoCambio) payload.foto = foto || null; else if (data.foto) payload.foto = data.foto;
+              await fs.setDoc(fs.doc(fs.db, 'directorio', uid), payload, { merge: true });
+            } catch (e2) { console.warn('Perfil profesional:', e2); perfilGuardado = false; }
+          }
+          try { if (window.Toast) {
+            if (perfilGuardado) Toast.success('Perfil guardado', nombre);
+            else Toast.info('Nombre guardado', 'No pudimos guardar el resto de tu perfil; puedes completarlo en Directorio VIP.');
+          } } catch (e) {}
+          cerrar();
+        } catch (e) {
+          guardando = false;
+          boton.disabled = false; boton.textContent = 'Guardar mi perfil';
+          hint.textContent = (e && e.message) || 'No se pudo guardar. Intenta nuevamente.';
+        }
+      }
+      $('pfb-guardar').addEventListener('click', guardar);
+      $('pfb-nombre').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardar(); } });
+      setTimeout(() => { try { $('pfb-nombre').focus(); } catch (e) {} }, 120);
+    });
+  };
+
   /* ============================ FORO VIP ============================ */
 
   // ═══════════════════════════════════════════════════════════════
@@ -14451,6 +14807,8 @@ const Sections = (function(){
           <div class="rz-prog" id="rz-prog" aria-live="polite"></div>
         </div>
 
+        <div id="rz-primer"></div>
+
         ${miembro ? '' : `<div class="retos-note" style="flex-wrap:wrap;">
           <svg class="ic"><use href="#i-shield-check"/></svg>
           <div style="flex:1;min-width:200px;"><strong style="color:var(--text);">Solo para miembros.</strong> Puedes ver cómo son los retos, pero para resolverlos y sumar XP necesitas una suscripción activa.</div>
@@ -14516,6 +14874,7 @@ const Sections = (function(){
       }
     };
     pintarAvanceRetos(null);
+    primerCursoRetosPintarBloques();
     if (miembro) { try { Promise.resolve(cargarPremios()).then(p => { if (p) pintarAvanceRetos(p); }).catch(() => {}); } catch(e){} }
     // XP acumulados (los calcula el servidor)
     try { Promise.resolve(cargarEstadoRetos()).then(e => { const el = container.querySelector('#rz-xp'); if (el && e) el.textContent = (e.xp || 0) + ' XP acumulados'; }).catch(() => {}); } catch(e){}
@@ -14828,6 +15187,8 @@ const Sections = (function(){
       caminoGuardar(r);
       if (r && typeof Toast !== 'undefined') {
         if (r.xpGanado > 0) Toast.success('+' + r.xpGanado + ' XP', 'Reto del camino superado');
+        const pc = r.primerCurso;
+        if (r.aceptado && pc && pc.aplica === true && pc.abierto !== true && pc.progreso) Toast.info('Primer curso', 'Llevas ' + pc.progreso.hechos + ' de ' + pc.progreso.meta + ' retos para abrirlo antes');
         (r.nuevas || []).forEach(n => Toast.success('🏅 Nueva insignia', n.nombre + ' · +' + n.xp + ' XP'));
       }
       return r;
@@ -15224,7 +15585,16 @@ window.__maybeAskName = function(opts){
     const esNueva = (opts && opts.forzar === true) || reciente;
     // Cuentas antiguas: se respeta la marca anterior de este navegador para no volver a preguntarles
     if (!esNueva && localStorage.getItem('alintec_name_confirmed') === '1') return;
-    if (document.getElementById('name-modal')) return;
+    if (document.getElementById('name-modal') || document.getElementById('pfb-modal')) return;
+    // Cuentas nuevas (creadas desde la fecha de publicación): tarjeta "Completa tu perfil profesional".
+    // Las cuentas anteriores siguen con la tarjeta de siempre; si la nueva no se puede mostrar, también.
+    if (!(opts && opts.__antigua === true) && typeof window.__cuentaNuevaParaTarjetaPerfil === 'function'
+        && window.__cuentaNuevaParaTarjetaPerfil() && typeof window.__tarjetaPerfilNueva === 'function') {
+      const usarAnterior = () => window.__maybeAskName(Object.assign({}, opts || {}, { __antigua: true }));
+      Promise.resolve(window.__tarjetaPerfilNueva({ nombre: (window.UserState && (window.UserState.nombre || window.UserState.displayName)) || '' }))
+        .then(ok => { if (ok === false) usarAnterior(); }, usarAnterior);
+      return;
+    }
     const S = window.UserState || {};
     const email = S.email || '';
     const emailPart = email.split('@')[0] || '';
@@ -18726,6 +19096,24 @@ button.banner__stat{appearance:none;font:inherit;color:inherit;cursor:pointer;bo
   .hojas--tarjetas .hoja--tarjeta .hj-paper{height:auto;grid-template-rows:auto auto 140px auto auto!important}
   .hojas--tarjetas .hoja--tarjeta .hj-fig{height:140px}
 }
+/* Primer curso: se abre antes resolviendo retos (tira en la tarjeta, lista por tipo dentro del curso y en Retos) */
+.cursos-grid .curso-card--retos .curso-card__title{margin-bottom:6px}
+.cursos-grid .curso-card--retos .curso-card__body::after{display:none}
+.cursos-grid .curso-card--retos:hover .curso-card__title,.cursos-grid .curso-card--retos:hover .curso-card__meta{transform:none}
+.rt-tira{margin-top:10px;padding:8px 11px 9px;border-radius:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.rt-tira__t{display:flex;align-items:center;justify-content:space-between;gap:8px;font:700 11.5px Inter,system-ui,sans-serif;color:#fff}
+.rt-tira__t span{display:inline-flex;align-items:center;gap:6px}.rt-tira__t .ic{width:13px;height:13px;color:#ffd84d}
+.rt-tira__bar{height:5px;margin-top:7px;border-radius:4px;background:rgba(255,255,255,.28);overflow:hidden}.rt-tira__bar span{display:block;height:100%;border-radius:4px;background:#ffd84d}
+.rt-caja{margin-top:12px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--primary) 25%,transparent)}
+.rt-caja--solo{margin:0 0 18px;padding:16px 18px;border:1px solid color-mix(in srgb,var(--primary) 40%,transparent);border-radius:16px;background:color-mix(in srgb,var(--primary) 9%,var(--surface))}
+.rt-caja__t{display:flex;align-items:center;gap:8px;margin-bottom:10px;font:800 14.5px 'Plus Jakarta Sans',Inter,sans-serif;color:var(--text)}.rt-caja__t .ic{width:17px;height:17px;color:var(--primary)}
+.rt-lista{display:grid;gap:9px}
+.rt-fila{display:grid;grid-template-columns:minmax(120px,1.1fr) 2fr 44px;gap:12px;align-items:center}
+.rt-fila__n b{display:block;font:700 12.5px Inter,system-ui,sans-serif;color:var(--text)}.rt-fila__n small{display:block;font-size:11px;color:var(--text-3)}
+.rt-fila__b{height:8px;border-radius:5px;background:var(--border-2);overflow:hidden}.rt-fila__b span{display:block;height:100%;background:var(--primary);border-radius:5px}
+.rt-fila__c{text-align:right;font:700 12px 'JetBrains Mono',monospace;color:var(--text-2)}.rt-fila.is-ok .rt-fila__c{color:var(--primary)}.rt-fila__c .ic{width:16px;height:16px;color:var(--primary)}
+.rt-total{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:13px;color:var(--text-2)}.rt-total b{color:var(--text)}
+@media(max-width:560px){.rt-fila{grid-template-columns:1fr 1.4fr 40px}}
 /* Fin del desplazamiento: una sola página, menús independientes y solo el espacio que ocupa la barra móvil. */
 /* Los beneficios de Inicio permanecen ocultos hasta confirmar una membresía VIP. */
 :root:not([data-mode="vip"]) .aside{display:none!important}

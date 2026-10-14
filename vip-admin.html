@@ -6521,6 +6521,12 @@ const Pages={
           mostrada: false
         }
       };
+      // Reactivación de una membresía que ya había vencido: su calendario se retoma desde hoy
+      // (el servidor lo aplica la próxima vez que se consulte; lo ya abierto se conserva).
+      const vencioAntes = Pages._mbToDate(miembroActual?.expiraEn) || Pages._mbToDate(miembroActual?.fechaFinAcceso);
+      if (vencioAntes && vencioAntes.getTime() < ahora.getTime()) {
+        activacion.reanudacionCalendario = { vencioEn: vencioAntes.toISOString(), reanudadoEn: ahora.toISOString() };
+      }
       // Solo una membresía realmente nueva espera el certificado inicial.
       // Los miembros legados tienen fechaAlta pero no fechaInicioRutaVip; no
       // debemos bloquearlos al renovar o extender su acceso desde el admin.
