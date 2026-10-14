@@ -8602,7 +8602,8 @@ const Sections = (function(){
       @keyframes pgPulso{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--primary) 22%,transparent)}}
       @keyframes pgPopEsq{from{opacity:0;transform:scale(.6)}}
       @media (prefers-reduced-motion:reduce){.prueba-card--arte{animation:none!important}}
-      @media (max-width:560px){.prueba-card__art{align-self:center}}
+      /* En columna (teléfono) el flex-basis de 172px se volvía ALTO y dejaba un hueco: la altura la manda el propio abanico */
+      @media (max-width:560px){.prueba-card__art{align-self:center;flex:0 0 auto;height:100px;margin:0 auto}}
       @media (max-width:560px){.prueba-card{flex-direction:column;align-items:flex-start;gap:10px}}
     `;
     document.head.appendChild(st);
