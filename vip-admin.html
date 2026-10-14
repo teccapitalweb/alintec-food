@@ -1215,6 +1215,17 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
   .mobile-drawer__item .nav-item__badge{margin-left:auto}
   .mobile-drawer__item--salir,.mobile-drawer__item--salir .ic{color:#EF4444}
 }
+/* Pantallas muy altas (iPad vertical, monitores verticales): igual que en el panel del usuario. El menú reparte su espacio
+   en partes iguales entre sus grupos y el contenido corto de cada apartado se centra en el alto disponible.
+   Solo aplica con 881 px de ancho o más y 1100 px de alto o más (el menú completo ya cabe): en el resto no cambia nada. */
+@media(min-width:881px) and (min-height:1100px){
+  .sidebar .nav-section{margin-top:auto;padding-top:9px}
+  .sidebar .nav-item{padding-top:clamp(9px,calc(9px + (100vh - 1100px) / 70),14px);padding-bottom:clamp(9px,calc(9px + (100vh - 1100px) / 70),14px)}
+  .main{display:flex;flex-direction:column}
+  .main > .page{flex:1 1 auto;width:100%;display:flex;flex-direction:column}
+  .main > .page > :first-child{margin-top:auto}
+  .main > .page > :last-child{margin-bottom:auto}
+}
 </style>
 </head>
 <body style="visibility:hidden">
