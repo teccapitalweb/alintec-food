@@ -3319,6 +3319,27 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <!-- Banner sticky FOMO · solo visible para invitado y sin-membresia -->
+<script>
+/* Altura de la barra "Activar suscripción" -> --fomo-h (0 cuando no se ve). El menú lateral y el encabezado
+   se acomodan debajo de ella: la barra siempre queda a la vista y nunca tapa el logo. */
+(function(){
+  function medir(){
+    var b = document.getElementById('fomo-banner');
+    var h = 0;
+    if (b && getComputedStyle(b).display !== 'none') h = Math.round(b.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--fomo-h', h + 'px');
+  }
+  function iniciar(){
+    var b = document.getElementById('fomo-banner');
+    if (!b) return;
+    if (window.ResizeObserver) new ResizeObserver(medir).observe(b);
+    if (window.MutationObserver) new MutationObserver(medir).observe(b, { attributes: true, attributeFilter: ['style', 'class'] });
+    window.addEventListener('resize', medir);
+    medir();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();
+</script>
 <div class="fomo-banner" id="fomo-banner" style="display:none">
   <span class="fomo-banner__icon" aria-hidden="true"><svg class="ic"><use href="#i-crown"/></svg></span>
   <span class="fomo-banner__text" id="fomo-banner-text"><strong>Activar suscripción</strong></span>
@@ -8568,6 +8589,20 @@ const Sections = (function(){
       @keyframes pgSubeTexto{from{opacity:0;transform:translateY(8px)}}
       @keyframes pgBrilloBtn{0%,55%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
       @media (prefers-reduced-motion:reduce){.pg-cover,.pg-badge,[data-modal-id="prueba-intro"] .prueba-aviso,.pg-cta::after{animation:none!important}}
+      /* Tarjeta "Selecciona tu prueba gratuita" en Mis cursos: abanico de cursos y pulso suave */
+      .prueba-card--arte{position:relative;overflow:hidden;animation:pgPulso 1.6s ease .5s 2;background:radial-gradient(120% 160% at 0% 0%,color-mix(in srgb,var(--primary) 16%,transparent),transparent 58%),var(--surface)}
+      .prueba-card__art{flex:0 0 172px;width:172px;height:100px;margin:0}
+      .prueba-card__art .pg-cover{top:6px;width:86px;height:66px;margin-left:-43px;border-width:2px}
+      .prueba-card__art .pg-cover--0{transform:translateX(-54px) rotate(-10deg) scale(.92)}
+      .prueba-card__art .pg-cover--2{transform:translateX(54px) rotate(10deg) scale(.92)}
+      .prueba-card__art .pg-badge{padding:4px 11px;font-size:10px}
+      .prueba-card__kick{display:block;margin-bottom:5px;font:800 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+      .prueba-portada-wrap{position:relative}
+      .pg-badge--esquina{left:auto;right:12px;top:12px;bottom:auto;transform:none;animation:pgPopEsq .5s cubic-bezier(.2,1.4,.4,1) .3s both}
+      @keyframes pgPulso{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--primary) 22%,transparent)}}
+      @keyframes pgPopEsq{from{opacity:0;transform:scale(.6)}}
+      @media (prefers-reduced-motion:reduce){.prueba-card--arte{animation:none!important}}
+      @media (max-width:560px){.prueba-card__art{align-self:center}}
       @media (max-width:560px){.prueba-card{flex-direction:column;align-items:flex-start;gap:10px}}
     `;
     document.head.appendChild(st);
@@ -8576,9 +8611,10 @@ const Sections = (function(){
   function pruebaBannerHtml() {
     if (!pruebaPendiente()) return '';
     inyectarEstilosPrueba();
-    return `<div class="prueba-card" id="prueba-card">
-      <div class="prueba-card__ic"><svg class="ic"><use href="#i-play"/></svg></div>
+    return `<div class="prueba-card prueba-card--arte" id="prueba-card">
+      ${pruebaArteHtml('prueba-card__art')}
       <div>
+        <span class="prueba-card__kick">Tu prueba gratuita</span>
         <h3>Selecciona el curso de tu preferencia para obtener tu prueba gratuita</h3>
         <p>Solo puedes elegir <strong>un</strong> curso y después no se puede cambiar.</p>
       </div>
@@ -8603,7 +8639,7 @@ const Sections = (function(){
     }
     Modal.open({
       id: 'prueba-aviso', title: 'Selecciona tu prueba gratuita', icon: 'i-play', size: 'sm',
-      body: `<p class="prueba-aviso">Elige el curso de tu preferencia para poder ver el contenido de los cursos.</p>`,
+      body: pruebaArteHtml() + `<p class="prueba-aviso">Elige el curso de tu preferencia para poder ver el contenido de los cursos.</p>`,
       footer: pie
     });
   }
@@ -8665,7 +8701,7 @@ const Sections = (function(){
     });
     Modal.open({
       id: 'prueba-confirmar', title: '¿Seguro que deseas este curso?', subtitle: 'Tu prueba gratuita', icon: 'i-play', size: 'sm', closeOnBackdrop: false,
-      body: `<div class="prueba-portada" style="background-image:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35)),url('${c.portada || PORTADA_DEFAULT}');"></div>
+      body: `<div class="prueba-portada-wrap"><div class="prueba-portada" style="background-image:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35)),url('${c.portada || PORTADA_DEFAULT}');"></div><span class="pg-badge pg-badge--esquina">Gratis</span></div>
         <div class="prueba-curso">${escapeHtml(c.titulo)}</div>
         <p class="prueba-aviso" style="margin-top:10px;">${opts.desdeGuia ? 'Elegiste este curso desde nuestra guía virtual. ' : ''}Será tu <strong>prueba gratuita</strong>.</p>
         <p class="prueba-aviso" style="margin-top:10px;"><strong>Solo puedes elegir uno y después no se puede cambiar.</strong></p>`,
@@ -8674,13 +8710,13 @@ const Sections = (function(){
   }
 
   // Portadas de los primeros cursos (o imágenes del sitio si aún no cargan) para el abanico de la tarjeta de prueba
-  function pruebaArteHtml() {
+  function pruebaArteHtml(clase) {
     const lista = Array.isArray(cursos) ? cursos.filter(c => c && c.activo !== false) : [];
     const limpiar = u => String(u || '').replace(/['"()\\\s]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
     const respaldo = ['assets/img/materiales/haccp-v2.jpg', 'assets/img/materiales/etiquetado-v2.jpg', 'assets/img/materiales/cadena-frio-v2.jpg'];
     const p = lista.filter(c => c.portada).slice(0, 3).map(c => limpiar(c.portada));
     while (p.length < 3) p.push(respaldo[p.length]);
-    return '<div class="pg-art" aria-hidden="true">'
+    return '<div class="pg-art' + (clase ? ' ' + clase : '') + '" aria-hidden="true">'
       + p.map((u, i) => '<i class="pg-cover pg-cover--' + i + '" style="background-image:url(\'' + u + '\')"></i>').join('')
       + '<span class="pg-badge">Gratis</span></div>';
   }
@@ -19177,6 +19213,13 @@ html,body{overscroll-behavior-y:none}
   body:not([data-seccion]) .aside,body[data-seccion="inicio"] .aside{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
   :root:not([data-mode="vip"]) .main{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
 }
+/* Barra "Activar suscripción": fija arriba siempre. Antes se iba al bajar y, al subir, volvía a pasar por encima del logo.
+   El contenido, el menú lateral y el encabezado empiezan debajo de ella (--fomo-h = su altura, 0 si no se muestra). */
+.fomo-banner{position:fixed;top:0;left:0;right:0;z-index:300}
+body:has(#fomo-banner:not([style*="display:none"])){padding-top:var(--fomo-h,0px)}
+@media(min-width:881px){.sidebar{top:var(--fomo-h,0px);height:calc(100dvh - var(--fomo-h,0px));max-height:calc(100dvh - var(--fomo-h,0px))}}
+.topbar{top:calc(var(--fomo-h,0px) + 12px)}
+@media(max-width:880px){.topbar{top:calc(var(--fomo-h,0px) + 8px)}}
 </style>
 <script>
 // La reserva inferior sigue la altura real de la navegación, también con zoom o texto grande.
