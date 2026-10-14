@@ -19259,13 +19259,17 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:var(--fomo-h,0px
 @media(min-width:881px){.sidebar{top:var(--fomo-h,0px);height:calc(100dvh - var(--fomo-h,0px));max-height:calc(100dvh - var(--fomo-h,0px))}}
 .topbar{top:calc(var(--fomo-h,0px) + 12px)}
 @media(max-width:880px){.topbar{top:calc(var(--fomo-h,0px) + 8px)}}
-/* Pantallas altas (iPad en vertical, monitores verticales): el menú ocupaba solo la mitad de arriba y dejaba un
-   espacio en blanco enorme. Las opciones y los grupos se separan según el alto disponible y "Mi cuenta" baja
-   al fondo (sobre el botón de WhatsApp). En pantallas normales no cambia nada. */
+/* Pantallas altas (iPad en vertical, monitores verticales): el menú ocupaba solo la mitad de arriba y los apartados cortos
+   (Canal, etc.) quedaban pegados arriba con todo lo demás en blanco. Aquí el menú reparte su espacio en partes iguales
+   entre sus grupos (sin un hueco grande en un solo lugar) y el contenido corto se centra en el alto disponible.
+   Solo aplica cuando la pantalla mide 1150 px de alto o más: en laptops, monitores normales y teléfonos no cambia nada. */
 @media(min-width:881px) and (min-height:1150px){
-  .sidebar .nav-section{margin-top:clamp(10px,calc(10px + (100vh - 1150px) / 40),26px)}
+  .sidebar .nav-section{margin-top:auto;padding-top:10px}
   .sidebar .nav-item{padding-top:clamp(8px,calc(8px + (100vh - 1150px) / 60),13px);padding-bottom:clamp(8px,calc(8px + (100vh - 1150px) / 60),13px)}
-  .sidebar > .nav-section:last-child{margin-top:auto;padding-top:clamp(10px,calc(10px + (100vh - 1150px) / 40),26px)}
+  .main{min-height:calc(100dvh - var(--fomo-h,0px))}
+  #dynamic-section{display:flex;flex-direction:column;flex:1 1 auto}
+  #dynamic-section > :first-child{margin-top:auto}
+  #dynamic-section > :last-child{margin-bottom:auto!important}
 }
 </style>
 <script>
