@@ -19259,6 +19259,14 @@ body:has(#fomo-banner:not([style*="display:none"])){padding-top:var(--fomo-h,0px
 @media(min-width:881px){.sidebar{top:var(--fomo-h,0px);height:calc(100dvh - var(--fomo-h,0px));max-height:calc(100dvh - var(--fomo-h,0px))}}
 .topbar{top:calc(var(--fomo-h,0px) + 12px)}
 @media(max-width:880px){.topbar{top:calc(var(--fomo-h,0px) + 8px)}}
+/* Pantallas altas (iPad en vertical, monitores verticales): el menú ocupaba solo la mitad de arriba y dejaba un
+   espacio en blanco enorme. Las opciones y los grupos se separan según el alto disponible y "Mi cuenta" baja
+   al fondo (sobre el botón de WhatsApp). En pantallas normales no cambia nada. */
+@media(min-width:881px) and (min-height:1150px){
+  .sidebar .nav-section{margin-top:clamp(10px,calc(10px + (100vh - 1150px) / 40),26px)}
+  .sidebar .nav-item{padding-top:clamp(8px,calc(8px + (100vh - 1150px) / 60),13px);padding-bottom:clamp(8px,calc(8px + (100vh - 1150px) / 60),13px)}
+  .sidebar > .nav-section:last-child{margin-top:auto;padding-top:clamp(10px,calc(10px + (100vh - 1150px) / 40),26px)}
+}
 </style>
 <script>
 // La reserva inferior sigue la altura real de la navegación, también con zoom o texto grande.
