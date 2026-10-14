@@ -3779,6 +3779,8 @@ if (window.__isDemoMode) {
             try { if (window.__regaloBienvenida) await window.__regaloBienvenida(); } catch(e){}
             try { window.__maybeAskName && window.__maybeAskName({ forzar: true }); } catch(e){}
             await pausa(400);
+            // Espera a que la persona termine su tarjeta de perfil (guardar y continuar, o cerrarla)
+            for (let i = 0; i < 3000 && window.__perfilTarjetaPendiente === true; i++) await pausa(300);
             await esperarSin('name-modal', 2400);
             await esperarSin('pfb-modal', 2400);
           } finally { window.__bienvenidaPendiente = false; }
@@ -8547,6 +8549,25 @@ const Sections = (function(){
       .prueba-aviso strong{color:var(--text)}
       .prueba-portada{height:170px;border-radius:14px;background-size:cover;background-position:center;background-color:var(--surface-3)}
       .prueba-curso{margin:12px 0 2px;font-weight:800;color:var(--text);font-size:16px;line-height:1.35;letter-spacing:-.2px}
+      .pg-art{position:relative;height:128px;width:250px;max-width:100%;margin:2px auto 14px}
+      .pg-cover{position:absolute;top:10px;left:50%;width:116px;height:90px;margin-left:-58px;border-radius:14px;background:var(--surface-3) center/cover no-repeat;border:3px solid var(--surface);box-shadow:0 12px 26px rgba(0,0,0,.24)}
+      .pg-cover--0{transform:translateX(-72px) rotate(-10deg) scale(.92);animation:pgAbreI .75s cubic-bezier(.2,1.2,.4,1) .15s both,pgFlota 5.5s ease-in-out 1.2s infinite}
+      .pg-cover--1{z-index:2;transform:translateY(-6px);animation:pgSubeCurso .6s cubic-bezier(.2,1.2,.4,1) .05s both,pgFlota 5s ease-in-out 1.3s infinite reverse}
+      .pg-cover--2{transform:translateX(72px) rotate(10deg) scale(.92);animation:pgAbreD .75s cubic-bezier(.2,1.2,.4,1) .25s both,pgFlota 6s ease-in-out 1s infinite}
+      .pg-badge{position:absolute;z-index:3;left:50%;bottom:0;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#ffc04d,var(--primary));color:#1a1206;font:800 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 8px 18px rgba(0,0,0,.22);animation:pgPopMini .5s cubic-bezier(.2,1.4,.4,1) .7s both}
+      [data-modal-id="prueba-intro"] .prueba-aviso{animation:pgSubeTexto .5s ease both}
+      [data-modal-id="prueba-intro"] .prueba-aviso:nth-of-type(1){animation-delay:.35s}
+      [data-modal-id="prueba-intro"] .prueba-aviso:nth-of-type(2){animation-delay:.45s}
+      .pg-cta{position:relative;overflow:hidden;box-shadow:0 10px 22px color-mix(in srgb,var(--primary) 32%,transparent)}
+      .pg-cta::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-130%);animation:pgBrilloBtn 3.2s ease-in-out 1.2s infinite}
+      @keyframes pgAbreI{from{transform:translateX(0) rotate(0) scale(.8);opacity:0}}
+      @keyframes pgAbreD{from{transform:translateX(0) rotate(0) scale(.8);opacity:0}}
+      @keyframes pgSubeCurso{from{transform:translateY(14px) scale(.85);opacity:0}}
+      @keyframes pgFlota{0%,100%{translate:0 0}50%{translate:0 -6px}}
+      @keyframes pgPopMini{from{opacity:0;transform:translateX(-50%) scale(.6)}}
+      @keyframes pgSubeTexto{from{opacity:0;transform:translateY(8px)}}
+      @keyframes pgBrilloBtn{0%,55%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+      @media (prefers-reduced-motion:reduce){.pg-cover,.pg-badge,[data-modal-id="prueba-intro"] .prueba-aviso,.pg-cta::after{animation:none!important}}
       @media (max-width:560px){.prueba-card{flex-direction:column;align-items:flex-start;gap:10px}}
     `;
     document.head.appendChild(st);
@@ -8652,6 +8673,18 @@ const Sections = (function(){
     });
   }
 
+  // Portadas de los primeros cursos (o imágenes del sitio si aún no cargan) para el abanico de la tarjeta de prueba
+  function pruebaArteHtml() {
+    const lista = Array.isArray(cursos) ? cursos.filter(c => c && c.activo !== false) : [];
+    const limpiar = u => String(u || '').replace(/['"()\\\s]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
+    const respaldo = ['assets/img/materiales/haccp-v2.jpg', 'assets/img/materiales/etiquetado-v2.jpg', 'assets/img/materiales/cadena-frio-v2.jpg'];
+    const p = lista.filter(c => c.portada).slice(0, 3).map(c => limpiar(c.portada));
+    while (p.length < 3) p.push(respaldo[p.length]);
+    return '<div class="pg-art" aria-hidden="true">'
+      + p.map((u, i) => '<i class="pg-cover pg-cover--' + i + '" style="background-image:url(\'' + u + '\')"></i>').join('')
+      + '<span class="pg-badge">Gratis</span></div>';
+  }
+
   // Tarjeta de explicación para cuentas nuevas que entran de forma tradicional (sin curso previo)
   function introPruebaGratuita() {
     inyectarEstilosPrueba();
@@ -8666,14 +8699,14 @@ const Sections = (function(){
     const pie = document.createElement('div');
     pie.style.cssText = 'display:flex;justify-content:flex-end;';
     const boton = document.createElement('button');
-    boton.className = 'btn btn--accent';
+    boton.className = 'btn btn--accent pg-cta';
     boton.textContent = 'Elegir mi curso';
     boton.addEventListener('click', () => { Modal.close('prueba-intro'); });
     pie.appendChild(boton);
     Modal.open({
       id: 'prueba-intro', title: 'Tu prueba gratuita', subtitle: 'Una función para usuarios nuevos', icon: 'i-play', size: 'sm', closeOnBackdrop: false,
       onClose: irACursos,
-      body: `<p class="prueba-aviso">Al ser un usuario nuevo, <strong>te damos a elegir un curso de tu interés como prueba gratuita</strong>.</p>
+      body: pruebaArteHtml() + `<p class="prueba-aviso">Al ser un usuario nuevo, <strong>te damos a elegir un curso de tu interés como prueba gratuita</strong>.</p>
         <p class="prueba-aviso" style="margin-top:10px;">Lo eliges en <strong>Mis cursos</strong>.</p>`,
       footer: pie
     });
@@ -8703,6 +8736,7 @@ const Sections = (function(){
       // El recorrido todavía no se ha mostrado (ni terminado): se espera hasta 5 minutos a que lo haga
       const tourPendiente = tour && typeof tour.wasSeen === 'function' && !tour.wasSeen() && !tourVisto && Date.now() - inicio < 300000;
       const ocupado = tourPendiente
+        || window.__perfilTarjetaPendiente === true
         || document.getElementById('name-modal') || document.getElementById('pfb-modal') || document.getElementById('splash-bienvenida')
         || document.body.classList.contains('membership-tour-open')
         || document.querySelector('.modal-backdrop');
@@ -15590,9 +15624,14 @@ window.__maybeAskName = function(opts){
     // Las cuentas anteriores siguen con la tarjeta de siempre; si la nueva no se puede mostrar, también.
     if (!(opts && opts.__antigua === true) && typeof window.__cuentaNuevaParaTarjetaPerfil === 'function'
         && window.__cuentaNuevaParaTarjetaPerfil() && typeof window.__tarjetaPerfilNueva === 'function') {
+      // Desde este instante el recorrido y la tarjeta de prueba gratuita esperan: la tarjeta nueva tarda un momento en armarse
+      window.__perfilTarjetaPendiente = true;
+      const liberar = () => { window.__perfilTarjetaPendiente = false; };
+      const seguro = setTimeout(liberar, 15 * 60 * 1000); // por si algo la dejara colgada: nunca bloquea para siempre
       const usarAnterior = () => window.__maybeAskName(Object.assign({}, opts || {}, { __antigua: true }));
       Promise.resolve(window.__tarjetaPerfilNueva({ nombre: (window.UserState && (window.UserState.nombre || window.UserState.displayName)) || '' }))
-        .then(ok => { if (ok === false) usarAnterior(); }, usarAnterior);
+        .then(ok => { if (ok === false) usarAnterior(); }, usarAnterior)
+        .finally(() => { clearTimeout(seguro); liberar(); });
       return;
     }
     const S = window.UserState || {};
@@ -20170,7 +20209,7 @@ window.AlintecOnboarding = new window.MembershipTour({
   ready: function(){
     var state = window.UserState || {};
     var decidida = window.__isDemoMode === true || window.__bienvenidaDecidida === true;
-    return decidida && !window.__bienvenidaPendiente && state.modo && state.modo !== 'cargando' && !!(state.uid || state.email) && getComputedStyle(document.body).visibility !== 'hidden';
+    return decidida && !window.__bienvenidaPendiente && window.__perfilTarjetaPendiente !== true && state.modo && state.modo !== 'cargando' && !!(state.uid || state.email) && getComputedStyle(document.body).visibility !== 'hidden';
   },
   steps: [
     {
