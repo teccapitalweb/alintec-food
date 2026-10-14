@@ -8771,14 +8771,15 @@ const Sections = (function(){
       if (abierto) tourVisto = true;
       // El recorrido todavía no se ha mostrado (ni terminado): se espera hasta 5 minutos a que lo haga
       const tourPendiente = tour && typeof tour.wasSeen === 'function' && !tour.wasSeen() && !tourVisto && Date.now() - inicio < 300000;
-      const ocupado = tourPendiente
+      const ocupado = document.visibilityState === 'hidden'
+        || tourPendiente
         || window.__perfilTarjetaPendiente === true
         || document.getElementById('name-modal') || document.getElementById('pfb-modal') || document.getElementById('splash-bienvenida')
         || document.body.classList.contains('membership-tour-open')
         || document.querySelector('.modal-backdrop');
       if (ocupado) { libreDesde = 0; }
       else if (!libreDesde) { libreDesde = Date.now(); }
-      if ((libreDesde && Date.now() - libreDesde > 1500 && Date.now() - inicio > 3500) || Date.now() - inicio > 600000) {
+      if (document.visibilityState !== 'hidden' && ((libreDesde && Date.now() - libreDesde > 1500 && Date.now() - inicio > 3500) || Date.now() - inicio > 600000)) {
         clearInterval(iv);
         cb();
       }
@@ -8795,9 +8796,11 @@ const Sections = (function(){
         return;
       }
       if (pref) borrarPrefGuia();
-      // Sin curso de la guía: una tarjeta explica la función y de ahí se le lleva a Mis cursos (una vez por visita)
+      // Sin curso de la guía: una tarjeta explica la función y de ahí se le lleva a Mis cursos (una vez por visita
+      // de CADA cuenta: antes la marca era de toda la pestaña y una segunda cuenta nueva ya no la veía)
       let visto = false;
-      try { visto = sessionStorage.getItem('af_prueba_guiada') === '1'; sessionStorage.setItem('af_prueba_guiada', '1'); } catch (e) {}
+      const claveVisto = 'af_prueba_guiada_' + (window.UserState?.uid || window.__currentUser?.uid || '');
+      try { visto = sessionStorage.getItem(claveVisto) === '1'; sessionStorage.setItem(claveVisto, '1'); } catch (e) {}
       if (!visto) introPruebaGratuita();
       return;
     }
@@ -8824,7 +8827,8 @@ const Sections = (function(){
         else { localStorage.setItem(clave, String(Date.now())); sessionStorage.setItem(clave, '1'); }
       } catch (e) {}
       if (otra) return;
-      ejecutarFlujoPrueba();
+      if (pruebaEstado) { ejecutarFlujoPrueba(); return; }
+      Promise.resolve(cargarEstadoPrueba()).catch(() => {}).then(() => ejecutarFlujoPrueba());
     });
   }
 
@@ -9756,6 +9760,38 @@ const Sections = (function(){
     if (spacer) spacer.style.display = 'none';
   }
 
+  // Aún no elige su prueba gratuita: Inicio no le pone ningún curso (ni "Comenzar" uno); solo le recuerda que puede
+  // elegir el suyo cuando quiera. Si lo pospone, aquí lo encuentra de nuevo.
+  function pintarContinuarElegirPrueba(wrap, spacer) {
+    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    const ir = () => navigateToSection('cursos');
+    setTxt('continuar-titulo', 'Elige tu curso de prueba.');
+    setTxt('continuar-card-lbl', 'PRUEBA GRATUITA');
+    setTxt('continuar-curso', 'Aún no eliges tu curso');
+    setTxt('continuar-clase-lbl', 'SIGUIENTE PASO');
+    setTxt('continuar-clase-nombre', 'Elige el curso de tu preferencia');
+    setTxt('continuar-ir-txt', 'Elegir mi curso');
+    const btnClase = document.getElementById('continuar-clase-btn'); if (btnClase) btnClase.onclick = ir;
+    const btnIr = document.getElementById('continuar-ir-btn'); if (btnIr) btnIr.onclick = ir;
+    setTxt('continuar-meta-titulo', 'Tu prueba gratuita te espera');
+    const filas = [
+      { small: 'AHORA', icon: 'i-play', txt: 'Entra a Mis cursos y elige el curso que más te interese' },
+      { small: 'DESPUÉS', icon: 'i-arrow-right', txt: 'Verás todas sus clases, menos la última' },
+      { small: 'CUANDO QUIERAS', icon: 'i-trophy', txt: 'Puedes hacerlo hoy o volver más tarde: no corre prisa' }
+    ];
+    const pasos = document.getElementById('continuar-pasos');
+    if (pasos) {
+      pasos.innerHTML = filas.map(x => `
+        <li class="continuar__paso">
+          <span class="continuar__paso-ic"><svg class="ic"><use href="#${x.icon}"/></svg></span>
+          <span class="continuar__paso-txt"><small>${x.small}</small><strong>${escapeHtml(x.txt)}</strong></span>
+        </li>`).join('');
+    }
+    wrap.classList.add('is-espera');
+    wrap.classList.remove('is-vacio');
+    if (spacer) spacer.style.display = 'none';
+  }
+
   async function actualizarContinuarWidget() {
     const wrap = document.getElementById('continuar-widget');
     const spacer = document.getElementById('continuar-spacer');
@@ -9764,6 +9800,8 @@ const Sections = (function(){
     const setTxt0 = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
     const esVipUser = window.UserState?.modo === 'vip' || (typeof esAdminReal === 'function' && esAdminReal()) || window.UserState?.isAdmin;
+    // Prueba gratuita sin elegir: no se le sugiere un curso por su cuenta
+    if (pruebaPendiente()) { pintarContinuarElegirPrueba(wrap, spacer); return; }
     const disponibles = (cursos || [])
       .map((c, idx) => ({ c, idx }))
       .filter(({ c, idx }) => cursoDesbloqueado(idx, c) && Array.isArray(c.sesiones) && c.sesiones.length);
@@ -10376,7 +10414,7 @@ const Sections = (function(){
     } else if (JSON.stringify(_primerCursoRetos) !== antes) {
       try { renderCursosList(); } catch(e){}
       try {
-        if (_ultimoContinuar && _ultimoContinuar.wrap && document.body.contains(_ultimoContinuar.wrap)) pintarContinuarSinCurso(_ultimoContinuar.wrap, _ultimoContinuar.spacer);
+        if (!pruebaPendiente() && _ultimoContinuar && _ultimoContinuar.wrap && document.body.contains(_ultimoContinuar.wrap)) pintarContinuarSinCurso(_ultimoContinuar.wrap, _ultimoContinuar.spacer);
       } catch(e){}
     }
     primerCursoRetosPintarBloques();
