@@ -9816,6 +9816,11 @@ const Sections = (function(){
       if (p.clasesVistas.length > mejorAvance) { mejorAvance = p.clasesVistas.length; elegido = c; }
     });
     if (!elegido) { const libre = disponibles.find(({ c }) => !getProgresoCurso(c.id).completado); elegido = libre ? libre.c : null; }
+    // Con prueba gratuita elegida y sin membresía, su curso actual es SIEMPRE el que eligió (no el primero que esté abierto)
+    if (!tieneAccesoVipCompleto() && pruebaEstado && typeof pruebaEstado.elegida === 'string' && pruebaEstado.elegida) {
+      const suyo = disponibles.find(({ c }) => c.id === pruebaEstado.elegida);
+      if (suyo && !getProgresoCurso(suyo.c.id).completado) elegido = suyo.c;
+    }
 
     if (!elegido) { pintarContinuarSinCurso(wrap, spacer); return; }
     wrap.classList.remove('is-espera');
