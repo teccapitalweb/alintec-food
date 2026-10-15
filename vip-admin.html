@@ -2472,7 +2472,14 @@ const Pages={
           </div>
         </div>
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;">
-          <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Últimas pruebas elegidas</h3>
+          <style>.pg-tabs{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:999px}.pg-tabs button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer}.pg-tabs button.on{background:var(--primary);color:#fff}</style>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+            <h3 id="pg-lista-titulo" style="margin:0;font-size:14px;color:var(--text);">Últimas pruebas elegidas</h3>
+            <div class="pg-tabs" role="tablist" aria-label="Ver cuentas">
+              <button type="button" role="tab" data-pg-modo="elegidas" class="on">Eligieron <span id="pg-tab-elegidas"></span></button>
+              <button type="button" role="tab" data-pg-modo="sin">Sin elegir <span id="pg-tab-sin"></span></button>
+            </div>
+          </div>
           <div id="pg-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
         </div>
         <p style="font-size:11.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">"Cuentas nuevas" son las creadas desde el 2 de octubre de 2026 (la fecha en que arrancó esta función). "Pagó" significa que la cuenta tiene o tuvo una membresía.</p>
@@ -2547,23 +2554,46 @@ const Pages={
       }
     }
 
-    // Lista de las últimas pruebas elegidas
+    // Listas: quienes ya eligieron y las cuentas nuevas que todavía no escogen su curso (marcadas "Sin elegir")
     if (lista) {
-      const recientes = elegidas.slice().sort((a, b) => ((Pages._mbToDate(b.pruebaElegidaEn) || 0) - (Pages._mbToDate(a.pruebaElegidaEn) || 0))).slice(0, 15);
-      if (!recientes.length) { lista.textContent = 'Todavía nadie ha elegido su prueba gratuita.'; return; }
-      lista.innerHTML = recientes.map(m => {
-        const f = Pages._mbToDate(m.pruebaElegidaEn);
-        const fecha = f ? f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+      const fmt = f => f ? f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+      const chip = (txt, fondo, color) => '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:' + fondo + ';color:' + color + ';">' + txt + '</span>';
+      const chipPago = m => pago(m)
+        ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,.18);color:#0f9f6e;">Pagó</span>'
+        : '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);">Sin pagar</span>';
+      const fila = (m, centro, chips, fecha) => {
         const nombre = m.nombre || m.displayName || (m.email || '').split('@')[0] || 'Miembro';
-        const curso = cursosPorId[m.cursoPruebaElegido] || m.cursoPruebaElegido;
-        const pagoTxt = pago(m)
-          ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,.18);color:#0f9f6e;">Pagó</span>'
-          : '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);">Sin pagar</span>';
         return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">'
           + '<span style="min-width:0;flex:1 1 220px;"><strong style="color:var(--text);">' + AdminEsc(nombre) + '</strong><br><span style="font-size:11.5px;color:var(--text-3);">' + AdminEsc(m.email || '') + '</span></span>'
-          + '<span style="flex:2 1 260px;color:var(--text);">' + AdminEsc(curso) + '</span>'
-          + pagoTxt + '<span style="color:var(--text-3);">' + AdminEsc(fecha) + '</span></div>';
-      }).join('');
+          + '<span style="flex:2 1 260px;color:var(--text);">' + centro + '</span>'
+          + chips + '<span style="color:var(--text-3);">' + AdminEsc(fecha) + '</span></div>';
+      };
+      const recientes = elegidas.slice().sort((a, b) => ((Pages._mbToDate(b.pruebaElegidaEn) || 0) - (Pages._mbToDate(a.pruebaElegidaEn) || 0))).slice(0, 15);
+      const pendientes = sinElegir.slice().sort((a, b) => ((fechaReg(b) || 0) - (fechaReg(a) || 0))).slice(0, 30);
+      const pintar = modo => {
+        const titulo = document.getElementById('pg-lista-titulo');
+        document.querySelectorAll('[data-pg-modo]').forEach(b => b.classList.toggle('on', b.dataset.pgModo === modo));
+        if (modo === 'sin') {
+          if (titulo) titulo.textContent = 'Cuentas nuevas que aún no eligen su prueba';
+          if (!pendientes.length) { lista.textContent = 'No hay cuentas nuevas pendientes de elegir.'; return; }
+          lista.innerHTML = pendientes.map(m => fila(m,
+            'Todavía no elige su curso · se registró el ' + AdminEsc(fmt(fechaReg(m))),
+            chip('Sin elegir', 'rgba(247,148,29,.18)', '#b45309') + chipPago(m),
+            fmt(fechaReg(m)))).join('')
+            + (sinElegir.length > pendientes.length ? '<p style="margin:10px 0 0;font-size:11.5px;color:var(--text-3);">Mostrando las ' + pendientes.length + ' más recientes de ' + sinElegir.length + '.</p>' : '');
+          return;
+        }
+        if (titulo) titulo.textContent = 'Últimas pruebas elegidas';
+        if (!recientes.length) { lista.textContent = 'Todavía nadie ha elegido su prueba gratuita.'; return; }
+        lista.innerHTML = recientes.map(m => {
+          const curso = cursosPorId[m.cursoPruebaElegido] || m.cursoPruebaElegido;
+          return fila(m, AdminEsc(curso), chipPago(m), fmt(Pages._mbToDate(m.pruebaElegidaEn)));
+        }).join('');
+      };
+      set('pg-tab-elegidas', '(' + elegidas.length + ')');
+      set('pg-tab-sin', '(' + sinElegir.length + ')');
+      document.querySelectorAll('[data-pg-modo]').forEach(b => { b.onclick = () => pintar(b.dataset.pgModo); });
+      pintar('elegidas');
     }
   },
 
