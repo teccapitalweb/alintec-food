@@ -2494,10 +2494,55 @@ const Pages={
     const caja = document.getElementById('recordatorios-pago');
     if (!caja) return;
     const zona = 'America/Mexico_City';
+    const MAX_VUELTAS = 3;
     const cuando = ms => ms ? new Date(ms).toLocaleString('es-MX', { timeZone: zona, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }) : '—';
-    const NOMBRE_PASO = { 1: 'Hazte VIP (sin cupón)', 2: 'Cupón $50', 3: 'Cupón $100', 4: 'Cupón $50', 5: 'Cupón $100', 6: 'Cupón $50', 7: 'Cupón $100' };
+    const hora = ms => new Date(ms).toLocaleTimeString('es-MX', { timeZone: zona, hour: 'numeric', minute: '2-digit', hour12: true });
+    const claveDia = ms => new Date(ms).toLocaleDateString('en-CA', { timeZone: zona });
+    // "Hoy · 3:20 p. m.", "Mañana · 8:00 a. m." o "sáb 18 de oct · 8:00 a. m."
+    const diaHora = (ms, ahoraMs) => {
+      const dif = Math.round((Date.parse(claveDia(ms)) - Date.parse(claveDia(ahoraMs))) / 86400000);
+      const dia = dif === 0 ? 'Hoy' : dif === 1 ? 'Mañana' : new Date(ms).toLocaleDateString('es-MX', { timeZone: zona, weekday: 'short', day: 'numeric', month: 'short' });
+      return dia + ' · ' + hora(ms);
+    };
+    const hace = (ms, ahoraMs) => {
+      const m = Math.max(0, Math.round((ahoraMs - ms) / 60000));
+      return m < 1 ? 'hace un momento' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + ' d';
+    };
+    // Cada correo: color y nombre claros (1 = sin cupón, $50 = verde, $100 = naranja)
+    const CORREO = {
+      1: { n: 'Hazte VIP', sub: 'Sin cupón', c: '#64748B' },
+      2: { n: 'Cupón $50', sub: 'Primer mes $149', c: '#16A34A' }, 3: { n: 'Cupón $100', sub: 'Primer mes $99', c: '#EA580C' },
+      4: { n: 'Cupón $50', sub: 'Primer mes $149', c: '#16A34A' }, 5: { n: 'Cupón $100', sub: 'Primer mes $99', c: '#EA580C' },
+      6: { n: 'Cupón $50', sub: 'Primer mes $149', c: '#16A34A' }, 7: { n: 'Cupón $100', sub: 'Primer mes $99', c: '#EA580C' }
+    };
+    const NOMBRE_PASO = Object.fromEntries(Object.entries(CORREO).map(([k, v]) => [k, v.n]));
     let datos = null;
     let verTodas = false;
+    let filtro = 'todas';
+    if (!document.getElementById('rp-css')) {
+      const st = document.createElement('style');
+      st.id = 'rp-css';
+      st.textContent = '.rp-tabla{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)}'
+        + '.rp-th,.rp-tr{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,1.3fr);gap:14px;align-items:center;padding:11px 14px}'
+        + '.rp-th{background:var(--surface-2);font:700 10.5px "JetBrains Mono",monospace;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3)}'
+        + '.rp-tr{border-top:1px solid var(--border)}.rp-tr:hover{background:color-mix(in srgb,var(--primary) 4%,transparent)}'
+        + '.rp-3 .rp-th,.rp-3 .rp-tr{grid-template-columns:minmax(0,1.6fr) minmax(0,1.2fr) minmax(0,1.2fr)}'
+        + '.rp-persona{display:flex;align-items:center;gap:10px;min-width:0}'
+        + '.rp-av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:800 13px Inter,sans-serif;color:#fff}'
+        + '.rp-nombre{font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+        + '.rp-sub{font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+        + '.rp-puntos{display:flex;gap:5px;margin-bottom:5px}.rp-pt{width:12px;height:12px;border-radius:50%;background:var(--surface-3);border:1.5px solid var(--border-2)}'
+        + '.rp-pt.hecho{background:#22C55E;border-color:#22C55E}.rp-pt.sig{background:var(--surface);border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}'
+        + '.rp-pill{display:inline-block;padding:3px 10px;border-radius:999px;font:700 11.5px Inter,sans-serif;color:#fff}'
+        + '.rp-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif}'
+        + '.rp-listo{background:#22C55E22;color:#16A34A}.rp-prog{background:#3B82F622;color:#2563EB}.rp-hecho{background:var(--surface-3);color:var(--text-2)}'
+        + '.rp-lbl{display:none;font:700 10px "JetBrains Mono",monospace;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);margin-bottom:3px}'
+        + '.rp-tabs{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--border);border-radius:999px;margin:0 0 10px}'
+        + '.rp-tabs button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer}.rp-tabs button.on{background:var(--primary);color:#fff}'
+        + '.rp-estado{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;margin:0 0 12px;font-size:13px;line-height:1.45}'
+        + '@media(max-width:760px){.rp-th{display:none}.rp-tr,.rp-3 .rp-tr{grid-template-columns:1fr;gap:9px}.rp-lbl{display:block}}';
+      document.head.appendChild(st);
+    }
     const llamar = async (ruta, cuerpo) => {
       for (let i = 0; i < 60 && !(window._fb && window._fb.auth && window._fb.auth.currentUser); i++) await new Promise(r => setTimeout(r, 250));
       const token = await Pages._getAuthToken();
@@ -2508,9 +2553,16 @@ const Pages={
       if (!r.ok) throw new Error(j.error || 'No se pudo completar');
       return j;
     };
-    const fila = (p, centro, derecha) => '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">'
-      + '<span style="min-width:0;flex:1 1 200px;"><strong style="color:var(--text);">' + AdminEsc(p.nombre || p.correo.split('@')[0] || 'Miembro') + '</strong><br><span style="font-size:11.5px;color:var(--text-3);">' + AdminEsc(p.correo) + '</span></span>'
-      + '<span style="flex:1 1 190px;color:var(--text);font-size:12.5px;">' + centro + '</span><span style="color:var(--text-3);font-size:12px;">' + derecha + '</span></div>';
+    const COLORES_AV = ['#2E7D32', '#1565C0', '#6A1B9A', '#C2410C', '#00838F', '#AD1457', '#4E342E', '#455A64'];
+    const persona = p => {
+      const nombre = p.nombre || p.correo.split('@')[0] || 'Miembro';
+      const ini = (nombre.trim().split(/\s+/).slice(0, 2).map(s => s[0] || '').join('') || '?').toUpperCase();
+      const color = COLORES_AV[(p.correo.length + (p.correo.charCodeAt(0) || 0)) % COLORES_AV.length];
+      return '<div class="rp-persona"><span class="rp-av" style="background:' + color + '">' + AdminEsc(ini) + '</span><div style="min-width:0"><div class="rp-nombre">' + AdminEsc(nombre) + '</div>'
+        + '<div class="rp-sub">' + AdminEsc(p.correo) + '</div>' + (p.registroMs ? '<div class="rp-sub">Se registró ' + AdminEsc(cuando(p.registroMs)) + '</div>' : '') + '</div></div>';
+    };
+    const pildora = paso => '<span class="rp-pill" style="background:' + CORREO[paso].c + '">Correo ' + paso + ' · ' + CORREO[paso].n + '</span>';
+    const puntos = paso => '<div class="rp-puntos" aria-hidden="true">' + [1, 2, 3, 4, 5, 6, 7].map(n => '<span class="rp-pt ' + (n < paso ? 'hecho' : n === paso ? 'sig' : '') + '" title="Correo ' + n + ' · ' + CORREO[n].n + '"></span>').join('') + '</div>';
     const pintar = () => {
       const d = datos;
       const activo = d.modo === 'activo';
@@ -2518,6 +2570,12 @@ const Pages={
         ? '<span style="margin-left:8px;padding:3px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif;background:#22C55E22;color:#16A34A">ACTIVO</span>'
         : '<span style="margin-left:8px;padding:3px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif;background:var(--surface-3);color:var(--text-2)">APAGADO</span>';
       const dato = (n, t) => '<div style="padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--surface);"><b style="display:block;font:800 20px \'Plus Jakarta Sans\',Inter,sans-serif;">' + n + '</b><span style="display:block;margin-top:3px;font-size:11.5px;color:var(--text-3);">' + t + '</span></div>';
+      // Mensaje claro de qué está pasando ahora mismo
+      const estado = !activo
+        ? '<div class="rp-estado" style="background:var(--surface-3);color:var(--text-2);">⏸ <span><b>Apagado.</b> No se está enviando ningún correo. Pulsa «Activar» cuando quieras empezar.</span></div>'
+        : d.dentroDeHorario
+          ? '<div class="rp-estado" style="background:#22C55E1A;color:#166534;">🟢 <span><b>Activo y enviando.</b> Estamos dentro del horario permitido (8:00 a. m. a 10:00 p. m.). Cada 20 minutos se revisa a quién le toca.</span></div>'
+          : '<div class="rp-estado" style="background:#F59E0B1F;color:#92400E;">🌙 <span><b>Activo, en pausa por el horario.</b> No se envía entre 10:00 p. m. y 8:00 a. m.; se reanuda solo a las 8:00 a. m.</span></div>';
       // Cuántos cupones se enviaron y cuántas personas pagaron con cada uno (el uso lo cuenta Stripe)
       const est = d.estadisticas || { enviadosPorPaso: [], cuponesEnviados: {}, cuponesUsados: {} };
       const env50 = est.cuponesEnviados[50] || 0, env100 = est.cuponesEnviados[100] || 0;
@@ -2530,26 +2588,54 @@ const Pages={
         + dato(est.enviadosPorPaso.reduce((a, b) => a + b, 0), 'Correos enviados en total') + '</div>'
         + '<div style="position:relative;height:210px;margin-bottom:6px;"><canvas id="rp-grafica" aria-label="Cupones enviados y cupones usados al pagar"></canvas></div>'
         + '<p style="margin:0;font-size:11.5px;color:var(--text-3);line-height:1.5;">"Pagaron" cuenta las veces que Stripe registró el cupón al crearse la suscripción (no incluye tus pruebas si no completaste el pago). ' + (est.desdeMs ? 'Datos desde el ' + AdminEsc(cuando(est.desdeMs)) + '.' : 'Aún no se ha enviado ningún recordatorio real.') + '</p>';
-      const visibles = verTodas ? d.proximos : d.proximos.slice(0, 10);
-      const proximos = d.proximos.length
-        ? visibles.map(p => fila(p, 'Correo ' + p.paso + ' · ' + NOMBRE_PASO[p.paso] + ' (vuelta ' + p.ciclo + ')' + (p.registroMs ? '<br><span style="font-size:11.5px;color:var(--text-3);">Se registró ' + AdminEsc(cuando(p.registroMs)) + '</span>' : ''), p.debeSalirMs <= d.ahoraMs ? (d.dentroDeHorario ? 'toca ahora' : 'sale a las 8 a. m.') : AdminEsc(cuando(p.debeSalirMs)))).join('')
-          + (d.proximos.length > 10 ? '<div style="text-align:center;margin-top:10px;"><button class="btn btn--ghost" id="rp-ver-todas" type="button">' + (verTodas ? 'Ver menos' : 'Ver las ' + d.proximos.length + ' cuentas') + '</button></div>' : '')
+      // Seguimiento de cuentas: quién va en qué correo y cuándo sale el siguiente
+      const listo = p => p.debeSalirMs <= d.ahoraMs && d.dentroDeHorario;
+      const cuenta = { todas: d.proximos.length, listas: d.proximos.filter(listo).length };
+      cuenta.prog = cuenta.todas - cuenta.listas;
+      const filtradas = d.proximos.filter(p => filtro === 'todas' || (filtro === 'listas' ? listo(p) : !listo(p)));
+      const visibles = verTodas ? filtradas : filtradas.slice(0, 10);
+      const fila = p => {
+        const sale = p.saleMs || p.debeSalirMs;
+        const porHorario = !listo(p) && p.debeSalirMs < sale - 60000;
+        const estadoCelda = listo(p)
+          ? '<span class="rp-chip rp-listo">✅ Listo para enviar</span><div class="rp-sub" style="margin-top:4px;">Sale en la próxima revisión (cada 20 min)</div>'
+          : '<span class="rp-chip rp-prog">🕒 ' + AdminEsc(diaHora(sale, d.ahoraMs)) + '</span>'
+            + '<div class="rp-sub" style="margin-top:4px;white-space:normal;">' + (porHorario ? 'Le tocaba a las ' + AdminEsc(hora(p.debeSalirMs)) + ' (fuera de horario)' : 'Faltan ' + (sale - d.ahoraMs >= 3600000 ? Math.round((sale - d.ahoraMs) / 3600000) + ' h' : Math.max(1, Math.round((sale - d.ahoraMs) / 60000)) + ' min')) + '</div>';
+        return '<div class="rp-tr"><div>' + persona(p) + '</div>'
+          + '<div><div class="rp-lbl">Progreso</div>' + puntos(p.paso) + '<div class="rp-sub">Vuelta ' + p.ciclo + ' de ' + MAX_VUELTAS + ' · ' + (p.paso === 1 ? (p.ciclo === 1 ? 'todavía sin correos' : 'empieza otra vuelta') : (p.paso - 1) + ' de 7 enviados') + '</div></div>'
+          + '<div><div class="rp-lbl">Siguiente correo</div>' + pildora(p.paso) + '<div class="rp-sub" style="margin-top:4px;">' + CORREO[p.paso].sub + '</div></div>'
+          + '<div><div class="rp-lbl">Cuándo sale</div>' + estadoCelda + '</div></div>';
+      };
+      const tabla = d.proximos.length
+        ? '<div class="rp-tabs" role="tablist">'
+          + [['todas', 'Todas'], ['listas', 'Listas ahora'], ['prog', 'Programadas']].map(([k, t]) => '<button type="button" role="tab" data-rp-filtro="' + k + '" class="' + (filtro === k ? 'on' : '') + '">' + t + ' (' + cuenta[k] + ')</button>').join('') + '</div>'
+          + '<div class="rp-tabla"><div class="rp-th"><span>Persona</span><span>Progreso</span><span>Siguiente correo</span><span>Cuándo sale</span></div>'
+          + (visibles.length ? visibles.map(fila).join('') : '<div class="rp-tr" style="grid-template-columns:1fr;color:var(--text-3);font-size:13px;">No hay cuentas en esta lista.</div>') + '</div>'
+          + (filtradas.length > 10 ? '<div style="text-align:center;margin-top:10px;"><button class="btn btn--ghost" id="rp-ver-todas" type="button">' + (verTodas ? 'Ver menos' : 'Ver las ' + filtradas.length + ' cuentas') + '</button></div>' : '')
+          + '<p style="margin:8px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.5;">Los puntos son los 7 correos de cada vuelta: <span style="color:#16A34A;font-weight:700;">verde = ya enviado</span>, con aro = el siguiente, gris = pendiente.</p>'
         : '<div style="padding:12px 0;font-size:13px;color:var(--text-3);">No hay envíos pendientes.</div>';
       const ultimos = d.ultimos.length
-        ? d.ultimos.map(p => fila(p, 'Correo ' + p.paso + ' · ' + NOMBRE_PASO[p.paso] + ' (vuelta ' + p.ciclo + ')', AdminEsc(cuando(p.enviadoMs)))).join('')
+        ? '<div class="rp-tabla rp-3"><div class="rp-th"><span>Persona</span><span>Correo enviado</span><span>Cuándo</span></div>'
+          + d.ultimos.map(p => '<div class="rp-tr"><div>' + persona(p) + '</div><div><div class="rp-lbl">Correo enviado</div>' + pildora(p.paso) + '<div class="rp-sub" style="margin-top:4px;">Vuelta ' + p.ciclo + ' de ' + MAX_VUELTAS + '</div></div>'
+            + '<div><div class="rp-lbl">Cuándo</div><span class="rp-chip rp-hecho">✉️ ' + AdminEsc(hace(p.enviadoMs, d.ahoraMs)) + '</span><div class="rp-sub" style="margin-top:4px;">' + AdminEsc(cuando(p.enviadoMs)) + '</div></div></div>').join('') + '</div>'
         : '<div style="padding:12px 0;font-size:13px;color:var(--text-3);">Todavía no se ha enviado ningún recordatorio.</div>';
-      caja.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;">'
+      const camino = '<details style="margin:0 0 14px;"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:var(--primary);">¿Cómo funciona cada vuelta?</summary>'
+        + '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">' + [1, 2, 3, 4, 5, 6, 7].map(n => pildora(n)).join('<span style="color:var(--text-3);">›</span>') + '</div>'
+        + '<p style="margin:10px 0 0;font-size:12px;color:var(--text-3);line-height:1.6;">• El <b>Correo 1</b> sale 12 horas después de registrarse (sin cupón).<br>• El <b>Correo 2</b> sale 12 horas después del 1.<br>• Cada cupón vale <b>24 horas</b>. El siguiente correo sale <b>12 horas después de que vence</b> el anterior.<br>• Al terminar los 7 correos hay <b>4 días de descanso</b> y empieza otra vuelta (máximo 3 vueltas).<br>• Solo se envía de <b>8:00 a. m. a 10:00 p. m.</b> (hora de México). Quien paga o pide la baja deja de recibirlos.</p></details>';
+      caja.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'
         + '<h3 style="margin:0;font-size:14px;color:var(--text);">Recordatorios de pago' + chip + '</h3>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn--ghost" id="rp-actualizar" type="button">Actualizar</button>'
         + '<button class="btn ' + (activo ? 'btn--ghost' : 'btn--accent') + '" id="rp-modo" type="button">' + (activo ? 'Apagar' : 'Activar') + '</button></div></div>'
-        + '<p style="margin:0 0 12px;font-size:12.5px;color:var(--text-3);line-height:1.55;">Correos con cupón de descuento para quienes se registraron y <b>nunca han pagado</b>. Cada persona recibe hasta 7 correos por vuelta (3 vueltas, con 4 días de descanso entre ellas), solo de 8:00 a. m. a 10:00 p. m. hora de México. Quien paga o pide la baja deja de recibirlos. Los cupones valen 24 horas, son de un solo uso y solo para el plan mensual.</p>'
+        + estado
+        + '<p style="margin:0 0 12px;font-size:12.5px;color:var(--text-3);line-height:1.55;">Correos con cupón de descuento para quienes se registraron y <b>nunca han pagado</b>. Los cupones valen 24 horas, son de un solo uso y solo para el plan mensual.</p>'
+        + camino
         + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;">'
-        + dato(d.conteo.recibiendo, 'Cuentas en seguimiento') + dato(d.enviadosHoy + ' / ' + d.topeDiario, 'Enviados hoy / tope') + dato(d.conteo.yaPagaron, 'Ya pagaron (no reciben)') + dato(d.conteo.bajas, 'Pidieron la baja') + dato(d.conteo.terminados, 'Terminaron sus 3 vueltas') + '</div>'
+        + dato(d.conteo.recibiendo, 'Cuentas en seguimiento') + dato(d.enviadosHoy + ' / ' + d.topeDiario, 'Correos enviados hoy / tope') + dato(d.conteo.yaPagaron, 'Ya pagaron (no reciben)') + dato(d.conteo.bajas, 'Pidieron la baja') + dato(d.conteo.terminados, 'Terminaron sus 3 vueltas') + '</div>'
         + '<h4 style="margin:6px 0 8px;font-size:13px;color:var(--text);">Resultados de los cupones</h4>' + resultados
-        + '<h4 style="margin:16px 0 4px;font-size:13px;color:var(--text);">Próximos envíos</h4>' + proximos
-        + '<h4 style="margin:16px 0 4px;font-size:13px;color:var(--text);">Últimos enviados</h4>' + ultimos
-        + '<h4 style="margin:16px 0 6px;font-size:13px;color:var(--text);">Probar los correos</h4>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="rp-paso" class="input" style="max-width:260px;">' + [1, 2, 3, 4, 5, 6, 7].map(n => '<option value="' + n + '">Correo ' + n + ' · ' + NOMBRE_PASO[n] + '</option>').join('') + '</select>'
+        + '<h4 style="margin:18px 0 8px;font-size:13px;color:var(--text);">Seguimiento de cuentas</h4>' + tabla
+        + '<h4 style="margin:18px 0 8px;font-size:13px;color:var(--text);">Últimos correos enviados</h4>' + ultimos
+        + '<h4 style="margin:18px 0 6px;font-size:13px;color:var(--text);">Probar los correos</h4>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="rp-paso" class="input" style="max-width:280px;">' + [1, 2, 3, 4, 5, 6, 7].map(n => '<option value="' + n + '">Correo ' + n + ' · ' + NOMBRE_PASO[n] + '</option>').join('') + '</select>'
         + '<button class="btn btn--ghost" id="rp-probar" type="button">Enviarme una prueba</button></div>'
         + '<p style="margin:8px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.5;">La prueba llega solo a tu correo de administrador, con un cupón real (24 horas) para que puedas comprobar el descuento al pagar. No cambia nada de ninguna cuenta.</p>';
       // Gráfica: cupones enviados contra cupones usados, para cada descuento
@@ -2567,6 +2653,7 @@ const Pages={
         lienzo.insertAdjacentHTML('afterend', '<p style="margin:12px 0;text-align:center;font-size:13px;color:var(--text-3);">No se pudo cargar la librería de gráficas. Recarga la página.</p>');
         lienzo.style.display = 'none';
       }
+      caja.querySelectorAll('[data-rp-filtro]').forEach(b => b.addEventListener('click', () => { filtro = b.dataset.rpFiltro; verTodas = false; pintar(); }));
       const verMas = caja.querySelector('#rp-ver-todas');
       if (verMas) verMas.addEventListener('click', () => { verTodas = !verTodas; pintar(); });
       caja.querySelector('#rp-actualizar').addEventListener('click', cargar);
