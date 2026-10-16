@@ -7169,6 +7169,7 @@ const Pages={
             </div>
           </div>
           <p style="margin:0;font-size:12.5px;color:var(--text-3);line-height:1.5">El servidor anota solo cada caída, reinicio o error inesperado, con su hora (hora de México) y cuánto duró. Así, si algo falla de madrugada, aquí queda la causa aunque nadie estuviera mirando.</p>
+          ${r.reinicios ? '<div style="margin:12px 0 0;padding:11px 14px;border-radius:12px;background:var(--surface-2,rgba(0,0,0,.04));font-size:12.5px;line-height:1.55;color:var(--text-2)">¿Los reinicios de abajo fueron por <b>publicaciones</b> que hiciste tú? Desde ahora las publicaciones se anotan solas como normales. Para limpiar los anteriores: <button class="btn btn--ghost btn--sm" id="bi-reconocer" type="button" style="margin-left:6px">Marcarlos como publicaciones normales</button></div>' : ''}
           <div class="bi-resumen">
             <div class="bi-dato"><b>${escB(activoDesde(d.servidor.segundosActivo))}</b><span>Encendido sin interrupciones</span></div>
             <div class="bi-dato"><b style="color:${r.caidas ? COLOR.error : 'inherit'}">${r.caidas}</b><span>Caídas en ${r.dias} días</span></div>
@@ -7180,6 +7181,19 @@ const Pages={
             : '<div style="padding:20px 0 6px;text-align:center;font-size:13px;color:var(--text-3)">' + (filtro === 'problemas' ? 'Sin caídas ni errores registrados. ✅' : 'Todavía no hay registros.') + '</div>'}
           ${lista.length > 8 ? '<div style="text-align:center;margin-top:10px"><button class="btn btn--ghost" id="bi-mas" type="button">' + (todos ? 'Ver menos' : 'Ver los ' + lista.length + ' registros') + '</button></div>' : ''}
           <div class="bi-vigilante"><b style="color:var(--text)">Para que te avise al momento:</b> agrega esta dirección en un vigilante gratuito (por ejemplo UptimeRobot) para que la revise cada 5 minutos y te escriba si deja de responder.<br><code>${escB(url)}</code> <button class="btn btn--ghost btn--sm" id="bi-url" type="button" style="margin-left:6px">Copiar</button></div>`;
+        const rec = caja.querySelector('#bi-reconocer');
+        if (rec) rec.addEventListener('click', async () => {
+          if (!window.confirm('¿Marcar los ' + r.reinicios + ' reinicios anteriores como publicaciones normales?\n\nUsa esto solo si sabes que fueron por publicaciones tuyas. Las caídas y los errores no se tocan.')) return;
+          rec.disabled = true; rec.textContent = 'Marcando…';
+          try {
+            const token = await Pages._getAuthToken();
+            const resp = await fetch(Pages._webhookUrl + '/api/admin/incidentes/reconocer-reinicios', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+            const j = await resp.json().catch(() => ({}));
+            if (!resp.ok) throw new Error(j.error || 'No se pudo marcar');
+            Toast.success('Marcados ' + j.marcados + ' reinicios como publicaciones normales');
+            await cargar();
+          } catch (err) { Toast.error('No se pudo marcar: ' + err.message); rec.disabled = false; rec.textContent = 'Marcarlos como publicaciones normales'; }
+        });
         caja.querySelector('#bi-actualizar').addEventListener('click', cargar);
         caja.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { filtro = b.dataset.f; todos = false; pintar(); }));
         const mas = caja.querySelector('#bi-mas');
