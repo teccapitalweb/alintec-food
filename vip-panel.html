@@ -16732,6 +16732,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         }
       };
     }
+    // Cupón de recordatorio vigente (el mismo código que llegó por correo): cambia el texto y el botón de la barra
+    if (typeof window.__bannerCupon === 'function') window.__bannerCupon();
 
     // 5. Sidebar · ocultar "Cerrar sesión" si invitado, agregar "Salir del demo"
     const navLogoutLinks = document.querySelectorAll('[data-action="logout"], .nav-item--logout');
@@ -19164,6 +19166,13 @@ html,body{overscroll-behavior-y:none}
   body:not([data-seccion]) .aside,body[data-seccion="inicio"] .aside{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
   :root:not([data-mode="vip"]) .main{padding-bottom:var(--panel-mobile-clearance,calc(84px + env(safe-area-inset-bottom)))!important}
 }
+/* Cupón dentro de la barra de suscripción (el mismo código del correo) */
+.cupon-texto{display:flex;flex-direction:column;gap:1px;text-align:left}
+.cupon-texto small{font-size:11.5px;font-weight:500;opacity:.92}
+.cupon-caja{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.16);border:1.5px dashed rgba(255,255,255,.75);border-radius:10px;padding:4px 5px 4px 12px;font:800 14px 'JetBrains Mono',Consolas,monospace;letter-spacing:1px;color:#fff}
+.cupon-caja button{border:0;background:#fff;color:#1B5E20;border-radius:7px;padding:5px 10px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.cupon-reloj{font:700 12.5px 'JetBrains Mono',Consolas,monospace;background:rgba(0,0,0,.22);padding:4px 10px;border-radius:999px;color:#fff;white-space:nowrap}
+@media(max-width:880px){.cupon-texto{align-items:center;text-align:center}}
 /* Barra "Activar suscripción": fija arriba siempre. Antes se iba al bajar y, al subir, volvía a pasar por encima del logo.
    El contenido, el menú lateral y el encabezado empiezan debajo de ella (--fomo-h = su altura, 0 si no se muestra). */
 .fomo-banner{position:fixed;top:0;left:0;right:0;z-index:300}
@@ -20264,5 +20273,87 @@ window.AlintecOnboarding = new window.MembershipTour({
 });
 </script>
 <script src="assets/js/visitas.js?v=20261007-2" data-pagina="panel" defer></script>
+<script>
+/* Cupón de recordatorio dentro de la barra de suscripción. Pide al servidor el cupón vigente de la persona (el MISMO código
+   del correo), lo muestra con su cuenta regresiva y lo copia al usar el botón. Falla en silencio: sin cupón o con error,
+   la barra queda como siempre. */
+(function(){
+  var cupon = null, reloj = null, original = null;
+  function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  function fmt(seg){ var h = Math.floor(seg / 3600), m = Math.floor(seg % 3600 / 60), x = seg % 60; return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); }
+  function limpiar(){
+    clearInterval(reloj); reloj = null;
+    ['fomo-cupon-caja', 'fomo-cupon-reloj'].forEach(function(id){ var e = document.getElementById(id); if (e) e.remove(); });
+    if (original) {
+      var ic = document.querySelector('#fomo-banner .fomo-banner__icon'); if (ic) ic.innerHTML = original.icono;
+      var cta = document.getElementById('fomo-banner-cta'); if (cta) cta.innerHTML = original.cta;
+      original = null;
+    }
+  }
+  window.__bannerCupon = function(){
+    var S = window.UserState || {};
+    var banner = document.getElementById('fomo-banner');
+    if (!banner || S.modo !== 'sin-membresia' || !cupon || cupon.venceMs <= Date.now()) { limpiar(); return; }
+    var texto = document.getElementById('fomo-banner-text');
+    var cta = document.getElementById('fomo-banner-cta');
+    var ic = banner.querySelector('.fomo-banner__icon');
+    if (!texto || !cta) return;
+    if (!original) original = { icono: ic ? ic.innerHTML : '', cta: cta.innerHTML };
+    if (ic) ic.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>';
+    texto.classList.add('cupon-texto');
+    texto.innerHTML = '<strong>Tienes un cupón de $' + esc(cupon.monto) + ' para tu primer mes</strong><small>Pagas solo $' + esc(cupon.precioFinal) + ' en el plan mensual</small>';
+    ['fomo-cupon-caja', 'fomo-cupon-reloj'].forEach(function(id){ var e = document.getElementById(id); if (e) e.remove(); });
+    var caja = document.createElement('span'); caja.id = 'fomo-cupon-caja'; caja.className = 'cupon-caja';
+    caja.innerHTML = '<span>' + esc(cupon.codigo) + '</span><button type="button" id="fomo-cupon-copiar">Copiar</button>';
+    var rel = document.createElement('span'); rel.id = 'fomo-cupon-reloj'; rel.className = 'cupon-reloj';
+    banner.insertBefore(caja, cta); banner.insertBefore(rel, cta);
+    var flecha = original.cta.indexOf('<svg') >= 0 ? original.cta.slice(original.cta.indexOf('<svg')) : '';
+    cta.innerHTML = 'Usar mi cupón ' + flecha;
+    function copiar(aviso){
+      try { if (navigator.clipboard) navigator.clipboard.writeText(cupon.codigo); } catch (e) {}
+      try { if (window.Toast) Toast.success(aviso, 'Código ' + cupon.codigo); } catch (e) {}
+    }
+    document.getElementById('fomo-cupon-copiar').onclick = function(){ copiar('¡Código copiado!'); };
+    cta.onclick = function(){
+      copiar('Código copiado');
+      try { if (window.Toast) Toast.info('Elige el plan mensual', 'Pega tu código en «Agregar código promocional»'); } catch (e) {}
+      if (window.navigateToSection) window.navigateToSection('suscripcion');
+    };
+    clearInterval(reloj);
+    var tic = function(){
+      var resta = Math.floor((cupon.venceMs - Date.now()) / 1000);
+      if (resta <= 0) { cupon = null; limpiar(); if (window.__applyUserState) window.__applyUserState(); return; }
+      rel.textContent = 'Vence en ' + fmt(resta);
+    };
+    tic(); reloj = setInterval(tic, 1000);
+  };
+  function consultar(){
+    try {
+      var S = window.UserState || {};
+      if (document.visibilityState === 'hidden' || window.__isDemoMode === true || S.modo !== 'sin-membresia' || S.isAdmin) return;
+      if (!window.__currentUser || typeof window.__currentUser.getIdToken !== 'function') return;
+      window.__currentUser.getIdToken().then(function(token){
+        return fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + '/api/v2/cupon-activo', { headers: { 'Authorization': 'Bearer ' + token } });
+      }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+        if (!d || d.ok !== true) return;
+        var nuevo = d.cupon && d.cupon.codigo && d.cupon.venceMs > Date.now() ? d.cupon : null;
+        var igual = (nuevo && cupon && nuevo.codigo === cupon.codigo) || (!nuevo && !cupon);
+        cupon = nuevo;
+        if (!igual && window.__applyUserState) window.__applyUserState();
+      }).catch(function(){});
+    } catch (e) {}
+  }
+  // La primera consulta espera a que el panel sepa si la cuenta tiene membresía; luego se repite cada 5 minutos (por si llega un cupón nuevo)
+  var intentos = 0;
+  var espera = setInterval(function(){
+    intentos++;
+    var S = window.UserState || {};
+    if (S.modo === 'sin-membresia' && window.__currentUser) { clearInterval(espera); consultar(); }
+    else if (S.modo === 'vip' || S.modo === 'invitado' || intentos > 90) clearInterval(espera);
+  }, 1000);
+  setInterval(consultar, 300000);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') consultar(); });
+})();
+</script>
 </body>
 </html>
