@@ -2483,8 +2483,87 @@ const Pages={
           <div id="pg-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
         </div>
         <p style="font-size:11.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">"Cuentas nuevas" son las creadas desde el 2 de octubre de 2026 (la fecha en que arrancó esta función). "Pagó" significa que la cuenta tiene o tuvo una membresía.</p>
+        <div id="recordatorios-pago" style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:20px;"><div style="padding:18px;text-align:center;color:var(--text-3);font-size:13px">Cargando los recordatorios de pago…</div></div>
       </div>`;
     Pages._cargarPruebas();
+    Pages._recordatoriosPago();
+  },
+
+  // ── Recordatorios de pago: correos con cupón para las cuentas que se registraron y nunca han pagado ──
+  _recordatoriosPago(){
+    const caja = document.getElementById('recordatorios-pago');
+    if (!caja) return;
+    const zona = 'America/Mexico_City';
+    const cuando = ms => ms ? new Date(ms).toLocaleString('es-MX', { timeZone: zona, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }) : '—';
+    const NOMBRE_PASO = { 1: 'Hazte VIP (sin cupón)', 2: 'Cupón $50', 3: 'Cupón $100', 4: 'Cupón $50', 5: 'Cupón $100', 6: 'Cupón $50', 7: 'Cupón $100' };
+    let datos = null;
+    const llamar = async (ruta, cuerpo) => {
+      for (let i = 0; i < 60 && !(window._fb && window._fb.auth && window._fb.auth.currentUser); i++) await new Promise(r => setTimeout(r, 250));
+      const token = await Pages._getAuthToken();
+      const r = await fetch(Pages._webhookUrl + ruta, cuerpo === undefined
+        ? { headers: { 'Authorization': 'Bearer ' + token } }
+        : { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'No se pudo completar');
+      return j;
+    };
+    const fila = (p, centro, derecha) => '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">'
+      + '<span style="min-width:0;flex:1 1 200px;"><strong style="color:var(--text);">' + AdminEsc(p.nombre || p.correo.split('@')[0] || 'Miembro') + '</strong><br><span style="font-size:11.5px;color:var(--text-3);">' + AdminEsc(p.correo) + '</span></span>'
+      + '<span style="flex:1 1 190px;color:var(--text);font-size:12.5px;">' + centro + '</span><span style="color:var(--text-3);font-size:12px;">' + derecha + '</span></div>';
+    const pintar = () => {
+      const d = datos;
+      const activo = d.modo === 'activo';
+      const chip = activo
+        ? '<span style="margin-left:8px;padding:3px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif;background:#22C55E22;color:#16A34A">ACTIVO</span>'
+        : '<span style="margin-left:8px;padding:3px 11px;border-radius:999px;font:700 11.5px Inter,sans-serif;background:var(--surface-3);color:var(--text-2)">APAGADO</span>';
+      const dato = (n, t) => '<div style="padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--surface);"><b style="display:block;font:800 20px \'Plus Jakarta Sans\',Inter,sans-serif;">' + n + '</b><span style="display:block;margin-top:3px;font-size:11.5px;color:var(--text-3);">' + t + '</span></div>';
+      const proximos = d.proximos.length
+        ? d.proximos.map(p => fila(p, 'Correo ' + p.paso + ' · ' + NOMBRE_PASO[p.paso] + ' (vuelta ' + p.ciclo + ')', p.debeSalirMs <= d.ahoraMs ? (d.dentroDeHorario ? 'toca ahora' : 'sale a las 8 a. m.') : AdminEsc(cuando(p.debeSalirMs)))).join('')
+        : '<div style="padding:12px 0;font-size:13px;color:var(--text-3);">No hay envíos pendientes.</div>';
+      const ultimos = d.ultimos.length
+        ? d.ultimos.map(p => fila(p, 'Correo ' + p.paso + ' · ' + NOMBRE_PASO[p.paso] + ' (vuelta ' + p.ciclo + ')', AdminEsc(cuando(p.enviadoMs)))).join('')
+        : '<div style="padding:12px 0;font-size:13px;color:var(--text-3);">Todavía no se ha enviado ningún recordatorio.</div>';
+      caja.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;">'
+        + '<h3 style="margin:0;font-size:14px;color:var(--text);">Recordatorios de pago' + chip + '</h3>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn--ghost" id="rp-actualizar" type="button">Actualizar</button>'
+        + '<button class="btn ' + (activo ? 'btn--ghost' : 'btn--accent') + '" id="rp-modo" type="button">' + (activo ? 'Apagar' : 'Activar') + '</button></div></div>'
+        + '<p style="margin:0 0 12px;font-size:12.5px;color:var(--text-3);line-height:1.55;">Correos con cupón de descuento para quienes se registraron y <b>nunca han pagado</b>. Cada persona recibe hasta 7 correos por vuelta (3 vueltas, con 4 días de descanso entre ellas), solo de 8:00 a. m. a 10:00 p. m. hora de México. Quien paga o pide la baja deja de recibirlos. Los cupones valen 24 horas, son de un solo uso y solo para el plan mensual.</p>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;">'
+        + dato(d.conteo.recibiendo, 'Cuentas en seguimiento') + dato(d.enviadosHoy + ' / ' + d.topeDiario, 'Enviados hoy / tope') + dato(d.conteo.yaPagaron, 'Ya pagaron (no reciben)') + dato(d.conteo.bajas, 'Pidieron la baja') + dato(d.conteo.terminados, 'Terminaron sus 3 vueltas') + '</div>'
+        + '<h4 style="margin:6px 0 4px;font-size:13px;color:var(--text);">Próximos envíos</h4>' + proximos
+        + '<h4 style="margin:16px 0 4px;font-size:13px;color:var(--text);">Últimos enviados</h4>' + ultimos
+        + '<h4 style="margin:16px 0 6px;font-size:13px;color:var(--text);">Probar los correos</h4>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="rp-paso" class="input" style="max-width:260px;">' + [1, 2, 3, 4, 5, 6, 7].map(n => '<option value="' + n + '">Correo ' + n + ' · ' + NOMBRE_PASO[n] + '</option>').join('') + '</select>'
+        + '<button class="btn btn--ghost" id="rp-probar" type="button">Enviarme una prueba</button></div>'
+        + '<p style="margin:8px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.5;">La prueba llega solo a tu correo de administrador, con un cupón real (24 horas) para que puedas comprobar el descuento al pagar. No cambia nada de ninguna cuenta.</p>';
+      caja.querySelector('#rp-actualizar').addEventListener('click', cargar);
+      caja.querySelector('#rp-modo').addEventListener('click', async () => {
+        const nuevo = activo ? 'apagado' : 'activo';
+        if (nuevo === 'activo' && !window.confirm('¿Activar los recordatorios de pago?\n\nSe empezarán a enviar correos REALES a las ' + d.conteo.recibiendo + ' cuentas en seguimiento (dentro del horario de 8 a. m. a 10 p. m.).')) return;
+        try { await llamar('/api/admin/recordatorios/modo', { modo: nuevo }); Toast.success(nuevo === 'activo' ? 'Recordatorios activados' : 'Recordatorios apagados'); await cargar(); }
+        catch (e) { Toast.error('No se pudo cambiar: ' + e.message); }
+      });
+      caja.querySelector('#rp-probar').addEventListener('click', async () => {
+        const b = caja.querySelector('#rp-probar');
+        const paso = Number(caja.querySelector('#rp-paso').value);
+        b.disabled = true; b.textContent = 'Enviando…';
+        try { const r = await llamar('/api/admin/recordatorios/prueba', { paso }); Toast.success('Prueba enviada a ' + r.enviadoA); }
+        catch (e) { Toast.error('No se pudo enviar la prueba: ' + e.message); }
+        finally { b.disabled = false; b.textContent = 'Enviarme una prueba'; }
+      });
+    };
+    const cargar = async () => {
+      try {
+        datos = await llamar('/api/admin/recordatorios');
+        if (document.body.contains(caja)) pintar();
+      } catch (err) {
+        if (!document.body.contains(caja)) return;
+        caja.innerHTML = '<div style="padding:18px;text-align:center;font-size:13px;color:var(--text-2)"><b style="display:block;margin-bottom:4px">No se pudieron leer los recordatorios de pago</b>' + AdminEsc(err.message) + '<br><button class="btn btn--ghost" id="rp-reintentar" type="button" style="margin-top:10px">Reintentar</button></div>';
+        const re = caja.querySelector('#rp-reintentar');
+        if (re) re.addEventListener('click', cargar);
+      }
+    };
+    cargar();
   },
 
   async _cargarPruebas(){
