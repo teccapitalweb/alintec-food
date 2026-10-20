@@ -14015,7 +14015,6 @@ const Sections = (function(){
             <button class="btn btn--wa" id="btn-wa-canal-open"><svg class="ic"><use href="#i-whatsapp"/></svg>Abrir grupo</button>
             <button class="btn btn--ghost" id="btn-wa-canal-share"><svg class="ic"><use href="#i-arrow-right"/></svg>Compartir invitación</button>
           </div>
-          ${toolEsVIP() ? '' : '<p style="margin:14px 0 0;font-size:12.5px;opacity:.85;">Para unirte al canal necesitas tu membresía VIP activa.</p>'}
         </section>
 
         <section class="wa-social" aria-label="Síguenos en redes sociales">
@@ -16454,8 +16453,7 @@ function initNav(){
     document.addEventListener('click', e => { if (!e.target.closest('#topbar-search')) cerrar(); });
   })();
   document.getElementById('btn-wa')?.addEventListener('click',()=>{
-    // El grupo de la comunidad es solo para miembros
-    if (window.UserState?.modo !== 'vip') { navigateToSection('canal'); return; } // la guardia lo manda a Suscripción
+    // El canal oficial de WhatsApp es libre para todos: no pide cuenta ni membresía
     window.open(AlintecFood_CONTACT.canal,'_blank');
     Toast.success('Abriendo canal Alintec Food','Comunidad oficial');
   });
@@ -16556,15 +16554,13 @@ function initNav(){
 
     // Sección Canal WhatsApp · abrir grupo
     if(t.closest('#btn-wa-canal-open')){
-      if (!comunidadRequiereVIP('unirte al canal de WhatsApp')) return;
-      window.open(AlintecFood_CONTACT.canal,'_blank');
+      window.open(AlintecFood_CONTACT.canal,'_blank'); // libre para todos
       Toast.success('Abriendo canal','Comunidad Alintec Food');
       return;
     }
     // Sección Canal WhatsApp · compartir
     if(t.closest('#btn-wa-canal-share')){
-      if (!comunidadRequiereVIP('compartir la invitación al canal')) return;
-      window.open(AlintecFood_CONTACT.shareInvitacion(),'_blank');
+      window.open(AlintecFood_CONTACT.shareInvitacion(),'_blank'); // libre para todos
       Toast.success('Compartiendo','Selecciona contactos');
       return;
     }

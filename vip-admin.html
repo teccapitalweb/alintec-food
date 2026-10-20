@@ -1848,8 +1848,8 @@ const Pages={
     const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     const NOMBRE_PAGINA = { landing: 'Página principal', acceso: 'Inicio de sesión', panel: 'Panel de miembros', demo: 'Demo gratuita' };
-    const NOMBRE_FUENTE = { directo: 'Directo', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', meta: 'Meta (Facebook o Instagram)', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
-    const COLOR_FUENTE = { directo: '#94A3B8', interno: '#CBD5E1', google: '#4285F4', bing: '#00809D', duckduckgo: '#DE5833', yahoo: '#7E1FFF', facebook: '#1877F2', instagram: '#E1306C', meta: '#6366F1', whatsapp: '#25D366', linkedin: '#0A66C2', x: '#64748B', youtube: '#FF0000', tiktok: '#14B8A6', correo: '#F59E0B', otros: '#A8A29E' };
+    const NOMBRE_FUENTE = { directo: 'Directo', interno: 'Dentro del sitio', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo', facebook: 'Facebook', instagram: 'Instagram', meta: 'Meta sin identificar', whatsapp: 'WhatsApp', linkedin: 'LinkedIn', x: 'X (Twitter)', youtube: 'YouTube', tiktok: 'TikTok', correo: 'Correo electrónico', otros: 'Otros sitios' };
+    const COLOR_FUENTE = { directo: '#94A3B8', interno: '#CBD5E1', google: '#4285F4', bing: '#00809D', duckduckgo: '#DE5833', yahoo: '#7E1FFF', facebook: '#1877F2', instagram: '#E1306C', meta: '#C4B5FD', whatsapp: '#25D366', linkedin: '#0A66C2', x: '#64748B', youtube: '#FF0000', tiktok: '#14B8A6', correo: '#F59E0B', otros: '#A8A29E' };
     const NOMBRE_DISP = { movil: 'Teléfono', tablet: 'Tableta', computadora: 'Computadora' };
     const COLOR_DISP = { movil: '#58B71B', tablet: '#F7941D', computadora: '#3B82F6' };
     const VERDE = '#58B71B', VERDE_OSC = '#2F7D32', AZUL = '#3B82F6';
@@ -2194,7 +2194,11 @@ const Pages={
         const ordenFuentes = Object.entries(fuentes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
         const totFuentes = ordenFuentes.reduce((a, [, v]) => a + v, 0);
         const REDES = ['facebook', 'instagram', 'meta', 'whatsapp', 'tiktok', 'youtube', 'linkedin', 'x'];
-        const sociales = REDES.map(k => ({ k, total: fuentes[k] || 0 })).filter(x => x.total > 0).sort((a, b) => b.total - a.total);
+        // "Meta sin identificar" = llegaron desde un enlace de Facebook o Instagram pero el navegador no dice de cuál: va al final y no cuenta como "la más fuerte"
+        const sociales = REDES.map(k => ({ k, total: fuentes[k] || 0 })).filter(x => x.total > 0)
+          .sort((a, b) => (a.k === 'meta') - (b.k === 'meta') || b.total - a.total);
+        const identificadas = sociales.filter(x => x.k !== 'meta');
+        const metaSinIdentificar = fuentes.meta || 0;
         const totSociales = sociales.reduce((a, x) => a + x.total, 0);
         const serieRedes = sociales.slice(0, 5).map(x => ({ k: x.k, datos: grupos.map(g => g.reduce((t, c) => t + (((dato(c).fuentes || {})[x.k]) || 0), 0)) }));
         const redesVacio = '<div class="mx2-empty"><b>Todavía nadie ha llegado desde una red social</b>Aquí verás cuántas personas llegan desde cada una. Comparte tus enlaces con <code>?utm_source=facebook</code> o <code>?utm_source=instagram</code> para medirlo con exactitud.<div class="mx2-leg" style="justify-content:center;margin-top:14px">' + REDES.map(k => `<span><i style="background:${COLOR_FUENTE[k]};border-radius:50%"></i>${NOMBRE_FUENTE[k]} <b>0</b></span>`).join('') + '</div></div>';
@@ -2275,8 +2279,9 @@ const Pages={
 
           <div class="mx2-grid mx2-g2">
             <div class="mx2-card"><h3>Redes sociales · ¿cuánta gente llega de cada una?</h3>
-              <p class="mx2-sub">${totSociales ? '<strong>' + num(totSociales) + '</strong> de ' + num(totFuentes) + ' personas (' + Math.round(totSociales / Math.max(1, totFuentes) * 100) + '%) llegaron desde una red social. La más fuerte: <strong>' + esc(NOMBRE_FUENTE[sociales[0].k]) + '</strong>.' : 'Personas que llegaron desde Facebook, Instagram, WhatsApp, TikTok y más.'}</p>
-              ${sociales.length ? `<div class="mx2-cv" style="height:${Math.max(170, sociales.length * 44 + 30)}px"><canvas id="mx2-redes"></canvas></div>` : redesVacio}</div>
+              <p class="mx2-sub">${totSociales ? '<strong>' + num(totSociales) + '</strong> de ' + num(totFuentes) + ' personas (' + Math.round(totSociales / Math.max(1, totFuentes) * 100) + '%) llegaron desde una red social.' + (identificadas.length ? ' La más fuerte: <strong>' + esc(NOMBRE_FUENTE[identificadas[0].k]) + '</strong>.' : '') : 'Personas que llegaron desde Facebook, Instagram, WhatsApp, TikTok y más.'}</p>
+              ${sociales.length ? `<div class="mx2-cv" style="height:${Math.max(170, sociales.length * 44 + 30)}px"><canvas id="mx2-redes"></canvas></div>` : redesVacio}
+              ${metaSinIdentificar ? '<p class="mx2-sub" style="margin-top:10px"><strong>Meta sin identificar (' + num(metaSinIdentificar) + '):</strong> llegaron desde un enlace de Facebook o de Instagram, pero el navegador no dice de cuál, así que no se pueden repartir. Para que cada una cuente por separado, agrega a tus anuncios de Meta: <code>?utm_source={{site_source_name}}</code>.</p>' : ''}</div>
             <div class="mx2-card"><h3>Redes sociales a lo largo del tiempo</h3>
               <p class="mx2-sub">Cuántas personas llegaron de cada red ${estado.rango === '365' || estado.rango === 'todo' ? 'mes a mes' : 'día a día'}.</p>
               ${sociales.length ? `<div class="mx2-cv" style="height:${Math.max(220, sociales.length * 44 + 30)}px"><canvas id="mx2-redes-tiempo"></canvas></div>` : redesVacio}</div>
