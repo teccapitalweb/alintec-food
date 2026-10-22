@@ -909,6 +909,7 @@ body::before{
 .modal__close{margin-left:auto;width:30px;height:30px;border-radius:50%;background:var(--surface-2);color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:all .15s}
 .modal__close:hover{color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .modal__close .ic{width:14px;height:14px;stroke-width:2.2}
+.modal__icon .ic{width:18px;height:18px}
 .modal__body{padding:20px 22px;overflow-y:auto;flex:1}
 .modal__footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 
@@ -1377,6 +1378,7 @@ window.__signOut = async () => {
       <div class="nav-label">Comunidad</div>
       <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros VIP<span class="nav-item__badge" id="badge-miembros" title="Miembros activos">0</span></a>
       <a class="nav-item" data-section="suscripciones"><svg class="ic"><use href="#i-credit-card"/></svg>Suscripciones</a>
+      <a class="nav-item" data-section="creditos"><svg class="ic"><use href="#i-zap"/></svg>Créditos</a>
       <a class="nav-item" data-section="noticias"><svg class="ic"><use href="#i-news"/></svg>Noticias y datos</a>
       <a class="nav-item" data-section="foro"><svg class="ic"><use href="#i-users"/></svg>Foro<span class="nav-item__badge" id="badge-foro">0</span></a>
       <a class="nav-item" data-section="directorio"><svg class="ic"><use href="#i-user"/></svg>Directorio<span class="nav-item__badge" id="badge-dir">0</span></a>
@@ -2802,6 +2804,317 @@ const Pages={
     }
   },
 
+  // ── Créditos: regalar créditos a las cuentas (se canjean por materiales descargables), historial y gráfica de canjes ──
+  creditos(p){
+    p.innerHTML = `
+      <div class="fade-up">
+        <style>
+          .cr-card{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;min-width:0}
+          .cr-card h3{margin:0;font-size:14px;color:var(--text)}
+          .cr-card .cr-sub{margin:4px 0 12px;font-size:11.5px;color:var(--text-3);line-height:1.5}
+          .cr-fila{display:grid;grid-template-columns:minmax(0,1fr) 130px 90px 140px;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px}
+          .cr-fila:last-child,.cr-hist:last-child{border-bottom:0}
+          .cr-hist{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1.35fr) 112px;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+          .cr-user strong{display:block;color:var(--text);font-weight:700;overflow-wrap:anywhere}
+          .cr-user span,.cr-dato span{display:block;font-size:11.5px;color:var(--text-3);overflow-wrap:anywhere}
+          .cr-dato strong{display:block;color:var(--text);font-weight:700}
+          .cr-chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+          .cr-saldo{text-align:right;font-weight:800;color:var(--text);font-size:14px}
+          .cr-saldo small{display:block;font-weight:500;font-size:10.5px;color:var(--text-3)}
+          .cr-accion{text-align:right}
+          .cr-tabs{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:999px;flex-wrap:wrap}
+          .cr-tabs button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer}
+          .cr-tabs button.on{background:var(--primary);color:#fff}
+          .cr-chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+          .cr-chips button{border:1px solid var(--border-2);background:var(--surface);color:var(--text);padding:7px 14px;border-radius:999px;font:700 12.5px Inter,sans-serif;cursor:pointer}
+          .cr-chips button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+          .cr-campo{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface);color:var(--text);font:500 13px Inter,sans-serif}
+          .cr-label{display:block;margin:12px 0 4px;font-size:12px;font-weight:700;color:var(--text-2)}
+          @media(max-width:760px){
+            .cr-fila{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"user accion" "plan saldo";row-gap:6px}
+            .cr-user{grid-area:user}.cr-accion{grid-area:accion}.cr-plan{grid-area:plan}.cr-saldo{grid-area:saldo}
+            .cr-hist{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"user accion" "regalo regalo" "estado estado";row-gap:8px}
+            .cr-hist .cr-user{grid-area:user}.cr-hist .cr-accion{grid-area:accion}.cr-hist .cr-regalo{grid-area:regalo}.cr-hist .cr-estado{grid-area:estado}
+          }
+        </style>
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Comunidad</span>
+          <h1 class="sec-hero__title">Créditos</h1>
+          <p class="sec-hero__sub">Regala créditos a las cuentas nuevas. Cada 100 créditos se canjean por un material descargable (plantillas, listas de verificación, presentaciones) desde la Biblioteca. Aquí ves a quién se los regalaste y qué canjearon.</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
+            <div class="kpi-card__label">Cuentas</div>
+            <div class="kpi-card__value" id="cr-kpi-cuentas">—</div>
+            <div class="kpi-card__sub">Registradas en la plataforma</div>
+          </div>
+          <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
+            <div class="kpi-card__label">Recibieron créditos</div>
+            <div class="kpi-card__value" id="cr-kpi-recibieron">—</div>
+            <div class="kpi-card__sub" id="cr-kpi-recibieron-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
+            <div class="kpi-card__label">Ya canjearon</div>
+            <div class="kpi-card__value" id="cr-kpi-canjearon">—</div>
+            <div class="kpi-card__sub" id="cr-kpi-canjearon-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#A855F7;--c2:#C084FC;">
+            <div class="kpi-card__label">Sin canjear</div>
+            <div class="kpi-card__value" id="cr-kpi-sin">—</div>
+            <div class="kpi-card__sub" id="cr-kpi-sin-sub">—</div>
+          </div>
+        </div>
+        <div class="cr-card" style="margin-top:20px;">
+          <h3>¿Qué materiales canjean más?</h3>
+          <p class="cr-sub" id="cr-graf-sub">Cuántas veces se canjeó cada material.</p>
+          <div id="cr-graf" style="position:relative;"><canvas id="cr-chart"></canvas></div>
+        </div>
+        <div class="cr-card" style="margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <h3>Historial de regalos <span id="cr-n-hist" style="font-weight:500;color:var(--text-3);"></span></h3>
+            <div class="cr-tabs" role="tablist" aria-label="Filtrar historial">
+              <button type="button" data-cr-filtro="todos" class="on">Todos</button>
+              <button type="button" data-cr-filtro="sin">Sin canjear</button>
+              <button type="button" data-cr-filtro="canjeo">Ya canjearon</button>
+            </div>
+          </div>
+          <p class="cr-sub" id="cr-hist-sub">A quién le regalaste créditos, si ya los usó y en qué.</p>
+          <div id="cr-hist" style="font-size:13px;color:var(--text-2);">Cargando…</div>
+        </div>
+        <div class="cr-card" style="margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+            <h3>Cuentas <span id="cr-n" style="font-weight:500;color:var(--text-3);"></span></h3>
+            <span style="font-size:11.5px;color:var(--text-3);">De la más reciente a la más antigua</span>
+          </div>
+          <input id="cr-buscar" type="search" placeholder="Buscar por nombre o correo…" autocomplete="off" class="cr-campo" style="margin:0 0 6px;">
+          <div id="cr-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
+        </div>
+      </div>`;
+    Pages._cargarCreditos();
+  },
+
+  async _cargarCreditos(){
+    const lista = document.getElementById('cr-lista');
+    let miembros = [];
+    try {
+      await Pages._esperarAdmin();
+      const { db, collection, getDocs } = window._fb;
+      const snap = await getDocs(collection(db, 'miembros'));
+      miembros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error('❌ No se pudieron leer las cuentas:', e.code || '', e.message);
+      if (lista) {
+        lista.innerHTML = 'No se pudieron cargar los datos (' + AdminEsc(e.code || e.message || 'error') + '). <a href="#" id="cr-reintentar" style="color:var(--primary);font-weight:700;">Reintentar</a>';
+        const re = document.getElementById('cr-reintentar');
+        if (re) re.addEventListener('click', ev => { ev.preventDefault(); Pages._cargarCreditos(); });
+      }
+      return;
+    }
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const ZONA = 'America/Mexico_City';
+    const registro = m => Pages._mbToDate(m.fechaRegistro || m.createdAt);
+    const saldoDe = m => Math.max(0, Math.floor(Number(m.creditos) || 0));
+    const canjesDe = m => Object.entries(m.creditosCanjeados && typeof m.creditosCanjeados === 'object' ? m.creditosCanjeados : {})
+      .map(([id, ms]) => ({ id, ms: Number(ms) || 0 })).sort((a, b) => a.ms - b.ms);
+    const cuentas = miembros.filter(m => m.email || m.nombre || m.displayName)
+      .sort((a, b) => ((registro(b) ? registro(b).getTime() : 0) - (registro(a) ? registro(a).getTime() : 0)));
+    const nombreDe = m => m.nombre || m.displayName || String(m.email || '').split('@')[0] || 'Sin nombre';
+    const fFecha = f => f ? f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA }) : '—';
+    const fMs = ms => { if (!ms) return '—'; const f = new Date(ms); return f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA }) + ' · ' + f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA }); };
+    const chip = (txt, fondo, color) => '<span class="cr-chip" style="background:' + fondo + ';color:' + color + ';">' + txt + '</span>';
+    const planChip = m => {
+      const t = Pages._mbPlanTipo(m);
+      if (t === 'anual') return chip('Anual', 'rgba(67,160,71,.16)', '#2e7d32');
+      if (t === 'mensual') return chip('Mensual', 'rgba(59,130,246,.12)', '#2563eb');
+      if (t === 'regalo') return chip('Regalo', 'rgba(168,85,247,.14)', '#7e22ce');
+      return chip('Gratis', 'var(--surface-3)', 'var(--text-2)');
+    };
+
+    // Lo que guarda el servidor de cada regalo y canje (el historial con fechas) y el catálogo de materiales
+    let ledger = null, catalogo = [], avisoLedger = '';
+    const cargarLedger = async () => {
+      try {
+        const token = await Pages._getAuthToken();
+        const resp = await fetch(Pages._webhookUrl + '/api/admin/creditos/movimientos?limite=500', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (resp.status === 404) { ledger = null; avisoLedger = 'El servidor todavía no tiene esta función (se activa cuando termine su actualización): las fechas de los regalos aparecerán entonces.'; return; }
+        const j = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(j.error || 'respuesta ' + resp.status);
+        ledger = j.movimientos || []; catalogo = j.catalogo || []; avisoLedger = '';
+      } catch (e) { ledger = null; avisoLedger = 'No se pudieron leer las fechas de los regalos (' + (e.message || 'error') + ').'; }
+    };
+    const tituloDe = id => { const c = catalogo.find(x => x.id === id); return c ? c.titulo : id; };
+
+    // Por cuenta: cuánto se le regaló y cuándo (según el servidor)
+    const regalosPor = () => {
+      const r = {};
+      (ledger || []).filter(x => x.tipo === 'regalo').forEach(x => {
+        const o = r[x.uid] = r[x.uid] || { total: 0, veces: 0, ultimaMs: 0, mensaje: '' };
+        o.total += Number(x.cantidad) || 0; o.veces++;
+        if (x.ms > o.ultimaMs) { o.ultimaMs = x.ms; o.mensaje = x.mensaje || ''; }
+      });
+      return r;
+    };
+
+    const pintarTodo = () => {
+      const regalos = regalosPor();
+      const recibio = m => !!(regalos[m.id] || m.creditosAviso || canjesDe(m).length || saldoDe(m) > 0);
+      const receptores = cuentas.filter(recibio);
+      const canjearon = receptores.filter(m => canjesDe(m).length);
+      const sinCanjear = receptores.filter(m => !canjesDe(m).length);
+      const totalRegalado = Object.values(regalos).reduce((a, o) => a + o.total, 0);
+      set('cr-kpi-cuentas', cuentas.length);
+      set('cr-kpi-recibieron', receptores.length);
+      set('cr-kpi-recibieron-sub', ledger ? totalRegalado + ' créditos regalados' : 'Cuentas con créditos o canjes');
+      set('cr-kpi-canjearon', canjearon.length);
+      set('cr-kpi-canjearon-sub', receptores.length ? Math.round(canjearon.length / receptores.length * 100) + '% de quienes recibieron' : 'Aún no regalas créditos');
+      set('cr-kpi-sin', sinCanjear.length);
+      set('cr-kpi-sin-sub', sinCanjear.reduce((a, m) => a + saldoDe(m), 0) + ' créditos sin usar');
+      set('cr-n', '(' + cuentas.length + ')');
+
+      // Gráfica: materiales más canjeados (cuenta lo que dicen las cuentas, que es la fuente de verdad)
+      const conteo = {};
+      cuentas.forEach(m => canjesDe(m).forEach(c => { conteo[c.id] = (conteo[c.id] || 0) + 1; }));
+      const barras = Object.entries(conteo).map(([id, n]) => ({ id, n, titulo: tituloDe(id) })).sort((a, b) => b.n - a.n || a.titulo.localeCompare(b.titulo, 'es'));
+      const grafCaja = document.getElementById('cr-graf');
+      if (grafCaja) {
+        if (window.__crChart) { try { window.__crChart.destroy(); } catch (e) {} window.__crChart = null; }
+        if (!barras.length) grafCaja.innerHTML = '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">Aún nadie canjea materiales. Cuando lo hagan, aquí verás cuáles les gustan más.</p>';
+        else if (!window.Chart) grafCaja.innerHTML = '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">No se pudo cargar la librería de gráficas. Recarga la página.</p>';
+        else {
+          grafCaja.innerHTML = '<canvas id="cr-chart"></canvas>';
+          grafCaja.style.height = Math.max(160, barras.length * 44 + 40) + 'px';
+          Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
+          const total = barras.reduce((a, b) => a + b.n, 0);
+          window.__crChart = new Chart(document.getElementById('cr-chart'), {
+            type: 'bar',
+            data: { labels: barras.map(b => b.titulo.length > 42 ? b.titulo.slice(0, 41) + '…' : b.titulo), datasets: [{ data: barras.map(b => b.n), backgroundColor: barras.map((b, i) => i === 0 ? '#58B71B' : '#9CCC65'), borderRadius: 6, maxBarThickness: 30 }] },
+            options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false },
+              tooltip: { callbacks: { label: c => c.parsed.x + (c.parsed.x === 1 ? ' canje' : ' canjes') + ' · ' + Math.round(c.parsed.x / total * 100) + '%' } } },
+              scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+          });
+        }
+        set('cr-graf-sub', barras.length ? 'Cuántas veces se canjeó cada material (' + total0(barras) + ' en total).' : 'Cuántas veces se canjeó cada material.');
+      }
+
+      // Historial de regalos: a quién, cuánto, cuándo y si ya canjeó (y qué)
+      const caja = document.getElementById('cr-hist');
+      if (caja) {
+        const estadoDe = m => { const c = canjesDe(m); return c.length ? 'canjeo' : 'sin'; };
+        const ordenMs = m => (regalos[m.id] && regalos[m.id].ultimaMs) || (m.creditosAviso && Number(m.creditosAviso.ms)) || 0;
+        const filas = receptores.slice().sort((a, b) => ordenMs(b) - ordenMs(a));
+        const cuentan = { todos: filas.length, sin: filas.filter(m => estadoDe(m) === 'sin').length, canjeo: filas.filter(m => estadoDe(m) === 'canjeo').length };
+        document.querySelectorAll('[data-cr-filtro]').forEach(b => {
+          b.classList.toggle('on', b.dataset.crFiltro === filtro);
+          b.textContent = ({ todos: 'Todos', sin: 'Sin canjear', canjeo: 'Ya canjearon' })[b.dataset.crFiltro] + ' (' + cuentan[b.dataset.crFiltro] + ')';
+        });
+        set('cr-n-hist', '');
+        set('cr-hist-sub', avisoLedger || 'A quién le regalaste créditos, si ya los usó y en qué.');
+        const vistas = filas.filter(m => filtro === 'todos' || estadoDe(m) === filtro);
+        if (!vistas.length) { caja.innerHTML = '<p style="margin:18px 0;text-align:center;color:var(--text-3);">' + (filas.length ? 'No hay cuentas con ese filtro.' : 'Todavía no has regalado créditos. Usa el botón "Regalar créditos" en la lista de cuentas de abajo.') + '</p>'; return; }
+        caja.innerHTML = vistas.slice(0, limiteHist).map(m => {
+          const g = regalos[m.id], c = canjesDe(m);
+          const regalo = g
+            ? '<strong>+' + g.total + ' créditos</strong><span>' + AdminEsc(fMs(g.ultimaMs)) + (g.veces > 1 ? ' · ' + g.veces + ' regalos' : '') + '</span>' + (g.mensaje ? '<span style="font-style:italic;">“' + AdminEsc(g.mensaje) + '”</span>' : '')
+            : (m.creditosAviso && Number(m.creditosAviso.cantidad) > 0
+              ? '<strong>+' + Number(m.creditosAviso.cantidad) + ' créditos</strong><span>' + AdminEsc(fMs(Number(m.creditosAviso.ms))) + '</span>'
+              : '<strong>Regalo registrado</strong><span>Sin fecha disponible</span>');
+          let estado;
+          if (c.length) estado = chip('Ya canjeó', 'rgba(52,211,153,.18)', '#0f9f6e')
+            + '<div style="margin-top:6px;font-size:12px;color:var(--text);">' + c.map(x => AdminEsc(tituloDe(x.id))).join('<br>') + '</div>'
+            + '<span style="display:block;font-size:11.5px;color:var(--text-3);margin-top:2px;">' + AdminEsc(fMs(c[c.length - 1].ms)) + '</span>';
+          else if (m.creditosAviso && m.creditosAviso.visto === true) estado = chip('Vio la tarjeta · sin canjear', 'rgba(247,148,29,.18)', '#b45309');
+          else estado = chip('Aún no abre su tarjeta', 'var(--surface-3)', 'var(--text-2)');
+          return '<div class="cr-hist"><div class="cr-user"><strong>' + AdminEsc(nombreDe(m)) + '</strong><span>' + AdminEsc(m.email || '') + '</span></div>'
+            + '<div class="cr-dato cr-regalo">' + regalo + '</div><div class="cr-dato cr-estado">' + estado + '</div>'
+            + '<div class="cr-accion"><div class="cr-saldo" style="margin-bottom:6px;">' + saldoDe(m) + '<small>créditos</small></div><button type="button" class="btn btn--ghost" data-cr-regalar="' + AdminEsc(m.id) + '" style="padding:6px 10px;font-size:11.5px;">Regalar más</button></div></div>';
+        }).join('') + (vistas.length > limiteHist ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="cr-mas-hist" class="btn btn--ghost">Ver más (' + (vistas.length - limiteHist) + ')</button></div>' : '');
+        const mas = document.getElementById('cr-mas-hist');
+        if (mas) mas.onclick = () => { limiteHist += 30; pintarTodo(); };
+      }
+
+      // Lista de cuentas con el botón de regalar
+      if (lista) {
+        const q = texto.trim().toLowerCase();
+        const vistas = cuentas.filter(m => !q || ((m.nombre || '') + ' ' + (m.displayName || '') + ' ' + (m.email || '')).toLowerCase().includes(q));
+        if (!vistas.length) lista.innerHTML = '<p style="margin:18px 0;text-align:center;color:var(--text-3);">' + (cuentas.length ? 'Ninguna cuenta coincide con la búsqueda.' : 'Todavía no hay cuentas.') + '</p>';
+        else {
+          lista.innerHTML = vistas.slice(0, limite).map(m => {
+            const saldo = saldoDe(m), canjes = canjesDe(m).length;
+            return '<div class="cr-fila"><div class="cr-user"><strong>' + AdminEsc(nombreDe(m)) + '</strong><span>' + AdminEsc(m.email || '') + ' · se registró el ' + AdminEsc(fFecha(registro(m))) + '</span></div>'
+              + '<div class="cr-plan">' + planChip(m) + '</div>'
+              + '<div class="cr-saldo">' + saldo + '<small>' + (canjes ? canjes + (canjes === 1 ? ' canje' : ' canjes') : 'créditos') + '</small></div>'
+              + '<div class="cr-accion"><button type="button" class="btn btn--accent" data-cr-regalar="' + AdminEsc(m.id) + '" style="padding:8px 12px;font-size:12px;">Regalar créditos</button></div></div>';
+          }).join('') + (vistas.length > limite ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="cr-mas" class="btn btn--ghost">Ver más (' + (vistas.length - limite) + ')</button></div>' : '');
+          const mas = document.getElementById('cr-mas');
+          if (mas) mas.onclick = () => { limite += 30; pintarTodo(); };
+        }
+      }
+    };
+    const total0 = barras => barras.reduce((a, b) => a + b.n, 0);
+
+    let texto = '', limite = 30, filtro = 'todos', limiteHist = 30;
+    const buscar = document.getElementById('cr-buscar');
+    if (buscar) buscar.oninput = () => { texto = buscar.value; limite = 30; pintarTodo(); };
+    document.querySelectorAll('[data-cr-filtro]').forEach(b => { b.onclick = () => { filtro = b.dataset.crFiltro; limiteHist = 30; pintarTodo(); }; });
+    pintarTodo();
+    cargarLedger().then(pintarTodo);
+
+    // Regalar: ventana con cantidad y mensaje opcional (desde la lista de cuentas o desde el historial)
+    const pagina = document.getElementById('page');
+    if (pagina) pagina.onclick = ev => {
+      const b = ev.target.closest('[data-cr-regalar]');
+      if (!b) return;
+      const m = cuentas.find(x => x.id === b.dataset.crRegalar);
+      if (!m) return;
+      const nombre = nombreDe(m) === 'Sin nombre' ? 'esta cuenta' : nombreDe(m);
+      const body = document.createElement('div');
+      body.innerHTML = '<p style="margin:0 0 4px;font-size:13px;color:var(--text-2);">Se los regalas a <strong style="color:var(--text);">' + AdminEsc(nombre) + '</strong> (' + AdminEsc(m.email || '') + '). Le aparecerá una tarjeta de felicitación la próxima vez que entre.</p>'
+        + '<label class="cr-label">¿Cuántos créditos?</label>'
+        + '<div class="cr-chips" id="cr-rapidos"><button type="button" data-n="100" class="on">100</button><button type="button" data-n="200">200</button><button type="button" data-n="300">300</button><button type="button" data-n="400">400</button><button type="button" data-otro="1">Otro número</button></div>'
+        + '<input id="cr-cantidad" class="cr-campo" type="number" min="1" max="10000" step="1" value="100" inputmode="numeric">'
+        + '<p style="margin:6px 0 0;font-size:11.5px;color:var(--text-3);">Cada 100 créditos alcanzan para canjear un material.</p>'
+        + '<label class="cr-label">Mensaje para la persona (opcional)</label>'
+        + '<textarea id="cr-mensaje" class="cr-campo" rows="3" maxlength="200" placeholder="Ej.: ¡Gracias por unirte desde el canal de WhatsApp!"></textarea>';
+      const footer = document.createElement('div');
+      footer.innerHTML = '<button class="btn btn--ghost" id="cr-cancelar">Cancelar</button><button class="btn btn--accent" id="cr-confirmar"><svg class="ic"><use href="#i-check"/></svg>Regalar créditos</button>';
+      Modal.open({ title: 'Regalar créditos', subtitle: nombre, icon: 'i-zap', body, footer });
+      const campo = body.querySelector('#cr-cantidad');
+      body.querySelector('#cr-rapidos').addEventListener('click', e => {
+        const r = e.target.closest('[data-n], [data-otro]');
+        if (!r) return;
+        // "Otro número": se borra la cantidad y el cursor pasa al campo para escribir la que quieras
+        if (r.dataset.otro) { campo.value = ''; campo.focus(); }
+        else campo.value = r.dataset.n;
+        body.querySelectorAll('#cr-rapidos button').forEach(x => x.classList.toggle('on', x === r));
+      });
+      campo.addEventListener('input', () => body.querySelectorAll('#cr-rapidos button').forEach(x => x.classList.toggle('on', x.dataset.n ? x.dataset.n === campo.value : !!x.dataset.otro && !['100', '200', '300', '400'].includes(campo.value))));
+      footer.querySelector('#cr-cancelar').addEventListener('click', () => Modal.close());
+      footer.querySelector('#cr-confirmar').addEventListener('click', async () => {
+        const cantidad = Number(campo.value);
+        if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 10000) { Toast.error('Cantidad inválida', 'Escribe un número entero entre 1 y 10000'); return; }
+        const btn = footer.querySelector('#cr-confirmar');
+        btn.disabled = true; btn.style.opacity = '.65';
+        try {
+          const token = await Pages._getAuthToken();
+          const mensaje = body.querySelector('#cr-mensaje').value.trim();
+          const resp = await fetch(Pages._webhookUrl + '/api/admin/creditos/regalar', {
+            method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: m.id, cantidad, mensaje })
+          });
+          const j = await resp.json().catch(() => ({}));
+          if (resp.status === 404 && !j.error) throw new Error('el servidor todavía no tiene esta función (se activa cuando termine su actualización)');
+          if (!resp.ok) throw new Error(j.error || 'respuesta ' + resp.status);
+          m.creditos = j.saldo;
+          m.creditosAviso = { cantidad: ((m.creditosAviso && m.creditosAviso.visto === false) ? Number(m.creditosAviso.cantidad) || 0 : 0) + cantidad, mensaje, ms: Date.now(), visto: false };
+          Toast.success('Créditos regalados', nombre + ' ahora tiene ' + j.saldo + ' créditos');
+          Modal.close();
+          pintarTodo();
+          cargarLedger().then(pintarTodo);
+        } catch (err) { Toast.error('No se pudieron regalar los créditos', err.message); btn.disabled = false; btn.style.opacity = ''; }
+      });
+    };
+  },
+
   // ── Suscripciones: quién pagó, cuánto y cuándo, y qué monto prefieren pagar ──
   suscripciones(p){
     p.innerHTML = `
@@ -2833,6 +3146,7 @@ const Pages={
           <span class="sec-hero__eyebrow">Comunidad</span>
           <h1 class="sec-hero__title">Suscripciones</h1>
           <p class="sec-hero__sub">Quién pagó su membresía, cuánto pagó y cuándo. Abajo ves qué monto prefieren pagar tus miembros.</p>
+          <div class="sec-hero__actions"><button type="button" class="btn btn--ghost" id="sb-sync" title="Revisa en Stripe los cobros de todos los miembros y guarda los que falten">Traer pagos desde Stripe</button></div>
         </div>
         <div class="kpi-grid">
           <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
@@ -2890,6 +3204,20 @@ const Pages={
         <p style="font-size:11.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">Las horas son de la Ciudad de México. "Primer pago" es cuando la persona se suscribió; las demás son renovaciones. Si un pago dice "Monto no registrado", esa persona sí pagó, pero el sistema no guardó cuánto: lo ves en tu panel de Stripe.</p>
       </div>`;
     Pages._cargarSuscripciones();
+    const sync = document.getElementById('sb-sync');
+    if (sync) sync.addEventListener('click', async () => {
+      sync.disabled = true; sync.textContent = 'Trayendo pagos…';
+      try {
+        const token = await Pages._getAuthToken();
+        const resp = await fetch(Pages._webhookUrl + '/api/admin/pagos/sincronizar', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+        const j = await resp.json().catch(() => ({}));
+        if (resp.status === 404) throw new Error('el servidor todavía no tiene esta función (se activa cuando termine su actualización)');
+        if (!resp.ok) throw new Error(j.error || 'respuesta ' + resp.status);
+        Toast.success(j.nuevos ? 'Se guardaron ' + j.nuevos + (j.nuevos === 1 ? ' pago nuevo' : ' pagos nuevos') + ' desde Stripe' : 'Todos los pagos ya estaban guardados' + (j.errores ? ' (' + j.errores + ' no se pudieron revisar)' : ''));
+        Pages._cargarSuscripciones();
+      } catch (err) { Toast.error('No se pudieron traer los pagos: ' + err.message); }
+      sync.disabled = false; sync.textContent = 'Traer pagos desde Stripe';
+    });
   },
 
   async _cargarSuscripciones(){
@@ -7870,7 +8198,7 @@ function dirAdminCargar(){
 // ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
 // de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
 window.__CLASES_EN_VIVO_ACTIVAS = false;
-const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones'];
+const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones','creditos'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();

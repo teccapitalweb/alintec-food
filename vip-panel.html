@@ -8470,6 +8470,7 @@ const Sections = (function(){
       try { window.__actualizarContinuarWidget?.(); } catch (e) {}
       try { primerCursoRetosCargar(); } catch (e) {}
       programarFlujoPrueba();
+      try { credProgramarAviso(); } catch (e) {}
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
       console.warn('No se pudo cargar el catálogo seguro:', e.message);
@@ -8763,8 +8764,9 @@ const Sections = (function(){
 
   // Espera a que terminen los avisos de bienvenida (nombre, recorrido guiado, confeti) para
   // que la tarjeta aparezca después de ellos y no los interrumpa.
-  function esperarPanelLibre(cb) {
+  function esperarPanelLibre(cb, opciones) {
     const inicio = Date.now();
+    const estable = (opciones && opciones.estable) || 1500;
     let libreDesde = 0, tourVisto = false;
     const iv = setInterval(() => {
       const tour = window.AlintecOnboarding;
@@ -8780,7 +8782,7 @@ const Sections = (function(){
         || document.querySelector('.modal-backdrop');
       if (ocupado) { libreDesde = 0; }
       else if (!libreDesde) { libreDesde = Date.now(); }
-      if (document.visibilityState !== 'hidden' && ((libreDesde && Date.now() - libreDesde > 1500 && Date.now() - inicio > 3500) || Date.now() - inicio > 600000)) {
+      if (document.visibilityState !== 'hidden' && ((libreDesde && Date.now() - libreDesde > estable && Date.now() - inicio > 3500) || Date.now() - inicio > 600000)) {
         clearInterval(iv);
         cb();
       }
@@ -11918,6 +11920,216 @@ const Sections = (function(){
         </div>
       </article>`;
   }
+  // ═══════════════════════════════════════════════════════════════════
+  // Créditos y materiales canjeables · plantillas, listas de verificación y presentaciones que NO son de los cursos
+  // El administrador regala créditos; cada material cuesta lo que indica el catálogo (100). El servidor lleva el saldo,
+  // decide si el canje procede y entrega el archivo solo a quien ya lo canjeó.
+  // ═══════════════════════════════════════════════════════════════════
+  const CRED_TIPOS = { excel: 'Excel', pdf: 'PDF', checklist: 'Checklist', powerpoint: 'PowerPoint', word: 'Word' };
+  const CRED_EXT = { excel: 'xlsx', powerpoint: 'pptx', word: 'docx', pdf: 'pdf', checklist: 'pdf' };
+  let _credEstado = null;        // { saldo, costo, aviso, materiales } tal como lo responde el servidor
+  let _credCargando = null;
+  let _credAvisoProgramado = false;
+  function credLlamar(ruta, opciones) {
+    return window.__currentUser.getIdToken().then(token => fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + ruta, {
+      ...(opciones || {}),
+      headers: { 'Authorization': 'Bearer ' + token, ...(opciones && opciones.body ? { 'Content-Type': 'application/json' } : {}) }
+    }));
+  }
+  function credCargar(forzar) {
+    if (window.__isDemoMode === true || !window.__currentUser) return Promise.resolve(null);
+    if (_credCargando && !forzar) return _credCargando;
+    const p = (async () => {
+      try {
+        const r = await credLlamar('/api/v2/creditos');
+        if (r.ok) _credEstado = await r.json();
+      } catch (e) { /* sin conexión: se queda con lo último conocido */ }
+      return _credEstado;
+    })();
+    _credCargando = p;
+    p.then(() => { if (_credCargando === p) _credCargando = null; });
+    return p;
+  }
+  function credPortada(m) { return m.portada ? 'assets/img/materiales/canje/' + encodeURIComponent(m.portada) : ''; }
+  // Un material del catálogo de créditos
+  function credItem(id) {
+    const e = _credEstado;
+    return e && Array.isArray(e.materiales) ? (e.materiales.find(x => x.id === id) || null) : null;
+  }
+  // Barra "Tus créditos" de la Biblioteca (no se muestra al administrador ni en el demo)
+  function credSaldoHTML() {
+    const e = _credEstado;
+    if (!e || esAdminReal() || window.__isDemoMode === true) return '';
+    const saldo = Number(e.saldo) || 0;
+    const costo = Number(e.costo) || 100;
+    const alcanza = Math.floor(saldo / costo);
+    const detalle = saldo >= costo
+      ? 'Alcanzan para ' + alcanza + (alcanza === 1 ? ' material' : ' materiales') + ' · cada uno cuesta ' + costo + ' créditos'
+      : 'Cada material cuesta ' + costo + ' créditos. Regalamos créditos en nuestro canal de WhatsApp';
+    return '<div class="cred-saldo' + (saldo >= costo ? ' cred-saldo--hay' : '') + '"><span class="cred-saldo__ic"><svg class="ic"><use href="#i-bolt"/></svg></span>'
+      + '<div class="cred-saldo__txt"><strong>Tus créditos: <b>' + saldo + '</b></strong><span>' + escapeHtml(detalle) + '</span></div></div>';
+  }
+  function credTarjetasHTML() {
+    const e = _credEstado;
+    if (!e || !Array.isArray(e.materiales) || !e.materiales.length) return '';
+    return e.materiales.map(m => {
+      const portada = credPortada(m);
+      const etiqueta = m.canjeado ? '<span class="mat-canje__tag mat-canje__tag--ok">Canjeado</span>'
+        : m.porRetos ? '<span class="mat-canje__tag mat-canje__tag--ok">Desbloqueado</span>'
+        : (e.esMiembro && m.retos) ? '<span class="mat-canje__tag">Retos ' + Math.min(Number(e.superados) || 0, m.retos) + ' de ' + m.retos + '</span>'
+        : '<span class="mat-canje__tag">' + Number(m.creditos) + ' créditos</span>';
+      return '<article class="mat-canje" data-mat="' + escapeHtml(m.id) + '" role="button" tabindex="0" aria-label="' + escapeHtml(m.titulo) + '">'
+        + '<div class="mat-canje__top"' + (portada ? ' style="background-image:url(\'' + portada + '\')"' : '') + '>'
+        + '<span class="mat-canje__tipo">' + escapeHtml(CRED_TIPOS[m.tipo] || m.tipo) + '</span>'
+        + (portada ? '' : '<span class="mat-canje__ph">' + escapeHtml(m.titulo) + '</span>') + '</div>'
+        + '<div class="mat-canje__body"><div class="mat-canje__title">' + escapeHtml(m.titulo) + '</div>'
+        + '<div class="mat-canje__detalle">' + escapeHtml(m.detalle || m.categoria || '') + '</div>' + etiqueta + '</div></article>';
+    }).join('');
+  }
+  // Pinta los materiales al final del estante de libros y los mantiene al día (primero con lo último conocido, luego con lo del servidor)
+  function credIniciarEstante(container) {
+    const estante = container.querySelector('#bib-estante');
+    if (!estante) return;
+    const pintar = () => {
+      const barra = container.querySelector('#cred-saldo-slot');
+      if (barra) barra.innerHTML = credSaldoHTML();
+      estante.querySelectorAll('.mat-canje').forEach(n => n.remove());
+      estante.insertAdjacentHTML('beforeend', credTarjetasHTML());
+      const cuenta = container.querySelector('#bib-estante-cuenta');
+      const nMat = _credEstado && Array.isArray(_credEstado.materiales) ? _credEstado.materiales.length : 0;
+      if (cuenta) cuenta.textContent = Math.max(0, BIBLIOTECA_LIBROS.length - 1) + ' títulos de consulta' + (nMat ? ' · ' + nMat + ' materiales' : '');
+    };
+    pintar();
+    credCargar().then(pintar);
+    estante.addEventListener('click', ev => { const t = ev.target.closest('.mat-canje'); if (t) credAbrirMaterial(t.dataset.mat); });
+    estante.addEventListener('keydown', ev => {
+      const t = ev.target.closest && ev.target.closest('.mat-canje');
+      if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); credAbrirMaterial(t.dataset.mat); }
+    });
+    window.__credRepintarEstante = pintar;
+  }
+  async function credDescargar(m, boton) {
+    if (boton) { boton.disabled = true; boton.dataset.txt = boton.textContent; boton.textContent = 'Descargando…'; }
+    try {
+      const r = await credLlamar('/api/v2/materiales/' + encodeURIComponent(m.id) + '/archivo');
+      if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || 'No se pudo descargar el archivo'); }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = m.id + '.' + (CRED_EXT[m.tipo] || 'pdf');
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      if (typeof Toast !== 'undefined') Toast.success('Descarga lista', m.titulo);
+    } catch (e) {
+      if (typeof Toast !== 'undefined') Toast.error('No se pudo descargar', e.message || 'Intenta nuevamente');
+    } finally {
+      if (boton) { boton.disabled = false; boton.textContent = boton.dataset.txt || 'Descargar'; }
+    }
+  }
+  async function credCanjear(m, boton) {
+    boton.disabled = true; boton.textContent = 'Canjeando…';
+    try {
+      const r = await credLlamar('/api/v2/creditos/canjear', { method: 'POST', body: JSON.stringify({ id: m.id }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'No se pudo canjear');
+      await credCargar(true);
+      if (window.__credRepintarEstante) window.__credRepintarEstante();
+      if (typeof Toast !== 'undefined') Toast.success('¡Material desbloqueado!', m.titulo);
+      credAbrirMaterial(m.id);
+    } catch (e) {
+      boton.disabled = false; boton.textContent = 'Sí, canjear';
+      if (typeof Toast !== 'undefined') Toast.error('No se pudo canjear', e.message || 'Intenta nuevamente');
+      await credCargar(true);
+    }
+  }
+  function credAbrirMaterial(id, paso) {
+    const e = _credEstado;
+    const m = credItem(id);
+    if (!m) return;
+    const admin = esAdminReal();
+    const disponible = m.canjeado || m.porRetos || admin;
+    const miembro = !!e.esMiembro;
+    const saldo = Number(e.saldo) || 0;
+    const portada = credPortada(m);
+    const tipo = CRED_TIPOS[m.tipo] || m.tipo;
+    const pie = document.createElement('div');
+    pie.className = 'cred-pie';
+    const boton = (txt, clase, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = clase; b.textContent = txt; b.addEventListener('click', () => fn(b)); pie.appendChild(b); return b; };
+    let aviso = '';
+    if (disponible) {
+      aviso = '<p class="cred-estado cred-estado--ok">' + (m.canjeado ? 'Ya lo canjeaste. Puedes descargarlo cuando quieras.' : m.porRetos ? 'Lo desbloqueaste con tus retos. Puedes descargarlo cuando quieras.' : 'Vista de administrador: acceso directo.') + '</p>';
+      boton('Cerrar', 'btn btn--ghost', () => Modal.close('material-canje'));
+      boton('Descargar', 'btn btn--accent', b => credDescargar(m, b));
+    } else if (paso === 'confirmar') {
+      aviso = '<p class="cred-estado">Vas a usar <strong>' + Number(m.creditos) + ' de tus ' + saldo + ' créditos</strong> para desbloquear este material. Después no se pueden recuperar.</p>';
+      boton('Volver', 'btn btn--ghost', () => credAbrirMaterial(id));
+      boton('Sí, canjear', 'btn btn--accent', b => credCanjear(m, b));
+    } else if (miembro && m.retos) {
+      const llevas = Math.min(Number(e.superados) || 0, m.retos);
+      aviso = '<p class="cred-estado">Como miembro lo desbloqueas <strong>superando ' + m.retos + ' retos</strong> en la Zona de retos. Llevas <strong>' + llevas + '</strong>.'
+        + (saldo >= m.creditos ? ' También puedes canjearlo con tus ' + saldo + ' créditos.' : '') + '</p>';
+      boton('Ir a la Zona de retos', saldo >= m.creditos ? 'btn btn--ghost' : 'btn btn--accent', () => { Modal.close('material-canje'); try { navigateToSection('retos'); } catch (err) {} });
+      if (saldo >= m.creditos) boton('Canjear por ' + Number(m.creditos) + ' créditos', 'btn btn--accent', () => credAbrirMaterial(id, 'confirmar'));
+    } else if (saldo >= m.creditos) {
+      aviso = '<p class="cred-estado cred-estado--ok">Tienes <strong>' + saldo + ' créditos</strong>: alcanzan para este material.</p>';
+      boton('Ahora no', 'btn btn--ghost', () => Modal.close('material-canje'));
+      boton('Canjear por ' + Number(m.creditos) + ' créditos', 'btn btn--accent', () => credAbrirMaterial(id, 'confirmar'));
+    } else {
+      aviso = '<p class="cred-estado">Este material cuesta <strong>' + Number(m.creditos) + ' créditos</strong> y tú tienes ' + saldo + '. Regalamos créditos a la comunidad: entérate primero en nuestro canal de WhatsApp.' + (m.retos ? ' Con membresía también lo abres superando ' + m.retos + ' retos.' : '') + '</p>';
+      boton('Entendido', 'btn btn--ghost', () => Modal.close('material-canje'));
+      boton('Ir al canal', 'btn btn--accent', () => { window.open(AlintecFood_CONTACT.canal, '_blank'); });
+    }
+    const body = '<div class="cred-mat">'
+      + '<div class="cred-mat__portada"' + (portada ? ' style="background-image:url(\'' + portada + '\')"' : '') + '></div>'
+      + '<p class="cred-mat__desc">' + escapeHtml(m.descripcion || '') + '</p>'
+      + '<p class="cred-mat__det">' + escapeHtml(m.detalle || tipo) + '</p>' + aviso + '</div>';
+    Modal.open({ id: 'material-canje', title: escapeHtml(m.titulo), subtitle: escapeHtml(tipo + (m.categoria ? ' · ' + m.categoria : '')), icon: 'i-folder', size: 'sm', closeOnBackdrop: paso !== 'confirmar', body, footer: pie });
+  }
+
+  // Tarjeta "¡Felicidades! Ganaste créditos": aparece cuando el administrador regala créditos, siempre DESPUÉS de las demás tarjetas
+  // (bienvenida, nombre, recorrido y prueba gratuita) para que nunca se encimen.
+  function credProgramarAviso() {
+    if (_credAvisoProgramado || window.__isDemoMode === true) return;
+    _credAvisoProgramado = true;
+    credCargar().then(e => {
+      if (!e || !e.aviso) return;
+      esperarPanelLibre(() => { credMostrarAviso(); }, { estable: 4000 });
+    });
+  }
+  function credMostrarAviso() {
+    credCargar(true).then(e => {
+      if (!e || !e.aviso) return;
+      let visto = false;
+      const marcarVisto = () => {
+        if (visto) return;
+        visto = true;
+        if (_credEstado) _credEstado.aviso = null;
+        credLlamar('/api/v2/creditos/aviso-visto', { method: 'POST', body: '{}' }).catch(() => {});
+      };
+      const pie = document.createElement('div');
+      pie.className = 'cred-pie';
+      const entendido = document.createElement('button');
+      entendido.type = 'button'; entendido.className = 'btn btn--ghost'; entendido.textContent = 'Entendido';
+      entendido.addEventListener('click', () => Modal.close('creditos-aviso'));
+      const canjear = document.createElement('button');
+      canjear.type = 'button'; canjear.className = 'btn btn--accent'; canjear.textContent = 'Canjear';
+      canjear.addEventListener('click', () => {
+        Modal.close('creditos-aviso');
+        try { navigateToSection('pdfs'); } catch (err) {}
+        setTimeout(() => { try { document.getElementById('bib-estante')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (err) {} }, 700);
+      });
+      pie.appendChild(entendido); pie.appendChild(canjear);
+      const mensaje = e.aviso.mensaje ? '<blockquote class="cred-aviso__msg">“' + escapeHtml(e.aviso.mensaje) + '”</blockquote>' : '';
+      Modal.open({
+        id: 'creditos-aviso', title: '¡Felicidades!', subtitle: 'Tienes un regalo', icon: 'i-bolt', size: 'sm', closeOnBackdrop: false,
+        onClose: marcarVisto,
+        body: '<div class="cred-aviso"><div class="cred-aviso__num">' + Number(e.aviso.cantidad) + '</div><div class="cred-aviso__lbl">créditos</div>'
+          + '<p>Has ganado <strong>' + Number(e.aviso.cantidad) + ' créditos</strong>. Puedes canjearlos por el material de tu elección en la Biblioteca.</p>' + mensaje + '</div>',
+        footer: pie
+      });
+    });
+  }
+
   // Invitación a ganar libros con retos: miembros ven su avance; quien no tiene membresía, el camino para empezar
   function _bibRetosBannerHTML(){
     if (esAdminReal()) return '';
@@ -12163,12 +12375,13 @@ const Sections = (function(){
           <div class="sec-hero__media" aria-hidden="true"><img src="assets/img/ui/biblioteca-virtual-3d-v1.webp" alt="" decoding="async"></div>
         </div>
         ${_bibTabsHTML()}
+        <div id="cred-saldo-slot"></div>
         <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-book-2"/></svg>Libros</div>
         ${_bibRetosBannerHTML()}
         <div id="bib-libros-bloque">
           ${_libroDestacadoHTML(BIBLIOTECA_LIBROS[0])}
-          <div class="bib-shelf-title"><span>Explora más libros</span><small>${Math.max(0, BIBLIOTECA_LIBROS.length - 1)} títulos de consulta</small></div>
-          <div class="bib-libros-grid">${BIBLIOTECA_LIBROS.slice(1).map(_libroCardHTML).join('')}</div>
+          <div class="bib-shelf-title"><span>Explora más libros y materiales</span><small id="bib-estante-cuenta">${Math.max(0, BIBLIOTECA_LIBROS.length - 1)} títulos de consulta</small></div>
+          <div class="bib-libros-grid" id="bib-estante">${BIBLIOTECA_LIBROS.slice(1).map(_libroCardHTML).join('')}</div>
         </div>
         <div class="bib-seccion-titulo"><svg class="ic"><use href="#i-folder"/></svg>Documentos y plantillas</div>
         <div id="bib-docs-bloque">
@@ -12203,6 +12416,8 @@ const Sections = (function(){
         </div>
       </div>
     `;
+
+    try { credIniciarEstante(container); } catch (e) { console.warn('Materiales canjeables:', e.message); }
 
     // Bind inmediato: el filtro queda funcional en cuanto termina el render.
     {
@@ -18708,6 +18923,29 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .libro-card__save{top:7px;right:7px;width:24px;height:24px}.libro-card__save .ic{width:11px;height:11px}
 .libro-card__body{padding:10px 2px 0}.libro-card__title{font-size:11.5px;line-height:1.28}.libro-card__autor{margin-top:3px;font-size:9.5px;line-height:1.3}
 .libro-card__reading{margin-top:9px}.libro-card__progress{height:4px}.libro-card__progress-label{margin-top:5px;font-size:8.5px}
+/* Materiales canjeables con créditos (junto a los libros) */
+.cred-saldo{display:flex;align-items:center;gap:14px;margin:0 0 20px;padding:14px 18px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--surface) 96%,var(--primary) 4%),var(--surface))}
+.cred-saldo__ic{flex:0 0 40px;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}.cred-saldo__ic .ic{width:20px;height:20px}
+.cred-saldo__txt{min-width:0}.cred-saldo__txt strong{display:block;font:800 15px 'Plus Jakarta Sans',sans-serif;color:var(--text)}.cred-saldo__txt b{font-size:19px;color:var(--primary)}
+.cred-saldo__txt span{display:block;margin-top:2px;font-size:12px;line-height:1.4;color:var(--text-3)}
+.cred-saldo--hay{border-color:color-mix(in srgb,var(--primary) 40%,var(--border))}
+.mat-canje{flex:0 0 148px;max-width:148px;scroll-snap-align:start;cursor:pointer;outline-offset:4px}
+.mat-canje__top{position:relative;aspect-ratio:3/4.22;border-radius:4px 10px 10px 4px;overflow:hidden;background:linear-gradient(150deg,#43A047,#14301C) center/cover no-repeat;box-shadow:0 14px 26px rgba(18,48,26,.22);transition:transform .2s ease}
+.mat-canje:hover .mat-canje__top,.mat-canje:focus-visible .mat-canje__top{transform:translateY(-3px)}
+.mat-canje__top::after{content:'';position:absolute;inset:0;border:1px solid rgba(255,255,255,.2);border-radius:inherit;pointer-events:none}
+.mat-canje__tipo{position:absolute;z-index:2;top:9px;left:9px;padding:4px 6px;border-radius:4px;background:#F7F3EA;color:#173044;font:800 6.5px 'JetBrains Mono',monospace;letter-spacing:.7px;text-transform:uppercase;box-shadow:0 3px 8px rgba(0,0,0,.16)}
+.mat-canje__ph{position:absolute;inset:auto 12px 14px 12px;color:#fff;font:800 12px 'Plus Jakarta Sans',sans-serif;line-height:1.2}
+.mat-canje__body{padding:10px 2px 0}.mat-canje__title{font-size:11.5px;line-height:1.28;font-weight:700;color:var(--text)}.mat-canje__detalle{margin-top:3px;font-size:9.5px;line-height:1.3;color:var(--text-3)}
+.mat-canje__tag{display:inline-flex;margin-top:8px;padding:3px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);font:800 9px 'JetBrains Mono',monospace;letter-spacing:.3px}
+.mat-canje__tag--ok{background:rgba(52,211,153,.18);color:#0f9f6e}
+@media(max-width:760px){.mat-canje{flex-basis:136px;max-width:136px}}
+.cred-mat__portada{width:128px;aspect-ratio:3/4.22;margin:0 auto 14px;border-radius:4px 10px 10px 4px;background:linear-gradient(150deg,#43A047,#14301C) center/cover no-repeat;box-shadow:0 14px 26px rgba(18,48,26,.22)}
+.cred-mat__desc{margin:0 0 8px;font-size:13.5px;line-height:1.55;color:var(--text)}.cred-mat__det{margin:0 0 12px;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3)}
+.cred-estado{margin:0;padding:11px 13px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--text-2)}.cred-estado--ok{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:var(--text)}
+.cred-pie{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.cred-aviso{text-align:center;padding:6px 4px 2px}.cred-aviso__num{font:800 64px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-2px;background:linear-gradient(135deg,#43A047,#F7941D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.cred-aviso__lbl{margin:2px 0 14px;font:800 11px 'JetBrains Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--text-3)}.cred-aviso p{margin:0 0 10px;font-size:14px;line-height:1.55;color:var(--text)}
+.cred-aviso__msg{margin:12px 0 0;padding:11px 14px;border-left:3px solid var(--primary);border-radius:0 10px 10px 0;background:var(--surface-2);font-size:13px;font-style:italic;color:var(--text-2);text-align:left}
 
 .pdfs-grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))!important;gap:38px 28px!important}
 .pdfs-grid .pdf-card{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
