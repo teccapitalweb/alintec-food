@@ -3010,7 +3010,8 @@ const Pages={
         set('cr-n-hist', '');
         set('cr-hist-sub', avisoLedger || 'A quién le regalaste créditos, si ya los usó y en qué.');
         const vistas = filas.filter(m => filtro === 'todos' || estadoDe(m) === filtro);
-        if (!vistas.length) { caja.innerHTML = '<p style="margin:18px 0;text-align:center;color:var(--text-3);">' + (filas.length ? 'No hay cuentas con ese filtro.' : 'Todavía no has regalado créditos. Usa el botón "Regalar créditos" en la lista de cuentas de abajo.') + '</p>'; return; }
+        if (!vistas.length) { caja.innerHTML = '<p style="margin:18px 0;text-align:center;color:var(--text-3);">' + (filas.length ? 'No hay cuentas con ese filtro.' : 'Todavía no has regalado créditos. Usa el botón "Regalar créditos" en la lista de cuentas de abajo.') + '</p>'; }
+        else {
         caja.innerHTML = vistas.slice(0, limiteHist).map(m => {
           const g = regalos[m.id], c = canjesDe(m);
           const regalo = g
@@ -3030,6 +3031,7 @@ const Pages={
         }).join('') + (vistas.length > limiteHist ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="cr-mas-hist" class="btn btn--ghost">Ver más (' + (vistas.length - limiteHist) + ')</button></div>' : '');
         const mas = document.getElementById('cr-mas-hist');
         if (mas) mas.onclick = () => { limiteHist += 30; pintarTodo(); };
+        }
       }
 
       // Lista de cuentas con el botón de regalar
