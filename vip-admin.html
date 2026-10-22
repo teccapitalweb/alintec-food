@@ -1145,14 +1145,13 @@ body::before{display:block!important;opacity:1!important;filter:none!important;a
 .tpl-mini u{position:absolute;left:4px;height:3px;background:#b9b9b9;text-decoration:none}
 .tpl-mini u:nth-of-type(1){top:45px;width:38px;background:var(--tc)}.tpl-mini u:nth-of-type(2){top:52px;width:28px}
 .tpl-mini--verde{--tc:#154034}.tpl-mini--naranja{--tc:#C2500C}.tpl-mini--naranja b{right:20px}.tpl-mini--bicolor{--tc:#E8434B}.tpl-mini--bicolor b{background:linear-gradient(135deg,#222,#555)}.tpl-mini--bicolor i{background:linear-gradient(90deg,#E8434B 50%,#1b1b1b 50%)}
-.news-template-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px;padding:13px;border:1px solid var(--border);border-radius:18px;background:var(--surface-2)}
+.news-template-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:10px;margin:0 0 18px;padding:13px;border:1px solid var(--border);border-radius:18px;background:var(--surface-2)}
 .news-template{display:flex;align-items:center;gap:10px;min-width:0;padding:9px;border:1px solid transparent;border-radius:13px;background:transparent;color:var(--text);text-align:left;cursor:pointer;transition:.2s ease}
 .news-template:hover{background:var(--surface);border-color:var(--border-2);transform:translateY(-2px)}.news-template.is-selected{background:var(--surface);border-color:color-mix(in srgb,var(--primary) 38%,var(--border));box-shadow:0 9px 22px rgba(23,54,36,.09)}
 .news-template__visual{width:43px;height:54px;flex-shrink:0;border-radius:6px 10px 10px 6px;display:grid;place-items:center;color:#fff;box-shadow:inset 5px 0 rgba(0,0,0,.16),5px 7px 12px rgba(0,0,0,.15);transform:perspective(500px) rotateY(-4deg)}.news-template__visual .ic{width:18px;height:18px}.news-template__visual--report{background:linear-gradient(145deg,#2E6D51,#55906C)}.news-template__visual--alert{background:linear-gradient(145deg,#7A463D,#B36A54)}.news-template__visual--innovation{background:linear-gradient(145deg,#375C59,#5D8983)}.news-template__visual--norm{background:linear-gradient(145deg,#6B5C3D,#A4874E)}
-.news-template strong,.news-template small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.news-template strong{font-size:11.5px}.news-template small{margin-top:3px;font-size:9.5px;color:var(--text-3)}
+.news-template strong,.news-template small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:normal;overflow-wrap:anywhere}.news-template strong{font-size:11.5px}.news-template small{margin-top:3px;font-size:9.5px;color:var(--text-3)}.news-template>span:last-child{min-width:0;flex:1 1 auto}
 :root[data-theme="night"] .news-template-picker{background:#101913;border-color:var(--border-2)}:root[data-theme="night"] .news-template:hover,:root[data-theme="night"] .news-template.is-selected{background:#1B2820;border-color:rgba(114,173,132,.3);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 @media(max-width:880px){.app{grid-template-columns:1fr}.page{padding:16px 14px 104px}.topbar{padding:10px 14px}.sec-hero{padding:24px 21px;border-radius:20px}.mobile-nav{background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(18px);box-shadow:0 -10px 30px rgba(21,53,57,.08)}.mobile-nav__item.is-active{color:var(--primary)}}
-@media(max-width:720px){.news-template-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Modo oscuro del administrador · azul tinta, sin dominante verdosa */
 :root[data-theme="night"]{color-scheme:dark;--bg:#09111A;--bg-deep:#060C12;--surface:#111C27;--surface-2:#172431;--surface-3:#213140;--text:#F2F6F8;--text-2:#B5C2CC;--text-3:#7E8E9A;--border:rgba(221,233,241,.075);--border-2:rgba(221,233,241,.14);--border-strong:rgba(221,233,241,.23);--primary:#70AFCC;--primary-soft:#9BC9DE;--primary-deep:#397B9A;--primary-glow:rgba(91,157,188,.13);--highlight:#9788CF;--success:#5BB18D;--info:#70AFCC;--accent:#A797E2;--warning:#E3B465;--shadow-card:0 18px 46px rgba(0,0,0,.34)}
@@ -1377,6 +1376,7 @@ window.__signOut = async () => {
     <div class="nav-section">
       <div class="nav-label">Comunidad</div>
       <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros VIP<span class="nav-item__badge" id="badge-miembros" title="Miembros activos">0</span></a>
+      <a class="nav-item" data-section="suscripciones"><svg class="ic"><use href="#i-credit-card"/></svg>Suscripciones</a>
       <a class="nav-item" data-section="noticias"><svg class="ic"><use href="#i-news"/></svg>Noticias y datos</a>
       <a class="nav-item" data-section="foro"><svg class="ic"><use href="#i-users"/></svg>Foro<span class="nav-item__badge" id="badge-foro">0</span></a>
       <a class="nav-item" data-section="directorio"><svg class="ic"><use href="#i-user"/></svg>Directorio<span class="nav-item__badge" id="badge-dir">0</span></a>
@@ -2800,6 +2800,256 @@ const Pages={
       document.querySelectorAll('[data-pg-modo]').forEach(b => { b.onclick = () => pintar(b.dataset.pgModo); });
       pintar('elegidas');
     }
+  },
+
+  // ── Suscripciones: quién pagó, cuánto y cuándo, y qué monto prefieren pagar ──
+  suscripciones(p){
+    p.innerHTML = `
+      <div class="fade-up">
+        <style>
+          .sb-tabs{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:999px;flex-wrap:wrap}
+          .sb-tabs button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer}
+          .sb-tabs button.on{background:var(--primary);color:#fff}
+          .sb-card{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;min-width:0}
+          .sb-card h3{margin:0 0 4px;font-size:14px;color:var(--text)}
+          .sb-card .sb-sub{margin:0 0 12px;font-size:11.5px;color:var(--text-3);line-height:1.5}
+          .sb-graficas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:20px}
+          .sb-fila{display:grid;grid-template-columns:132px minmax(0,1fr) auto 108px;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px}
+          .sb-fila:last-child{border-bottom:0}
+          .sb-fecha strong,.sb-user strong{display:block;color:var(--text);font-weight:700;overflow-wrap:anywhere}
+          .sb-fecha span,.sb-user span{display:block;font-size:11.5px;color:var(--text-3);overflow-wrap:anywhere}
+          .sb-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+          .sb-chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+          .sb-monto{text-align:right;font-weight:800;color:var(--text);font-size:14px}
+          .sb-monto small{display:block;font-weight:500;font-size:10.5px;color:var(--text-3)}
+          @media(max-width:900px){.sb-graficas{grid-template-columns:minmax(0,1fr)}}
+          @media(max-width:720px){
+            .sb-fila{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"user monto" "fecha chips";row-gap:6px}
+            .sb-user{grid-area:user}.sb-monto{grid-area:monto}.sb-fecha{grid-area:fecha}.sb-chips{grid-area:chips}
+            .sb-fecha strong{display:inline}.sb-fecha span{display:inline;margin-left:6px}
+          }
+        </style>
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Comunidad</span>
+          <h1 class="sec-hero__title">Suscripciones</h1>
+          <p class="sec-hero__sub">Quién pagó su membresía, cuánto pagó y cuándo. Abajo ves qué monto prefieren pagar tus miembros.</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
+            <div class="kpi-card__label">Dinero cobrado</div>
+            <div class="kpi-card__value" id="sb-kpi-total">—</div>
+            <div class="kpi-card__sub" id="sb-kpi-total-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
+            <div class="kpi-card__label">Personas que han pagado</div>
+            <div class="kpi-card__value" id="sb-kpi-personas">—</div>
+            <div class="kpi-card__sub" id="sb-kpi-personas-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#F7941D;--c2:#FBBF24;">
+            <div class="kpi-card__label">Monto más elegido</div>
+            <div class="kpi-card__value" id="sb-kpi-moda">—</div>
+            <div class="kpi-card__sub" id="sb-kpi-moda-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#EF4444;--c2:#F87171;">
+            <div class="kpi-card__label">Cobros rechazados</div>
+            <div class="kpi-card__value" id="sb-kpi-fallidos">—</div>
+            <div class="kpi-card__sub">Tarjeta sin fondos o rechazada</div>
+          </div>
+        </div>
+        <div class="sb-graficas">
+          <div class="sb-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+              <h3 style="margin:0;">¿Cuánto prefieren pagar?</h3>
+              <div class="sb-tabs" role="tablist" aria-label="Qué pagos contar">
+                <button type="button" data-sb-graf="primer" class="on">Primer pago</button>
+                <button type="button" data-sb-graf="todos">Todos los pagos</button>
+              </div>
+            </div>
+            <p class="sb-sub" id="sb-graf-sub">Cuántas personas escogieron cada monto al suscribirse.</p>
+            <div id="sb-graf-monto" style="position:relative;"><canvas id="sb-chart-monto" height="240"></canvas></div>
+          </div>
+          <div class="sb-card">
+            <h3>Dinero cobrado por mes</h3>
+            <p class="sb-sub">Últimos 6 meses · solo pagos con monto registrado.</p>
+            <div id="sb-graf-mes" style="position:relative;"><canvas id="sb-chart-mes" height="240"></canvas></div>
+          </div>
+        </div>
+        <div class="sb-card" style="margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+            <h3 style="margin:0;">Pagos de suscripción</h3>
+            <div class="sb-tabs" role="tablist" aria-label="Filtrar pagos">
+              <button type="button" data-sb-filtro="todos" class="on">Todos <span id="sb-n-todos"></span></button>
+              <button type="button" data-sb-filtro="primer">Primer pago <span id="sb-n-primer"></span></button>
+              <button type="button" data-sb-filtro="renov">Renovaciones <span id="sb-n-renov"></span></button>
+              <button type="button" data-sb-filtro="fallido">Rechazados <span id="sb-n-fallido"></span></button>
+            </div>
+          </div>
+          <input id="sb-buscar" type="search" placeholder="Buscar por nombre o correo…" autocomplete="off" style="width:100%;box-sizing:border-box;margin:0 0 6px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-1,transparent);color:var(--text);font:500 13px Inter,sans-serif;">
+          <div id="sb-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:12px;line-height:1.5;">Las horas son de la Ciudad de México. "Primer pago" es cuando la persona se suscribió; las demás son renovaciones. Si un pago dice "Monto no registrado", esa persona sí pagó, pero el sistema no guardó cuánto: lo ves en tu panel de Stripe.</p>
+      </div>`;
+    Pages._cargarSuscripciones();
+  },
+
+  async _cargarSuscripciones(){
+    const lista = document.getElementById('sb-lista');
+    let miembros = [], pagos = [];
+    try {
+      await Pages._esperarAdmin();
+      const { db, collection, getDocs } = window._fb;
+      const [mSnap, pSnap] = await Promise.all([getDocs(collection(db, 'miembros')), getDocs(collection(db, 'pagos'))]);
+      miembros = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      pagos = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error('❌ No se pudieron leer las suscripciones:', e.code || '', e.message);
+      if (lista) {
+        lista.innerHTML = 'No se pudieron cargar los datos (' + AdminEsc(e.code || e.message || 'error') + '). <a href="#" id="sb-reintentar" style="color:var(--primary);font-weight:700;">Reintentar</a>';
+        const re = document.getElementById('sb-reintentar');
+        if (re) re.addEventListener('click', ev => { ev.preventDefault(); Pages._cargarSuscripciones(); });
+      }
+      return;
+    }
+    const ZONA = 'America/Mexico_City';
+    const fecha = v => Pages._mbToDate(v);
+    const porSub = {}, porEmail = {};
+    miembros.forEach(m => {
+      if (m.stripeSubscriptionId) porSub[m.stripeSubscriptionId] = m;
+      if (m.email) porEmail[String(m.email).toLowerCase()] = m;
+    });
+    const VENTANA = 36 * 3600000; // un pago a menos de 36 h de la alta de la membresía es el primero
+    const nombreDe = (m, email) => (m && (m.nombre || m.displayName)) || (email || '').split('@')[0] || 'Sin nombre';
+
+    // Un renglón por pago registrado
+    const filas = pagos.map(pg => {
+      const email = String(pg.email || '').toLowerCase();
+      const m = porSub[pg.subscriptionId] || porEmail[email] || null;
+      const f = fecha(pg.fechaPago) || fecha(pg.createdAt);
+      const alta = m ? fecha(m.fechaAlta) : null;
+      const esPrimer = !!(f && alta && Math.abs(f.getTime() - alta.getTime()) <= VENTANA);
+      return {
+        clave: pg.invoiceId || pg.id, fecha: f, email: email || (m && m.email) || '', nombre: nombreDe(m, email),
+        monto: typeof pg.monto === 'number' ? pg.monto : null, moneda: pg.moneda || 'MXN',
+        fallido: pg.estado === 'fallido', tipo: pg.estado === 'fallido' ? 'fallido' : (esPrimer ? 'primer' : 'renov'),
+        plan: m ? (m.plan || '') : '', persona: (m && (m.uid || m.id)) || email || pg.subscriptionId || pg.id
+      };
+    });
+    // Quien pagó pero el servidor no alcanzó a guardar ese cobro (monto): aparece igual, con el monto sin registrar
+    miembros.forEach(m => {
+      const alta = fecha(m.fechaAlta);
+      if (!alta || !m.stripeSubscriptionId || m.esRegalo === true || m.plan === 'regalo' || m.plan === 'admin') return;
+      const yaEsta = filas.some(r => !r.fallido && r.persona === (m.uid || m.id) && r.fecha && Math.abs(r.fecha.getTime() - alta.getTime()) <= VENTANA);
+      if (yaEsta) return;
+      filas.push({ clave: 'alta_' + m.id, fecha: alta, email: String(m.email || '').toLowerCase(), nombre: nombreDe(m, m.email), monto: null, moneda: 'MXN',
+        fallido: false, tipo: 'primer', plan: m.plan || '', persona: m.uid || m.id });
+    });
+    filas.sort((a, b) => ((b.fecha ? b.fecha.getTime() : 0) - (a.fecha ? a.fecha.getTime() : 0)));
+
+    const pagadas = filas.filter(r => !r.fallido);
+    const conMonto = pagadas.filter(r => r.monto !== null && r.monto > 0);
+    const fallidas = filas.filter(r => r.fallido);
+    const dinero = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const personas = new Set(pagadas.map(r => r.persona));
+    const total = conMonto.reduce((a, r) => a + r.monto, 0);
+    const primeros = pagadas.filter(r => r.tipo === 'primer');
+    const primerosConMonto = primeros.filter(r => r.monto !== null && r.monto > 0);
+
+    // Cuántas veces aparece cada monto (por persona en el primer pago; por pago en "todos")
+    const contar = arr => {
+      const c = {};
+      arr.forEach(r => { const k = String(r.monto); c[k] = (c[k] || 0) + 1; });
+      return Object.entries(c).map(([k, n]) => ({ monto: Number(k), n })).sort((a, b) => b.n - a.n || b.monto - a.monto);
+    };
+    const modaPrimer = contar(primerosConMonto);
+    const modaTodos = contar(conMonto);
+    const moda = modaPrimer.length ? modaPrimer[0] : modaTodos[0];
+    const baseModa = modaPrimer.length ? primerosConMonto.length : conMonto.length;
+    set('sb-kpi-total', conMonto.length ? dinero(total) : '$0');
+    set('sb-kpi-total-sub', conMonto.length + (conMonto.length === 1 ? ' pago con monto registrado' : ' pagos con monto registrado') + (pagadas.length > conMonto.length ? ' · ' + (pagadas.length - conMonto.length) + ' sin monto' : ''));
+    set('sb-kpi-personas', personas.size);
+    set('sb-kpi-personas-sub', pagadas.filter(r => r.tipo === 'renov').length + ' renovaciones registradas');
+    set('sb-kpi-moda', moda ? dinero(moda.monto) : '—');
+    set('sb-kpi-moda-sub', moda ? moda.n + ' de ' + baseModa + (modaPrimer.length ? ' en su primer pago' : ' pagos') : 'Aún no hay montos registrados');
+    set('sb-kpi-fallidos', fallidas.length);
+
+    // Gráficas
+    const hayChart = !!window.Chart;
+    const vacio = (id, txt) => { const cont = document.getElementById(id); if (cont) cont.innerHTML = '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">' + txt + '</p>'; };
+    let chartMonto = null;
+    const pintarMonto = modo => {
+      document.querySelectorAll('[data-sb-graf]').forEach(b => b.classList.toggle('on', b.dataset.sbGraf === modo));
+      const datos = modo === 'primer' ? modaPrimer : modaTodos;
+      set('sb-graf-sub', modo === 'primer' ? 'Cuántas personas escogieron cada monto al suscribirse por primera vez.' : 'Cuántos pagos se han hecho de cada monto, contando renovaciones.');
+      if (!hayChart) { vacio('sb-graf-monto', 'No se pudo cargar la librería de gráficas. Recarga la página.'); return; }
+      let cont = document.getElementById('sb-graf-monto');
+      if (!cont) return;
+      if (chartMonto) { try { chartMonto.destroy(); } catch (e) {} chartMonto = null; }
+      if (!datos.length) { cont.innerHTML = '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">Aún no hay montos registrados.</p>'; return; }
+      cont.innerHTML = '<canvas id="sb-chart-monto"></canvas>';
+      cont.style.height = Math.max(180, datos.length * 46 + 40) + 'px';
+      const total = datos.reduce((a, d) => a + d.n, 0);
+      chartMonto = new Chart(document.getElementById('sb-chart-monto'), {
+        type: 'bar',
+        data: { labels: datos.map(d => dinero(d.monto)), datasets: [{ data: datos.map(d => d.n), backgroundColor: datos.map((d, i) => i === 0 ? '#58B71B' : '#9CCC65'), borderRadius: 6, maxBarThickness: 30 }] },
+        options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: c => c.parsed.x + (c.parsed.x === 1 ? ' vez' : ' veces') + ' · ' + Math.round(c.parsed.x / total * 100) + '%' } } },
+          scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+      });
+    };
+    const pintarMes = () => {
+      if (!hayChart) { vacio('sb-graf-mes', 'No se pudo cargar la librería de gráficas. Recarga la página.'); return; }
+      const clave = d => d.toLocaleDateString('en-CA', { timeZone: ZONA }).slice(0, 7);
+      const meses = [];
+      const hoy = new Date();
+      for (let i = 5; i >= 0; i--) { const d = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - i, 15)); meses.push({ k: clave(d), t: d.toLocaleDateString('es-MX', { month: 'short', timeZone: 'UTC' }).replace('.', '') }); }
+      const porMes = {};
+      conMonto.forEach(r => { if (r.fecha) { const k = clave(r.fecha); porMes[k] = (porMes[k] || 0) + r.monto; } });
+      if (!conMonto.length) { vacio('sb-graf-mes', 'Aún no hay pagos con monto registrado.'); return; }
+      new Chart(document.getElementById('sb-chart-mes'), {
+        type: 'bar',
+        data: { labels: meses.map(m => m.t), datasets: [{ data: meses.map(m => porMes[m.k] || 0), backgroundColor: '#3B82F6', borderRadius: 6, maxBarThickness: 38 }] },
+        options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => dinero(c.parsed.y) } } },
+          scales: { y: { beginAtZero: true, ticks: { callback: v => dinero(v) } } } }
+      });
+    };
+    if (hayChart) Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
+    pintarMonto(modaPrimer.length ? 'primer' : 'todos');
+    pintarMes();
+    document.querySelectorAll('[data-sb-graf]').forEach(b => { b.onclick = () => pintarMonto(b.dataset.sbGraf); });
+
+    // Lista con filtros y buscador
+    if (!lista) return;
+    const chip = (txt, fondo, color) => '<span class="sb-chip" style="background:' + fondo + ';color:' + color + ';">' + txt + '</span>';
+    const fFecha = f => f ? f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA }) : '—';
+    const fHora = f => f ? f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA }) : '';
+    const fila = r => {
+      const tipo = r.fallido ? chip('Rechazado', 'rgba(239,68,68,.16)', '#dc2626')
+        : r.tipo === 'primer' ? chip('Primer pago', 'rgba(88,183,27,.18)', '#3f8a12') : chip('Renovación', 'rgba(59,130,246,.16)', '#2563eb');
+      const plan = r.plan === 'anual' ? chip('Anual', 'rgba(67,160,71,.16)', '#2e7d32') : r.plan === 'mensual' ? chip('Mensual', 'rgba(59,130,246,.12)', '#2563eb') : '';
+      const monto = r.monto !== null ? '<div class="sb-monto' + (r.fallido ? '" style="color:#dc2626;text-decoration:line-through;opacity:.85' : '') + '">' + AdminEsc(dinero(r.monto)) + (r.moneda && r.moneda !== 'MXN' ? '<small>' + AdminEsc(r.moneda) + '</small>' : '') + '</div>'
+        : '<div class="sb-monto"><small>Monto no registrado</small></div>';
+      return '<div class="sb-fila"><div class="sb-fecha"><strong>' + AdminEsc(fFecha(r.fecha)) + '</strong><span>' + AdminEsc(fHora(r.fecha)) + '</span></div>'
+        + '<div class="sb-user"><strong>' + AdminEsc(r.nombre) + '</strong><span>' + AdminEsc(r.email) + '</span></div>'
+        + '<div class="sb-chips">' + tipo + plan + '</div>' + monto + '</div>';
+    };
+    let filtro = 'todos', texto = '', limite = 40;
+    const cuentan = { todos: filas.length, primer: filas.filter(r => r.tipo === 'primer').length, renov: filas.filter(r => r.tipo === 'renov').length, fallido: fallidas.length };
+    Object.keys(cuentan).forEach(k => set('sb-n-' + k, '(' + cuentan[k] + ')'));
+    const pintar = () => {
+      document.querySelectorAll('[data-sb-filtro]').forEach(b => b.classList.toggle('on', b.dataset.sbFiltro === filtro));
+      const q = texto.trim().toLowerCase();
+      const vistas = filas.filter(r => (filtro === 'todos' || r.tipo === filtro) && (!q || (r.nombre + ' ' + r.email).toLowerCase().includes(q)));
+      if (!vistas.length) { lista.innerHTML = '<p style="margin:18px 0;text-align:center;color:var(--text-3);">' + (filas.length ? 'No hay pagos con ese filtro.' : 'Todavía no hay pagos registrados.') + '</p>'; return; }
+      lista.innerHTML = vistas.slice(0, limite).map(fila).join('')
+        + (vistas.length > limite ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="sb-mas" class="btn btn--ghost">Ver más (' + (vistas.length - limite) + ')</button></div>' : '');
+      const mas = document.getElementById('sb-mas');
+      if (mas) mas.onclick = () => { limite += 40; pintar(); };
+    };
+    document.querySelectorAll('[data-sb-filtro]').forEach(b => { b.onclick = () => { filtro = b.dataset.sbFiltro; limite = 40; pintar(); }; });
+    const buscar = document.getElementById('sb-buscar');
+    if (buscar) buscar.oninput = () => { texto = buscar.value; limite = 40; pintar(); };
+    pintar();
   },
 
   dashboard(p){
@@ -6202,6 +6452,14 @@ const Pages={
       fechaContextual = fechaRegistro ? `Registrado ${fmtFechaHora(fechaRegistro)}` : '';
     }
 
+    // Fecha y hora (México) del primer pago de la suscripción: la guarda el servidor al cobrar (fechaAlta)
+    const fechaPagoSub = Pages._mbToDate(m.fechaAlta);
+    const lineaPago = fechaPagoSub
+      ? '<span style="font-size:11px;font-weight:600;color:#10B981;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" style="display:inline;vertical-align:-2px;margin-right:3px;"><use href="#i-credit-card"/></svg>Pagó el '
+        + fechaPagoSub.toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric', timeZone:'America/Mexico_City' }) + ' · '
+        + fechaPagoSub.toLocaleTimeString('es-MX', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/Mexico_City' }) + '</span>'
+      : '';
+
     const nombreEsc = nombre.replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const emailEsc = email.replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const tooltip = (m.uid || m.id || '');
@@ -6216,6 +6474,7 @@ const Pages={
           <div class="curso-row__meta" style="display:flex;flex-direction:column;gap:3px;align-items:flex-start;">
             <span class="curso-row__instructor" title="${emailEsc}" style="font-size:12px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11" style="display:inline;vertical-align:-2px;margin-right:3px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${emailEsc.length > 36 ? emailEsc.slice(0,36)+'…' : emailEsc}${uidCorto ? ` <span style="color:var(--text-3);font-size:10.5px;" title="${tooltip}">· ${uidCorto}…</span>` : ''}</span>
             <span style="font-size:11px;color:var(--text-3);">${fechaContextual}</span>
+            ${lineaPago}
           </div>
         </div>
         <div class="curso-row__stats" style="gap:8px;">
@@ -7611,7 +7870,7 @@ function dirAdminCargar(){
 // ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
 // de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
 window.__CLASES_EN_VIVO_ACTIVAS = false;
-const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas'];
+const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
