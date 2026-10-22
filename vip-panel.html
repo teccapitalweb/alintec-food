@@ -16204,7 +16204,8 @@ function iniciarAvisosPersonales() {
     foro: { icono: 'i-messages', color: '#60A5FA' },
     logro: { icono: 'i-trophy', color: '#FBBF24' },
     premio: { icono: 'i-crown', color: '#F59E0B' },
-    libro: { icono: 'i-book-2', color: '#34D399' }
+    libro: { icono: 'i-book-2', color: '#34D399' },
+    creditos: { icono: 'i-bolt', color: '#F7941D' }
   };
   try {
     const q = fs.query(fs.collection(fs.db, 'avisos', uid, 'items'), fs.orderBy('creadoEn', 'desc'), fs.limit(30));
