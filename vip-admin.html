@@ -3082,6 +3082,30 @@ const Pages={
           </div>
         </div>
         <div class="cr-card" style="margin-top:20px;">
+          <style>
+            .cp-form{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1.3fr) minmax(0,.9fr) auto;gap:10px;align-items:end;margin:6px 0 14px}
+            .cp-form label{display:block;font-size:11.5px;font-weight:700;color:var(--text-2)}
+            .cp-form label .cr-campo{margin-top:4px}
+            .cp-fila{display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1.3fr) minmax(0,1.3fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--border);font-size:13px}
+            .cp-clave code{display:block;font:800 15px 'JetBrains Mono',monospace;letter-spacing:.5px;color:var(--text);overflow-wrap:anywhere}
+            .cp-clave span,.cp-dato span{display:block;font-size:11.5px;color:var(--text-3)}
+            .cp-dato strong{display:block;color:var(--text)}
+            .cp-acc{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+            .cp-acc .btn{padding:7px 10px;font-size:12px}
+            @media(max-width:1000px){.cp-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.cp-form .btn{grid-column:1 / -1}.cp-fila{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a b" "c c" "d d" "e e"}.cp-fila>:nth-child(1){grid-area:a}.cp-fila>:nth-child(2){grid-area:b}.cp-fila>:nth-child(3){grid-area:c}.cp-fila>:nth-child(4){grid-area:d}.cp-fila>:nth-child(5){grid-area:e}.cp-acc{justify-content:flex-start}}
+          </style>
+          <h3>Cupones de créditos</h3>
+          <p class="cr-sub">Creas una clave, la compartes en tu canal de WhatsApp y cada persona la canjea una sola vez. La clave no se muestra en el panel de las personas: solo les avisa que hay un cupón y las invita al canal.</p>
+          <form id="cp-form" class="cp-form" autocomplete="off">
+            <label>Clave (vacía = al azar)<input id="cp-clave" class="cr-campo" maxlength="30" placeholder="Ej.: CANAL100"></label>
+            <label>Créditos<input id="cp-creditos" class="cr-campo" type="number" min="1" max="10000" step="1" value="100" inputmode="numeric"></label>
+            <label>Vence el (opcional)<input id="cp-vence" class="cr-campo" type="datetime-local"></label>
+            <label>Máximo de personas<input id="cp-max" class="cr-campo" type="number" min="1" step="1" placeholder="Sin límite" inputmode="numeric"></label>
+            <button type="submit" class="btn btn--accent" id="cp-crear">Crear cupón</button>
+          </form>
+          <div id="cp-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
+        </div>
+        <div class="cr-card" style="margin-top:16px;">
           <h3>¿Qué materiales canjean más?</h3>
           <p class="cr-sub" id="cr-graf-sub">Cuántas veces se canjeó cada material.</p>
           <div id="cr-graf" style="position:relative;"><canvas id="cr-chart"></canvas></div>
@@ -3108,6 +3132,101 @@ const Pages={
         </div>
       </div>`;
     Pages._cargarCreditos();
+    Pages._cargarCupones();
+  },
+
+  // ── Cupones de créditos: la clave se comparte en el canal de WhatsApp y cada persona la canjea una sola vez ──
+  async _cargarCupones(){
+    const lista = document.getElementById('cp-lista');
+    const form = document.getElementById('cp-form');
+    if (!lista || !form) return;
+    const ZONA = 'America/Mexico_City';
+    const fMs = ms => { const f = new Date(ms); return f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA }) + ' · ' + f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA }); };
+    const llamar = async (ruta, opciones) => {
+      const token = await Pages._getAuthToken();
+      const resp = await fetch(Pages._webhookUrl + ruta, { ...(opciones || {}), headers: { 'Authorization': 'Bearer ' + token, ...(opciones && opciones.body ? { 'Content-Type': 'application/json' } : {}) } });
+      const j = await resp.json().catch(() => ({}));
+      if (resp.status === 404 && !j.error) throw new Error('el servidor todavía no tiene esta función (se activa cuando termine su actualización)');
+      if (!resp.ok) throw new Error(j.error || 'respuesta ' + resp.status);
+      return j;
+    };
+    let cupones = [];
+    const ESTADOS = {
+      activo: ['Activo', 'rgba(52,211,153,.18)', '#0f9f6e'], pausado: ['Pausado', 'var(--surface-3)', 'var(--text-2)'],
+      vencido: ['Vencido', 'rgba(247,148,29,.18)', '#b45309'], agotado: ['Agotado', 'rgba(59,130,246,.16)', '#2563eb']
+    };
+    const mensajeWhatsApp = c => '🎁 ¡Cupón de ' + c.creditos + ' créditos!\nClave: ' + c.clave
+      + '\n\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y canjea un material gratis.'
+      + (c.venceMs ? '\nVálido hasta el ' + fMs(c.venceMs) + ' (hora de México).' : '') + (c.maxUsos ? '\nSolo las primeras ' + c.maxUsos + ' personas.' : '');
+    const copiar = async (texto, aviso) => {
+      try { await navigator.clipboard.writeText(texto); Toast.success(aviso); }
+      catch (e) { Toast.error('No se pudo copiar', 'Selecciónalo y cópialo a mano'); }
+    };
+    const pintar = () => {
+      if (!cupones.length) { lista.innerHTML = '<p class="cr-sub" style="margin:14px 0 4px;text-align:center;">Todavía no has creado cupones.</p>'; return; }
+      lista.innerHTML = cupones.map(c => {
+        const [txt, fondo, color] = ESTADOS[c.estado] || ESTADOS.activo;
+        return '<div class="cp-fila" data-cp="' + AdminEsc(c.id) + '">'
+          + '<div class="cp-clave"><code>' + AdminEsc(c.clave) + '</code><span>' + c.creditos + ' créditos</span></div>'
+          + '<div class="cp-dato"><span class="cr-chip" style="background:' + fondo + ';color:' + color + ';">' + txt + '</span></div>'
+          + '<div class="cp-dato"><strong>' + c.usos + (c.maxUsos ? ' de ' + c.maxUsos : '') + '</strong><span>' + (c.usos === 1 ? 'canje' : 'canjes') + ' · ' + c.entregados + ' créditos entregados</span></div>'
+          + '<div class="cp-dato"><strong>' + (c.venceMs ? (c.estado === 'vencido' ? 'Venció' : 'Vence') : 'Sin fecha límite') + '</strong><span>' + (c.venceMs ? AdminEsc(fMs(c.venceMs)) : 'Hasta que lo pauses') + '</span></div>'
+          + '<div class="cp-acc"><button type="button" class="btn btn--ghost" data-cp-copiar="' + AdminEsc(c.id) + '">Copiar mensaje</button>'
+          + '<button type="button" class="btn btn--ghost" data-cp-quien="' + AdminEsc(c.id) + '">Ver quién</button>'
+          + '<button type="button" class="btn btn--ghost" data-cp-estado="' + AdminEsc(c.id) + '">' + (c.estado === 'pausado' ? 'Reactivar' : 'Pausar') + '</button></div></div>';
+      }).join('');
+    };
+    const cargar = async () => {
+      try { cupones = (await llamar('/api/admin/creditos/cupones')).cupones || []; pintar(); }
+      catch (e) { lista.innerHTML = '<p class="cr-sub" style="margin:12px 0;">No se pudieron leer los cupones (' + AdminEsc(e.message) + ').</p>'; }
+    };
+    await cargar();
+
+    form.onsubmit = async ev => {
+      ev.preventDefault();
+      const boton = document.getElementById('cp-crear');
+      const creditos = Number(document.getElementById('cp-creditos').value);
+      const venceTxt = document.getElementById('cp-vence').value;
+      const maxTxt = document.getElementById('cp-max').value;
+      if (!Number.isInteger(creditos) || creditos < 1 || creditos > 10000) { Toast.error('Créditos inválidos', 'Escribe un número entero entre 1 y 10000'); return; }
+      const venceMs = venceTxt ? new Date(venceTxt).getTime() : 0;
+      if (venceTxt && !(venceMs > Date.now())) { Toast.error('Fecha inválida', 'La fecha y hora de vencimiento deben ser posteriores a este momento'); return; }
+      boton.disabled = true; boton.textContent = 'Creando…';
+      try {
+        const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify({ clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0 }) });
+        Toast.success('Cupón creado', 'La clave es ' + r.clave);
+        form.reset(); document.getElementById('cp-creditos').value = '100';
+        await cargar();
+      } catch (e) { Toast.error('No se pudo crear el cupón', e.message); }
+      boton.disabled = false; boton.textContent = 'Crear cupón';
+    };
+
+    lista.onclick = async ev => {
+      const b = ev.target.closest('button');
+      if (!b) return;
+      const id = b.dataset.cpCopiar || b.dataset.cpQuien || b.dataset.cpEstado;
+      const c = cupones.find(x => x.id === id);
+      if (!c) return;
+      if (b.dataset.cpCopiar) return copiar(mensajeWhatsApp(c), 'Mensaje copiado: pégalo en tu canal de WhatsApp');
+      if (b.dataset.cpEstado) {
+        b.disabled = true;
+        try { await llamar('/api/admin/creditos/cupones/estado', { method: 'POST', body: JSON.stringify({ clave: c.id, activo: c.estado === 'pausado' }) }); await cargar(); }
+        catch (e) { Toast.error('No se pudo cambiar', e.message); b.disabled = false; }
+        return;
+      }
+      b.disabled = true;
+      try {
+        const r = await llamar('/api/admin/creditos/cupones/canjes?clave=' + encodeURIComponent(c.id));
+        const cuerpo = document.createElement('div');
+        cuerpo.innerHTML = r.canjes.length ? r.canjes.map(x => '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border);font-size:13px;"><span><strong style="color:var(--text);">' + AdminEsc(x.nombre || String(x.email || '').split('@')[0] || 'Sin nombre') + '</strong><br><span style="color:var(--text-3);font-size:12px;">' + AdminEsc(x.email) + '</span></span><span style="color:var(--text-3);text-align:right;">+' + x.creditos + ' créditos<br><span style="font-size:12px;">' + AdminEsc(fMs(x.ms)) + '</span></span></div>').join('')
+          : '<p class="cr-sub" style="text-align:center;margin:18px 0;">Nadie ha canjeado este cupón todavía.</p>';
+        const pie = document.createElement('div');
+        pie.innerHTML = '<button class="btn btn--ghost" id="cp-cerrar">Cerrar</button>';
+        Modal.open({ title: 'Quién canjeó ' + c.clave, subtitle: r.canjes.length + (r.canjes.length === 1 ? ' persona' : ' personas'), icon: 'i-zap', body: cuerpo, footer: pie });
+        pie.querySelector('#cp-cerrar').addEventListener('click', () => Modal.close());
+      } catch (e) { Toast.error('No se pudo leer', e.message); }
+      b.disabled = false;
+    };
   },
 
   async _cargarCreditos(){
@@ -3164,10 +3283,10 @@ const Pages={
     // Por cuenta: cuánto se le regaló y cuándo (según el servidor)
     const regalosPor = () => {
       const r = {};
-      (ledger || []).filter(x => x.tipo === 'regalo').forEach(x => {
+      (ledger || []).filter(x => x.tipo === 'regalo' || x.tipo === 'cupon').forEach(x => {
         const o = r[x.uid] = r[x.uid] || { total: 0, veces: 0, ultimaMs: 0, mensaje: '' };
         o.total += Number(x.cantidad) || 0; o.veces++;
-        if (x.ms > o.ultimaMs) { o.ultimaMs = x.ms; o.mensaje = x.mensaje || ''; }
+        if (x.ms > o.ultimaMs) { o.ultimaMs = x.ms; o.mensaje = x.mensaje || (x.cupon ? 'Cupón ' + x.cupon : ''); }
       });
       return r;
     };

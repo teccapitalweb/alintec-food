@@ -8278,7 +8278,7 @@ const Sections = (function(){
           const fin = p && p.completado === true && p.fechaCompletado ? Date.parse(p.fechaCompletado) : 0;
           return fin >= RESENAS_DESDE_MS && p.certificado && p.certificado.folio && !mias.some(x => x.cursoId === c.id) && resenaOmisiones(c.id) < RESENA_OMISIONES_MAX;
         });
-        if (pendiente) await resenaMostrar(pendiente);
+        if (pendiente && tarjetaIngresoTomar()) await resenaMostrar(pendiente);
       } catch (e) { console.warn('[reseñas]', e.message); }
     }, 7000);
   }
@@ -8610,6 +8610,7 @@ const Sections = (function(){
       try { primerCursoRetosCargar(); } catch (e) {}
       programarFlujoPrueba();
       try { credProgramarAviso(); } catch (e) {}
+      try { cuponProgramarTarjeta(); } catch (e) {}
       try { resenaProgramarPendientes(); } catch (e) {}
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
@@ -12070,6 +12071,13 @@ const Sections = (function(){
   let _credEstado = null;        // { saldo, costo, aviso, materiales } tal como lo responde el servidor
   let _credCargando = null;
   let _credAvisoProgramado = false;
+  let _cuponProgramado = false;
+  // Al entrar solo se muestra UNA tarjeta informativa (regalo, cupón o reseña pendiente): nunca se amontonan
+  function tarjetaIngresoTomar() {
+    if (window.__tarjetaIngreso === true) return false;
+    window.__tarjetaIngreso = true;
+    return true;
+  }
   function credLlamar(ruta, opciones) {
     return window.__currentUser.getIdToken().then(token => fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + ruta, {
       ...(opciones || {}),
@@ -12109,6 +12117,32 @@ const Sections = (function(){
     return '<div class="cred-saldo' + (saldo >= costo ? ' cred-saldo--hay' : '') + '"><span class="cred-saldo__ic"><svg class="ic"><use href="#i-bolt"/></svg></span>'
       + '<div class="cred-saldo__txt"><strong>Tus créditos: <b>' + saldo + '</b></strong><span>' + escapeHtml(detalle) + '</span></div></div>';
   }
+  function credCuponFormHTML() {
+    return '<form class="cred-cupon" id="cred-cupon-form" autocomplete="off">'
+      + '<label for="cred-cupon-clave">¿Tienes un código?</label>'
+      + '<div class="cred-cupon__fila"><input id="cred-cupon-clave" type="text" maxlength="30" autocapitalize="characters" spellcheck="false" placeholder="Escribe tu código">'
+      + '<button type="submit" class="btn btn--accent btn--sm">Canjear</button></div></form>';
+  }
+  async function credCanjearCupon(form) {
+    const campo = form.querySelector('input');
+    const boton = form.querySelector('button');
+    const clave = campo.value.trim();
+    if (!clave) { campo.focus(); return; }
+    boton.disabled = true; boton.textContent = 'Canjeando…';
+    try {
+      const r = await credLlamar('/api/v2/creditos/cupon', { method: 'POST', body: JSON.stringify({ clave }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok && j.codigo === 'cupon_agotado') { campo.value = ''; cuponMostrarAgotado(j.error); boton.disabled = false; boton.textContent = 'Canjear'; return; }
+      if (!r.ok) throw new Error(j.error || 'No se pudo canjear el código');
+      campo.value = '';
+      await credCargar(true);
+      if (window.__credRepintarEstante) window.__credRepintarEstante();
+      if (typeof Toast !== 'undefined') Toast.success('¡Código canjeado!', '+' + Number(j.creditos) + ' créditos · ahora tienes ' + Number(j.saldo));
+    } catch (e) {
+      if (typeof Toast !== 'undefined') Toast.error('No se pudo canjear', e.message || 'Intenta nuevamente');
+    }
+    boton.disabled = false; boton.textContent = 'Canjear';
+  }
   function credTarjetasHTML() {
     const e = _credEstado;
     if (!e || !Array.isArray(e.materiales) || !e.materiales.length) return '';
@@ -12132,7 +12166,16 @@ const Sections = (function(){
     if (!estante) return;
     const pintar = () => {
       const barra = container.querySelector('#cred-saldo-slot');
-      if (barra) barra.innerHTML = credSaldoHTML();
+      if (barra) {
+        const html = credSaldoHTML();
+        const previo = barra.querySelector('#cred-cupon-clave');
+        const texto = previo ? previo.value : '';
+        const enfocado = !!previo && document.activeElement === previo;
+        barra.innerHTML = html ? html + credCuponFormHTML() : '';
+        const nuevo = barra.querySelector('#cred-cupon-clave');
+        if (nuevo && texto) nuevo.value = texto;
+        if (nuevo && enfocado) nuevo.focus();
+      }
       estante.querySelectorAll('.mat-canje').forEach(n => n.remove());
       estante.insertAdjacentHTML('beforeend', credTarjetasHTML());
       const cuenta = container.querySelector('#bib-estante-cuenta');
@@ -12141,6 +12184,8 @@ const Sections = (function(){
     };
     pintar();
     credCargar().then(pintar);
+    const slotCupon = container.querySelector('#cred-saldo-slot');
+    if (slotCupon) slotCupon.addEventListener('submit', ev => { const f = ev.target.closest('#cred-cupon-form'); if (f) { ev.preventDefault(); credCanjearCupon(f); } });
     estante.addEventListener('click', ev => { const t = ev.target.closest('.mat-canje'); if (t) credAbrirMaterial(t.dataset.mat); });
     estante.addEventListener('keydown', ev => {
       const t = ev.target.closest && ev.target.closest('.mat-canje');
@@ -12239,6 +12284,7 @@ const Sections = (function(){
   function credMostrarAviso() {
     credCargar(true).then(e => {
       if (!e || !e.aviso) return;
+      if (!tarjetaIngresoTomar()) return;
       let visto = false;
       const marcarVisto = () => {
         if (visto) return;
@@ -12267,6 +12313,76 @@ const Sections = (function(){
           + '<p>Has ganado <strong>' + Number(e.aviso.cantidad) + ' créditos</strong>. Puedes canjearlos por el material de tu elección en la Biblioteca.</p>' + mensaje + '</div>',
         footer: pie
       });
+    });
+  }
+
+  // Quien escribe una clave correcta cuando el cupón ya llegó a su límite de personas: se le avisa con cariño y se le invita a seguir atento al canal
+  function cuponMostrarAgotado(limite) {
+    const pie = document.createElement('div');
+    pie.className = 'cred-pie';
+    const entendido = document.createElement('button');
+    entendido.type = 'button'; entendido.className = 'btn btn--ghost'; entendido.textContent = 'Entendido';
+    entendido.addEventListener('click', () => Modal.close('cupon-agotado'));
+    const canal = document.createElement('button');
+    canal.type = 'button'; canal.className = 'btn btn--accent'; canal.textContent = 'Ir al canal';
+    canal.addEventListener('click', () => { Modal.close('cupon-agotado'); window.open(AlintecFood_CONTACT.canal, '_blank'); });
+    pie.appendChild(entendido); pie.appendChild(canal);
+    Modal.open({
+      id: 'cupon-agotado', title: 'Lo sentimos', subtitle: 'Llegaste un poquito tarde', icon: 'i-bolt', size: 'sm',
+      body: '<div class="cred-aviso"><p>' + escapeHtml(limite || 'Este cupón ya alcanzó su límite de personas') + ' y tú llegaste después de que se acabaron.</p>'
+        + '<p><strong>No te desanimes.</strong> Estate atento a nuestro canal de WhatsApp: ahí compartimos más cupones y ofertas para que no te pierdas el próximo.</p></div>',
+      footer: pie
+    });
+  }
+  // Tarjeta "Hay un cupón de créditos": NO muestra la clave; invita al canal de WhatsApp, donde se comparte. Una vez por cupón y cuenta.
+  function cuponClaveVisto() { return 'af_cupon_visto_' + (window.UserState?.uid || window.__currentUser?.uid || ''); }
+  function cuponProgramarTarjeta() {
+    if (_cuponProgramado || window.__isDemoMode === true || !window.__currentUser || esAdminReal()) return;
+    _cuponProgramado = true;
+    credLlamar('/api/v2/creditos/cupon-activo').then(r => r.ok ? r.json() : null).then(j => {
+      const c = j && j.cupon;
+      if (!c || !c.token) return;
+      let visto = '';
+      try { visto = localStorage.getItem(cuponClaveVisto()) || ''; } catch (e) {}
+      if (visto === c.token) return;
+      esperarPanelLibre(() => { cuponMostrarTarjeta(c); }, { estable: 6500 });
+    }).catch(() => {});
+  }
+  function cuponMostrarTarjeta(c) {
+    if (!tarjetaIngresoTomar()) return;
+    try { localStorage.setItem(cuponClaveVisto(), c.token); } catch (e) {}
+    const pie = document.createElement('div');
+    pie.className = 'cred-pie';
+    const ahoraNo = document.createElement('button');
+    ahoraNo.type = 'button'; ahoraNo.className = 'btn btn--ghost'; ahoraNo.textContent = 'Ahora no';
+    ahoraNo.addEventListener('click', () => Modal.close('cupon-activo'));
+    const canal = document.createElement('button');
+    canal.type = 'button'; canal.className = 'btn btn--accent'; canal.textContent = 'Unirme al canal';
+    canal.addEventListener('click', () => { Modal.close('cupon-activo'); window.open(AlintecFood_CONTACT.canal, '_blank'); });
+    // "Ya tengo la clave": lleva a PDFs y material y deja el cursor en el campo para escribirla
+    const yaTengo = document.createElement('button');
+    yaTengo.type = 'button'; yaTengo.className = 'btn btn--ghost'; yaTengo.textContent = 'Ya tengo la clave';
+    yaTengo.addEventListener('click', () => {
+      Modal.close('cupon-activo');
+      try { navigateToSection('pdfs'); } catch (err) {}
+      let intentos = 0;
+      const buscar = setInterval(() => {
+        const campo = document.getElementById('cred-cupon-clave');
+        if (campo || ++intentos > 20) {
+          clearInterval(buscar);
+          if (campo) { campo.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => campo.focus({ preventScroll: true }), 400); }
+        }
+      }, 300);
+    });
+    pie.appendChild(ahoraNo); pie.appendChild(yaTengo); pie.appendChild(canal);
+    const vence = c.venceMs ? '<p class="cred-cupon__vence">Disponible por tiempo limitado.</p>' : '';
+    Modal.open({
+      id: 'cupon-activo', title: 'Hay un cupón para ti', subtitle: 'Créditos gratis', icon: 'i-bolt', size: 'sm', closeOnBackdrop: false,
+      body: '<div class="cred-aviso"><div class="cred-aviso__num">' + Number(c.creditos) + '</div><div class="cred-aviso__lbl">créditos</div>'
+        + '<p>Hay un <strong>cupón de ' + Number(c.creditos) + ' créditos</strong> disponible. Con ellos puedes canjear un material de la Biblioteca sin costo.</p>'
+        + '<ol class="cred-pasos"><li>Únete a nuestro <strong>canal de WhatsApp</strong>: ahí compartimos la clave y otras ofertas.</li>'
+        + '<li>Escribe la clave en <strong>PDFs y material → «¿Tienes un código?»</strong>. Si ya la tienes, toca <strong>«Ya tengo la clave»</strong> y te llevamos directo al campo.</li></ol>' + vence + '</div>',
+      footer: pie
     });
   }
 
@@ -19370,6 +19486,14 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .cred-saldo__txt{min-width:0}.cred-saldo__txt strong{display:block;font:800 15px 'Plus Jakarta Sans',sans-serif;color:var(--text)}.cred-saldo__txt b{font-size:19px;color:var(--primary)}
 .cred-saldo__txt span{display:block;margin-top:2px;font-size:12px;line-height:1.4;color:var(--text-3)}
 .cred-saldo--hay{border-color:color-mix(in srgb,var(--primary) 40%,var(--border))}
+.cred-cupon{margin:-8px 0 20px;padding:12px 18px;border:1px dashed var(--border-2);border-radius:14px;background:var(--surface)}
+.cred-cupon label{display:block;margin:0 0 8px;font:700 12.5px Inter,sans-serif;color:var(--text-2)}
+.cred-cupon__fila{display:flex;gap:10px;flex-wrap:wrap}
+.cred-cupon input{flex:1 1 180px;min-width:0;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface-2);color:var(--text);font:700 14px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.cred-cupon input::placeholder{font:500 13px Inter,sans-serif;letter-spacing:0;text-transform:none;color:var(--text-3)}
+.cred-cupon input:focus{outline:2px solid color-mix(in srgb,var(--primary) 50%,transparent);outline-offset:1px}
+.cred-pasos{margin:0 0 10px;padding:0 0 0 20px;text-align:left;font-size:13.5px;line-height:1.55;color:var(--text)}.cred-pasos li{margin:0 0 6px}
+.cred-cupon__vence{font-size:12px!important;color:var(--text-3)!important}
 .mat-canje{flex:0 0 148px;max-width:148px;scroll-snap-align:start;cursor:pointer;outline-offset:4px}
 .mat-canje__top{position:relative;aspect-ratio:3/4.22;border-radius:4px 10px 10px 4px;overflow:hidden;background:linear-gradient(150deg,#43A047,#14301C) center/cover no-repeat;box-shadow:0 14px 26px rgba(18,48,26,.22);transition:transform .2s ease}
 .mat-canje:hover .mat-canje__top,.mat-canje:focus-visible .mat-canje__top{transform:translateY(-3px)}
