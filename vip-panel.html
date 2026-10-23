@@ -15512,6 +15512,246 @@ const Sections = (function(){
           {id:'mano-sin-guante',x:.25,y:.22,w:.42,h:.50,type:'Contacto directo',why:'La mano descubierta toca alimento listo para consumo y puede contaminarlo.'},
           {id:'tornillo-suelto',x:.64,y:.67,w:.30,h:.28,type:'Peligro metálico',why:'El tornillo y la arandela sueltos pueden incorporarse al producto abierto.'}
         ]
+      },
+      {
+        id:'n-panaderia', title:'Panadería', image:'assets/img/retos/detective-nuevas/01-panaderia.webp',
+        hazards:[
+          {id:'vidrio',x:.2,y:.59,w:.2,h:.31,type:'Peligro físico',why:'Hay un vaso de vidrio roto y astillas sobre la mesa donde se preparan los panes; los fragmentos pueden terminar en el alimento.'},
+          {id:'cascara',x:.57,y:.575,w:.1,h:.12,type:'Contaminación cruzada',why:'Una cáscara de huevo crudo quedó sobre un pan ya terminado y con crema, listo para vender.'},
+          {id:'ducto',x:.74,y:0,w:.25,h:.2,type:'Falla de saneamiento',why:'El extractor tiene polvo y grasa acumulados que pueden caer sobre las charolas de producto terminado.'}
+        ]
+      },
+      {
+        id:'n-taqueria', title:'Taquería', image:'assets/img/retos/detective-nuevas/02-taqueria.webp',
+        hazards:[
+          {id:'celular',x:.37,y:.28,w:.17,h:.17,type:'Objeto contaminado',why:'Usa el celular con los mismos guantes con los que toca las tortillas; los guantes se contaminan y ya no protegen el alimento.'},
+          {id:'pollo-crudo',x:0,y:.6,w:.39,h:.17,type:'Contaminación cruzada',why:'El pollo crudo comparte tabla con el cilantro picado que se sirve sin cocción.'},
+          {id:'basura',x:.79,y:.44,w:.21,h:.34,type:'Manejo de residuos',why:'El bote de basura está abierto, lleno y junto a la salsa y los ingredientes de servicio.'}
+        ]
+      },
+      {
+        id:'n-pescaderia', title:'Pescadería', image:'assets/img/retos/detective-nuevas/03-pescaderia.webp',
+        hazards:[
+          {id:'cuchillo',x:.43,y:.64,w:.36,h:.22,type:'Peligro físico',why:'El cuchillo está oxidado y con el mango deteriorado: no se puede limpiar bien y puede soltar partículas de óxido al pescado.'},
+          {id:'caja-sucia',x:0,y:.23,w:.4,h:.74,type:'Falla de saneamiento',why:'La caja que contiene el pescado tiene manchas y residuos adheridos de usos anteriores.'},
+          {id:'quimico',x:.75,y:.18,w:.11,h:.5,type:'Peligro químico',why:'Un atomizador con un líquido sin etiqueta está junto al pescado expuesto y puede contaminarlo.'}
+        ]
+      },
+      {
+        id:'n-lacteos', title:'Planta de lácteos', image:'assets/img/retos/detective-nuevas/04-lacteos.webp',
+        hazards:[
+          {id:'goteo',x:.69,y:0,w:.14,h:.45,type:'Contaminación ambiental',why:'Gotea agua desde la tubería sobre la zona donde se maneja el producto.'},
+          {id:'plastico',x:.52,y:.57,w:.27,h:.25,type:'Peligro físico',why:'La pala azul está rota y sus fragmentos de plástico están sobre la mesa, junto al queso.'},
+          {id:'manos',x:.38,y:.38,w:.25,h:.15,type:'Manos sin protección',why:'Manipula el queso con las manos descubiertas, sin guantes ni lavado visible.'}
+        ]
+      },
+      {
+        id:'n-buffet', title:'Buffet', image:'assets/img/retos/detective-nuevas/05-buffet.webp',
+        hazards:[
+          {id:'goteo-pollo',x:.41,y:.2,w:.42,h:.33,type:'Contaminación cruzada',why:'El pollo crudo está en la repisa superior y escurre líquido sobre los alimentos que se sirven abajo.'},
+          {id:'mosca',x:.86,y:.78,w:.09,h:.1,type:'Fauna nociva',why:'Hay una mosca posada sobre la fruta picada del buffet, sin protección ni cubierta.'},
+          {id:'mano-pan',x:.2,y:.36,w:.17,h:.17,type:'Contacto directo',why:'La persona toma el pan con la mano en vez de usar pinzas, y contamina el que queda para los demás.'}
+        ]
+      },
+      {
+        id:'n-comedor-escolar', title:'Comedor escolar', image:'assets/img/retos/detective-nuevas/06-comedor-escolar.webp',
+        hazards:[
+          {id:'pan-moho',x:0,y:.55,w:.23,h:.26,type:'Materia prima en mal estado',why:'El pan de caja tiene moho visible y está junto a los sándwiches que se preparan.'},
+          {id:'quimico',x:.56,y:.34,w:.08,h:.28,type:'Almacenamiento químico',why:'El garrafón de limpieza está destapado y sin etiqueta, junto a la estufa y a los alimentos.'},
+          {id:'trapeador',x:.74,y:.15,w:.2,h:.7,type:'Utensilio de limpieza',why:'El trapeador está recargado sobre la mesa de trabajo, en contacto con la zona de alimentos.'}
+        ]
+      },
+      {
+        id:'n-enlatados', title:'Recepción de enlatados', image:'assets/img/retos/detective-nuevas/07-enlatados.webp',
+        hazards:[
+          {id:'lata-oxidada',x:.36,y:.39,w:.23,h:.46,type:'Envase dañado',why:'La lata está muy oxidada: el óxido puede perforar el envase y el producto ya no es seguro.'},
+          {id:'lata-derrame',x:.6,y:.48,w:.37,h:.38,type:'Producto con derrame',why:'La lata está rota y escurre salsa dentro de la caja; el producto está contaminado y debe rechazarse.'},
+          {id:'lata-deformada',x:.03,y:.38,w:.25,h:.52,type:'Envase deformado',why:'La tapa de la lata se ve abombada y arrugada; un envase deformado puede indicar descomposición o pérdida del cierre.'}
+        ]
+      },
+      {
+        id:'n-huevos', title:'Repostería con huevo', image:'assets/img/retos/detective-nuevas/08-huevos.webp',
+        hazards:[
+          {id:'cascaras',x:.33,y:.62,w:.25,h:.2,type:'Contaminación cruzada',why:'Las cáscaras sucias de huevo crudo están sobre la misma tabla donde descansan las tartaletas terminadas.'},
+          {id:'manos-huevo',x:0,y:.36,w:.3,h:.26,type:'Manos sin protección',why:'Rompe huevo crudo con las manos descubiertas y sin lavarlas después, lo que puede transmitir Salmonella a otros alimentos.'},
+          {id:'huevo-cocido',x:.74,y:.5,w:.26,h:.32,type:'Almacenamiento',why:'Los huevos cocidos pelados están en un recipiente sin tapa, junto al cartón de huevo crudo.'}
+        ]
+      },
+      {
+        id:'n-frutas-cortadas', title:'Fruta cortada', image:'assets/img/retos/detective-nuevas/09-frutas-cortadas.webp',
+        hazards:[
+          {id:'caja-sucia',x:.32,y:.24,w:.49,h:.4,type:'Falla de saneamiento',why:'La caja de plástico está cubierta de lodo y se apoya junto a la fruta ya cortada, lista para comer.'},
+          {id:'cuter',x:.72,y:.71,w:.28,h:.15,type:'Peligro físico',why:'Hay un cúter y una hoja suelta sobre la tabla de la fruta; un fragmento de metal puede quedar en el producto.'},
+          {id:'fresa-moho',x:.19,y:.6,w:.17,h:.19,type:'Materia prima en mal estado',why:'Una fresa con moho visible quedó mezclada con la fruta que se va a servir.'}
+        ]
+      },
+      {
+        id:'n-sushi', title:'Barra de sushi', image:'assets/img/retos/detective-nuevas/10-sushi.webp',
+        hazards:[
+          {id:'trapo',x:.46,y:.55,w:.21,h:.37,type:'Utensilio contaminado',why:'El trapo sucio y húmedo está encima del tapete donde se enrolla el sushi.'},
+          {id:'manos-joyeria',x:.69,y:.28,w:.27,h:.26,type:'Joyería y manos descubiertas',why:'Arma el sushi con las manos desnudas y una pulsera puesta, que acumula suciedad y puede caer al alimento.'},
+          {id:'pescado-crudo',x:0,y:.47,w:.42,h:.35,type:'Control de temperatura',why:'El salmón crudo y el arroz comparten charola a temperatura ambiente, sin hielo ni refrigeración.'}
+        ]
+      },
+      {
+        id:'n-heladeria', title:'Heladería', image:'assets/img/retos/detective-nuevas/11-heladeria.webp',
+        hazards:[
+          {id:'agua-sucia',x:0,y:.4,w:.39,h:.33,type:'Falla de saneamiento',why:'La cuchara de servir está en agua turbia y con residuos, que se acumula bacterias durante el día.'},
+          {id:'nueces',x:.36,y:.55,w:.25,h:.22,type:'Alérgenos',why:'Hay frutos secos regados fuera del contenedor, junto a los demás productos: puede haber contaminación cruzada de alérgenos.'},
+          {id:'atomizador',x:.81,y:.22,w:.07,h:.45,type:'Peligro químico',why:'El atomizador con líquido sin etiqueta está junto a los toppings que se sirven al cliente.'}
+        ]
+      },
+      {
+        id:'n-carniceria', title:'Carnicería', image:'assets/img/retos/detective-nuevas/12-carniceria.webp',
+        hazards:[
+          {id:'tabla-mixta',x:0,y:.36,w:.58,h:.4,type:'Contaminación cruzada',why:'La carne cruda y la carne ya cocida comparten la misma tabla y el mismo cuchillo.'},
+          {id:'basura',x:.8,y:.55,w:.2,h:.27,type:'Manejo de residuos',why:'El bote sin tapa tiene restos de carne y papel usado, pegado a la mesa de trabajo.'},
+          {id:'molino',x:.59,y:.18,w:.16,h:.18,type:'Equipo deteriorado',why:'La boca del molino tiene óxido: no se puede desinfectar bien y puede soltar partículas a la carne molida.'}
+        ]
+      },
+      {
+        id:'n-bebidas', title:'Jugos y bebidas', image:'assets/img/retos/detective-nuevas/13-bebidas.webp',
+        hazards:[
+          {id:'vaso-roto',x:.44,y:.18,w:.25,h:.48,type:'Peligro físico',why:'El vaso de la licuadora está estrellado: puede soltar fragmentos de plástico a la bebida.'},
+          {id:'naranja-moho',x:.09,y:.54,w:.13,h:.19,type:'Materia prima en mal estado',why:'Hay una naranja con moho entre la fruta que se usa para el jugo.'},
+          {id:'quimico',x:.77,y:.02,w:.13,h:.45,type:'Almacenamiento químico',why:'El garrafón de químico está en la misma repisa que los recipientes con fruta lista.'}
+        ]
+      },
+      {
+        id:'n-harina', title:'Almacén de harina', image:'assets/img/retos/detective-nuevas/14-harina.webp',
+        hazards:[
+          {id:'rata',x:.43,y:.5,w:.14,h:.14,type:'Fauna nociva',why:'Hay una rata junto a un costal abierto: evidencia de plaga activa en el almacén.'},
+          {id:'costal-roto',x:0,y:.18,w:.38,h:.64,type:'Empaque dañado',why:'El costal está roto y la harina se derrama sobre un piso mojado; el producto ya no es seguro.'},
+          {id:'quimicos',x:.69,y:0,w:.31,h:.35,type:'Almacenamiento químico',why:'Los desinfectantes están en la repisa justo arriba de los costales abiertos de harina.'}
+        ]
+      },
+      {
+        id:'n-conservas', title:'Conservas caseras', image:'assets/img/retos/detective-nuevas/15-conservas.webp',
+        hazards:[
+          {id:'pimiento-moho',x:.48,y:.63,w:.15,h:.16,type:'Materia prima en mal estado',why:'Un chile con moho visible está entre las verduras que se van a envasar.'},
+          {id:'frasco-roto',x:0,y:.45,w:.17,h:.4,type:'Peligro físico',why:'El frasco de vidrio está quebrado y puede soltar astillas a las conservas.'},
+          {id:'trapo',x:.8,y:.38,w:.2,h:.5,type:'Utensilio contaminado',why:'Un trapo sucio cuelga dentro de un frasco limpio que se va a usar para envasar.'}
+        ]
+      },
+      {
+        id:'n-pollo', title:'Línea de pollo', image:'assets/img/retos/detective-nuevas/16-pollo.webp',
+        hazards:[
+          {id:'cara',x:.54,y:.14,w:.14,h:.21,type:'Contaminación por contacto',why:'Se toca la cara con el guante y sigue manipulando pollo: el guante ya no protege y pasa la contaminación al alimento.'},
+          {id:'goteo',x:0,y:.13,w:.34,h:.62,type:'Contaminación cruzada',why:'El pollo crudo de la repisa superior gotea sobre la lechuga lista para consumo que está debajo.'},
+          {id:'tabla',x:.65,y:.64,w:.35,h:.27,type:'Superficie deteriorada',why:'La tabla tiene cortes profundos y manchas oscuras: acumula residuos y no se puede desinfectar bien.'}
+        ]
+      },
+      {
+        id:'n-comida-reparto', title:'Comida a domicilio', image:'assets/img/retos/detective-nuevas/17-comida-reparto.webp',
+        hazards:[
+          {id:'casco',x:.73,y:.36,w:.27,h:.43,type:'Objeto personal',why:'El casco de motocicleta está sobre la mesa donde se arman los alimentos; viene de la calle y contamina la superficie.'},
+          {id:'grapas',x:.5,y:.62,w:.2,h:.26,type:'Peligro físico',why:'La engrapadora y varias grapas sueltas están junto a los envases abiertos; una grapa puede terminar en la comida.'},
+          {id:'pollo-crudo',x:0,y:.46,w:.32,h:.3,type:'Contaminación cruzada',why:'La charola de pollo crudo está sobre la misma mesa donde se arman platillos listos para entregar.'}
+        ]
+      },
+      {
+        id:'n-verduras-lavado', title:'Lavado de verduras', image:'assets/img/retos/detective-nuevas/18-verduras-lavado.webp',
+        hazards:[
+          {id:'agua-sucia',x:0,y:.25,w:.45,h:.45,type:'Falla de saneamiento',why:'El agua del lavado está turbia y con lodo; si no se cambia, ensucia las verduras en vez de limpiarlas.'},
+          {id:'cepillo',x:.41,y:.4,w:.4,h:.2,type:'Utensilio contaminado',why:'El cepillo sucio descansa sobre la lechuga que ya se lavó.'},
+          {id:'atomizador',x:.85,y:.44,w:.11,h:.24,type:'Peligro químico',why:'El atomizador con producto de limpieza está dentro de la caja de pepinos.'}
+        ]
+      },
+      {
+        id:'n-ahumados', title:'Carnes ahumadas', image:'assets/img/retos/detective-nuevas/19-ahumados.webp',
+        hazards:[
+          {id:'goteo',x:.75,y:0,w:.12,h:.56,type:'Contaminación ambiental',why:'La tubería gotea condensación sobre la zona donde se rebana la carne.'},
+          {id:'crudo-cocido',x:0,y:.58,w:.56,h:.37,type:'Contaminación cruzada',why:'La pieza de cerdo cruda está pegada a la carne ahumada ya rebanada y lista para servir.'},
+          {id:'carne-expuesta',x:0,y:0,w:.32,h:.58,type:'Almacenamiento',why:'La carne ahumada está en repisas abiertas, sin cubrir ni identificar, expuesta al ambiente.'}
+        ]
+      },
+      {
+        id:'n-especias', title:'Especias y condimentos', image:'assets/img/retos/detective-nuevas/20-especias.webp',
+        hazards:[
+          {id:'costal',x:0,y:.46,w:.3,h:.4,type:'Empaque dañado',why:'El costal de hierbas está roto y se derrama directamente sobre el piso.'},
+          {id:'insecto',x:.53,y:.5,w:.07,h:.09,type:'Fauna nociva',why:'Hay un insecto sobre el pimentón del tazón: indica que el producto o el área tienen plagas.'},
+          {id:'quimico',x:.79,y:.35,w:.19,h:.4,type:'Peligro químico',why:'El cubo con el símbolo de producto corrosivo está junto a los tazones de especias.'}
+        ]
+      },
+      {
+        id:'n-chocolate', title:'Chocolatería', image:'assets/img/retos/detective-nuevas/21-chocolate.webp',
+        hazards:[
+          {id:'vidrio',x:.37,y:.31,w:.37,h:.28,type:'Peligro físico',why:'Un frasco de vidrio se rompió sobre la mesa y hay astillas cerca de los chocolates.'},
+          {id:'cacahuate',x:0,y:.3,w:.56,h:.52,type:'Alérgenos',why:'Los cacahuates se derramaron sobre el molde de chocolate: puede contaminar de alérgenos un producto que no los declara.'},
+          {id:'brocha',x:.75,y:.6,w:.25,h:.25,type:'Utensilio contaminado',why:'La brocha tiene residuos secos y se apoya sobre los chocolates terminados.'}
+        ]
+      },
+      {
+        id:'n-tortilleria', title:'Tortillería', image:'assets/img/retos/detective-nuevas/22-tortilleria.webp',
+        hazards:[
+          {id:'llave',x:.51,y:.52,w:.27,h:.16,type:'Peligro físico',why:'Hay una llave inglesa oxidada sobre la mesa donde se apilan las tortillas.'},
+          {id:'cubeta',x:.03,y:.37,w:.28,h:.42,type:'Falla de saneamiento',why:'La masa está en una cubeta sucia, apoyada en un piso con lodo y agua estancada.'},
+          {id:'atomizador',x:.83,y:.19,w:.1,h:.4,type:'Peligro químico',why:'El atomizador con líquido sin identificar está pegado a las tortillas listas.'}
+        ]
+      },
+      {
+        id:'n-cafe-postres', title:'Cafetería y postres', image:'assets/img/retos/detective-nuevas/23-cafe-postres.webp',
+        hazards:[
+          {id:'celular',x:.69,y:.69,w:.2,h:.2,type:'Objeto contaminado',why:'El celular está sobre la mesa de trabajo, junto a la fruta y las espátulas del postre.'},
+          {id:'anillo',x:.4,y:.38,w:.15,h:.15,type:'Joyería y manos descubiertas',why:'Decora el pastel con las manos desnudas y con un anillo puesto.'},
+          {id:'fruta-moho',x:.02,y:.58,w:.22,h:.2,type:'Materia prima en mal estado',why:'Algunas frutas que decoran la tarta tienen moho.'}
+        ]
+      },
+      {
+        id:'n-congelados', title:'Cámara de congelación', image:'assets/img/retos/detective-nuevas/24-congelados.webp',
+        hazards:[
+          {id:'goteo',x:0,y:.03,w:.28,h:.62,type:'Contaminación cruzada',why:'El ave cruda gotea sangre sobre las empanadas listas que están en la repisa de abajo.'},
+          {id:'escarcha',x:.62,y:0,w:.38,h:.37,type:'Falla de equipo',why:'Hay hielo acumulado en exceso sobre las repisas y el techo: la cámara no está descongelando bien y la temperatura no es estable.'},
+          {id:'caja-piso',x:.43,y:.58,w:.17,h:.28,type:'Almacenamiento',why:'Una caja con producto está directamente en el piso mojado y con hielo, fuera de tarimas o repisas.'}
+        ]
+      },
+      {
+        id:'n-porcionado', title:'Porcionado de comidas', image:'assets/img/retos/detective-nuevas/25-porcionado.webp',
+        hazards:[
+          {id:'trapo',x:.52,y:.57,w:.18,h:.21,type:'Utensilio contaminado',why:'Un trapo sucio quedó sobre las verduras cocidas que se van a servir.'},
+          {id:'tornillo',x:.85,y:.73,w:.08,h:.09,type:'Peligro físico',why:'Hay un tornillo suelto en la barra de servicio, junto a las charolas de comida.'},
+          {id:'cucharon',x:.08,y:.5,w:.18,h:.26,type:'Contaminación cruzada',why:'El cucharón de la salsa está metido en el arroz: se mezclan los alimentos y los alérgenos de uno pasan al otro.'}
+        ]
+      },
+      {
+        id:'n-ensaladas', title:'Ensaladas', image:'assets/img/retos/detective-nuevas/26-ensaladas.webp',
+        hazards:[
+          {id:'caracol',x:.5,y:.63,w:.09,h:.1,type:'Fauna nociva',why:'Hay un caracol sobre la lechuga: la verdura no se lavó ni inspeccionó bien.'},
+          {id:'pollo-crudo',x:0,y:.55,w:.28,h:.3,type:'Contaminación cruzada',why:'El pollo crudo está en la misma tabla que la lechuga que se sirve sin cocción.'},
+          {id:'cabello',x:.62,y:0,w:.36,h:.38,type:'Cabello sin protección',why:'Prepara la ensalada con el cabello largo suelto y sin cofia.'}
+        ]
+      },
+      {
+        id:'n-agua-hielo', title:'Máquina de hielo', image:'assets/img/retos/detective-nuevas/27-agua-hielo.webp',
+        hazards:[
+          {id:'vaso',x:.1,y:.51,w:.11,h:.22,type:'Peligro físico',why:'El vaso está estrellado y puede soltar astillas de vidrio hacia el hielo o las bebidas.'},
+          {id:'trapeador',x:.77,y:0,w:.17,h:.98,type:'Utensilio de limpieza',why:'El trapeador sucio está recargado contra la máquina de hielo y la contamina.'},
+          {id:'pala',x:.4,y:.32,w:.12,h:.28,type:'Utensilio contaminado',why:'La pala se quedó dentro del hielo; hay que guardarla limpia y fuera del contenedor, porque contamina el hielo que se va a consumir.'}
+        ]
+      },
+      {
+        id:'n-lavado-utensilios', title:'Lavado de utensilios', image:'assets/img/retos/detective-nuevas/28-lavado-utensilios.webp',
+        hazards:[
+          {id:'sarten',x:0,y:.3,w:.38,h:.25,type:'Falla de saneamiento',why:'La sartén con grasa quemada está sobre los platos limpios: los ensucia y los contamina.'},
+          {id:'detergente',x:.78,y:.38,w:.22,h:.52,type:'Peligro químico',why:'El garrafón gotea detergente sobre los cubiertos limpios; quedan con residuos químicos.'},
+          {id:'cepillo',x:.52,y:.39,w:.16,h:.28,type:'Utensilio de limpieza',why:'El cepillo de limpieza está metido en la canasta de cubiertos ya lavados.'}
+        ]
+      },
+      {
+        id:'n-mermeladas', title:'Mermeladas', image:'assets/img/retos/detective-nuevas/29-mermeladas.webp',
+        hazards:[
+          {id:'fresas-moho',x:.52,y:.47,w:.2,h:.23,type:'Materia prima en mal estado',why:'Hay fresas con moho blanco mezcladas con la fruta que se usará para la mermelada.'},
+          {id:'trapo',x:.74,y:.44,w:.24,h:.4,type:'Utensilio contaminado',why:'Un trapo manchado y sucio cuelga sobre un frasco que se va a llenar.'},
+          {id:'frasco',x:.03,y:.47,w:.22,h:.46,type:'Peligro físico',why:'El frasco tiene el borde despostillado: puede soltar esquirlas de vidrio al producto.'}
+        ]
+      },
+      {
+        id:'n-picnic-catering', title:'Catering al aire libre', image:'assets/img/retos/detective-nuevas/30-picnic-catering.webp',
+        hazards:[
+          {id:'moscas',x:0,y:.52,w:.36,h:.2,type:'Fauna nociva',why:'Hay moscas posadas sobre el pollo ya cocido, en un evento al aire libre y sin tapa.'},
+          {id:'carne-cruda',x:.35,y:.53,w:.34,h:.26,type:'Contaminación cruzada',why:'La carne cruda y su cuchillo están pegados a la canasta del pan que se sirve sin cocción.'},
+          {id:'quimico',x:.88,y:.39,w:.09,h:.32,type:'Peligro químico',why:'La botella de producto de limpieza está junto a la jarra de limonada que se va a servir.'}
+        ]
       }
     ];
     const ordenSecuencias=[
