@@ -2883,6 +2883,7 @@ const Pages={
             <span class="rs-chip"><i style="background:#9CA3AF"></i>Pocas reseñas</span>
           </div>
           <div class="rs-cv" id="rs-graf" style="min-height:120px;"><p class="rs-vacio">Cargando…</p></div>
+          <div id="rs-graf-pie"></div>
           <div class="rs-grupos" id="rs-grupos"></div>
         </div>
         <div class="rs-card" style="margin-top:16px;">
@@ -2958,24 +2959,35 @@ const Pages={
 
     // Gráfica de promedios por curso, coloreada por grupo
     const graf = document.getElementById('rs-graf');
+    const INI_GRAF = 6;
+    let limiteGraf = INI_GRAF;
+    const pintarGraf = () => {
+    const vistasG = cursos.slice(0, limiteGraf);
     if (window.__rsChart) { try { window.__rsChart.destroy(); } catch (e) {} window.__rsChart = null; }
     if (graf) {
       if (!cursos.length) graf.innerHTML = '<p class="rs-vacio" style="text-align:center;margin:26px 0;font-size:13px;">Aún no hay reseñas. Aparecerán cuando tus alumnos terminen un curso y lo califiquen.</p>';
       else if (!window.Chart) graf.innerHTML = '<p class="rs-vacio" style="text-align:center;margin:26px 0;font-size:13px;">No se pudo cargar la librería de gráficas. Recarga la página.</p>';
       else {
         graf.innerHTML = '<canvas id="rs-chart"></canvas>';
-        graf.style.height = Math.max(160, cursos.length * 44 + 44) + 'px';
+        graf.style.height = Math.max(160, vistasG.length * 44 + 44) + 'px';
         Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
         window.__rsChart = new Chart(document.getElementById('rs-chart'), {
           type: 'bar',
-          data: { labels: cursos.map(c => c.titulo.length > 44 ? c.titulo.slice(0, 43) + '…' : c.titulo),
-            datasets: [{ data: cursos.map(c => Math.round(c.prom * 10) / 10), backgroundColor: cursos.map(c => GRUPOS[c.grupo].color), borderRadius: 6, maxBarThickness: 28 }] },
+          data: { labels: vistasG.map(c => c.titulo.length > 44 ? c.titulo.slice(0, 43) + '…' : c.titulo),
+            datasets: [{ data: vistasG.map(c => Math.round(c.prom * 10) / 10), backgroundColor: vistasG.map(c => GRUPOS[c.grupo].color), borderRadius: 6, maxBarThickness: 28 }] },
           options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false },
-            tooltip: { callbacks: { label: ctx => dos(ctx.parsed.x) + ' estrellas · ' + cursos[ctx.dataIndex].n + (cursos[ctx.dataIndex].n === 1 ? ' reseña' : ' reseñas') } } },
+            tooltip: { callbacks: { label: ctx => dos(ctx.parsed.x) + ' estrellas · ' + vistasG[ctx.dataIndex].n + (vistasG[ctx.dataIndex].n === 1 ? ' reseña' : ' reseñas') } } },
             scales: { x: { min: 0, max: 5, ticks: { stepSize: 1 } } } }
         });
       }
     }
+    const pieG = document.getElementById('rs-graf-pie');
+    if (pieG) {
+      pieG.innerHTML = Pages._verMasHtml(cursos.length, limiteGraf, INI_GRAF);
+      pieG.onclick = ev => { const n = Pages._verMasNuevo(ev, limiteGraf, INI_GRAF, 6); if (n !== null) { limiteGraf = n; pintarGraf(); } };
+    }
+    };
+    pintarGraf();
 
     // Los tres grupos (y los que aún tienen pocas reseñas)
     const gruposCaja = document.getElementById('rs-grupos');
@@ -2997,7 +3009,8 @@ const Pages={
     // Lista de comentarios con filtros
     const selCurso = document.getElementById('rs-f-curso');
     if (selCurso) selCurso.insertAdjacentHTML('beforeend', cursos.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es')).map(c => '<option value="' + AdminEsc(c.id) + '">' + AdminEsc(c.titulo) + ' (' + c.n + ')</option>').join(''));
-    let limite = 30;
+    const INI_COM = 10;
+    let limite = INI_COM;
     const fecha = ms => { const f = new Date(ms); return f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA }) + ' · ' + f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA }); };
     const pintar = () => {
       if (!lista) return;
@@ -3013,11 +3026,10 @@ const Pages={
         return '<div class="rs-fila"><div class="rs-fila__cab"><span style="font-size:13px;"><strong>' + AdminEsc(quien) + '</strong> · ' + estrellas(Number(r.estrellas) || 0) + '</span><span>' + AdminEsc(fecha(r.actualizadaMs || r.creadaMs)) + '</span></div>'
           + '<p class="rs-fila__curso">' + AdminEsc(r.curso || r.cursoId) + (r.email ? ' · ' + AdminEsc(r.email) : '') + '</p>'
           + (com ? '<p class="rs-fila__txt">' + AdminEsc(com) + '</p>' : '<p class="rs-fila__sin">Solo calificó, sin comentario.</p>') + '</div>';
-      }).join('') + (vistas.length > limite ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="rs-mas" class="btn btn--ghost">Ver más (' + (vistas.length - limite) + ')</button></div>' : '');
-      const mas = document.getElementById('rs-mas');
-      if (mas) mas.onclick = () => { limite += 30; pintar(); };
+      }).join('') + Pages._verMasHtml(vistas.length, limite, INI_COM);
+      lista.onclick = ev => { const n = Pages._verMasNuevo(ev, limite, INI_COM, 20); if (n !== null) { limite = n; pintar(); } };
     };
-    ['rs-f-curso', 'rs-f-est', 'rs-f-com'].forEach(id => { const el = document.getElementById(id); if (el) el.onchange = () => { limite = 30; pintar(); }; });
+    ['rs-f-curso', 'rs-f-est', 'rs-f-com'].forEach(id => { const el = document.getElementById(id); if (el) el.onchange = () => { limite = INI_COM; pintar(); }; });
     pintar();
   },
 
@@ -3083,7 +3095,12 @@ const Pages={
         </div>
         <div class="cr-card" style="margin-top:20px;">
           <style>
-            .cp-form{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1.3fr) minmax(0,.9fr) auto;gap:10px;align-items:end;margin:6px 0 14px}
+            .cp-form{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) minmax(0,.9fr) auto;gap:10px;align-items:end;margin:6px 0 14px}
+            .cp-vence{grid-column:1 / -1;padding-top:4px}
+            .cp-vence .cp-lbl{display:block;font-size:11.5px;font-weight:700;color:var(--text-2)}
+            .cp-otra{display:none;gap:10px;flex-wrap:wrap;margin-top:8px}
+            .cp-otra label{flex:1 1 160px}
+            #cp-resumen{margin:8px 0 0;padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);font-size:12.5px;color:var(--text-2)}
             .cp-form label{display:block;font-size:11.5px;font-weight:700;color:var(--text-2)}
             .cp-form label .cr-campo{margin-top:4px}
             .cp-fila{display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1.3fr) minmax(0,1.3fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--border);font-size:13px}
@@ -3099,9 +3116,25 @@ const Pages={
           <form id="cp-form" class="cp-form" autocomplete="off">
             <label>Clave (vacía = al azar)<input id="cp-clave" class="cr-campo" maxlength="30" placeholder="Ej.: CANAL100"></label>
             <label>Créditos<input id="cp-creditos" class="cr-campo" type="number" min="1" max="10000" step="1" value="100" inputmode="numeric"></label>
-            <label>Vence el (opcional)<input id="cp-vence" class="cr-campo" type="datetime-local"></label>
             <label>Máximo de personas<input id="cp-max" class="cr-campo" type="number" min="1" step="1" placeholder="Sin límite" inputmode="numeric"></label>
             <button type="submit" class="btn btn--accent" id="cp-crear">Crear cupón</button>
+            <div class="cp-vence" id="cp-vence">
+              <span class="cp-lbl">¿Cuándo deja de servir el cupón?</span>
+              <div class="cr-chips" id="cp-chips" style="margin:6px 0 0;">
+                <button type="button" class="on" data-vence="sin">No vence</button>
+                <button type="button" data-vence="1h">En 1 hora</button>
+                <button type="button" data-vence="6h">En 6 horas</button>
+                <button type="button" data-vence="24h">En 24 horas</button>
+                <button type="button" data-vence="3d">En 3 días</button>
+                <button type="button" data-vence="7d">En 7 días</button>
+                <button type="button" data-vence="otra">Elegir día y hora</button>
+              </div>
+              <div class="cp-otra" id="cp-otra">
+                <label>Día<input id="cp-fecha" class="cr-campo" type="date"></label>
+                <label>Hora<input id="cp-hora" class="cr-campo" type="time" value="23:59"></label>
+              </div>
+              <p id="cp-resumen">El cupón no vence: sirve hasta que lo pauses o se acabe el cupo.</p>
+            </div>
           </form>
           <div id="cp-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
         </div>
@@ -3109,6 +3142,7 @@ const Pages={
           <h3>¿Qué materiales canjean más?</h3>
           <p class="cr-sub" id="cr-graf-sub">Cuántas veces se canjeó cada material.</p>
           <div id="cr-graf" style="position:relative;"><canvas id="cr-chart"></canvas></div>
+          <div id="cr-graf-pie"></div>
         </div>
         <div class="cr-card" style="margin-top:16px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
@@ -3135,6 +3169,21 @@ const Pages={
     Pages._cargarCupones();
   },
 
+  // "Ver más / Ver menos" de las listas y gráficas largas: arrancan cortas y cada toque muestra un poco más
+  _verMasHtml(total, limite, inicial){
+    const quedan = total - limite;
+    let h = '';
+    if (quedan > 0) h += '<button type="button" class="btn btn--ghost" data-vm="mas">Ver más (' + quedan + ')</button>';
+    if (limite > inicial && total > inicial) h += '<button type="button" class="btn btn--ghost" data-vm="menos">Ver menos</button>';
+    return h ? '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-top:12px;">' + h + '</div>' : '';
+  },
+  // Devuelve el nuevo límite si se tocó uno de los dos botones; null si el toque fue en otra cosa
+  _verMasNuevo(ev, limite, inicial, paso){
+    const b = ev.target.closest && ev.target.closest('[data-vm]');
+    if (!b) return null;
+    return b.dataset.vm === 'mas' ? limite + paso : inicial;
+  },
+
   // ── Cupones de créditos: la clave se comparte en el canal de WhatsApp y cada persona la canjea una sola vez ──
   async _cargarCupones(){
     const lista = document.getElementById('cp-lista');
@@ -3151,6 +3200,8 @@ const Pages={
       return j;
     };
     let cupones = [];
+    const INI_CUP = 3;
+    let limiteCup = INI_CUP;
     const ESTADOS = {
       activo: ['Activo', 'rgba(52,211,153,.18)', '#0f9f6e'], pausado: ['Pausado', 'var(--surface-3)', 'var(--text-2)'],
       vencido: ['Vencido', 'rgba(247,148,29,.18)', '#b45309'], agotado: ['Agotado', 'rgba(59,130,246,.16)', '#2563eb']
@@ -3164,7 +3215,7 @@ const Pages={
     };
     const pintar = () => {
       if (!cupones.length) { lista.innerHTML = '<p class="cr-sub" style="margin:14px 0 4px;text-align:center;">Todavía no has creado cupones.</p>'; return; }
-      lista.innerHTML = cupones.map(c => {
+      lista.innerHTML = cupones.slice(0, limiteCup).map(c => {
         const [txt, fondo, color] = ESTADOS[c.estado] || ESTADOS.activo;
         return '<div class="cp-fila" data-cp="' + AdminEsc(c.id) + '">'
           + '<div class="cp-clave"><code>' + AdminEsc(c.clave) + '</code><span>' + c.creditos + ' créditos</span></div>'
@@ -3174,7 +3225,7 @@ const Pages={
           + '<div class="cp-acc"><button type="button" class="btn btn--ghost" data-cp-copiar="' + AdminEsc(c.id) + '">Copiar mensaje</button>'
           + '<button type="button" class="btn btn--ghost" data-cp-quien="' + AdminEsc(c.id) + '">Ver quién</button>'
           + '<button type="button" class="btn btn--ghost" data-cp-estado="' + AdminEsc(c.id) + '">' + (c.estado === 'pausado' ? 'Reactivar' : 'Pausar') + '</button></div></div>';
-      }).join('');
+      }).join('') + Pages._verMasHtml(cupones.length, limiteCup, INI_CUP);
     };
     const cargar = async () => {
       try { cupones = (await llamar('/api/admin/creditos/cupones')).cupones || []; pintar(); }
@@ -3182,26 +3233,60 @@ const Pages={
     };
     await cargar();
 
+    // Vencimiento: botones rápidos (en 1 hora, en 3 días…) o un día y una hora a elegir
+    const DURACIONES = { '1h': 3600000, '6h': 21600000, '24h': 86400000, '3d': 259200000, '7d': 604800000 };
+    let vence = 'sin';
+    const venceAMs = () => {
+      if (vence === 'sin') return 0;
+      if (DURACIONES[vence]) return Date.now() + DURACIONES[vence];
+      const f = document.getElementById('cp-fecha').value, h = document.getElementById('cp-hora').value;
+      return f && h ? new Date(f + 'T' + h).getTime() : NaN;
+    };
+    const pintarResumen = () => {
+      const v = venceAMs();
+      const el = document.getElementById('cp-resumen');
+      if (vence === 'sin') el.textContent = 'El cupón no vence: sirve hasta que lo pauses o se acabe el cupo.';
+      else if (Number.isNaN(v)) el.textContent = 'Elige el día y la hora en que deja de servir.';
+      else if (v <= Date.now()) el.textContent = 'Ese día y hora ya pasaron. Elige uno más adelante.';
+      else el.textContent = 'Dejará de servir el ' + new Date(v).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) + ' a las ' + new Date(v).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/./g, '');
+    };
+    const elegirVence = clave => {
+      vence = clave;
+      document.querySelectorAll('#cp-chips [data-vence]').forEach(b => b.classList.toggle('on', b.dataset.vence === clave));
+      document.getElementById('cp-otra').style.display = clave === 'otra' ? 'flex' : 'none';
+      if (clave === 'otra') {
+        const f = document.getElementById('cp-fecha');
+        const hoy = new Date(); const dos = n => String(n).padStart(2, '0');
+        const iso = hoy.getFullYear() + '-' + dos(hoy.getMonth() + 1) + '-' + dos(hoy.getDate());
+        f.min = iso; if (!f.value) f.value = iso;
+      }
+      pintarResumen();
+    };
+    document.getElementById('cp-chips').onclick = ev => { const b = ev.target.closest('[data-vence]'); if (b) elegirVence(b.dataset.vence); };
+    ['cp-fecha', 'cp-hora'].forEach(id => { document.getElementById(id).onchange = pintarResumen; });
+
     form.onsubmit = async ev => {
       ev.preventDefault();
       const boton = document.getElementById('cp-crear');
       const creditos = Number(document.getElementById('cp-creditos').value);
-      const venceTxt = document.getElementById('cp-vence').value;
       const maxTxt = document.getElementById('cp-max').value;
       if (!Number.isInteger(creditos) || creditos < 1 || creditos > 10000) { Toast.error('Créditos inválidos', 'Escribe un número entero entre 1 y 10000'); return; }
-      const venceMs = venceTxt ? new Date(venceTxt).getTime() : 0;
-      if (venceTxt && !(venceMs > Date.now())) { Toast.error('Fecha inválida', 'La fecha y hora de vencimiento deben ser posteriores a este momento'); return; }
+      const venceMs = venceAMs();
+      if (Number.isNaN(venceMs)) { Toast.error('Falta el día o la hora', 'Elige cuándo deja de servir el cupón'); return; }
+      if (venceMs && !(venceMs > Date.now())) { Toast.error('Fecha inválida', 'El día y la hora deben ser posteriores a este momento'); return; }
       boton.disabled = true; boton.textContent = 'Creando…';
       try {
         const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify({ clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0 }) });
         Toast.success('Cupón creado', 'La clave es ' + r.clave);
-        form.reset(); document.getElementById('cp-creditos').value = '100';
+        form.reset(); document.getElementById('cp-creditos').value = '100'; elegirVence('sin');
         await cargar();
       } catch (e) { Toast.error('No se pudo crear el cupón', e.message); }
       boton.disabled = false; boton.textContent = 'Crear cupón';
     };
 
     lista.onclick = async ev => {
+      const nuevo = Pages._verMasNuevo(ev, limiteCup, INI_CUP, 5);
+      if (nuevo !== null) { limiteCup = nuevo; pintar(); return; }
       const b = ev.target.closest('button');
       if (!b) return;
       const id = b.dataset.cpCopiar || b.dataset.cpQuien || b.dataset.cpEstado;
@@ -3312,24 +3397,30 @@ const Pages={
       cuentas.forEach(m => canjesDe(m).forEach(c => { conteo[c.id] = (conteo[c.id] || 0) + 1; }));
       const barras = Object.entries(conteo).map(([id, n]) => ({ id, n, titulo: tituloDe(id) })).sort((a, b) => b.n - a.n || a.titulo.localeCompare(b.titulo, 'es'));
       const grafCaja = document.getElementById('cr-graf');
+      const vistasG = barras.slice(0, limiteGraf);
       if (grafCaja) {
         if (window.__crChart) { try { window.__crChart.destroy(); } catch (e) {} window.__crChart = null; }
         if (!barras.length) grafCaja.innerHTML = '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">Aún nadie canjea materiales. Cuando lo hagan, aquí verás cuáles les gustan más.</p>';
         else if (!window.Chart) grafCaja.innerHTML = '<p style="margin:24px 0;text-align:center;font-size:13px;color:var(--text-3);">No se pudo cargar la librería de gráficas. Recarga la página.</p>';
         else {
           grafCaja.innerHTML = '<canvas id="cr-chart"></canvas>';
-          grafCaja.style.height = Math.max(160, barras.length * 44 + 40) + 'px';
+          grafCaja.style.height = Math.max(160, vistasG.length * 44 + 40) + 'px';
           Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
           const total = barras.reduce((a, b) => a + b.n, 0);
           window.__crChart = new Chart(document.getElementById('cr-chart'), {
             type: 'bar',
-            data: { labels: barras.map(b => b.titulo.length > 42 ? b.titulo.slice(0, 41) + '…' : b.titulo), datasets: [{ data: barras.map(b => b.n), backgroundColor: barras.map((b, i) => i === 0 ? '#58B71B' : '#9CCC65'), borderRadius: 6, maxBarThickness: 30 }] },
+            data: { labels: vistasG.map(b => b.titulo.length > 42 ? b.titulo.slice(0, 41) + '…' : b.titulo), datasets: [{ data: vistasG.map(b => b.n), backgroundColor: vistasG.map((b, i) => i === 0 ? '#58B71B' : '#9CCC65'), borderRadius: 6, maxBarThickness: 30 }] },
             options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false },
               tooltip: { callbacks: { label: c => c.parsed.x + (c.parsed.x === 1 ? ' canje' : ' canjes') + ' · ' + Math.round(c.parsed.x / total * 100) + '%' } } },
               scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
           });
         }
         set('cr-graf-sub', barras.length ? 'Cuántas veces se canjeó cada material (' + total0(barras) + ' en total).' : 'Cuántas veces se canjeó cada material.');
+      }
+      const pieG = document.getElementById('cr-graf-pie');
+      if (pieG) {
+        pieG.innerHTML = Pages._verMasHtml(barras.length, limiteGraf, INI_GRAF);
+        pieG.onclick = ev => { const n = Pages._verMasNuevo(ev, limiteGraf, INI_GRAF, 5); if (n !== null) { limiteGraf = n; pintarTodo(); } };
       }
 
       // Historial de regalos: a quién, cuánto, cuándo y si ya canjeó (y qué)
@@ -3364,9 +3455,8 @@ const Pages={
           return '<div class="cr-hist"><div class="cr-user"><strong>' + AdminEsc(nombreDe(m)) + '</strong><span>' + AdminEsc(m.email || '') + '</span></div>'
             + '<div class="cr-dato cr-regalo">' + regalo + '</div><div class="cr-dato cr-estado">' + estado + '</div>'
             + '<div class="cr-accion"><div class="cr-saldo" style="margin-bottom:6px;">' + saldoDe(m) + '<small>créditos</small></div><button type="button" class="btn btn--ghost" data-cr-regalar="' + AdminEsc(m.id) + '" style="padding:6px 10px;font-size:11.5px;">Regalar más</button></div></div>';
-        }).join('') + (vistas.length > limiteHist ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="cr-mas-hist" class="btn btn--ghost">Ver más (' + (vistas.length - limiteHist) + ')</button></div>' : '');
-        const mas = document.getElementById('cr-mas-hist');
-        if (mas) mas.onclick = () => { limiteHist += 30; pintarTodo(); };
+        }).join('') + Pages._verMasHtml(vistas.length, limiteHist, INI_HIST);
+        caja.onclick = ev => { const n = Pages._verMasNuevo(ev, limiteHist, INI_HIST, 10); if (n !== null) { limiteHist = n; pintarTodo(); } };
         }
       }
 
@@ -3382,18 +3472,18 @@ const Pages={
               + '<div class="cr-plan">' + planChip(m) + '</div>'
               + '<div class="cr-saldo">' + saldo + '<small>' + (canjes ? canjes + (canjes === 1 ? ' canje' : ' canjes') : 'créditos') + '</small></div>'
               + '<div class="cr-accion"><button type="button" class="btn btn--accent" data-cr-regalar="' + AdminEsc(m.id) + '" style="padding:8px 12px;font-size:12px;">Regalar créditos</button></div></div>';
-          }).join('') + (vistas.length > limite ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="cr-mas" class="btn btn--ghost">Ver más (' + (vistas.length - limite) + ')</button></div>' : '');
-          const mas = document.getElementById('cr-mas');
-          if (mas) mas.onclick = () => { limite += 30; pintarTodo(); };
+          }).join('') + Pages._verMasHtml(vistas.length, limite, INI_CTAS);
+          lista.onclick = ev => { const n = Pages._verMasNuevo(ev, limite, INI_CTAS, 20); if (n !== null) { limite = n; pintarTodo(); } };
         }
       }
     };
     const total0 = barras => barras.reduce((a, b) => a + b.n, 0);
 
-    let texto = '', limite = 30, filtro = 'todos', limiteHist = 30;
+    const INI_GRAF = 5, INI_HIST = 5, INI_CTAS = 10;
+    let texto = '', limite = INI_CTAS, filtro = 'todos', limiteHist = INI_HIST, limiteGraf = INI_GRAF;
     const buscar = document.getElementById('cr-buscar');
-    if (buscar) buscar.oninput = () => { texto = buscar.value; limite = 30; pintarTodo(); };
-    document.querySelectorAll('[data-cr-filtro]').forEach(b => { b.onclick = () => { filtro = b.dataset.crFiltro; limiteHist = 30; pintarTodo(); }; });
+    if (buscar) buscar.oninput = () => { texto = buscar.value; limite = INI_CTAS; pintarTodo(); };
+    document.querySelectorAll('[data-cr-filtro]').forEach(b => { b.onclick = () => { filtro = b.dataset.crFiltro; limiteHist = INI_HIST; pintarTodo(); }; });
     pintarTodo();
     cargarLedger().then(pintarTodo);
 
