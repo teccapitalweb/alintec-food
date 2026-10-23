@@ -8145,6 +8145,144 @@ const Sections = (function(){
     } catch (e) { console.warn('Regalo de bienvenida:', e.message); }
   };
 
+  // ═══════════════════════════════════════════════════════════════
+  // ⭐ Reseña del curso: después de sacar el certificado, la persona califica de 1 a 5 estrellas y, si quiere, deja un comentario.
+  // La guarda el servidor (que comprueba que de verdad terminó el curso); solo la administración la lee.
+  // ═══════════════════════════════════════════════════════════════
+  const RESENAS_DESDE_MS = Date.parse('2026-10-23T00:00:00-06:00'); // solo cursos terminados desde que existe esta función
+  const RESENA_OMISIONES_MAX = 3;                                    // si dice "Ahora no", se le vuelve a preguntar hasta 3 veces en total
+  const RESENA_TEXTOS = ['', 'No me gustó', 'Podría mejorar', 'Está bien', 'Me gustó', '¡Excelente!'];
+  let _resenasMias = null;         // lo que ya calificó: [{ cursoId, estrellas, comentario }]
+  let _resenaMostrando = false;
+  let _resenasPendientesProgramado = false;
+  function resenaLlamar(ruta, opciones) {
+    return window.__currentUser.getIdToken().then(token => fetch((window.WEBHOOK_URL || 'https://alintec-webhook-production.up.railway.app') + ruta, {
+      ...(opciones || {}),
+      headers: { 'Authorization': 'Bearer ' + token, ...(opciones && opciones.body ? { 'Content-Type': 'application/json' } : {}) }
+    }));
+  }
+  async function resenasCargarMias() {
+    if (_resenasMias) return _resenasMias;
+    const r = await resenaLlamar('/api/v2/resenas/mias');
+    if (!r.ok) throw new Error('No se pudieron consultar tus reseñas');
+    const j = await r.json();
+    _resenasMias = Array.isArray(j.resenas) ? j.resenas : [];
+    return _resenasMias;
+  }
+  const resenaClaveLS = cursoId => 'af_resena_omitida_' + ((window.UserState && window.UserState.uid) || '') + '_' + cursoId;
+  const resenaOmisiones = cursoId => { try { return Number(localStorage.getItem(resenaClaveLS(cursoId))) || 0; } catch (e) { return 0; } };
+  const resenaOmitir = cursoId => { try { localStorage.setItem(resenaClaveLS(cursoId), String(resenaOmisiones(cursoId) + 1)); } catch (e) {} };
+  function resenaInyectarEstilos() {
+    if (document.getElementById('resena-css')) return;
+    const st = document.createElement('style');
+    st.id = 'resena-css';
+    st.textContent = '.rsn{text-align:center}.rsn__curso{margin:0 0 14px;font:700 14px/1.35 "Plus Jakarta Sans",sans-serif;color:var(--text)}'
+      + '.rsn__estrellas{display:flex;justify-content:center;gap:6px;margin:4px 0 6px}'
+      + '.rsn__estrellas button{border:0;background:none;padding:2px 3px;cursor:pointer;font-size:42px;line-height:1;color:var(--border-2,#cfd8d1);transition:transform .12s,color .12s}'
+      + '.rsn__estrellas button:hover{transform:scale(1.12)}.rsn__estrellas button.on{color:#F5B83D;text-shadow:0 2px 10px rgba(245,184,61,.45)}'
+      + '.rsn__txt{min-height:20px;margin:0 0 14px;font:700 13px "Plus Jakarta Sans",sans-serif;color:var(--text-2)}'
+      + '.rsn__lbl{display:block;margin:0 0 6px;text-align:left;font-size:12px;font-weight:700;color:var(--text-2)}'
+      + '.rsn textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:84px;padding:11px 13px;border:1px solid var(--border-2);border-radius:12px;background:var(--surface-2);color:var(--text);font:500 13.5px/1.5 Inter,sans-serif}'
+      + '.rsn__cont{display:block;margin-top:4px;text-align:right;font-size:11px;color:var(--text-3)}';
+    document.head.appendChild(st);
+  }
+  // La tarjeta con las estrellas. Devuelve una promesa que se cumple al cerrarla.
+  function resenaMostrar(curso) {
+    return new Promise(resolve => {
+      if (_resenaMostrando || !curso || !curso.id) { resolve(false); return; }
+      _resenaMostrando = true;
+      resenaInyectarEstilos();
+      let estrellas = 0, enviando = false, enviada = false;
+      const pie = document.createElement('div');
+      pie.className = 'cred-pie';
+      const ahoraNo = document.createElement('button');
+      ahoraNo.type = 'button'; ahoraNo.className = 'btn btn--ghost'; ahoraNo.textContent = 'Ahora no';
+      const enviar = document.createElement('button');
+      enviar.type = 'button'; enviar.className = 'btn btn--accent'; enviar.textContent = 'Enviar'; enviar.disabled = true;
+      pie.appendChild(ahoraNo); pie.appendChild(enviar);
+      Modal.open({
+        id: 'resena-curso', title: '¿Qué te pareció el curso?', subtitle: 'Tu opinión nos ayuda a mejorar', icon: 'i-trophy', size: 'sm', closeOnBackdrop: false,
+        onClose: () => { _resenaMostrando = false; if (!enviada) resenaOmitir(curso.id); resolve(enviada); },
+        body: '<div class="rsn"><p class="rsn__curso">' + escapeHtml(curso.titulo) + '</p>'
+          + '<div class="rsn__estrellas" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">'
+          + [1, 2, 3, 4, 5].map(n => '<button type="button" role="radio" aria-checked="false" data-e="' + n + '" aria-label="' + n + (n === 1 ? ' estrella' : ' estrellas') + '">★</button>').join('')
+          + '</div><p class="rsn__txt" id="rsn-txt">Toca una estrella para calificar</p>'
+          + '<label class="rsn__lbl" for="rsn-com">Cuéntanos más (opcional)</label>'
+          + '<textarea id="rsn-com" maxlength="500" placeholder="¿Qué te gustó? ¿Qué podemos mejorar?"></textarea>'
+          + '<small class="rsn__cont"><span id="rsn-n">0</span>/500</small></div>',
+        footer: pie
+      });
+      const botones = [...document.querySelectorAll('.rsn__estrellas button')];
+      const pintar = n => botones.forEach(b => { const on = Number(b.dataset.e) <= n; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(Number(b.dataset.e) === estrellas)); });
+      botones.forEach(b => {
+        b.addEventListener('click', () => { estrellas = Number(b.dataset.e); pintar(estrellas); const t = document.getElementById('rsn-txt'); if (t) t.textContent = RESENA_TEXTOS[estrellas]; enviar.disabled = false; });
+        b.addEventListener('mouseenter', () => pintar(Number(b.dataset.e)));
+        b.addEventListener('mouseleave', () => pintar(estrellas));
+      });
+      const com = document.getElementById('rsn-com');
+      if (com) com.addEventListener('input', () => { const n = document.getElementById('rsn-n'); if (n) n.textContent = String(com.value.length); });
+      ahoraNo.addEventListener('click', () => Modal.close('resena-curso'));
+      enviar.addEventListener('click', async () => {
+        if (!estrellas || enviando) return;
+        enviando = true; enviar.disabled = true; enviar.textContent = 'Enviando…';
+        try {
+          const r = await resenaLlamar('/api/v2/resenas', { method: 'POST', body: JSON.stringify({ cursoId: curso.id, estrellas, comentario: com ? com.value : '' }) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || 'No se pudo enviar tu reseña');
+          enviada = true;
+          _resenasMias = (_resenasMias || []).filter(x => x.cursoId !== curso.id).concat([{ cursoId: curso.id, estrellas, comentario: com ? com.value.trim() : '' }]);
+          if (typeof Toast !== 'undefined') Toast.success('¡Gracias por tu opinión!', 'Tu reseña nos ayuda a mejorar los cursos.');
+          Modal.close('resena-curso');
+        } catch (e) {
+          enviando = false; enviar.disabled = false; enviar.textContent = 'Enviar';
+          if (typeof Toast !== 'undefined') Toast.error('No se pudo enviar', e.message || 'Intenta nuevamente');
+        }
+      });
+    });
+  }
+  // Espera a que terminen los avisos en pantalla (felicitación, certificado, otros) antes de mostrar la tarjeta
+  function resenaEsperarLibre(cb, estableMs) {
+    const t0 = Date.now();
+    let libreDesde = 0;
+    const iv = setInterval(() => {
+      const ocupado = document.visibilityState === 'hidden' || window.__bienvenidaPendiente === true || window.__perfilTarjetaPendiente === true
+        || document.getElementById('splash-completado') || document.getElementById('premio-xp') || document.getElementById('splash-bienvenida')
+        || document.getElementById('name-modal') || document.getElementById('pfb-modal') || document.getElementById('creditos-aviso')
+        || document.body.classList.contains('membership-tour-open') || document.querySelector('.modal-backdrop');
+      if (ocupado) libreDesde = 0; else if (!libreDesde) libreDesde = Date.now();
+      if (libreDesde && Date.now() - libreDesde > (estableMs || 2500)) { clearInterval(iv); cb(); }
+      else if (Date.now() - t0 > 600000) clearInterval(iv);
+    }, 600);
+  }
+  // Justo después de sacar el certificado
+  function resenaProgramar(curso) {
+    if (window.__isDemoMode === true || !window.__currentUser || esAdminReal()) return;
+    resenaEsperarLibre(async () => {
+      try {
+        const mias = await resenasCargarMias();
+        if (mias.some(x => x.cursoId === curso.id)) return;
+        await resenaMostrar(curso);
+      } catch (e) { console.warn('[reseñas]', e.message); }
+    }, 2500);
+  }
+  // En visitas posteriores: un curso terminado desde que existe la función, sin reseña y al que se le ha preguntado menos de 3 veces
+  function resenaProgramarPendientes() {
+    if (_resenasPendientesProgramado || window.__isDemoMode === true || !window.__currentUser || esAdminReal()) return;
+    _resenasPendientesProgramado = true;
+    resenaEsperarLibre(async () => {
+      try {
+        const mias = await resenasCargarMias();
+        const progreso = getProgreso();
+        const pendiente = cursos.find(c => {
+          const p = progreso[c.id];
+          const fin = p && p.completado === true && p.fechaCompletado ? Date.parse(p.fechaCompletado) : 0;
+          return fin >= RESENAS_DESDE_MS && p.certificado && p.certificado.folio && !mias.some(x => x.cursoId === c.id) && resenaOmisiones(c.id) < RESENA_OMISIONES_MAX;
+        });
+        if (pendiente) await resenaMostrar(pendiente);
+      } catch (e) { console.warn('[reseñas]', e.message); }
+    }, 7000);
+  }
+
   function mostrarSplashCompletado(curso) {
     // Cerrar visor si está abierto
     if (typeof window.cerrarVisor === 'function') window.cerrarVisor();
@@ -8158,6 +8296,7 @@ const Sections = (function(){
     // en el navegador no coincidiría con el certificado firmado ni con su QR.
     const folio = progreso.certificado?.folio || '';
     if (!folio) return;
+    try { resenaProgramar(curso); } catch (e) {}
     const nombre = window.UserState?.nombre || window.UserState?.displayName || (window.UserState?.email||'').split('@')[0] || 'Usuario VIP';
     // Objeto certificado real (mismos campos que en la sección Certificados)
     const certObj = {
@@ -8471,6 +8610,7 @@ const Sections = (function(){
       try { primerCursoRetosCargar(); } catch (e) {}
       programarFlujoPrueba();
       try { credProgramarAviso(); } catch (e) {}
+      try { resenaProgramarPendientes(); } catch (e) {}
       setTimeout(() => { try { window.__sincronizarProgresoPendiente?.(); } catch(e){} }, 0);
     } catch (e) {
       console.warn('No se pudo cargar el catálogo seguro:', e.message);

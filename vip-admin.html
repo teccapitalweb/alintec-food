@@ -1316,6 +1316,7 @@ window.__signOut = async () => {
 <symbol id="i-shield-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1-8.5 15a12 12 0 0 1-8.5-15a12 12 0 0 0 8.5-3"/><path d="M9 12l2 2l4-4"/></symbol>
 <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
 <symbol id="i-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/><line x1="3" y1="20" x2="21" y2="20"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
 <symbol id="i-credit-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8s11 8 11 8s-4 8-11 8s-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></symbol>
@@ -1360,6 +1361,7 @@ window.__signOut = async () => {
       <a class="nav-item" data-section="webinars"><svg class="ic"><use href="#i-broadcast"/></svg>Clases en vivo<span class="nav-item__badge" id="badge-webinars">0</span></a>
       <a class="nav-item" data-section="pdfs"><svg class="ic"><use href="#i-news"/></svg>PDFs y material<span class="nav-item__badge" id="badge-pdfs">0</span></a>
       <a class="nav-item" data-section="certificados"><svg class="ic"><use href="#i-certificate"/></svg>Certificados<span class="nav-item__badge" id="badge-certs">0</span></a>
+      <a class="nav-item" data-section="resenas"><svg class="ic"><use href="#i-star"/></svg>Reseñas</a>
     </div>
 
     <div class="nav-section">
@@ -1376,7 +1378,7 @@ window.__signOut = async () => {
 
     <div class="nav-section">
       <div class="nav-label">Comunidad</div>
-      <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros VIP<span class="nav-item__badge" id="badge-miembros" title="Miembros activos">0</span></a>
+      <a class="nav-item" data-section="miembros"><svg class="ic"><use href="#i-users"/></svg>Miembros<span class="nav-item__badge" id="badge-miembros" title="Miembros activos">0</span></a>
       <a class="nav-item" data-section="suscripciones"><svg class="ic"><use href="#i-credit-card"/></svg>Suscripciones</a>
       <a class="nav-item" data-section="creditos"><svg class="ic"><use href="#i-zap"/></svg>Créditos</a>
       <a class="nav-item" data-section="noticias"><svg class="ic"><use href="#i-news"/></svg>Noticias y datos</a>
@@ -2802,6 +2804,221 @@ const Pages={
       document.querySelectorAll('[data-pg-modo]').forEach(b => { b.onclick = () => pintar(b.dataset.pgModo); });
       pintar('elegidas');
     }
+  },
+
+  // ── Reseñas: cómo califican los alumnos los cursos que terminaron ──
+  resenas(p){
+    p.innerHTML = `
+      <div class="fade-up">
+        <style>
+          .rs-card{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;min-width:0}
+          .rs-card h3{margin:0 0 4px;font-size:14px;color:var(--text)}
+          .rs-sub{margin:0 0 12px;font-size:11.5px;color:var(--text-3);line-height:1.5}
+          .rs-leyenda{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+          .rs-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--surface-3);color:var(--text-2)}
+          .rs-chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+          .rs-grupos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+          .rs-grupo{border:1px solid var(--border);border-radius:12px;padding:13px;background:var(--surface);min-width:0}
+          .rs-grupo h4{margin:0 0 2px;font-size:13px;display:flex;align-items:center;gap:7px}
+          .rs-grupo small{display:block;margin-bottom:8px;font-size:11px;color:var(--text-3)}
+          .rs-grupo li{list-style:none;display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:12.5px}
+          .rs-grupo li span:first-child{overflow-wrap:anywhere;color:var(--text)}
+          .rs-grupo li span:last-child{white-space:nowrap;font-weight:800;color:var(--text)}
+          .rs-grupo ul{margin:0;padding:0}
+          .rs-vacio{margin:8px 0 0;font-size:12px;color:var(--text-3)}
+          .rs-dist{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12.5px}
+          .rs-dist b{width:34px;color:var(--text);white-space:nowrap}
+          .rs-dist .rs-barra{flex:1;height:10px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+          .rs-dist .rs-barra i{display:block;height:100%;border-radius:99px;background:#F5B83D}
+          .rs-dist span{width:68px;text-align:right;color:var(--text-3);white-space:nowrap}
+          .rs-est{color:#F5B83D;letter-spacing:1px;white-space:nowrap}.rs-est .off{color:var(--border-2)}
+          .rs-fila{padding:13px 0;border-bottom:1px solid var(--border);font-size:13px}
+          .rs-fila:last-child{border-bottom:0}
+          .rs-fila__cab{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+          .rs-fila__cab strong{color:var(--text)}
+          .rs-fila__cab span{font-size:11.5px;color:var(--text-3)}
+          .rs-fila__curso{margin:3px 0 0;font-size:12px;color:var(--text-3)}
+          .rs-fila__txt{margin:7px 0 0;color:var(--text);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+          .rs-fila__sin{margin:7px 0 0;font-size:12px;font-style:italic;color:var(--text-3)}
+          .rs-filtros{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+          .rs-filtros select{padding:8px 10px;border:1px solid var(--border-2);border-radius:10px;background:var(--surface);color:var(--text);font:500 12.5px Inter,sans-serif;max-width:100%}
+          .rs-filtros label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2)}
+          .rs-cv{position:relative}
+          @media(max-width:900px){.rs-grupos{grid-template-columns:minmax(0,1fr)}}
+        </style>
+        <div class="sec-hero">
+          <span class="sec-hero__eyebrow">Contenido</span>
+          <h1 class="sec-hero__title">Reseñas</h1>
+          <p class="sec-hero__sub">Lo que opinan tus alumnos de los cursos que terminaron: estrellas de 1 a 5 y, si quisieron, un comentario. Solo tú las ves.</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--c1:#F5B83D;--c2:#FBBF24;">
+            <div class="kpi-card__label">Calificación promedio</div>
+            <div class="kpi-card__value" id="rs-kpi-prom">—</div>
+            <div class="kpi-card__sub" id="rs-kpi-prom-sub">de 5 estrellas</div>
+          </div>
+          <div class="kpi-card" style="--c1:#58B71B;--c2:#9CCC65;">
+            <div class="kpi-card__label">Reseñas recibidas</div>
+            <div class="kpi-card__value" id="rs-kpi-total">—</div>
+            <div class="kpi-card__sub" id="rs-kpi-total-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#3B82F6;--c2:#60A5FA;">
+            <div class="kpi-card__label">Con comentario</div>
+            <div class="kpi-card__value" id="rs-kpi-com">—</div>
+            <div class="kpi-card__sub" id="rs-kpi-com-sub">—</div>
+          </div>
+          <div class="kpi-card" style="--c1:#A855F7;--c2:#C084FC;">
+            <div class="kpi-card__label">Cursos calificados</div>
+            <div class="kpi-card__value" id="rs-kpi-cursos">—</div>
+            <div class="kpi-card__sub" id="rs-kpi-cursos-sub">—</div>
+          </div>
+        </div>
+        <div class="rs-card" style="margin-top:20px;">
+          <h3>¿Cómo califican tus cursos?</h3>
+          <p class="rs-sub" id="rs-graf-sub">Calificación promedio de cada curso. Un curso necesita al menos 3 reseñas para clasificarse.</p>
+          <div class="rs-leyenda">
+            <span class="rs-chip"><i style="background:#43A047"></i>Excelentes · 4.5 o más</span>
+            <span class="rs-chip"><i style="background:#3B82F6"></i>Mejor calificados · de 3.5 a 4.4</span>
+            <span class="rs-chip"><i style="background:#EF4444"></i>Por mejorar · menos de 3.5</span>
+            <span class="rs-chip"><i style="background:#9CA3AF"></i>Pocas reseñas</span>
+          </div>
+          <div class="rs-cv" id="rs-graf" style="min-height:120px;"><p class="rs-vacio">Cargando…</p></div>
+          <div class="rs-grupos" id="rs-grupos"></div>
+        </div>
+        <div class="rs-card" style="margin-top:16px;">
+          <h3>Estrellas recibidas</h3>
+          <p class="rs-sub">Cuántas reseñas hay de cada calificación.</p>
+          <div id="rs-dist"></div>
+        </div>
+        <div class="rs-card" style="margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;">
+            <h3 style="margin:0;">Comentarios y calificaciones <span id="rs-n" style="font-weight:500;color:var(--text-3);"></span></h3>
+          </div>
+          <div class="rs-filtros">
+            <select id="rs-f-curso" aria-label="Filtrar por curso"><option value="">Todos los cursos</option></select>
+            <select id="rs-f-est" aria-label="Filtrar por estrellas"><option value="">Todas las estrellas</option><option value="5">5 estrellas</option><option value="4">4 estrellas</option><option value="3">3 estrellas</option><option value="2">2 estrellas</option><option value="1">1 estrella</option></select>
+            <label><input type="checkbox" id="rs-f-com"> Solo con comentario</label>
+          </div>
+          <div id="rs-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
+        </div>
+      </div>`;
+    Pages._cargarResenas();
+  },
+
+  async _cargarResenas(){
+    const lista = document.getElementById('rs-lista');
+    let todas = [];
+    try {
+      const token = await Pages._getAuthToken();
+      const resp = await fetch(Pages._webhookUrl + '/api/admin/resenas?limite=2000', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (resp.status === 404) throw new Error('el servidor todavía no tiene esta función (se activa cuando termine su actualización)');
+      const j = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(j.error || 'respuesta ' + resp.status);
+      todas = Array.isArray(j.resenas) ? j.resenas : [];
+    } catch (e) {
+      console.error('❌ No se pudieron leer las reseñas:', e.message);
+      ['rs-graf', 'rs-lista'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<p class="rs-vacio" style="font-size:13px;">No se pudieron cargar las reseñas (' + AdminEsc(e.message || 'error') + '). <a href="#" class="rs-reintentar" style="color:var(--primary);font-weight:700;">Reintentar</a></p>'; });
+      document.querySelectorAll('.rs-reintentar').forEach(a => a.addEventListener('click', ev => { ev.preventDefault(); Pages._cargarResenas(); }));
+      return;
+    }
+    const ZONA = 'America/Mexico_City';
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const MIN = 3;
+    const grupoDe = (prom, n) => n < MIN ? 'pocas' : prom >= 4.5 ? 'excelentes' : prom >= 3.5 ? 'buenos' : 'mejorar';
+    const GRUPOS = {
+      excelentes: { nombre: 'Excelentes', rango: '4.5 estrellas o más', color: '#43A047' },
+      buenos: { nombre: 'Mejor calificados', rango: 'de 3.5 a 4.4 estrellas', color: '#3B82F6' },
+      mejorar: { nombre: 'Por mejorar', rango: 'menos de 3.5 estrellas', color: '#EF4444' },
+      pocas: { nombre: 'Pocas reseñas', rango: 'menos de 3 reseñas', color: '#9CA3AF' }
+    };
+    const estrellas = n => '<span class="rs-est" aria-label="' + n + ' de 5 estrellas">' + '★'.repeat(n) + '<span class="off">' + '★'.repeat(5 - n) + '</span></span>';
+    const dos = n => (Math.round(n * 10) / 10).toFixed(1);
+
+    // Resumen por curso
+    const porCurso = {};
+    todas.forEach(r => {
+      const c = porCurso[r.cursoId] = porCurso[r.cursoId] || { id: r.cursoId, titulo: r.curso || r.cursoId, suma: 0, n: 0 };
+      c.suma += Number(r.estrellas) || 0; c.n++;
+      if (r.curso) c.titulo = r.curso;
+    });
+    const cursos = Object.values(porCurso).map(c => ({ ...c, prom: c.n ? c.suma / c.n : 0 })).map(c => ({ ...c, grupo: grupoDe(c.prom, c.n) }))
+      .sort((a, b) => b.prom - a.prom || b.n - a.n);
+    const total = todas.length;
+    const suma = todas.reduce((a, r) => a + (Number(r.estrellas) || 0), 0);
+    const conCom = todas.filter(r => String(r.comentario || '').trim()).length;
+    set('rs-kpi-prom', total ? dos(suma / total) + ' ★' : '—');
+    set('rs-kpi-prom-sub', total ? 'de 5 estrellas · entre todos los cursos' : 'Aún no hay reseñas');
+    set('rs-kpi-total', total);
+    const semana = todas.filter(r => Date.now() - (r.actualizadaMs || 0) < 7 * 86400000).length;
+    set('rs-kpi-total-sub', total ? semana + (semana === 1 ? ' en los últimos 7 días' : ' en los últimos 7 días') : 'Llegan cuando terminan un curso');
+    set('rs-kpi-com', conCom);
+    set('rs-kpi-com-sub', total ? Math.round(conCom / total * 100) + '% dejó un comentario' : 'El comentario es opcional');
+    set('rs-kpi-cursos', cursos.length);
+    set('rs-kpi-cursos-sub', cursos.length ? cursos.filter(c => c.grupo === 'excelentes').length + ' excelentes · ' + cursos.filter(c => c.grupo === 'mejorar').length + ' por mejorar' : 'Ningún curso calificado todavía');
+
+    // Gráfica de promedios por curso, coloreada por grupo
+    const graf = document.getElementById('rs-graf');
+    if (window.__rsChart) { try { window.__rsChart.destroy(); } catch (e) {} window.__rsChart = null; }
+    if (graf) {
+      if (!cursos.length) graf.innerHTML = '<p class="rs-vacio" style="text-align:center;margin:26px 0;font-size:13px;">Aún no hay reseñas. Aparecerán cuando tus alumnos terminen un curso y lo califiquen.</p>';
+      else if (!window.Chart) graf.innerHTML = '<p class="rs-vacio" style="text-align:center;margin:26px 0;font-size:13px;">No se pudo cargar la librería de gráficas. Recarga la página.</p>';
+      else {
+        graf.innerHTML = '<canvas id="rs-chart"></canvas>';
+        graf.style.height = Math.max(160, cursos.length * 44 + 44) + 'px';
+        Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#666';
+        window.__rsChart = new Chart(document.getElementById('rs-chart'), {
+          type: 'bar',
+          data: { labels: cursos.map(c => c.titulo.length > 44 ? c.titulo.slice(0, 43) + '…' : c.titulo),
+            datasets: [{ data: cursos.map(c => Math.round(c.prom * 10) / 10), backgroundColor: cursos.map(c => GRUPOS[c.grupo].color), borderRadius: 6, maxBarThickness: 28 }] },
+          options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false },
+            tooltip: { callbacks: { label: ctx => dos(ctx.parsed.x) + ' estrellas · ' + cursos[ctx.dataIndex].n + (cursos[ctx.dataIndex].n === 1 ? ' reseña' : ' reseñas') } } },
+            scales: { x: { min: 0, max: 5, ticks: { stepSize: 1 } } } }
+        });
+      }
+    }
+
+    // Los tres grupos (y los que aún tienen pocas reseñas)
+    const gruposCaja = document.getElementById('rs-grupos');
+    if (gruposCaja) gruposCaja.innerHTML = cursos.length ? ['excelentes', 'buenos', 'mejorar'].map(k => {
+      const lista = cursos.filter(c => c.grupo === k);
+      return '<div class="rs-grupo"><h4><i style="width:10px;height:10px;border-radius:50%;background:' + GRUPOS[k].color + ';display:inline-block"></i>' + GRUPOS[k].nombre + ' (' + lista.length + ')</h4><small>' + GRUPOS[k].rango + '</small>'
+        + (lista.length ? '<ul>' + lista.map(c => '<li><span>' + AdminEsc(c.titulo) + '</span><span>' + dos(c.prom) + ' ★ · ' + c.n + '</span></li>').join('') + '</ul>' : '<p class="rs-vacio">Ningún curso por ahora.</p>') + '</div>';
+    }).join('') : '';
+    const pocas = cursos.filter(c => c.grupo === 'pocas');
+    if (gruposCaja && pocas.length) gruposCaja.insertAdjacentHTML('afterend', '<p class="rs-sub" style="margin-top:12px;">Con pocas reseñas todavía (' + pocas.length + '): ' + pocas.map(c => AdminEsc(c.titulo) + ' (' + dos(c.prom) + ' ★, ' + c.n + ')').join(' · ') + '</p>');
+
+    // Estrellas recibidas
+    const dist = document.getElementById('rs-dist');
+    if (dist) dist.innerHTML = total ? [5, 4, 3, 2, 1].map(n => {
+      const k = todas.filter(r => Number(r.estrellas) === n).length;
+      return '<div class="rs-dist"><b>' + n + ' ★</b><div class="rs-barra"><i style="width:' + Math.round(k / total * 100) + '%"></i></div><span>' + k + ' · ' + Math.round(k / total * 100) + '%</span></div>';
+    }).join('') : '<p class="rs-vacio">Aún no hay reseñas.</p>';
+
+    // Lista de comentarios con filtros
+    const selCurso = document.getElementById('rs-f-curso');
+    if (selCurso) selCurso.insertAdjacentHTML('beforeend', cursos.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es')).map(c => '<option value="' + AdminEsc(c.id) + '">' + AdminEsc(c.titulo) + ' (' + c.n + ')</option>').join(''));
+    let limite = 30;
+    const fecha = ms => { const f = new Date(ms); return f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA }) + ' · ' + f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA }); };
+    const pintar = () => {
+      if (!lista) return;
+      const fc = selCurso ? selCurso.value : '';
+      const fe = (document.getElementById('rs-f-est') || {}).value || '';
+      const solo = !!(document.getElementById('rs-f-com') || {}).checked;
+      const vistas = todas.filter(r => (!fc || r.cursoId === fc) && (!fe || String(r.estrellas) === fe) && (!solo || String(r.comentario || '').trim()));
+      set('rs-n', '(' + vistas.length + ')');
+      if (!vistas.length) { lista.innerHTML = '<p class="rs-vacio" style="text-align:center;margin:18px 0;font-size:13px;">' + (total ? 'Ninguna reseña coincide con los filtros.' : 'Todavía no hay reseñas.') + '</p>'; return; }
+      lista.innerHTML = vistas.slice(0, limite).map(r => {
+        const quien = r.nombre || String(r.email || '').split('@')[0] || 'Alumno';
+        const com = String(r.comentario || '').trim();
+        return '<div class="rs-fila"><div class="rs-fila__cab"><span style="font-size:13px;"><strong>' + AdminEsc(quien) + '</strong> · ' + estrellas(Number(r.estrellas) || 0) + '</span><span>' + AdminEsc(fecha(r.actualizadaMs || r.creadaMs)) + '</span></div>'
+          + '<p class="rs-fila__curso">' + AdminEsc(r.curso || r.cursoId) + (r.email ? ' · ' + AdminEsc(r.email) : '') + '</p>'
+          + (com ? '<p class="rs-fila__txt">' + AdminEsc(com) + '</p>' : '<p class="rs-fila__sin">Solo calificó, sin comentario.</p>') + '</div>';
+      }).join('') + (vistas.length > limite ? '<div style="text-align:center;padding-top:12px;"><button type="button" id="rs-mas" class="btn btn--ghost">Ver más (' + (vistas.length - limite) + ')</button></div>' : '');
+      const mas = document.getElementById('rs-mas');
+      if (mas) mas.onclick = () => { limite += 30; pintar(); };
+    };
+    ['rs-f-curso', 'rs-f-est', 'rs-f-com'].forEach(id => { const el = document.getElementById(id); if (el) el.onchange = () => { limite = 30; pintar(); }; });
+    pintar();
   },
 
   // ── Créditos: regalar créditos a las cuentas (se canjean por materiales descargables), historial y gráfica de canjes ──
@@ -6415,7 +6632,7 @@ const Pages={
       <div class="fade-up">
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Comunidad</span>
-          <h1 class="sec-hero__title">Miembros VIP</h1>
+          <h1 class="sec-hero__title">Miembros</h1>
           <p class="sec-hero__sub">Aquí ves <strong style="color:var(--text-2);">todos los registrados</strong> (los que crearon cuenta) y <strong style="color:var(--text-2);">todos los miembros activos</strong> (los que ya pagaron). Cada uno con su fecha de registro y/o fecha de activación.</p>
           <div class="sec-hero__actions">
             <button class="btn btn--accent" id="new-mb-btn">
@@ -8200,7 +8417,7 @@ function dirAdminCargar(){
 // ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
 // de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
 window.__CLASES_EN_VIVO_ACTIVAS = false;
-const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones','creditos'];
+const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones','creditos','resenas'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
