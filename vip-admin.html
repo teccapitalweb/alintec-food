@@ -3615,6 +3615,31 @@ const Pages={
             <div class="kpi-card__value" id="sb-kpi-fallidos">—</div>
             <div class="kpi-card__sub">Tarjeta sin fondos o rechazada</div>
           </div>
+          <div class="kpi-card" style="--c1:#F59E0B;--c2:#FBBF24;">
+            <div class="kpi-card__label">Planes por vencer</div>
+            <div class="kpi-card__value" id="sb-kpi-xvencer">—</div>
+            <div class="kpi-card__sub" id="sb-kpi-xvencer-sub">Próximos 7 días</div>
+          </div>
+          <div class="kpi-card" style="--c1:#64748B;--c2:#94A3B8;">
+            <div class="kpi-card__label">Planes vencidos</div>
+            <div class="kpi-card__value" id="sb-kpi-vencidos">—</div>
+            <div class="kpi-card__sub" id="sb-kpi-vencidos-sub">Tuvieron plan y ya no tienen acceso</div>
+          </div>
+        </div>
+        <div class="sb-card" style="margin-top:0;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 4px;">
+            <h3 style="margin:0;">Planes por vencer y vencidos</h3>
+            <div class="sb-tabs" role="tablist" aria-label="Por vencer o vencidos">
+              <button type="button" data-sb-v="xvencer" class="on">Por vencer <span id="sb-n-xvencer"></span></button>
+              <button type="button" data-sb-v="vencidos">Vencidos <span id="sb-n-vencidos"></span></button>
+            </div>
+          </div>
+          <p class="sb-sub" id="sb-venc-sub">Quién está por perder el acceso y quién ya lo perdió.</p>
+          <div id="sb-venc-opc" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px;">
+            <div class="sb-tabs" aria-label="Qué tan pronto vence"><button type="button" data-sb-h="7" class="on">7 días</button><button type="button" data-sb-h="15">15 días</button><button type="button" data-sb-h="30">30 días</button></div>
+            <div class="sb-tabs" aria-label="Filtrar por renovación"><button type="button" data-sb-solo="0" class="on">Todos</button><button type="button" data-sb-solo="1">Solo los que no se renovarán</button></div>
+          </div>
+          <div id="sb-venc-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
         </div>
         <div class="sb-graficas">
           <div class="sb-card">
@@ -3791,6 +3816,77 @@ const Pages={
     pintarMonto(modaPrimer.length ? 'primer' : 'todos');
     pintarMes();
     document.querySelectorAll('[data-sb-graf]').forEach(b => { b.onclick = () => pintarMonto(b.dataset.sbGraf); });
+
+    // Planes por vencer y vencidos: quién está por perder el acceso y quién ya lo perdió
+    (() => {
+      const caja = document.getElementById('sb-venc-lista');
+      if (!caja) return;
+      const HORA = 3600000, DIA = 86400000;
+      const ahora = Date.now();
+      const chipV = (txt, fondo, color) => '<span class="sb-chip" style="background:' + fondo + ';color:' + color + ';">' + txt + '</span>';
+      const fDia = f => f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA });
+      const fHoraV = f => f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA });
+      const noAdmin = m => String(m.plan || '').toLowerCase() !== 'admin';
+      const noSeRenueva = m => m.cancelacionProgramada === true || m.estadoSuscripcion === 'cancelacion_programada';
+      const seRenueva = m => !!m.stripeSubscriptionId && !noSeRenueva(m) && Pages._mbPlanTipo(m) !== 'regalo';
+      // Último cobro de cada persona (los pagos ya vienen del más nuevo al más viejo)
+      const ultimoPago = {};
+      pagadas.forEach(r => { if (r.fecha && !ultimoPago[r.persona]) ultimoPago[r.persona] = r; });
+      const dueno = m => m.uid || m.id;
+      const todos = miembros.filter(noAdmin).map(m => ({ m, expira: Pages._mbToDate(m.expiraEn) })).filter(x => x.expira);
+      const porVencer = todos.filter(x => Pages._mbEstaActivo(x.m)).sort((a, b) => a.expira - b.expira);
+      const vencidos = todos.filter(x => !Pages._mbEstaActivo(x.m) && x.expira.getTime() <= ahora && (Pages._mbPlanTipo(x.m) !== 'sin-plan' || x.m.stripeSubscriptionId)).sort((a, b) => b.expira - a.expira);
+      const en7 = porVencer.filter(x => x.expira.getTime() - ahora <= 7 * DIA);
+      set('sb-kpi-xvencer', en7.length);
+      set('sb-kpi-xvencer-sub', en7.length ? en7.filter(x => noSeRenueva(x.m)).length + ' no se renovarán · próximos 7 días' : 'Nadie vence en los próximos 7 días');
+      set('sb-kpi-vencidos', vencidos.length);
+      set('sb-kpi-vencidos-sub', vencidos.length ? 'El más reciente: ' + fDia(vencidos[0].expira) : 'Nadie ha perdido su plan todavía');
+      const cuando = ms => {
+        const d = ms - ahora;
+        if (d >= 0) return d < 24 * HORA ? 'en menos de 24 horas' : d < 2 * DIA ? 'mañana' : 'en ' + Math.floor(d / DIA) + ' días';
+        const p = -d;
+        return p < 24 * HORA ? 'hoy' : p < 60 * DIA ? 'hace ' + Math.floor(p / DIA) + (Math.floor(p / DIA) === 1 ? ' día' : ' días') : 'hace ' + Math.floor(p / (30 * DIA)) + ' meses';
+      };
+      const planChip = m => { const t = Pages._mbPlanTipo(m);
+        return t === 'anual' ? chipV('Anual', 'rgba(67,160,71,.16)', '#2e7d32') : t === 'mensual' ? chipV('Mensual', 'rgba(59,130,246,.12)', '#2563eb')
+          : t === 'regalo' ? chipV('Regalo', 'rgba(168,85,247,.16)', '#7e22ce') : chipV('Acceso manual', 'var(--surface-3)', 'var(--text-2)'); };
+      const fila = (x, vence) => {
+        const m = x.m;
+        const estado = vence
+          ? (noSeRenueva(m) ? chipV('No se renovará', 'rgba(247,148,29,.18)', '#b45309') : seRenueva(m) ? chipV('Se renueva solo', 'rgba(52,211,153,.18)', '#0f9f6e') : chipV('Termina sin cobro', 'var(--surface-3)', 'var(--text-2)'))
+          : (m.estadoSuscripcion === 'cancelada' || noSeRenueva(m) ? chipV('Canceló', 'rgba(247,148,29,.18)', '#b45309') : chipV('No renovó', 'rgba(239,68,68,.14)', '#dc2626'));
+        const u = ultimoPago[dueno(m)];
+        const pago = u ? '<div class="sb-monto">' + (u.monto !== null ? AdminEsc(dinero(u.monto)) : '') + '<small>Pagó el ' + AdminEsc(u.fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', ...(u.fecha.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}), timeZone: ZONA })) + '</small></div>' : '<div class="sb-monto"><small>Sin pagos registrados</small></div>';
+        const correo = String(m.email || '').toLowerCase();
+        return '<div class="sb-fila"><div class="sb-fecha"><strong>' + AdminEsc((vence ? 'Vence el ' : 'Venció el ') + fDia(x.expira)) + '</strong><span>' + AdminEsc(fHoraV(x.expira) + ' · ' + cuando(x.expira.getTime())) + '</span></div>'
+          + '<div class="sb-user"><strong>' + AdminEsc(nombreDe(m, correo)) + '</strong><span>' + AdminEsc(correo) + '</span></div>'
+          + '<div class="sb-chips">' + estado + planChip(m) + '</div>' + pago + '</div>';
+      };
+      let tab = 'xvencer', horizonte = 7, solo = false;
+      const INI = 8;
+      let limiteV = INI;
+      const pintarV = () => {
+        document.querySelectorAll('[data-sb-v]').forEach(b => b.classList.toggle('on', b.dataset.sbV === tab));
+        document.querySelectorAll('[data-sb-h]').forEach(b => b.classList.toggle('on', Number(b.dataset.sbH) === horizonte));
+        document.querySelectorAll('[data-sb-solo]').forEach(b => b.classList.toggle('on', (b.dataset.sbSolo === '1') === solo));
+        const opc = document.getElementById('sb-venc-opc');
+        if (opc) opc.style.display = tab === 'xvencer' ? 'flex' : 'none';
+        const vistasXV = porVencer.filter(x => x.expira.getTime() - ahora <= horizonte * DIA && (!solo || noSeRenueva(x.m)));
+        set('sb-n-xvencer', '(' + vistasXV.length + ')');
+        set('sb-n-vencidos', '(' + vencidos.length + ')');
+        set('sb-venc-sub', tab === 'xvencer'
+          ? 'Membresías activas que llegan a su fecha de vencimiento en los próximos ' + horizonte + ' días. «Se renueva solo» significa que Stripe cobrará de nuevo; «No se renovará» es quien ya canceló y perderá el acceso.'
+          : 'Personas que tuvieron un plan y ya no tienen acceso (del más reciente al más antiguo). Son buenas candidatas para invitarlas a volver.');
+        const vistas = tab === 'xvencer' ? vistasXV : vencidos;
+        if (!vistas.length) { caja.innerHTML = '<p style="margin:18px 0;text-align:center;color:var(--text-3);">' + (tab === 'xvencer' ? (solo ? 'Nadie que no se vaya a renovar vence en ' + horizonte + ' días.' : 'Nadie vence en los próximos ' + horizonte + ' días.') : 'Todavía nadie ha perdido su plan.') + '</p>'; return; }
+        caja.innerHTML = vistas.slice(0, limiteV).map(x => fila(x, tab === 'xvencer')).join('') + Pages._verMasHtml(vistas.length, limiteV, INI);
+      };
+      caja.onclick = ev => { const n = Pages._verMasNuevo(ev, limiteV, INI, 10); if (n !== null) { limiteV = n; pintarV(); } };
+      document.querySelectorAll('[data-sb-v]').forEach(b => { b.onclick = () => { tab = b.dataset.sbV; limiteV = INI; pintarV(); }; });
+      document.querySelectorAll('[data-sb-h]').forEach(b => { b.onclick = () => { horizonte = Number(b.dataset.sbH); limiteV = INI; pintarV(); }; });
+      document.querySelectorAll('[data-sb-solo]').forEach(b => { b.onclick = () => { solo = b.dataset.sbSolo === '1'; limiteV = INI; pintarV(); }; });
+      pintarV();
+    })();
 
     // Lista con filtros y buscador
     if (!lista) return;
