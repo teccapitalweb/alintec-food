@@ -12345,7 +12345,12 @@ const Sections = (function(){
       let visto = '';
       try { visto = localStorage.getItem(cuponClaveVisto()) || ''; } catch (e) {}
       if (visto === c.token) return;
-      esperarPanelLibre(() => { cuponMostrarTarjeta(c); }, { estable: 6500 });
+      // La tarjeta espera a que terminen las demás: al llegar su turno se confirma de nuevo que el cupón sigue vigente (pudo vencer, agotarse o pausarse mientras tanto)
+      esperarPanelLibre(() => {
+        credLlamar('/api/v2/creditos/cupon-activo').then(r => r.ok ? r.json() : null).then(k => {
+          if (k && k.cupon && k.cupon.token === c.token) cuponMostrarTarjeta(k.cupon);
+        }).catch(() => {});
+      }, { estable: 6500 });
     }).catch(() => {});
   }
   function cuponMostrarTarjeta(c) {
