@@ -3116,8 +3116,17 @@ const Pages={
           <form id="cp-form" class="cp-form" autocomplete="off">
             <label>Clave (vacía = al azar)<input id="cp-clave" class="cr-campo" maxlength="30" placeholder="Ej.: CANAL100"></label>
             <label>Créditos<input id="cp-creditos" class="cr-campo" type="number" min="1" max="10000" step="1" value="100" inputmode="numeric"></label>
-            <label>Máximo de personas<input id="cp-max" class="cr-campo" type="number" min="1" step="1" placeholder="Sin límite" inputmode="numeric"></label>
+            <label>Máximo de personas (vacío = todas)<input id="cp-max" class="cr-campo" type="number" min="1" step="1" placeholder="Todas" inputmode="numeric"></label>
             <button type="submit" class="btn btn--accent" id="cp-crear">Crear cupón</button>
+            <div class="cp-vence" id="cp-para">
+              <span class="cp-lbl">¿A quién le llega este beneficio?</span>
+              <div class="cr-chips" id="cp-publico-chips" style="margin:6px 0 0;">
+                <button type="button" class="on" data-pub="todos">Ambos (gratuitos y VIP)</button>
+                <button type="button" data-pub="gratuitos">Miembros no VIP (plan gratuito)</button>
+                <button type="button" data-pub="miembros">Miembros VIP (ya pagaron)</button>
+              </div>
+              <p class="cr-sub" id="cp-publico-ayuda" style="margin:6px 0 0;">Le llega a todas las cuentas: las del plan gratuito y las que ya pagaron.</p>
+            </div>
             <div class="cp-vence" id="cp-vence">
               <span class="cp-lbl">¿Cuándo deja de servir el cupón?</span>
               <div class="cr-chips" id="cp-chips" style="margin:6px 0 0;">
@@ -3208,7 +3217,8 @@ const Pages={
     };
     const mensajeWhatsApp = c => '🎁 ¡Cupón de ' + c.creditos + ' créditos!\nClave: ' + c.clave
       + '\n\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y canjea un material gratis.'
-      + (c.venceMs ? '\nVálido hasta el ' + fMs(c.venceMs) + ' (hora de México).' : '') + (c.maxUsos ? '\nSolo las primeras ' + c.maxUsos + ' personas.' : '');
+      + (c.venceMs ? '\nVálido hasta el ' + fMs(c.venceMs) + ' (hora de México).' : '') + (c.maxUsos ? '\nSolo las primeras ' + c.maxUsos + ' personas.' : '')
+      + (c.publico === 'miembros' ? '\nSolo para miembros VIP (con suscripción activa).' : c.publico === 'gratuitos' ? '\nSolo para cuentas del plan gratuito.' : '');
     const copiar = async (texto, aviso) => {
       try { await navigator.clipboard.writeText(texto); Toast.success(aviso); }
       catch (e) { Toast.error('No se pudo copiar', 'Selecciónalo y cópialo a mano'); }
@@ -3218,7 +3228,7 @@ const Pages={
       lista.innerHTML = cupones.slice(0, limiteCup).map(c => {
         const [txt, fondo, color] = ESTADOS[c.estado] || ESTADOS.activo;
         return '<div class="cp-fila" data-cp="' + AdminEsc(c.id) + '">'
-          + '<div class="cp-clave"><code>' + AdminEsc(c.clave) + '</code><span>' + c.creditos + ' créditos</span></div>'
+          + '<div class="cp-clave"><code>' + AdminEsc(c.clave) + '</code><span>' + c.creditos + ' créditos · ' + ({ gratuitos: 'Solo plan gratuito', miembros: 'Solo miembros VIP' }[c.publico] || 'Ambos (gratuitos y VIP)') + '</span></div>'
           + '<div class="cp-dato"><span class="cr-chip" style="background:' + fondo + ';color:' + color + ';">' + txt + '</span></div>'
           + '<div class="cp-dato"><strong>' + c.usos + (c.maxUsos ? ' de ' + c.maxUsos : '') + '</strong><span>' + (c.usos === 1 ? 'canje' : 'canjes') + ' · ' + c.entregados + ' créditos entregados</span></div>'
           + '<div class="cp-dato"><strong>' + (c.venceMs ? (c.estado === 'vencido' ? 'Venció' : 'Vence') : 'Sin fecha límite') + '</strong><span>' + (c.venceMs ? AdminEsc(fMs(c.venceMs)) : 'Hasta que lo pauses') + '</span></div>'
@@ -3262,6 +3272,14 @@ const Pages={
       }
       pintarResumen();
     };
+    const AYUDA_PUB = { todos: 'Le llega a todas las cuentas: las del plan gratuito y las que ya pagaron.', gratuitos: 'Solo le llega a las cuentas del plan gratuito (incluye las que tuvieron suscripción y ya venció). Los VIP verán que no es para ellos.', miembros: 'Solo le llega a quienes ya pagaron y tienen la suscripción activa. Las cuentas gratuitas verán que es solo para VIP.' };
+    let publico = 'todos';
+    const elegirPublico = clave => {
+      publico = clave;
+      document.querySelectorAll('#cp-publico-chips [data-pub]').forEach(b => b.classList.toggle('on', b.dataset.pub === clave));
+      document.getElementById('cp-publico-ayuda').textContent = AYUDA_PUB[clave];
+    };
+    document.getElementById('cp-publico-chips').onclick = ev => { const b = ev.target.closest('[data-pub]'); if (b) elegirPublico(b.dataset.pub); };
     document.getElementById('cp-chips').onclick = ev => { const b = ev.target.closest('[data-vence]'); if (b) elegirVence(b.dataset.vence); };
     ['cp-fecha', 'cp-hora'].forEach(id => { document.getElementById(id).onchange = pintarResumen; });
 
@@ -3276,9 +3294,9 @@ const Pages={
       if (venceMs && !(venceMs > Date.now())) { Toast.error('Fecha inválida', 'El día y la hora deben ser posteriores a este momento'); return; }
       boton.disabled = true; boton.textContent = 'Creando…';
       try {
-        const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify({ clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0 }) });
+        const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify({ clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico }) });
         Toast.success('Cupón creado', 'La clave es ' + r.clave);
-        form.reset(); document.getElementById('cp-creditos').value = '100'; elegirVence('sin');
+        form.reset(); document.getElementById('cp-creditos').value = '100'; elegirVence('sin'); elegirPublico('todos');
         await cargar();
       } catch (e) { Toast.error('No se pudo crear el cupón', e.message); }
       boton.disabled = false; boton.textContent = 'Crear cupón';
