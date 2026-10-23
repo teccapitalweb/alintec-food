@@ -3239,7 +3239,11 @@ const Pages={
     };
     const cargar = async () => {
       try { cupones = (await llamar('/api/admin/creditos/cupones')).cupones || []; pintar(); }
-      catch (e) { lista.innerHTML = '<p class="cr-sub" style="margin:12px 0;">No se pudieron leer los cupones (' + AdminEsc(e.message) + ').</p>'; }
+      catch (e) {
+        lista.innerHTML = '<p class="cr-sub" style="margin:12px 0;">No se pudieron leer los cupones (' + AdminEsc(e.message) + '). Tus cupones siguen guardados. <a href="#" id="cp-reintentar" style="color:var(--primary);font-weight:700;">Reintentar</a></p>';
+        const re = document.getElementById('cp-reintentar');
+        if (re) re.addEventListener('click', ev => { ev.preventDefault(); lista.textContent = 'Cargando…'; cargar(); });
+      }
     };
     await cargar();
 
@@ -7369,7 +7373,9 @@ const Pages={
 
   // Obtener token de Firebase Auth para llamar al webhook
   async _getAuthToken() {
-    const user = window._fb?.auth?.currentUser;
+    let user = window._fb?.auth?.currentUser;
+    // Si la sesión del administrador todavía se está confirmando (recién abierta o recargada la página), se espera en lugar de fallar
+    if (!user) { await Pages._esperarAdmin(); user = window._fb?.auth?.currentUser; }
     if (!user) throw new Error('No hay usuario autenticado');
     return await user.getIdToken();
   },
