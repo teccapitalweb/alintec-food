@@ -12066,12 +12066,15 @@ const Sections = (function(){
   // El administrador regala créditos; cada material cuesta lo que indica el catálogo (100). El servidor lleva el saldo,
   // decide si el canje procede y entrega el archivo solo a quien ya lo canjeó.
   // ═══════════════════════════════════════════════════════════════════
-  const CRED_TIPOS = { excel: 'Excel', pdf: 'PDF', checklist: 'Checklist', powerpoint: 'PowerPoint', word: 'Word' };
-  const CRED_EXT = { excel: 'xlsx', powerpoint: 'pptx', word: 'docx', pdf: 'pdf', checklist: 'pdf' };
+  const CRED_TIPOS = { excel: 'Excel', pdf: 'PDF', checklist: 'Checklist', powerpoint: 'PowerPoint', word: 'Word', infografia: 'Infografía' };
+  const CRED_EXT = { excel: 'xlsx', powerpoint: 'pptx', word: 'docx', pdf: 'pdf', checklist: 'pdf', infografia: 'jpg' };
   let _credEstado = null;        // { saldo, costo, aviso, materiales } tal como lo responde el servidor
   let _credCargando = null;
   let _credAvisoProgramado = false;
   let _cuponProgramado = false;
+  // El estante empieza con los primeros materiales (los más fáciles de abrir) y cada toque en «Ver más» muestra más
+  const CRED_INI = 12;
+  let _credLimite = CRED_INI;
   // Al entrar solo se muestra UNA tarjeta informativa (regalo, cupón o reseña pendiente): nunca se amontonan
   function tarjetaIngresoTomar() {
     if (window.__tarjetaIngreso === true) return false;
@@ -12146,7 +12149,7 @@ const Sections = (function(){
   function credTarjetasHTML() {
     const e = _credEstado;
     if (!e || !Array.isArray(e.materiales) || !e.materiales.length) return '';
-    return e.materiales.map(m => {
+    return e.materiales.slice(0, _credLimite).map(m => {
       const portada = credPortada(m);
       const etiqueta = m.canjeado ? '<span class="mat-canje__tag mat-canje__tag--ok">Canjeado</span>'
         : m.porRetos ? '<span class="mat-canje__tag mat-canje__tag--ok">Desbloqueado</span>'
@@ -12158,7 +12161,14 @@ const Sections = (function(){
         + (portada ? '' : '<span class="mat-canje__ph">' + escapeHtml(m.titulo) + '</span>') + '</div>'
         + '<div class="mat-canje__body"><div class="mat-canje__title">' + escapeHtml(m.titulo) + '</div>'
         + '<div class="mat-canje__detalle">' + escapeHtml(m.detalle || m.categoria || '') + '</div>' + etiqueta + '</div></article>';
-    }).join('');
+    }).join('') + credMasHTML(e.materiales.length);
+  }
+  function credMasHTML(total) {
+    const quedan = total - _credLimite;
+    let h = '';
+    if (quedan > 0) h += '<button type="button" class="btn btn--ghost" data-cred-vm="mas">Ver más materiales (' + quedan + ')</button>';
+    if (_credLimite > CRED_INI && total > CRED_INI) h += '<button type="button" class="btn btn--ghost" data-cred-vm="menos">Ver menos</button>';
+    return h ? '<div class="mat-mas">' + h + '</div>' : '';
   }
   // Pinta los materiales al final del estante de libros y los mantiene al día (primero con lo último conocido, luego con lo del servidor)
   function credIniciarEstante(container) {
@@ -12176,7 +12186,7 @@ const Sections = (function(){
         if (nuevo && texto) nuevo.value = texto;
         if (nuevo && enfocado) nuevo.focus();
       }
-      estante.querySelectorAll('.mat-canje').forEach(n => n.remove());
+      estante.querySelectorAll('.mat-canje, .mat-mas').forEach(n => n.remove());
       estante.insertAdjacentHTML('beforeend', credTarjetasHTML());
       const cuenta = container.querySelector('#bib-estante-cuenta');
       const nMat = _credEstado && Array.isArray(_credEstado.materiales) ? _credEstado.materiales.length : 0;
@@ -12186,7 +12196,11 @@ const Sections = (function(){
     credCargar().then(pintar);
     const slotCupon = container.querySelector('#cred-saldo-slot');
     if (slotCupon) slotCupon.addEventListener('submit', ev => { const f = ev.target.closest('#cred-cupon-form'); if (f) { ev.preventDefault(); credCanjearCupon(f); } });
-    estante.addEventListener('click', ev => { const t = ev.target.closest('.mat-canje'); if (t) credAbrirMaterial(t.dataset.mat); });
+    estante.addEventListener('click', ev => {
+      const vm = ev.target.closest('[data-cred-vm]');
+      if (vm) { _credLimite = vm.dataset.credVm === 'mas' ? _credLimite + CRED_INI : CRED_INI; pintar(); return; }
+      const t = ev.target.closest('.mat-canje'); if (t) credAbrirMaterial(t.dataset.mat);
+    });
     estante.addEventListener('keydown', ev => {
       const t = ev.target.closest && ev.target.closest('.mat-canje');
       if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); credAbrirMaterial(t.dataset.mat); }
@@ -19499,6 +19513,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .cred-cupon input:focus{outline:2px solid color-mix(in srgb,var(--primary) 50%,transparent);outline-offset:1px}
 .cred-pasos{margin:0 0 10px;padding:0 0 0 20px;text-align:left;font-size:13.5px;line-height:1.55;color:var(--text)}.cred-pasos li{margin:0 0 6px}
 .cred-cupon__vence{font-size:12px!important;color:var(--text-3)!important}
+.mat-mas{flex:0 0 100%;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:6px 0 4px}
 .mat-canje{flex:0 0 148px;max-width:148px;scroll-snap-align:start;cursor:pointer;outline-offset:4px}
 .mat-canje__top{position:relative;aspect-ratio:3/4.22;border-radius:4px 10px 10px 4px;overflow:hidden;background:linear-gradient(150deg,#43A047,#14301C) center/cover no-repeat;box-shadow:0 14px 26px rgba(18,48,26,.22);transition:transform .2s ease}
 .mat-canje:hover .mat-canje__top,.mat-canje:focus-visible .mat-canje__top{transform:translateY(-3px)}
