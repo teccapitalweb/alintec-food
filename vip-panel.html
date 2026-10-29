@@ -3646,6 +3646,7 @@ if (window.__isDemoMode) {
         clearTimeout(_t);
         const data = await res.json();
         window.UserState.membership = data;
+        window.UserState.herramientasProHastaMs = data.herramientasProHasta ? (Date.parse(data.herramientasProHasta) || 0) : 0;
         if (data.activo) {
           window.UserState.modo = 'vip';
           window.UserState.plan = data.plan || 'mensual';
@@ -3689,6 +3690,9 @@ if (window.__isDemoMode) {
           window.UserState.fechaFinAcceso = ffa
             ? (ffa.toDate ? ffa.toDate().toISOString() : new Date(ffa).toISOString())
             : null;
+          // Respaldo si el servidor no respondió: el acceso por cupón también está en el documento de la cuenta (solo lo escribe el servidor)
+          const proDoc = Number(window.memberData.herramientasProHastaMs) || 0;
+          if (proDoc > (Number(window.UserState.herramientasProHastaMs) || 0)) window.UserState.herramientasProHastaMs = proDoc;
         } else {
           window.memberData = null;
         }
@@ -4655,7 +4659,8 @@ function pdfTablaSimple(pdf, opts){
 // Mientras las clases en vivo no estén listas se muestra "Próximamente". Para activarlas basta ponerlo en false.
 window.__CLASES_EN_VIVO_PRONTO = true;
 
-function toolEsVIP(){
+// Miembro con suscripción (o administrador). La comunidad, los retos y demás beneficios de miembro usan SOLO esto.
+function toolEsMiembro(){
   const S = window.UserState;
   if (!S) return false;
   if (S.modo === 'vip') return true;
@@ -4664,6 +4669,16 @@ function toolEsVIP(){
   if (S.isAdmin) return true;
   return false;
 }
+// Fecha (ms) hasta la que un cupón le da las Herramientas Pro; 0 si no tiene o ya venció. Se compara con la hora actual cada vez.
+function toolProTemporalHastaMs(){
+  const h = Number(window.UserState && window.UserState.herramientasProHastaMs) || 0;
+  return h > Date.now() ? h : 0;
+}
+// Acceso a las Herramientas Pro (resultados y PDF): miembros o quien tenga un cupón de acceso vigente.
+function toolEsVIP(){
+  return toolEsMiembro() || toolProTemporalHastaMs() > 0;
+}
+window.__toolProTemporalHastaMs = toolProTemporalHastaMs;
 // Devuelve true si puede continuar. Si NO es VIP, la lleva directo a Suscripción (con un aviso) y devuelve false.
 // Se llama justo cuando la persona intenta USAR la herramienta; ver la herramienta y capturar datos es libre.
 function toolRequiereVIP(nombreHerramienta){
@@ -4676,7 +4691,7 @@ function toolRequiereVIP(nombreHerramienta){
 
 // Igual que toolRequiereVIP, para la comunidad: aviso claro y directo a Suscripción.
 function comunidadRequiereVIP(accion){
-  if (toolEsVIP()) return true;
+  if (toolEsMiembro()) return true;
   try { if (typeof Modal !== 'undefined' && Modal.closeAll) Modal.closeAll(); } catch(e){}
   if (typeof Toast !== 'undefined') Toast.info('Función de membresía', 'Activa tu membresía para ' + (accion || 'participar en la comunidad') + '.');
   if (typeof navigateToSection === 'function') navigateToSection('suscripcion', { skipPaywall: true });
@@ -12138,6 +12153,13 @@ const Sections = (function(){
       if (!r.ok && j.codigo === 'cupon_agotado') { campo.value = ''; cuponMostrarAgotado(j.error); boton.disabled = false; boton.textContent = 'Canjear'; return; }
       if (!r.ok) throw new Error(j.error || 'No se pudo canjear el código');
       campo.value = '';
+      if (j.tipo === 'herramientas_pro') {
+        window.UserState.herramientasProHastaMs = Date.parse(j.herramientasProHasta) || 0;
+        proTemporalPintarInsignia();
+        proTemporalAvisoCanje(j);
+        boton.disabled = false; boton.textContent = 'Canjear';
+        return;
+      }
       await credCargar(true);
       if (window.__credRepintarEstante) window.__credRepintarEstante();
       if (typeof Toast !== 'undefined') Toast.success('¡Código canjeado!', '+' + Number(j.creditos) + ' créditos · ahora tienes ' + Number(j.saldo));
@@ -12349,6 +12371,69 @@ const Sections = (function(){
     });
   }
   // Tarjeta "Hay un cupón de créditos": NO muestra la clave; invita al canal de WhatsApp, donde se comparte. Una vez por cupón y cuenta.
+  // "7 días y 12 horas", "2 horas", "1 día"
+  function proTemporalDuracionTexto(ms) {
+    const h = Math.max(1, Math.round(Number(ms) / 3600000));
+    const d = Math.floor(h / 24), r = h % 24;
+    const partes = [];
+    if (d) partes.push(d + (d === 1 ? ' día' : ' días'));
+    if (r) partes.push(r + (r === 1 ? ' hora' : ' horas'));
+    return partes.join(' y ');
+  }
+  function proTemporalGrande(ms) {
+    const h = Math.max(1, Math.round(Number(ms) / 3600000));
+    const d = Math.floor(h / 24), r = h % 24;
+    if (d) return { num: d, lbl: (d === 1 ? 'día' : 'días') + (r ? ' y ' + r + (r === 1 ? ' hora' : ' horas') : '') + ' de Herramientas Pro' };
+    return { num: r, lbl: (r === 1 ? 'hora' : 'horas') + ' de Herramientas Pro' };
+  }
+  function proTemporalFechaTexto(ms) {
+    const f = new Date(ms);
+    return f.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) + ' a las ' + f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+  // Lo que queda, en pocas palabras: "3 d 4 h", "5 h 20 min", "40 min"
+  function proTemporalRestaTexto(hastaMs) {
+    const min = Math.max(1, Math.ceil((hastaMs - Date.now()) / 60000));
+    if (min >= 1440) return Math.floor(min / 1440) + ' d ' + Math.floor((min % 1440) / 60) + ' h';
+    if (min >= 60) return Math.floor(min / 60) + ' h ' + (min % 60) + ' min';
+    return min + ' min';
+  }
+  // Insignia junto a "Herramientas pro" en el menú: solo mientras el cupón siga vigente
+  let _proTemporalReloj = null;
+  function proTemporalPintarInsignia() {
+    const hasta = toolProTemporalHastaMs();
+    const etiquetas = document.querySelectorAll('[data-tour="tools"] .nav-label, [data-tour="tools"] .mobile-drawer__label');
+    etiquetas.forEach(et => {
+      let b = et.querySelector('.pro-temporal');
+      if (!hasta || toolEsMiembro()) { if (b) b.remove(); return; }
+      if (!b) { b = document.createElement('span'); b.className = 'pro-temporal'; et.appendChild(b); }
+      b.textContent = 'Por cupón · quedan ' + proTemporalRestaTexto(hasta);
+      b.title = 'Acceso a todas las Herramientas Pro hasta el ' + proTemporalFechaTexto(hasta);
+    });
+    if (hasta && !toolEsMiembro()) {
+      if (!_proTemporalReloj) _proTemporalReloj = setInterval(proTemporalPintarInsignia, 30000);
+    } else if (_proTemporalReloj) { clearInterval(_proTemporalReloj); _proTemporalReloj = null; }
+  }
+  window.__proTemporalPintarInsignia = proTemporalPintarInsignia;
+  function proTemporalAvisoCanje(j) {
+    const hasta = Date.parse(j.herramientasProHasta) || 0;
+    if (typeof Toast !== 'undefined') Toast.success('¡Herramientas Pro activas!', 'Tienes acceso por ' + proTemporalDuracionTexto(j.duracionMs));
+    const pie = document.createElement('div');
+    pie.className = 'cred-pie';
+    const cerrar = document.createElement('button');
+    cerrar.type = 'button'; cerrar.className = 'btn btn--ghost'; cerrar.textContent = 'Cerrar';
+    cerrar.addEventListener('click', () => Modal.close('pro-temporal'));
+    const ir = document.createElement('button');
+    ir.type = 'button'; ir.className = 'btn btn--accent'; ir.textContent = 'Usar las herramientas';
+    ir.addEventListener('click', () => { Modal.close('pro-temporal'); try { navigateToSection('tool-nom051'); } catch (e) {} });
+    pie.appendChild(cerrar); pie.appendChild(ir);
+    Modal.open({
+      id: 'pro-temporal', title: 'Herramientas Pro activas', subtitle: 'Acceso por cupón', icon: 'i-bolt', size: 'sm',
+      body: '<div class="cred-aviso"><div class="cred-aviso__num">' + proTemporalGrande(j.duracionMs).num + '</div><div class="cred-aviso__lbl">' + escapeHtml(proTemporalGrande(j.duracionMs).lbl) + '</div>'
+        + '<p>Ya puedes ver los <strong>resultados y descargar el PDF</strong> de todas las Herramientas Pro. Tu acceso termina el <strong>' + escapeHtml(proTemporalFechaTexto(hasta)) + '</strong>' + (/.$/.test(proTemporalFechaTexto(hasta)) ? '' : '.') + '</p>'
+        + '<p class="cred-cupon__vence">Si canjeas otro cupón de acceso antes de que termine, el tiempo se suma. Para conservar las herramientas después, activa tu suscripción.</p></div>',
+      footer: pie
+    });
+  }
   function cuponClaveVisto() { return 'af_cupon_visto_' + (window.UserState?.uid || window.__currentUser?.uid || ''); }
   function cuponProgramarTarjeta() {
     if (_cuponProgramado || window.__isDemoMode === true || !window.__currentUser || esAdminReal()) return;
@@ -12367,9 +12452,44 @@ const Sections = (function(){
       }, { estable: 6500 });
     }).catch(() => {});
   }
+  // Lleva a PDFs y material y deja el cursor en el campo «¿Tienes un código?»
+  function cuponIrACanjear(idModal) {
+    Modal.close(idModal);
+    try { navigateToSection('pdfs'); } catch (err) {}
+    let intentos = 0;
+    const buscar = setInterval(() => {
+      const campo = document.getElementById('cred-cupon-clave');
+      if (campo || ++intentos > 20) {
+        clearInterval(buscar);
+        if (campo) { campo.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => campo.focus({ preventScroll: true }), 400); }
+      }
+    }, 300);
+  }
+  // Cupón de Herramientas Pro: se ve igual que la tarjeta "¡Felicidades! Tienes un regalo" de los créditos
+  function cuponMostrarTarjetaPro(c) {
+    const g = proTemporalGrande(c.duracionMs);
+    const pie = document.createElement('div');
+    pie.className = 'cred-pie';
+    const ahoraNo = document.createElement('button');
+    ahoraNo.type = 'button'; ahoraNo.className = 'btn btn--ghost'; ahoraNo.textContent = 'Ahora no';
+    ahoraNo.addEventListener('click', () => Modal.close('cupon-activo'));
+    const canjear = document.createElement('button');
+    canjear.type = 'button'; canjear.className = 'btn btn--accent'; canjear.textContent = 'Canjear mi cupón';
+    canjear.addEventListener('click', () => cuponIrACanjear('cupon-activo'));
+    pie.appendChild(ahoraNo); pie.appendChild(canjear);
+    const vence = c.venceMs ? '<p class="cred-cupon__vence">Disponible por tiempo limitado.</p>' : '';
+    Modal.open({
+      id: 'cupon-activo', title: '¡Felicidades!', subtitle: 'Tienes un regalo', icon: 'i-bolt', size: 'sm', closeOnBackdrop: false,
+      body: '<div class="cred-aviso"><div class="cred-aviso__num">' + g.num + '</div><div class="cred-aviso__lbl">' + escapeHtml(g.lbl) + '</div>'
+        + '<p>Tienes un cupón de acceso a <strong>todas las Herramientas Pro</strong> durante <strong>' + escapeHtml(proTemporalDuracionTexto(c.duracionMs)) + '</strong>: podrás ver los resultados y descargar el PDF de cada herramienta sin costo.</p>'
+        + '<p>Escribe tu código en <strong>PDFs y material → «¿Tienes un código?»</strong>. La clave se comparte en nuestro canal de WhatsApp.</p>' + vence + '</div>',
+      footer: pie
+    });
+  }
   function cuponMostrarTarjeta(c) {
     if (!tarjetaIngresoTomar()) return;
     try { localStorage.setItem(cuponClaveVisto(), c.token); } catch (e) {}
+    if (c.tipo === 'herramientas_pro') { cuponMostrarTarjetaPro(c); return; }
     const pie = document.createElement('div');
     pie.className = 'cred-pie';
     const ahoraNo = document.createElement('button');
@@ -17521,6 +17641,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
     // Cupón de recordatorio vigente (el mismo código que llegó por correo): cambia el texto y el botón de la barra
     if (typeof window.__bannerCupon === 'function') window.__bannerCupon();
+    if (typeof window.__proTemporalPintarInsignia === 'function') window.__proTemporalPintarInsignia();
 
     // 5. Sidebar · ocultar "Cerrar sesión" si invitado, agregar "Salir del demo"
     const navLogoutLinks = document.querySelectorAll('[data-action="logout"], .nav-item--logout');
@@ -19513,6 +19634,7 @@ html[data-theme="day"] .af-seal,body[data-theme="day"] .af-seal{box-shadow:0 8px
 .cred-cupon input:focus{outline:2px solid color-mix(in srgb,var(--primary) 50%,transparent);outline-offset:1px}
 .cred-pasos{margin:0 0 10px;padding:0 0 0 20px;text-align:left;font-size:13.5px;line-height:1.55;color:var(--text)}.cred-pasos li{margin:0 0 6px}
 .cred-cupon__vence{font-size:12px!important;color:var(--text-3)!important}
+.pro-temporal{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--alintec-green-soft,#EAF4EC);color:var(--alintec-green-deep,#397655);font:700 9px 'JetBrains Mono',monospace;letter-spacing:.3px;text-transform:none;vertical-align:middle;white-space:nowrap}
 .mat-mas{flex:0 0 100%;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:6px 0 4px}
 .mat-canje{flex:0 0 148px;max-width:148px;scroll-snap-align:start;cursor:pointer;outline-offset:4px}
 .mat-canje__top{position:relative;aspect-ratio:3/4.22;border-radius:4px 10px 10px 4px;overflow:hidden;background:linear-gradient(150deg,#43A047,#14301C) center/cover no-repeat;box-shadow:0 14px 26px rgba(18,48,26,.22);transition:transform .2s ease}

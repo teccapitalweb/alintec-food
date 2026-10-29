@@ -3097,6 +3097,9 @@ const Pages={
           <style>
             .cp-form{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) minmax(0,.9fr) auto;gap:10px;align-items:end;margin:6px 0 14px}
             .cp-vence{grid-column:1 / -1;padding-top:4px}
+            .cp-pro-dur{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:8px}
+            .cp-pro-dur label{flex:0 1 130px}
+            .cp-pro-dur .cr-chips{margin:0;flex:1 1 280px}
             .cp-vence .cp-lbl{display:block;font-size:11.5px;font-weight:700;color:var(--text-2)}
             .cp-otra{display:none;gap:10px;flex-wrap:wrap;margin-top:8px}
             .cp-otra label{flex:1 1 160px}
@@ -3111,13 +3114,37 @@ const Pages={
             .cp-acc .btn{padding:7px 10px;font-size:12px}
             @media(max-width:1000px){.cp-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.cp-form .btn{grid-column:1 / -1}.cp-fila{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a b" "c c" "d d" "e e"}.cp-fila>:nth-child(1){grid-area:a}.cp-fila>:nth-child(2){grid-area:b}.cp-fila>:nth-child(3){grid-area:c}.cp-fila>:nth-child(4){grid-area:d}.cp-fila>:nth-child(5){grid-area:e}.cp-acc{justify-content:flex-start}}
           </style>
-          <h3>Cupones de créditos</h3>
+          <h3>Cupones (créditos y Herramientas Pro)</h3>
           <p class="cr-sub">Creas una clave, la compartes en tu canal de WhatsApp y cada persona la canjea una sola vez. La clave no se muestra en el panel de las personas: solo les avisa que hay un cupón y las invita al canal.</p>
           <form id="cp-form" class="cp-form" autocomplete="off">
+            <div class="cp-vence" id="cp-tipo">
+              <span class="cp-lbl">¿Qué regala este cupón?</span>
+              <div class="cr-chips" id="cp-tipo-chips" style="margin:6px 0 0;">
+                <button type="button" class="on" data-tipo="creditos">Créditos para materiales</button>
+                <button type="button" data-tipo="herramientas_pro">Acceso a Herramientas Pro por tiempo</button>
+              </div>
+              <p class="cr-sub" id="cp-tipo-ayuda" style="margin:6px 0 0;">Cada persona recibe créditos para canjear materiales de la Biblioteca.</p>
+            </div>
             <label>Clave (vacía = al azar)<input id="cp-clave" class="cr-campo" maxlength="30" placeholder="Ej.: CANAL100"></label>
-            <label>Créditos<input id="cp-creditos" class="cr-campo" type="number" min="1" max="10000" step="1" value="100" inputmode="numeric"></label>
+            <label id="cp-creditos-campo">Créditos<input id="cp-creditos" class="cr-campo" type="number" min="1" max="10000" step="1" value="100" inputmode="numeric"></label>
             <label>Máximo de personas (vacío = todas)<input id="cp-max" class="cr-campo" type="number" min="1" step="1" placeholder="Todas" inputmode="numeric"></label>
             <button type="submit" class="btn btn--accent" id="cp-crear">Crear cupón</button>
+            <div class="cp-vence" id="cp-pro-bloque" style="display:none;">
+              <span class="cp-lbl">¿Cuánto dura el acceso a las Herramientas Pro? (desde que la persona canjea el código)</span>
+              <div class="cp-pro-dur">
+                <label>Días<input id="cp-pro-dias" class="cr-campo" type="number" min="0" max="365" step="1" value="7" inputmode="numeric"></label>
+                <label>Horas<input id="cp-pro-horas" class="cr-campo" type="number" min="0" max="23" step="1" value="0" inputmode="numeric"></label>
+                <div class="cr-chips" id="cp-pro-rapidos">
+                  <button type="button" data-pro="0:6">6 horas</button>
+                  <button type="button" data-pro="1:0">1 día</button>
+                  <button type="button" data-pro="3:0">3 días</button>
+                  <button type="button" data-pro="7:0">7 días</button>
+                  <button type="button" data-pro="15:0">15 días</button>
+                  <button type="button" data-pro="30:0">30 días</button>
+                </div>
+              </div>
+              <p id="cp-pro-resumen" class="cr-sub" style="margin:8px 0 0;"></p>
+            </div>
             <div class="cp-vence" id="cp-para">
               <span class="cp-lbl">¿A quién le llega este beneficio?</span>
               <div class="cr-chips" id="cp-publico-chips" style="margin:6px 0 0;">
@@ -3215,8 +3242,12 @@ const Pages={
       activo: ['Activo', 'rgba(52,211,153,.18)', '#0f9f6e'], pausado: ['Pausado', 'var(--surface-3)', 'var(--text-2)'],
       vencido: ['Vencido', 'rgba(247,148,29,.18)', '#b45309'], agotado: ['Agotado', 'rgba(59,130,246,.16)', '#2563eb']
     };
-    const mensajeWhatsApp = c => '🎁 ¡Cupón de ' + c.creditos + ' créditos!\nClave: ' + c.clave
-      + '\n\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y canjea un material gratis.'
+    const durTxt = ms => { const h = Math.round(ms / 3600000), d = Math.floor(h / 24), r = h % 24, p = []; if (d) p.push(d + (d === 1 ? ' día' : ' días')); if (r) p.push(r + (r === 1 ? ' hora' : ' horas')); return p.join(' y '); };
+    const beneficio = c => c.tipo === 'herramientas_pro' ? 'Herramientas Pro · ' + durTxt(c.duracionMs) : c.creditos + ' créditos';
+    const mensajeWhatsApp = c => (c.tipo === 'herramientas_pro'
+      ? '🛠️ ¡Cupón de Herramientas Pro gratis!\nClave: ' + c.clave + '\n\nTe da acceso a TODAS las Herramientas Pro (resultados y PDF) por ' + durTxt(c.duracionMs) + '.\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y listo.'
+      : '🎁 ¡Cupón de ' + c.creditos + ' créditos!\nClave: ' + c.clave
+      + '\n\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y canjea un material gratis.')
       + (c.venceMs ? '\nVálido hasta el ' + fMs(c.venceMs) + ' (hora de México).' : '') + (c.maxUsos ? '\nSolo las primeras ' + c.maxUsos + ' personas.' : '')
       + (c.publico === 'miembros' ? '\nSolo para miembros VIP (con suscripción activa).' : c.publico === 'gratuitos' ? '\nSolo para cuentas del plan gratuito.' : '');
     const copiar = async (texto, aviso) => {
@@ -3228,9 +3259,9 @@ const Pages={
       lista.innerHTML = cupones.slice(0, limiteCup).map(c => {
         const [txt, fondo, color] = ESTADOS[c.estado] || ESTADOS.activo;
         return '<div class="cp-fila" data-cp="' + AdminEsc(c.id) + '">'
-          + '<div class="cp-clave"><code>' + AdminEsc(c.clave) + '</code><span>' + c.creditos + ' créditos · ' + ({ gratuitos: 'Solo plan gratuito', miembros: 'Solo miembros VIP' }[c.publico] || 'Ambos (gratuitos y VIP)') + '</span></div>'
+          + '<div class="cp-clave"><code>' + AdminEsc(c.clave) + '</code><span>' + beneficio(c) + ' · ' + ({ gratuitos: 'Solo plan gratuito', miembros: 'Solo miembros VIP' }[c.publico] || 'Ambos (gratuitos y VIP)') + '</span></div>'
           + '<div class="cp-dato"><span class="cr-chip" style="background:' + fondo + ';color:' + color + ';">' + txt + '</span></div>'
-          + '<div class="cp-dato"><strong>' + c.usos + (c.maxUsos ? ' de ' + c.maxUsos : '') + '</strong><span>' + (c.usos === 1 ? 'canje' : 'canjes') + ' · ' + c.entregados + ' créditos entregados</span></div>'
+          + '<div class="cp-dato"><strong>' + c.usos + (c.maxUsos ? ' de ' + c.maxUsos : '') + '</strong><span>' + (c.usos === 1 ? 'canje' : 'canjes') + (c.tipo === 'herramientas_pro' ? '' : ' · ' + c.entregados + ' créditos entregados') + '</span></div>'
           + '<div class="cp-dato"><strong>' + (c.venceMs ? (c.estado === 'vencido' ? 'Venció' : 'Vence') : 'Sin fecha límite') + '</strong><span>' + (c.venceMs ? AdminEsc(fMs(c.venceMs)) : 'Hasta que lo pauses') + '</span></div>'
           + '<div class="cp-acc"><button type="button" class="btn btn--ghost" data-cp-copiar="' + AdminEsc(c.id) + '">Copiar mensaje</button>'
           + '<button type="button" class="btn btn--ghost" data-cp-quien="' + AdminEsc(c.id) + '">Ver quién</button>'
@@ -3277,8 +3308,39 @@ const Pages={
       pintarResumen();
     };
     const AYUDA_PUB = { todos: 'Le llega a todas las cuentas: las del plan gratuito y las que ya pagaron.', gratuitos: 'Solo le llega a las cuentas del plan gratuito (incluye las que tuvieron suscripción y ya venció). Los VIP verán que no es para ellos.', miembros: 'Solo le llega a quienes ya pagaron y tienen la suscripción activa. Las cuentas gratuitas verán que es solo para VIP.' };
+    // Tipo de cupón: créditos o acceso a Herramientas Pro por tiempo (este último es solo para cuentas gratuitas)
+    let tipo = 'creditos';
+    const AYUDA_TIPO = { creditos: 'Cada persona recibe créditos para canjear materiales de la Biblioteca.', herramientas_pro: 'Cada persona recibe acceso a TODAS las Herramientas Pro (resultados y PDF) durante el tiempo que elijas. Solo para cuentas gratuitas: a un miembro VIP no le aporta nada.' };
+    const duracionTexto = (d, h) => { const p = []; if (d) p.push(d + (d === 1 ? ' día' : ' días')); if (h) p.push(h + (h === 1 ? ' hora' : ' horas')); return p.join(' y '); };
+    const leerDuracion = () => {
+      const d = Number(document.getElementById('cp-pro-dias').value || 0), h = Number(document.getElementById('cp-pro-horas').value || 0);
+      const ok = Number.isInteger(d) && Number.isInteger(h) && d >= 0 && d <= 365 && h >= 0 && h <= 23 && (d * 24 + h) >= 1 && (d * 24 + h) <= 365 * 24;
+      return { d, h, ok };
+    };
+    const pintarDuracion = () => {
+      const { d, h, ok } = leerDuracion();
+      document.getElementById('cp-pro-resumen').textContent = ok ? 'Cada persona tendrá las Herramientas Pro durante ' + duracionTexto(d, h) + ' a partir de que canjee el código. Si ya tenía tiempo, se le suma.' : 'Escribe entre 1 hora y 365 días (las horas, de 0 a 23).';
+    };
+    let elegirPublico;
+    const elegirTipo = clave => {
+      tipo = clave;
+      document.querySelectorAll('#cp-tipo-chips [data-tipo]').forEach(b => b.classList.toggle('on', b.dataset.tipo === clave));
+      document.getElementById('cp-tipo-ayuda').textContent = AYUDA_TIPO[clave];
+      const pro = clave === 'herramientas_pro';
+      document.getElementById('cp-creditos-campo').style.display = pro ? 'none' : '';
+      document.getElementById('cp-pro-bloque').style.display = pro ? '' : 'none';
+      document.getElementById('cp-para').style.display = pro ? 'none' : '';
+      if (pro) pintarDuracion(); else elegirPublico && elegirPublico(publico);
+    };
+    document.getElementById('cp-tipo-chips').onclick = ev => { const b = ev.target.closest('[data-tipo]'); if (b) elegirTipo(b.dataset.tipo); };
+    document.getElementById('cp-pro-rapidos').onclick = ev => {
+      const b = ev.target.closest('[data-pro]'); if (!b) return;
+      const [d, h] = b.dataset.pro.split(':');
+      document.getElementById('cp-pro-dias').value = d; document.getElementById('cp-pro-horas').value = h; pintarDuracion();
+    };
+    ['cp-pro-dias', 'cp-pro-horas'].forEach(id => { document.getElementById(id).oninput = pintarDuracion; });
     let publico = 'todos';
-    const elegirPublico = clave => {
+    elegirPublico = clave => {
       publico = clave;
       document.querySelectorAll('#cp-publico-chips [data-pub]').forEach(b => b.classList.toggle('on', b.dataset.pub === clave));
       document.getElementById('cp-publico-ayuda').textContent = AYUDA_PUB[clave];
@@ -3292,15 +3354,20 @@ const Pages={
       const boton = document.getElementById('cp-crear');
       const creditos = Number(document.getElementById('cp-creditos').value);
       const maxTxt = document.getElementById('cp-max').value;
-      if (!Number.isInteger(creditos) || creditos < 1 || creditos > 10000) { Toast.error('Créditos inválidos', 'Escribe un número entero entre 1 y 10000'); return; }
+      const dur = leerDuracion();
+      if (tipo === 'creditos' && (!Number.isInteger(creditos) || creditos < 1 || creditos > 10000)) { Toast.error('Créditos inválidos', 'Escribe un número entero entre 1 y 10000'); return; }
+      if (tipo === 'herramientas_pro' && !dur.ok) { Toast.error('Duración inválida', 'Escribe entre 1 hora y 365 días (las horas, de 0 a 23)'); return; }
       const venceMs = venceAMs();
       if (Number.isNaN(venceMs)) { Toast.error('Falta el día o la hora', 'Elige cuándo deja de servir el cupón'); return; }
       if (venceMs && !(venceMs > Date.now())) { Toast.error('Fecha inválida', 'El día y la hora deben ser posteriores a este momento'); return; }
       boton.disabled = true; boton.textContent = 'Creando…';
       try {
-        const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify({ clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico }) });
+        const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify(tipo === 'herramientas_pro'
+          ? { clave: document.getElementById('cp-clave').value, tipo, dias: dur.d, horas: dur.h, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico: 'gratuitos' }
+          : { clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico }) });
         Toast.success('Cupón creado', 'La clave es ' + r.clave);
-        form.reset(); document.getElementById('cp-creditos').value = '100'; elegirVence('sin'); elegirPublico('todos');
+        form.reset(); document.getElementById('cp-creditos').value = '100'; document.getElementById('cp-pro-dias').value = '7'; document.getElementById('cp-pro-horas').value = '0';
+        elegirVence('sin'); elegirPublico('todos'); elegirTipo('creditos');
         await cargar();
       } catch (e) { Toast.error('No se pudo crear el cupón', e.message); }
       boton.disabled = false; boton.textContent = 'Crear cupón';
@@ -3325,7 +3392,7 @@ const Pages={
       try {
         const r = await llamar('/api/admin/creditos/cupones/canjes?clave=' + encodeURIComponent(c.id));
         const cuerpo = document.createElement('div');
-        cuerpo.innerHTML = r.canjes.length ? r.canjes.map(x => '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border);font-size:13px;"><span><strong style="color:var(--text);">' + AdminEsc(x.nombre || String(x.email || '').split('@')[0] || 'Sin nombre') + '</strong><br><span style="color:var(--text-3);font-size:12px;">' + AdminEsc(x.email) + '</span></span><span style="color:var(--text-3);text-align:right;">+' + x.creditos + ' créditos<br><span style="font-size:12px;">' + AdminEsc(fMs(x.ms)) + '</span></span></div>').join('')
+        cuerpo.innerHTML = r.canjes.length ? r.canjes.map(x => '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border);font-size:13px;"><span><strong style="color:var(--text);">' + AdminEsc(x.nombre || String(x.email || '').split('@')[0] || 'Sin nombre') + '</strong><br><span style="color:var(--text-3);font-size:12px;">' + AdminEsc(x.email) + '</span></span><span style="color:var(--text-3);text-align:right;">' + (c.tipo === 'herramientas_pro' ? '+' + AdminEsc(durTxt(x.duracionMs)) + ' de Pro<br>hasta ' + AdminEsc(fMs(x.hastaMs)) : '+' + x.creditos + ' créditos') + '<br><span style="font-size:12px;">' + AdminEsc(fMs(x.ms)) + '</span></span></div>').join('')
           : '<p class="cr-sub" style="text-align:center;margin:18px 0;">Nadie ha canjeado este cupón todavía.</p>';
         const pie = document.createElement('div');
         pie.innerHTML = '<button class="btn btn--ghost" id="cp-cerrar">Cerrar</button>';
