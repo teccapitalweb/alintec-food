@@ -3097,13 +3097,6 @@ const Pages={
           <style>
             .cp-form{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) minmax(0,.9fr) auto;gap:10px;align-items:end;margin:6px 0 14px}
             .cp-vence{grid-column:1 / -1;padding-top:4px}
-            .cp-pro-dur{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:8px}
-            .cp-pro-dur label{flex:0 1 130px}
-            .cp-pro-dur .cr-chips{margin:0;flex:1 1 280px}
-            .cp-vence .cp-lbl{display:block;font-size:11.5px;font-weight:700;color:var(--text-2)}
-            .cp-otra{display:none;gap:10px;flex-wrap:wrap;margin-top:8px}
-            .cp-otra label{flex:1 1 160px}
-            #cp-resumen{margin:8px 0 0;padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);font-size:12.5px;color:var(--text-2)}
             .cp-form label{display:block;font-size:11.5px;font-weight:700;color:var(--text-2)}
             .cp-form label .cr-campo{margin-top:4px}
             .cp-fila{display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1.3fr) minmax(0,1.3fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--border);font-size:13px}
@@ -3130,20 +3123,8 @@ const Pages={
             <label>Máximo de personas (vacío = todas)<input id="cp-max" class="cr-campo" type="number" min="1" step="1" placeholder="Todas" inputmode="numeric"></label>
             <button type="submit" class="btn btn--accent" id="cp-crear">Crear cupón</button>
             <div class="cp-vence" id="cp-pro-bloque" style="display:none;">
-              <span class="cp-lbl">¿Cuánto dura el acceso a las Herramientas Pro? (desde que la persona canjea el código)</span>
-              <div class="cp-pro-dur">
-                <label>Días<input id="cp-pro-dias" class="cr-campo" type="number" min="0" max="365" step="1" value="7" inputmode="numeric"></label>
-                <label>Horas<input id="cp-pro-horas" class="cr-campo" type="number" min="0" max="23" step="1" value="0" inputmode="numeric"></label>
-                <div class="cr-chips" id="cp-pro-rapidos">
-                  <button type="button" data-pro="0:6">6 horas</button>
-                  <button type="button" data-pro="1:0">1 día</button>
-                  <button type="button" data-pro="3:0">3 días</button>
-                  <button type="button" data-pro="7:0">7 días</button>
-                  <button type="button" data-pro="15:0">15 días</button>
-                  <button type="button" data-pro="30:0">30 días</button>
-                </div>
-              </div>
-              <p id="cp-pro-resumen" class="cr-sub" style="margin:8px 0 0;"></p>
+              <span class="cp-lbl">Cómo funciona el acceso</span>
+              <p class="cr-sub" style="margin:2px 0 0;">Todas las personas que canjeen este cupón tendrán las Herramientas Pro <b>hasta el momento en que venza</b> (lo eliges abajo). Si alguien lo canjea el día 3 de 7, solo tendrá los 4 días que quedan.</p>
             </div>
             <div class="cp-vence" id="cp-para">
               <span class="cp-lbl">¿A quién le llega este beneficio?</span>
@@ -3155,21 +3136,32 @@ const Pages={
               <p class="cr-sub" id="cp-publico-ayuda" style="margin:6px 0 0;">Le llega a todas las cuentas: las del plan gratuito y las que ya pagaron.</p>
             </div>
             <div class="cp-vence" id="cp-vence">
-              <span class="cp-lbl">¿Cuándo deja de servir el cupón?</span>
+              <span class="cp-lbl" id="cp-vence-titulo">¿Hasta cuándo se puede canjear este cupón?</span>
+              <p class="cr-sub" id="cp-vence-ayuda" style="margin:2px 0 0;">Es la fecha límite para escribir el código. A quien ya lo canjeó no se le quita nada.</p>
               <div class="cr-chips" id="cp-chips" style="margin:6px 0 0;">
-                <button type="button" class="on" data-vence="sin">No vence</button>
+                <button type="button" class="on" id="cp-vence-sin" data-vence="sin">No vence</button>
+                <button type="button" data-vence="15m">En 15 minutos</button>
+                <button type="button" data-vence="30m">En 30 minutos</button>
                 <button type="button" data-vence="1h">En 1 hora</button>
                 <button type="button" data-vence="6h">En 6 horas</button>
                 <button type="button" data-vence="24h">En 24 horas</button>
                 <button type="button" data-vence="3d">En 3 días</button>
                 <button type="button" data-vence="7d">En 7 días</button>
+                <button type="button" data-vence="15d">En 15 días</button>
+                <button type="button" data-vence="30d">En 30 días</button>
+                <button type="button" data-vence="rel">Personalizado (días, horas y minutos)</button>
                 <button type="button" data-vence="otra">Elegir día y hora</button>
+              </div>
+              <div class="cp-otra" id="cp-rel">
+                <label>Días<input id="cp-rel-d" class="cr-campo" type="number" min="0" step="1" value="0" placeholder="0" inputmode="numeric"></label>
+                <label>Horas<input id="cp-rel-h" class="cr-campo" type="number" min="0" step="1" value="1" placeholder="0" inputmode="numeric"></label>
+                <label>Minutos<input id="cp-rel-m" class="cr-campo" type="number" min="0" step="1" value="0" placeholder="0" inputmode="numeric"></label>
               </div>
               <div class="cp-otra" id="cp-otra">
                 <label>Día<input id="cp-fecha" class="cr-campo" type="date"></label>
                 <label>Hora<input id="cp-hora" class="cr-campo" type="time" value="23:59"></label>
               </div>
-              <p id="cp-resumen">El cupón no vence: sirve hasta que lo pauses o se acabe el cupo.</p>
+              <p id="cp-resumen">Sin fecha límite: se podrá canjear hasta que lo pauses o se acabe el cupo.</p>
             </div>
           </form>
           <div id="cp-lista" style="font-size:13px;color:var(--text-2);">Cargando…</div>
@@ -3242,10 +3234,16 @@ const Pages={
       activo: ['Activo', 'rgba(52,211,153,.18)', '#0f9f6e'], pausado: ['Pausado', 'var(--surface-3)', 'var(--text-2)'],
       vencido: ['Vencido', 'rgba(247,148,29,.18)', '#b45309'], agotado: ['Agotado', 'rgba(59,130,246,.16)', '#2563eb']
     };
-    const durTxt = ms => { const h = Math.round(ms / 3600000), d = Math.floor(h / 24), r = h % 24, p = []; if (d) p.push(d + (d === 1 ? ' día' : ' días')); if (r) p.push(r + (r === 1 ? ' hora' : ' horas')); return p.join(' y '); };
-    const beneficio = c => c.tipo === 'herramientas_pro' ? 'Herramientas Pro · ' + durTxt(c.duracionMs) : c.creditos + ' créditos';
+    const durTxt = ms => {
+      const m = Math.max(1, Math.round(ms / 60000)), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), n = m % 60, p = [];
+      if (d) { p.push(d + (d === 1 ? ' día' : ' días')); if (h) p.push(h + (h === 1 ? ' hora' : ' horas')); }
+      else if (h) { p.push(h + (h === 1 ? ' hora' : ' horas')); if (n) p.push(n + (n === 1 ? ' minuto' : ' minutos')); }
+      else p.push(n + (n === 1 ? ' minuto' : ' minutos'));
+      return p.join(' y ');
+    };
+    const beneficio = c => c.tipo === 'herramientas_pro' ? 'Herramientas Pro · ' + (c.duracionMs ? durTxt(c.duracionMs) : 'hasta que venza el cupón') : c.creditos + ' créditos';
     const mensajeWhatsApp = c => (c.tipo === 'herramientas_pro'
-      ? '🛠️ ¡Cupón de Herramientas Pro gratis!\nClave: ' + c.clave + '\n\nTe da acceso a TODAS las Herramientas Pro (resultados y PDF) por ' + durTxt(c.duracionMs) + '.\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y listo.'
+      ? '🛠️ ¡Cupón de Herramientas Pro gratis!\nClave: ' + c.clave + '\n\nTe da acceso a TODAS las Herramientas Pro (resultados y PDF) ' + (c.duracionMs ? 'por ' + durTxt(c.duracionMs) : 'hasta el ' + fMs(c.venceMs) + ' (hora de México). Mientras antes lo canjees, más tiempo las usas') + '.\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y listo.'
       : '🎁 ¡Cupón de ' + c.creditos + ' créditos!\nClave: ' + c.clave
       + '\n\nEscríbela en alitecfood.com → PDFs y material → «¿Tienes un código?» y canjea un material gratis.')
       + (c.venceMs ? '\nVálido hasta el ' + fMs(c.venceMs) + ' (hora de México).' : '') + (c.maxUsos ? '\nSolo las primeras ' + c.maxUsos + ' personas.' : '')
@@ -3279,26 +3277,41 @@ const Pages={
     await cargar();
 
     // Vencimiento: botones rápidos (en 1 hora, en 3 días…) o un día y una hora a elegir
-    const DURACIONES = { '1h': 3600000, '6h': 21600000, '24h': 86400000, '3d': 259200000, '7d': 604800000 };
+    const DURACIONES = { '15m': 900000, '30m': 1800000, '1h': 3600000, '6h': 21600000, '24h': 86400000, '3d': 259200000, '7d': 604800000, '15d': 1296000000, '30d': 2592000000 };
     let vence = 'sin';
     const venceAMs = () => {
       if (vence === 'sin') return 0;
       if (DURACIONES[vence]) return Date.now() + DURACIONES[vence];
+      if (vence === 'rel') {
+        const d = Number(document.getElementById('cp-rel-d').value || 0), h = Number(document.getElementById('cp-rel-h').value || 0), m = Number(document.getElementById('cp-rel-m').value || 0);
+        if (![d, h, m].every(x => Number.isInteger(x) && x >= 0)) return NaN;
+        const total = ((d * 24 + h) * 60 + m) * 60000;
+        return total > 0 ? Date.now() + total : NaN;
+      }
       const f = document.getElementById('cp-fecha').value, h = document.getElementById('cp-hora').value;
       return f && h ? new Date(f + 'T' + h).getTime() : NaN;
     };
     const pintarResumen = () => {
       const v = venceAMs();
       const el = document.getElementById('cp-resumen');
-      if (vence === 'sin') el.textContent = 'El cupón no vence: sirve hasta que lo pauses o se acabe el cupo.';
-      else if (Number.isNaN(v)) el.textContent = 'Elige el día y la hora en que deja de servir.';
+      if (vence === 'sin') el.textContent = 'Sin fecha límite: se podrá canjear hasta que lo pauses o se acabe el cupo.';
+      else if (Number.isNaN(v) && vence === 'rel') el.textContent = 'Escribe cuánto tiempo falta: al menos 1 minuto (días, horas y minutos, números enteros).';
+      else if (Number.isNaN(v)) el.textContent = tipo === 'herramientas_pro' ? 'Elige el día y la hora hasta la que funcionarán las Herramientas Pro.' : 'Elige el día y la hora hasta la que se podrá canjear.';
       else if (v <= Date.now()) el.textContent = 'Ese día y hora ya pasaron. Elige uno más adelante.';
-      else el.textContent = 'Dejará de servir el ' + new Date(v).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) + ' a las ' + new Date(v).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/./g, '');
+      else {
+        let hora = new Date(v).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true });
+        if (hora.endsWith('.')) hora = hora.slice(0, -1);
+        const fecha = new Date(v).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) + ' a las ' + hora;
+        el.textContent = tipo === 'herramientas_pro'
+          ? 'Todas las personas que lo canjeen tendrán las Herramientas Pro hasta el ' + fecha + '. Quien lo canjee más tarde tendrá menos tiempo.'
+          : 'Se podrá canjear hasta el ' + fecha + '.';
+      }
     };
     const elegirVence = clave => {
       vence = clave;
       document.querySelectorAll('#cp-chips [data-vence]').forEach(b => b.classList.toggle('on', b.dataset.vence === clave));
       document.getElementById('cp-otra').style.display = clave === 'otra' ? 'flex' : 'none';
+      document.getElementById('cp-rel').style.display = clave === 'rel' ? 'flex' : 'none';
       if (clave === 'otra') {
         const f = document.getElementById('cp-fecha');
         const hoy = new Date(); const dos = n => String(n).padStart(2, '0');
@@ -3310,16 +3323,10 @@ const Pages={
     const AYUDA_PUB = { todos: 'Le llega a todas las cuentas: las del plan gratuito y las que ya pagaron.', gratuitos: 'Solo le llega a las cuentas del plan gratuito (incluye las que tuvieron suscripción y ya venció). Los VIP verán que no es para ellos.', miembros: 'Solo le llega a quienes ya pagaron y tienen la suscripción activa. Las cuentas gratuitas verán que es solo para VIP.' };
     // Tipo de cupón: créditos o acceso a Herramientas Pro por tiempo (este último es solo para cuentas gratuitas)
     let tipo = 'creditos';
-    const AYUDA_TIPO = { creditos: 'Cada persona recibe créditos para canjear materiales de la Biblioteca.', herramientas_pro: 'Cada persona recibe acceso a TODAS las Herramientas Pro (resultados y PDF) durante el tiempo que elijas. Solo para cuentas gratuitas: a un miembro VIP no le aporta nada.' };
-    const duracionTexto = (d, h) => { const p = []; if (d) p.push(d + (d === 1 ? ' día' : ' días')); if (h) p.push(h + (h === 1 ? ' hora' : ' horas')); return p.join(' y '); };
-    const leerDuracion = () => {
-      const d = Number(document.getElementById('cp-pro-dias').value || 0), h = Number(document.getElementById('cp-pro-horas').value || 0);
-      const ok = Number.isInteger(d) && Number.isInteger(h) && d >= 0 && d <= 365 && h >= 0 && h <= 23 && (d * 24 + h) >= 1 && (d * 24 + h) <= 365 * 24;
-      return { d, h, ok };
-    };
-    const pintarDuracion = () => {
-      const { d, h, ok } = leerDuracion();
-      document.getElementById('cp-pro-resumen').textContent = ok ? 'Cada persona tendrá las Herramientas Pro durante ' + duracionTexto(d, h) + ' a partir de que canjee el código. Si ya tenía tiempo, se le suma.' : 'Escribe entre 1 hora y 365 días (las horas, de 0 a 23).';
+    const AYUDA_TIPO = { creditos: 'Cada persona recibe créditos para canjear materiales de la Biblioteca.', herramientas_pro: 'Cada persona recibe acceso a TODAS las Herramientas Pro (resultados y PDF) hasta que venza el cupón (la fecha la eliges abajo). Solo para cuentas gratuitas: a un miembro VIP no le aporta nada.' };
+    const TEXTO_VENCE = {
+      creditos: ['¿Hasta cuándo se puede canjear este cupón?', 'Es la fecha límite para escribir el código. A quien ya lo canjeó no se le quita nada.'],
+      herramientas_pro: ['¿Hasta cuándo funcionarán las Herramientas Pro con este cupón?', 'A esa hora se acaba el acceso para todas las personas que lo hayan canjeado, y también es la fecha límite para canjearlo. Elige una fecha.']
     };
     let elegirPublico;
     const elegirTipo = clave => {
@@ -3330,15 +3337,14 @@ const Pages={
       document.getElementById('cp-creditos-campo').style.display = pro ? 'none' : '';
       document.getElementById('cp-pro-bloque').style.display = pro ? '' : 'none';
       document.getElementById('cp-para').style.display = pro ? 'none' : '';
-      if (pro) pintarDuracion(); else elegirPublico && elegirPublico(publico);
+      document.getElementById('cp-vence-titulo').textContent = TEXTO_VENCE[clave][0];
+      document.getElementById('cp-vence-ayuda').textContent = TEXTO_VENCE[clave][1];
+      // Un cupón de Herramientas Pro necesita fecha: sin ella nadie sabría cuándo se acaba el acceso
+      document.getElementById('cp-vence-sin').style.display = pro ? 'none' : '';
+      if (pro && vence === 'sin') elegirVence('7d'); else pintarResumen();
+      if (!pro && elegirPublico) elegirPublico(publico);
     };
     document.getElementById('cp-tipo-chips').onclick = ev => { const b = ev.target.closest('[data-tipo]'); if (b) elegirTipo(b.dataset.tipo); };
-    document.getElementById('cp-pro-rapidos').onclick = ev => {
-      const b = ev.target.closest('[data-pro]'); if (!b) return;
-      const [d, h] = b.dataset.pro.split(':');
-      document.getElementById('cp-pro-dias').value = d; document.getElementById('cp-pro-horas').value = h; pintarDuracion();
-    };
-    ['cp-pro-dias', 'cp-pro-horas'].forEach(id => { document.getElementById(id).oninput = pintarDuracion; });
     let publico = 'todos';
     elegirPublico = clave => {
       publico = clave;
@@ -3348,26 +3354,27 @@ const Pages={
     document.getElementById('cp-publico-chips').onclick = ev => { const b = ev.target.closest('[data-pub]'); if (b) elegirPublico(b.dataset.pub); };
     document.getElementById('cp-chips').onclick = ev => { const b = ev.target.closest('[data-vence]'); if (b) elegirVence(b.dataset.vence); };
     ['cp-fecha', 'cp-hora'].forEach(id => { document.getElementById(id).onchange = pintarResumen; });
+    ['cp-rel-d', 'cp-rel-h', 'cp-rel-m'].forEach(id => { document.getElementById(id).oninput = pintarResumen; });
 
     form.onsubmit = async ev => {
       ev.preventDefault();
       const boton = document.getElementById('cp-crear');
       const creditos = Number(document.getElementById('cp-creditos').value);
       const maxTxt = document.getElementById('cp-max').value;
-      const dur = leerDuracion();
       if (tipo === 'creditos' && (!Number.isInteger(creditos) || creditos < 1 || creditos > 10000)) { Toast.error('Créditos inválidos', 'Escribe un número entero entre 1 y 10000'); return; }
-      if (tipo === 'herramientas_pro' && !dur.ok) { Toast.error('Duración inválida', 'Escribe entre 1 hora y 365 días (las horas, de 0 a 23)'); return; }
       const venceMs = venceAMs();
+      if (tipo === 'herramientas_pro' && !venceMs) { Toast.error('Falta la fecha', 'Elige hasta cuándo funcionarán las Herramientas Pro con este cupón'); return; }
+      if (tipo === 'herramientas_pro' && venceMs - Date.now() > 365 * 86400000) { Toast.error('Demasiado lejos', 'El acceso a las Herramientas Pro no puede durar más de 365 días'); return; }
       if (Number.isNaN(venceMs)) { Toast.error('Falta el día o la hora', 'Elige cuándo deja de servir el cupón'); return; }
       if (venceMs && !(venceMs > Date.now())) { Toast.error('Fecha inválida', 'El día y la hora deben ser posteriores a este momento'); return; }
       boton.disabled = true; boton.textContent = 'Creando…';
       try {
         const r = await llamar('/api/admin/creditos/cupones', { method: 'POST', body: JSON.stringify(tipo === 'herramientas_pro'
-          ? { clave: document.getElementById('cp-clave').value, tipo, dias: dur.d, horas: dur.h, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico: 'gratuitos' }
+          ? { clave: document.getElementById('cp-clave').value, tipo, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico: 'gratuitos' }
           : { clave: document.getElementById('cp-clave').value, creditos, venceMs, maxUsos: maxTxt ? Number(maxTxt) : 0, publico }) });
         Toast.success('Cupón creado', 'La clave es ' + r.clave);
-        form.reset(); document.getElementById('cp-creditos').value = '100'; document.getElementById('cp-pro-dias').value = '7'; document.getElementById('cp-pro-horas').value = '0';
-        elegirVence('sin'); elegirPublico('todos'); elegirTipo('creditos');
+        form.reset(); document.getElementById('cp-creditos').value = '100';
+        elegirTipo('creditos'); elegirVence('sin'); elegirPublico('todos');
         await cargar();
       } catch (e) { Toast.error('No se pudo crear el cupón', e.message); }
       boton.disabled = false; boton.textContent = 'Crear cupón';

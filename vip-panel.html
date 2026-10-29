@@ -12372,19 +12372,25 @@ const Sections = (function(){
   }
   // Tarjeta "Hay un cupón de créditos": NO muestra la clave; invita al canal de WhatsApp, donde se comparte. Una vez por cupón y cuenta.
   // "7 días y 12 horas", "2 horas", "1 día"
+  // Partes de una duración, con minutos (un cupón puede vencer en 15 o 30 minutos)
+  function proTemporalPartes(ms) {
+    const m = Math.max(1, Math.round(Number(ms) / 60000));
+    return { d: Math.floor(m / 1440), h: Math.floor((m % 1440) / 60), n: m % 60 };
+  }
   function proTemporalDuracionTexto(ms) {
-    const h = Math.max(1, Math.round(Number(ms) / 3600000));
-    const d = Math.floor(h / 24), r = h % 24;
+    const { d, h, n } = proTemporalPartes(ms);
+    const u = (x, uno, varios) => x + (x === 1 ? uno : varios);
     const partes = [];
-    if (d) partes.push(d + (d === 1 ? ' día' : ' días'));
-    if (r) partes.push(r + (r === 1 ? ' hora' : ' horas'));
+    if (d) { partes.push(u(d, ' día', ' días')); if (h) partes.push(u(h, ' hora', ' horas')); }
+    else if (h) { partes.push(u(h, ' hora', ' horas')); if (n) partes.push(u(n, ' minuto', ' minutos')); }
+    else partes.push(u(n, ' minuto', ' minutos'));
     return partes.join(' y ');
   }
   function proTemporalGrande(ms) {
-    const h = Math.max(1, Math.round(Number(ms) / 3600000));
-    const d = Math.floor(h / 24), r = h % 24;
-    if (d) return { num: d, lbl: (d === 1 ? 'día' : 'días') + (r ? ' y ' + r + (r === 1 ? ' hora' : ' horas') : '') + ' de Herramientas Pro' };
-    return { num: r, lbl: (r === 1 ? 'hora' : 'horas') + ' de Herramientas Pro' };
+    const { d, h, n } = proTemporalPartes(ms);
+    if (d) return { num: d, lbl: (d === 1 ? 'día' : 'días') + (h ? ' y ' + h + (h === 1 ? ' hora' : ' horas') : '') + ' de Herramientas Pro' };
+    if (h) return { num: h, lbl: (h === 1 ? 'hora' : 'horas') + (n ? ' y ' + n + (n === 1 ? ' minuto' : ' minutos') : '') + ' de Herramientas Pro' };
+    return { num: n, lbl: (n === 1 ? 'minuto' : 'minutos') + ' de Herramientas Pro' };
   }
   function proTemporalFechaTexto(ms) {
     const f = new Date(ms);
@@ -12429,8 +12435,10 @@ const Sections = (function(){
     Modal.open({
       id: 'pro-temporal', title: 'Herramientas Pro activas', subtitle: 'Acceso por cupón', icon: 'i-bolt', size: 'sm',
       body: '<div class="cred-aviso"><div class="cred-aviso__num">' + proTemporalGrande(j.duracionMs).num + '</div><div class="cred-aviso__lbl">' + escapeHtml(proTemporalGrande(j.duracionMs).lbl) + '</div>'
-        + '<p>Ya puedes ver los <strong>resultados y descargar el PDF</strong> de todas las Herramientas Pro. Tu acceso termina el <strong>' + escapeHtml(proTemporalFechaTexto(hasta)) + '</strong>' + (/.$/.test(proTemporalFechaTexto(hasta)) ? '' : '.') + '</p>'
-        + '<p class="cred-cupon__vence">Si canjeas otro cupón de acceso antes de que termine, el tiempo se suma. Para conservar las herramientas después, activa tu suscripción.</p></div>',
+        + '<p>Ya puedes ver los <strong>resultados y descargar el PDF</strong> de todas las Herramientas Pro. Tu acceso termina el <strong>' + escapeHtml(proTemporalFechaTexto(hasta)) + '</strong>' + (proTemporalFechaTexto(hasta).endsWith('.') ? '' : '.') + '</p>'
+        + '<p class="cred-cupon__vence">' + (j.modo === 'hasta_vence'
+          ? 'El acceso termina cuando vence el cupón. Si canjeas otro cupón de acceso, se conserva la fecha más lejana. Para conservar las herramientas después, activa tu suscripción.'
+          : 'Si canjeas otro cupón de acceso antes de que termine, el tiempo se suma. Para conservar las herramientas después, activa tu suscripción.') + '</p></div>',
       footer: pie
     });
   }
@@ -12467,7 +12475,10 @@ const Sections = (function(){
   }
   // Cupón de Herramientas Pro: se ve igual que la tarjeta "¡Felicidades! Tienes un regalo" de los créditos
   function cuponMostrarTarjetaPro(c) {
-    const g = proTemporalGrande(c.duracionMs);
+    // Sin duración propia: las herramientas funcionan hasta que venza el cupón, así que se muestra lo que falta de aquí a esa fecha
+    const hastaVence = !c.duracionMs && Number(c.venceMs) > 0;
+    const g = proTemporalGrande(hastaVence ? Math.max(0, c.venceMs - Date.now()) : c.duracionMs);
+    if (hastaVence) g.lbl = g.lbl.replace(' de Herramientas Pro', ' para usar las Herramientas Pro');
     const pie = document.createElement('div');
     pie.className = 'cred-pie';
     const ahoraNo = document.createElement('button');
@@ -12477,11 +12488,13 @@ const Sections = (function(){
     canjear.type = 'button'; canjear.className = 'btn btn--accent'; canjear.textContent = 'Canjear mi cupón';
     canjear.addEventListener('click', () => cuponIrACanjear('cupon-activo'));
     pie.appendChild(ahoraNo); pie.appendChild(canjear);
-    const vence = c.venceMs ? '<p class="cred-cupon__vence">Disponible por tiempo limitado.</p>' : '';
+    const vence = c.venceMs && !hastaVence ? '<p class="cred-cupon__vence">Disponible por tiempo limitado.</p>' : '';
     Modal.open({
       id: 'cupon-activo', title: '¡Felicidades!', subtitle: 'Tienes un regalo', icon: 'i-bolt', size: 'sm', closeOnBackdrop: false,
       body: '<div class="cred-aviso"><div class="cred-aviso__num">' + g.num + '</div><div class="cred-aviso__lbl">' + escapeHtml(g.lbl) + '</div>'
-        + '<p>Tienes un cupón de acceso a <strong>todas las Herramientas Pro</strong> durante <strong>' + escapeHtml(proTemporalDuracionTexto(c.duracionMs)) + '</strong>: podrás ver los resultados y descargar el PDF de cada herramienta sin costo.</p>'
+        + (hastaVence
+          ? '<p>Tienes un cupón de acceso a <strong>todas las Herramientas Pro</strong> hasta el <strong>' + escapeHtml(proTemporalFechaTexto(c.venceMs)) + '</strong>. Podrás ver los resultados y descargar el PDF de cada herramienta sin costo. Canjéalo cuanto antes: el acceso termina para todos cuando vence el cupón.</p>'
+          : '<p>Tienes un cupón de acceso a <strong>todas las Herramientas Pro</strong> durante <strong>' + escapeHtml(proTemporalDuracionTexto(c.duracionMs)) + '</strong>: podrás ver los resultados y descargar el PDF de cada herramienta sin costo.</p>')
         + '<p>Escribe tu código en <strong>PDFs y material → «¿Tienes un código?»</strong>. La clave se comparte en nuestro canal de WhatsApp.</p>' + vence + '</div>',
       footer: pie
     });
