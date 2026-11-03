@@ -39,7 +39,7 @@ en `vip-admin.html` (const ADMINS) y en la variable `ADMIN_EMAILS` del webhook.
 ## Decisiones tomadas (avisar si se cambian)
 - **Certificado**: diseño Bionova (marco, medalla, sello IPCI navy/dorado), firmas de
   IBQ. Monserrat Martínez Machado (Coordinadora General) y Coordinación de Certificación
-  · IPCI Latinoamericano. Logo Alintec. Folios: `ALINTEC-AÑO-XXXXXX`.
+  · IPCIL Latinoamericano. Logo Alintec. Folios: `ALINTEC-AÑO-XXXXXX`.
 - **Herramientas pro**: Calculadora NOM-051, HACCP, BPM, Vida de anaquel y Microbiología UFC
   (solo para miembros VIP). El módulo dental heredado fue eliminado por completo.
 - **Noticias automáticas**: 6 categorías (Industria Alimentaria, Inocuidad, Tecnología
