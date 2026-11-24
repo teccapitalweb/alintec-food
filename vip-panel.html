@@ -15089,6 +15089,8 @@ const Sections = (function(){
       if (el) el.textContent = (S.plan === 'anual') ? __fmt(pp.ano) : __fmt(pp.mes);
     });
     const plan = PLAN_DATA[S.plan] || PLAN_DATA.mensual;
+    const sinRenovacion = S.membership?.estado === 'canceled'
+      || window.memberData?.estado === 'canceled' || window.memberData?.estadoSuscripcion === 'cancelada';
     const proxRenovStr = S.membership?.proximaRenovacion
       ? new Date(S.membership.proximaRenovacion).toLocaleDateString('es-MX', {day:'numeric',month:'long',year:'numeric'})
       : '—';
@@ -15104,7 +15106,7 @@ const Sections = (function(){
         <div class="sec-hero">
           <span class="sec-hero__eyebrow">Tu plan</span>
           <h1 class="sec-hero__title">Tu <span class="sec-hero__accent">suscripción.</span></h1>
-          <p class="sec-hero__sub">Detalles de tu membresía, historial de pagos y próxima renovación.</p>
+          <p class="sec-hero__sub">Detalles de tu membresía, historial de pagos y vigencia.</p>
         </div>
 
         <section class="plan-card">
@@ -15127,7 +15129,7 @@ const Sections = (function(){
             <div class="plan-feat"><svg class="ic"><use href="#i-check"/></svg>20% descuento en certificaciones</div>
           </div>
           <div class="plan-card__footer">
-            <span><strong>Próxima renovación:</strong> ${proxRenovStr}</span>
+            <span><strong>${sinRenovacion || S.cancelacionProgramada ? 'Acceso hasta:' : 'Próxima renovación:'}</strong> ${proxRenovStr}</span>
             <span><strong>Días restantes:</strong> ${diasRestantes}</span>
           </div>
         </section>
@@ -15144,13 +15146,13 @@ const Sections = (function(){
           </div>
 
           <div class="perfil-card">
-            <div class="perfil-card__title">${S.cancelacionProgramada ? 'Cancelación programada' : 'Cancelar suscripción'}</div>
+            <div class="perfil-card__title">${sinRenovacion ? 'Renovación desactivada' : S.cancelacionProgramada ? 'Cancelación programada' : 'Cancelar suscripción'}</div>
             <div style="padding:8px 0;font-size:13px;color:var(--text-2);line-height:1.55;">
-              ${S.cancelacionProgramada
+              ${sinRenovacion ? 'Tu acceso termina al vencer el periodo vigente. No habrá otro cobro automático.' : S.cancelacionProgramada
                 ? `Tu membresía se cancelará el <strong style="color:var(--text);">${S.fechaFinAcceso ? new Date(S.fechaFinAcceso).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}) : proxRenovStr}</strong>. Hasta esa fecha mantienes acceso completo. ¿Cambiaste de opinión?`
                 : 'Mantendrás acceso hasta el final del periodo pagado. Después se cancela automáticamente y no se te cobra más.'}
             </div>
-            ${S.cancelacionProgramada
+            ${sinRenovacion ? '' : S.cancelacionProgramada
               ? `<button class="btn btn--accent" style="width:100%;margin-top:8px;" id="btn-reactivar-sub" data-bypass-paywall="true">
                   <svg class="ic"><use href="#i-bolt"/></svg><span class="lbl">Reactivar suscripción</span>
                 </button>`

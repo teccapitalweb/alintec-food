@@ -3905,7 +3905,8 @@ const Pages={
       const fDia = f => f.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA });
       const fHoraV = f => f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: ZONA });
       const noAdmin = m => String(m.plan || '').toLowerCase() !== 'admin';
-      const noSeRenueva = m => m.cancelacionProgramada === true || m.estadoSuscripcion === 'cancelacion_programada';
+      const noSeRenueva = m => m.cancelacionProgramada === true || m.estado === 'canceled'
+        || ['cancelacion_programada', 'cancelada'].includes(m.estadoSuscripcion);
       const seRenueva = m => !!m.stripeSubscriptionId && !noSeRenueva(m) && Pages._mbPlanTipo(m) !== 'regalo';
       // Último cobro de cada persona (los pagos ya vienen del más nuevo al más viejo)
       const ultimoPago = {};
@@ -7539,6 +7540,8 @@ const Pages={
     const nombre = (m.nombre || m.displayName || m.email?.split('@')[0] || 'Sin nombre').replace(/</g,'&lt;');
     const email = (m.email || '').replace(/</g,'&lt;');
     const planActual = m.plan || null;
+    const estadoAcceso = activo ? '● Miembro activo'
+      : Pages._mbEstaExpirado(m) ? '○ Expirado' : planActual ? '○ Inactivo' : '○ Sin pagar';
 
     const body = document.createElement('div');
     body.innerHTML = `
@@ -7551,7 +7554,7 @@ const Pages={
             <div style="font-weight:800;color:var(--text);font-size:15px;">${nombre}</div>
             <div style="font-size:12px;color:var(--text-3);">${email}</div>
             <div style="margin-top:4px;font-size:11px;color:${activo ? '#34D399' : '#94A3B8'};font-weight:700;text-transform:uppercase;letter-spacing:.3px;">
-              ${activo ? '● Miembro activo' : '○ Sin pagar'}${planActual ? ' · ' + planActual.toUpperCase() : ''}
+              ${estadoAcceso}${planActual ? ' · ' + planActual.toUpperCase() : ''}
             </div>
           </div>
         </div>
