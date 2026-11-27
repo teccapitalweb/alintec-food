@@ -2811,10 +2811,20 @@ const Pages={
 
   // ── Reseñas: cómo califican los alumnos los cursos que terminaron ──
   // ═══════════════════════════ BUZÓN PRIVADO (soporte) ═══════════════════════════
-  // Chat privado con cada cuenta: una conversación permanente por miembro.
+  // Chat privado con cada cuenta, como FisioTeck: lista de conversaciones (Pendientes / En espera /
+  // Cerradas / Todas, buscador y no-leídos) y el hilo al lado, con burbujas y separadores por día.
   // Datos: GET /api/v2/admin/soporte · GET/POST /api/v2/admin/soporte/:uid[/mensajes|/estado]
-  _sopConvs: [], _sopFiltro: 'pendientes', _sopBusca: '', _sopAbierta: null, _sopTimer: null,
-  _sopTemas: { membresia: 'Membresía', cobros: 'Cobros y pagos', cuenta: 'Cuenta', cursos: 'Cursos', otro: 'Otro' },
+  _sopConvs: [], _sopSinLeer: null, _sopFiltro: 'pendiente', _sopBusca: '', _sopAbierta: null, _sopManual: false,
+  _sopTimer: null, _sopPedido: 0, _sopEnviando: false, _sopReintento: null,
+  _sopTemas: { membresia: 'Membresía', cobros: 'Cobros', cuenta: 'Cuenta', cursos: 'Cursos', otro: 'Otro' },
+  _sopEsc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
+  _sopId(){ return (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '' + Math.random()).replace(/-/g, '').slice(0, 32); },
+  // Por responder = el miembro escribió y el equipo aún no contesta; En espera = ya respondiste; Cerrada = resuelta
+  _sopEstadoDe(x){ return x.estado === 'resuelto' ? 'resuelto' : (x.ultimoDe === 'admin' ? 'respondida' : 'pendiente'); },
+  _sopNombreEstado: { pendiente: 'Por responder', respondida: 'Esperando al miembro', resuelto: 'Cerrada' },
+  _sopClaseEstado: { pendiente: 'ab', respondida: 'rs', resuelto: 're' },
+  _sopIniciales(n, c){ const p = String(n || c || '?').split(/[\s@.]+/).filter(Boolean); return ((p[0] || '?')[0] + (p[1] || '')).slice(0, 2).toUpperCase(); },
+  _sopFecha(ms){ if (!ms) return ''; const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? new Intl.DateTimeFormat('es-MX', { hour: 'numeric', minute: '2-digit' }).format(d) : new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short' }).format(d); },
   async _sopApi(ruta, metodo, cuerpo){
     const token = await Pages._getAuthToken();
     const r = await fetch(Pages._webhookUrl + ruta, {
@@ -2832,163 +2842,220 @@ const Pages={
       Pages._sopConvs = d.conversaciones || [];
       const b = document.getElementById('badge-soporte');
       if (b) b.textContent = d.sinLeer || 0;
+      if (Pages._sopSinLeer !== null && (d.sinLeer || 0) > Pages._sopSinLeer) Toast.success('Nuevo mensaje en el Buzón privado', '');
+      Pages._sopSinLeer = d.sinLeer || 0;
     } catch (e) { /* sin red: el globo se queda como está */ }
   },
   soporte(p){
     if (Pages._sopTimer) { clearInterval(Pages._sopTimer); Pages._sopTimer = null; }
-    Pages._sopAbierta = null;
+    Pages._sopAbierta = null; Pages._sopManual = false;
     p.innerHTML = `
       <div class="fade-up">
         <style>
-          .sop-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
-          .sop-kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:13px;padding:12px 14px}
-          .sop-kpi b{display:block;font-size:22px;color:var(--text)}
-          .sop-kpi span{font-size:11.5px;color:var(--text-3)}
-          .sop-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-          .sop-chip{border:1.5px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:var(--text-2);cursor:pointer}
-          .sop-chip.is-on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
-          .sop-busca{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);font:500 13px Inter,sans-serif;padding:8px 12px;outline:none}
-          .sop-fila{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .15s}
-          .sop-fila:hover{border-color:var(--primary)}
-          .sop-fila__dot{width:9px;height:9px;border-radius:50%;background:#F87171;flex:none}
-          .sop-fila__dot.is-ok{background:var(--border)}
-          .sop-fila__tx{flex:1;min-width:0}
-          .sop-fila__tx b{display:block;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-          .sop-fila__tx small{display:block;font-size:11.5px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-          .sop-fila__meta{flex:none;text-align:right}
-          .sop-fila__meta time{display:block;font-size:10.5px;color:var(--text-3)}
-          .sop-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 9px;background:var(--surface-2);color:var(--text-2);margin-top:4px}
-          .sop-tag.is-abierto{background:color-mix(in srgb,#34D399 15%,transparent);color:#17946a}
-          .sop-vacio{text-align:center;color:var(--text-3);padding:36px 12px;font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:13px}
-          .sop-chat{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:15px;overflow:hidden;min-height:430px}
-          .sop-chat__head{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-wrap:wrap}
-          .sop-chat__head b{font-size:14px;color:var(--text)}
-          .sop-chat__head small{font-size:11.5px;color:var(--text-3)}
-          .sop-chat__acts{margin-left:auto;display:flex;gap:7px;align-items:center}
-          .sop-chat__msgs{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:9px;max-height:50vh;min-height:250px}
-          .sop-m{max-width:82%;border-radius:14px;padding:9px 13px;font-size:13.5px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
-          .sop-m--miembro{align-self:flex-start;background:var(--surface-2);color:var(--text);border-bottom-left-radius:5px}
-          .sop-m--admin{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:5px}
-          .sop-m small{display:block;font-size:10px;opacity:.7;margin-top:4px}
-          .sop-comp{display:flex;gap:9px;align-items:flex-end;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
-          .sop-comp textarea{flex:1;border:1.5px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:500 13.5px/1.5 Inter,sans-serif;padding:9px 12px;resize:none;outline:none;max-height:120px}
-          .sop-comp button{width:40px;height:40px;border-radius:12px;border:0;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
-          .sop-comp button:disabled{opacity:.5}
+          #sop-raiz .bz-cols{display:grid;grid-template-columns:330px 1fr;gap:14px;align-items:start}
+          @media (max-width:900px){#sop-raiz .bz-cols{grid-template-columns:1fr}}
+          #sop-raiz .bz-lista{border:1px solid var(--border);border-radius:14px;background:var(--surface);overflow:hidden}
+          #sop-raiz .bz-tools{padding:12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
+          #sop-raiz .bz-busca{width:100%;border:1.5px solid var(--border);border-radius:11px;background:var(--surface-2);color:var(--text);font:500 13px Inter,sans-serif;padding:9px 12px;outline:none;box-sizing:border-box}
+          #sop-raiz .bz-busca:focus{border-color:var(--primary)}
+          #sop-raiz .bz-filtros{display:flex;gap:6px}
+          #sop-raiz .bz-filtros button{flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);font:700 .72rem Inter,sans-serif;cursor:pointer;color:var(--text-3)}
+          #sop-raiz .bz-filtros button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+          #sop-raiz .bz-ayuda{font-size:.66rem;line-height:1.5;color:var(--text-3)}
+          #sop-raiz .bz-ayuda b{color:var(--text)}
+          #sop-raiz .bz-items{max-height:62vh;overflow-y:auto}
+          #sop-raiz .bz-item{display:flex;gap:10px;width:100%;text-align:left;padding:12px;border:0;border-bottom:1px solid var(--border);background:none;cursor:pointer;align-items:center;font:inherit;color:var(--text)}
+          #sop-raiz .bz-item.on{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--primary)}
+          #sop-raiz .bz-ava{flex:0 0 auto;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#0F3D2E,#1F6B4A);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+          #sop-raiz .bz-item b{display:block;font-size:.84rem}
+          #sop-raiz .bz-item small{color:var(--text-3);font-size:.72rem;display:block}
+          #sop-raiz .bz-cuerpo{flex:1;min-width:0}
+          #sop-raiz .bz-cuerpo .fila1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+          #sop-raiz .bz-prev{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          #sop-raiz .bz-tags{display:flex;gap:5px;margin-top:4px}
+          .bz-tag{font:700 .6rem Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:100px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-3)}
+          .bz-tag.ab{color:#B45309;border-color:#B4530933}
+          .bz-tag.rs{color:#1D6FB8;border-color:#1D6FB833}
+          .bz-tag.re{color:#0F9D6C;border-color:#0F9D6C33}
+          #sop-raiz .bz-noleido{flex:0 0 auto;min-width:20px;height:20px;border-radius:10px;background:#E24A4A;color:#fff;font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px}
+          #sop-raiz .bz-hilo{border:1px solid var(--border);border-radius:14px;background:var(--surface);display:flex;flex-direction:column;min-height:430px;max-height:72vh}
+          #sop-raiz .bz-cab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+          #sop-raiz .bz-cab b{font-size:.9rem}
+          #sop-raiz .bz-cab a{font-size:.74rem;color:var(--primary);display:block;text-decoration:none}
+          #sop-raiz .bz-cab .der{margin-left:auto;display:flex;gap:8px;align-items:center}
+          #sop-raiz .bz-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px}
+          #sop-raiz .bz-dia{align-self:center;font:700 .6rem Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);border-radius:100px;padding:3px 11px}
+          #sop-raiz .bz-m{display:flex}
+          #sop-raiz .bz-m.admin{justify-content:flex-end}
+          #sop-raiz .bz-bur{max-width:78%;padding:9px 12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);font-size:.84rem;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere;color:var(--text)}
+          #sop-raiz .admin .bz-bur{background:linear-gradient(135deg,#0F3D2E,#1F6B4A);color:#fff;border:0}
+          #sop-raiz .bz-bur small{display:block;font:700 .6rem Inter,sans-serif;letter-spacing:.06em;margin-bottom:2px;opacity:.72}
+          #sop-raiz .bz-bur time{display:block;font-size:.62rem;opacity:.6;margin-top:3px;text-align:right}
+          #sop-raiz .bz-escribir{border-top:1px solid var(--border);padding:11px 13px}
+          #sop-raiz .bz-fila{display:flex;gap:8px;align-items:flex-end}
+          #sop-raiz .bz-fila textarea{flex:1;resize:none;min-height:42px;max-height:120px;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--text);font:500 .84rem/1.45 Inter,sans-serif;outline:none}
+          #sop-raiz .bz-fila textarea:focus{border-color:var(--primary)}
+          #sop-raiz .bz-responder{height:42px;padding:0 18px;border:0;border-radius:12px;background:linear-gradient(135deg,#0F3D2E,#1F6B4A);color:#fff;font:700 .8rem Inter,sans-serif;cursor:pointer}
+          #sop-raiz .bz-responder:disabled{opacity:.55;cursor:default}
+          #sop-raiz .bz-estado-btn{padding:7px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font:700 .74rem Inter,sans-serif;cursor:pointer}
+          #sop-raiz .bz-pie{display:flex;justify-content:space-between;margin-top:5px;font-size:.68rem;color:var(--text-3)}
+          #sop-raiz .bz-envio{font-size:.72rem;margin-top:4px;color:var(--text-3)}
+          #sop-raiz .bz-envio.err{color:#E24A4A}
+          #sop-raiz .bz-vacio{margin:auto;text-align:center;color:var(--text-3);padding:36px 18px;max-width:360px;font-size:.84rem;line-height:1.5}
+          #sop-raiz .bz-vacio b{display:block;color:var(--text);margin-bottom:4px}
         </style>
         <div class="page-head">
           <div>
             <h1 class="page-title">Buzón privado</h1>
-            <p class="page-sub">Conversaciones privadas con cada cuenta: responde aquí y la persona recibe tu mensaje en su apartado «Soporte privado» con aviso en su campanita.</p>
+            <p class="page-sub">Responde, acompaña y conserva cada seguimiento en un espacio seguro. La persona recibe tu respuesta en su apartado «Soporte privado», con aviso en su campanita.</p>
           </div>
           <button class="btn btn--ghost" id="sop-refrescar"><svg class="ic"><use href="#i-refresh"/></svg>Actualizar</button>
         </div>
-        <div class="sop-kpis" id="sop-kpis"></div>
-        <div id="sop-vista"></div>
+        <div id="sop-raiz"><div class="bz-cols">
+          <div class="bz-lista">
+            <div class="bz-tools">
+              <input class="bz-busca" type="search" id="sop-busca" placeholder="Buscar miembro, tema o mensaje" aria-label="Buscar conversaciones">
+              <div class="bz-filtros">
+                <button type="button" class="on" data-sopf="pendiente">Pendientes</button>
+                <button type="button" data-sopf="respondida">En espera</button>
+                <button type="button" data-sopf="resuelto">Cerradas</button>
+                <button type="button" data-sopf="todas">Todas</button>
+              </div>
+              <div class="bz-ayuda"><b>Pendientes:</b> esperan tu respuesta · <b>En espera:</b> ya respondiste y falta el miembro · <b>Cerradas:</b> las que marcaste como resueltas</div>
+            </div>
+            <div class="bz-items" id="sop-items"><div class="bz-vacio">Cargando conversaciones…</div></div>
+          </div>
+          <div class="bz-hilo" id="sop-hilo"><div class="bz-vacio"><b>Tu espacio de atención privada</b>Selecciona una conversación para ver el historial y responder sin salir del panel.</div></div>
+        </div></div>
       </div>`;
-    p.querySelector('#sop-refrescar').addEventListener('click', () => Pages._sopCargar(p));
-    Pages._sopCargar(p);
+    p.querySelector('#sop-refrescar').addEventListener('click', () => Pages._sopCargar());
+    p.querySelector('#sop-busca').addEventListener('input', ev => { Pages._sopBusca = (ev.target.value || '').toLowerCase(); Pages._sopLista(); });
+    p.querySelectorAll('[data-sopf]').forEach(b => b.addEventListener('click', () => {
+      Pages._sopFiltro = b.dataset.sopf;
+      p.querySelectorAll('[data-sopf]').forEach(x => x.classList.toggle('on', x === b));
+      if (Pages._sopAbierta && !Pages._sopFiltradas().some(x => x.uid === Pages._sopAbierta)) {
+        Pages._sopAbierta = null; Pages._sopManual = true; Pages._sopPedido++;
+        const h = document.getElementById('sop-hilo');
+        if (h) h.innerHTML = '<div class="bz-vacio"><b>Selecciona una conversación</b>Elige una de la lista para ver el historial y responder.</div>';
+      }
+      Pages._sopLista();
+    }));
+    Pages._sopCargar();
+    Pages._sopTimer = setInterval(() => {
+      if (!document.getElementById('sop-items')) { clearInterval(Pages._sopTimer); Pages._sopTimer = null; return; }
+      if (document.visibilityState === 'hidden') return;
+      Pages._sopCargar(true);
+      if (Pages._sopAbierta) Pages._sopAbrirConv(Pages._sopAbierta, { silencioso: true });
+    }, 20000);
   },
-  async _sopCargar(p){
+  _sopFiltradas(){
+    return (Pages._sopConvs || []).filter(x => (Pages._sopFiltro === 'todas' || Pages._sopEstadoDe(x) === Pages._sopFiltro)
+      && (!Pages._sopBusca || [x.nombre, x.correo, x.ultimoMensaje, Pages._sopTemas[x.tema]].join(' ').toLowerCase().includes(Pages._sopBusca)));
+  },
+  async _sopCargar(silencio){
     try {
       const d = await Pages._sopApi('/api/v2/admin/soporte');
       Pages._sopConvs = d.conversaciones || [];
       const b = document.getElementById('badge-soporte'); if (b) b.textContent = d.sinLeer || 0;
+      if (Pages._sopSinLeer !== null && (d.sinLeer || 0) > Pages._sopSinLeer && silencio) Toast.success('Nuevo mensaje en el Buzón privado', '');
+      Pages._sopSinLeer = d.sinLeer || 0;
     } catch (e) {
-      const v = p.querySelector('#sop-vista');
-      if (v) v.innerHTML = `<div class="sop-vacio">No se pudo cargar el buzón: ${String(e.message || '').replace(/[<>&]/g, '')}</div>`;
+      if (!silencio) { const caja = document.getElementById('sop-items'); if (caja) caja.innerHTML = '<div class="bz-vacio"><b>No se pudo cargar el buzón</b>' + Pages._sopEsc(e.message) + '</div>'; }
       return;
     }
-    if (Pages._sopAbierta) Pages._sopAbrirConv(p, Pages._sopAbierta, { silencioso: true });
-    else Pages._sopPintarLista(p);
+    if (document.getElementById('sop-items')) {
+      Pages._sopLista();
+      // Al entrar, se abre sola la conversación que espera respuesta (la primera con no-leídos)
+      if (!Pages._sopAbierta && !Pages._sopManual && (Pages._sopConvs || []).length) {
+        const pref = Pages._sopConvs.find(x => x.sinLeerAdmin > 0) || Pages._sopConvs.find(x => Pages._sopEstadoDe(x) === 'pendiente') || null;
+        if (pref && Pages._sopFiltradas().some(x => x.uid === pref.uid)) Pages._sopAbrirConv(pref.uid);
+      }
+    }
   },
-  _sopEsc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
-  _sopFecha(ms){ try { return ms ? new Date(ms).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''; } catch (e) { return ''; } },
-  _sopPintarLista(p){
-    const esc = Pages._sopEsc, convs = Pages._sopConvs;
-    const pendientes = convs.filter(c => c.sinLeerAdmin > 0);
-    const abiertas = convs.filter(c => c.estado !== 'resuelto');
-    const resueltas = convs.filter(c => c.estado === 'resuelto');
-    const kpis = p.querySelector('#sop-kpis');
-    if (kpis) kpis.innerHTML = `
-      <div class="sop-kpi"><b>${pendientes.length}</b><span>Con mensajes sin leer</span></div>
-      <div class="sop-kpi"><b>${abiertas.length}</b><span>Conversaciones abiertas</span></div>
-      <div class="sop-kpi"><b>${resueltas.length}</b><span>Resueltas</span></div>
-      <div class="sop-kpi"><b>${convs.length}</b><span>Total</span></div>`;
-    let lista = Pages._sopFiltro === 'pendientes' ? pendientes : Pages._sopFiltro === 'abiertas' ? abiertas : Pages._sopFiltro === 'resueltas' ? resueltas : convs;
-    if (Pages._sopBusca) lista = lista.filter(c => (c.nombre + ' ' + c.correo + ' ' + c.ultimoMensaje).toLowerCase().includes(Pages._sopBusca));
-    const chips = [['pendientes', 'Sin leer', pendientes.length], ['abiertas', 'Abiertas', abiertas.length], ['resueltas', 'Resueltas', resueltas.length], ['todas', 'Todas', convs.length]];
-    const v = p.querySelector('#sop-vista');
-    v.innerHTML = `
-      <div class="sop-bar">
-        ${chips.map(([k, n, q]) => `<button type="button" class="sop-chip${Pages._sopFiltro === k ? ' is-on' : ''}" data-sopf="${k}">${n} (${q})</button>`).join('')}
-        <input type="search" class="sop-busca" id="sop-busca" placeholder="Buscar por nombre, correo o mensaje…" value="${esc(Pages._sopBusca)}">
-      </div>
-      ${lista.length ? lista.map(c => `
-        <div class="sop-fila" data-sopuid="${esc(c.uid)}">
-          <span class="sop-fila__dot${c.sinLeerAdmin > 0 ? '' : ' is-ok'}"></span>
-          <span class="sop-fila__tx">
-            <b>${esc(c.nombre)} ${c.sinLeerAdmin > 0 ? `· ${c.sinLeerAdmin} nuevo${c.sinLeerAdmin !== 1 ? 's' : ''}` : ''}</b>
-            <small>${esc(c.correo)} · ${esc(Pages._sopTemas[c.tema] || 'Otro')} — ${esc(c.ultimoMensaje)}</small>
-          </span>
-          <span class="sop-fila__meta"><time>${Pages._sopFecha(c.actualizadoMs)}</time><span class="sop-tag${c.estado !== 'resuelto' ? ' is-abierto' : ''}">${c.estado === 'resuelto' ? 'Resuelta' : 'Abierta'}</span></span>
-        </div>`).join('') : '<div class="sop-vacio">No hay conversaciones en este grupo.</div>'}`;
-    v.querySelectorAll('[data-sopf]').forEach(b => b.addEventListener('click', () => { Pages._sopFiltro = b.dataset.sopf; Pages._sopPintarLista(p); }));
-    const busca = v.querySelector('#sop-busca');
-    if (busca) busca.addEventListener('input', () => { Pages._sopBusca = (busca.value || '').toLowerCase().trim(); Pages._sopPintarLista(p); });
-    v.querySelectorAll('[data-sopuid]').forEach(f => f.addEventListener('click', () => Pages._sopAbrirConv(p, f.dataset.sopuid)));
+  _sopLista(){
+    const caja = document.getElementById('sop-items'); if (!caja) return;
+    const esc = Pages._sopEsc, l = Pages._sopFiltradas();
+    caja.innerHTML = l.length ? l.map(x =>
+      `<button type="button" class="bz-item${Pages._sopAbierta === x.uid ? ' on' : ''}" data-sopuid="${esc(x.uid)}">
+        <span class="bz-ava">${esc(Pages._sopIniciales(x.nombre, x.correo))}</span>
+        <span class="bz-cuerpo"><span class="fila1"><b>${esc(x.nombre || 'Miembro')}</b><small>${esc(Pages._sopFecha(x.actualizadoMs))}</small></span>
+        <small class="bz-prev">${esc(x.ultimoDe === 'admin' ? 'Tú: ' + x.ultimoMensaje : x.ultimoDe === 'miembro' ? String(x.nombre || 'Miembro').split(' ')[0] + ': ' + x.ultimoMensaje : 'Sin mensajes')}</small>
+        <span class="bz-tags"><span class="bz-tag">${esc(Pages._sopTemas[x.tema] || 'Otro')}</span><span class="bz-tag ${Pages._sopClaseEstado[Pages._sopEstadoDe(x)]}">${Pages._sopNombreEstado[Pages._sopEstadoDe(x)]}</span></span></span>
+        ${x.sinLeerAdmin ? '<span class="bz-noleido">' + Math.min(99, x.sinLeerAdmin) + '</span>' : ''}</button>`).join('')
+      : `<div class="bz-vacio"><b>${Pages._sopFiltro === 'pendiente' ? 'Bandeja al día' : 'Sin resultados'}</b>${Pages._sopFiltro === 'pendiente' ? 'Los mensajes que esperan tu respuesta aparecerán aquí.' : 'Prueba con otra búsqueda o cambia el filtro.'}</div>`;
+    caja.querySelectorAll('[data-sopuid]').forEach(b => b.addEventListener('click', () => { Pages._sopManual = true; Pages._sopAbrirConv(b.dataset.sopuid); }));
   },
-  async _sopAbrirConv(p, uid, o){
+  _sopHtmlMsgs(l){
+    const esc = Pages._sopEsc;
+    if (!l.length) return '<div class="bz-vacio"><b>Sin mensajes todavía</b>Los mensajes aparecerán en este espacio.</div>';
+    let dia = '';
+    return l.map(m => {
+      const d = m.creadoMs ? new Date(m.creadoMs).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      const sep = d && d !== dia ? '<div class="bz-dia">' + esc(d) + '</div>' : ''; dia = d;
+      const hora = m.creadoMs ? new Intl.DateTimeFormat('es-MX', { hour: 'numeric', minute: '2-digit' }).format(new Date(m.creadoMs)) : '';
+      return sep + `<div class="bz-m ${m.de === 'admin' ? 'admin' : ''}"><div class="bz-bur"><small>${m.de === 'admin' ? 'Administración Alintec Food' : esc(m.nombre || 'Miembro')}</small>${esc(m.texto)}<time>${esc(hora)}</time></div></div>`;
+    }).join('');
+  },
+  async _sopAbrirConv(uid, o){
     o = o || {};
+    const ticket = ++Pages._sopPedido;
+    Pages._sopAbierta = uid; Pages._sopLista();
+    const raiz = document.getElementById('sop-hilo'); if (!raiz) return;
+    if (!o.silencioso) raiz.innerHTML = '<div class="bz-vacio">Cargando conversación…</div>';
     let d;
     try { d = await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid)); }
-    catch (e) { Toast.error('No se pudo abrir', e.message || ''); return; }
-    Pages._sopAbierta = uid;
-    const esc = Pages._sopEsc, c = d.conversacion || {};
-    const fila = Pages._sopConvs.find(x => x.uid === uid); if (fila) fila.sinLeerAdmin = 0;
-    const v = p.querySelector('#sop-vista'); if (!v) return;
-    const resuelto = c.estado === 'resuelto';
-    v.innerHTML = `
-      <div class="sop-chat">
-        <div class="sop-chat__head">
-          <button class="btn btn--ghost btn--sm" id="sop-volver">← Buzón</button>
-          <span><b>${esc(c.nombre)}</b><br><small>${esc(c.correo)} · ${esc(Pages._sopTemas[c.tema] || 'Otro')}</small></span>
-          <span class="sop-chat__acts">
-            <span class="sop-tag${resuelto ? '' : ' is-abierto'}">${resuelto ? 'Resuelta' : 'Abierta'}</span>
-            <button class="btn btn--ghost btn--sm" id="sop-estado">${resuelto ? 'Reabrir' : 'Marcar resuelta'}</button>
-          </span>
-        </div>
-        <div class="sop-chat__msgs" id="sop-msgs">
-          ${(d.mensajes || []).map(x => `<div class="sop-m sop-m--${x.de === 'admin' ? 'admin' : 'miembro'}">${esc(x.texto)}<small>${x.de === 'admin' ? 'Equipo' : esc(x.nombre || 'Miembro')} · ${Pages._sopFecha(x.creadoMs)}</small></div>`).join('') || '<div class="sop-vacio">Sin mensajes todavía.</div>'}
-        </div>
-        <div class="sop-comp">
-          <textarea id="sop-texto" rows="1" maxlength="3000" placeholder="Escribe tu respuesta… (recibe aviso en su campanita)"></textarea>
-          <button type="button" id="sop-enviar" title="Enviar"><svg class="ic"><use href="#i-send"/></svg></button>
-        </div>
-      </div>`;
-    const msgs = v.querySelector('#sop-msgs'); if (msgs) msgs.scrollTop = msgs.scrollHeight;
-    v.querySelector('#sop-volver').addEventListener('click', () => { Pages._sopAbierta = null; Pages._sopCargar(p); });
-    v.querySelector('#sop-estado').addEventListener('click', async (e) => {
-      const b = e.currentTarget; b.disabled = true;
+    catch (e) { if (!o.silencioso) Toast.error('No se pudo abrir', e.message || ''); return; }
+    if (Pages._sopAbierta !== uid || ticket !== Pages._sopPedido || !raiz.isConnected) return;
+    const esc = Pages._sopEsc, c = d.conversacion || {}, cerrada = c.estado === 'resuelto';
+    const estadoVis = Pages._sopEstadoDe(c);
+    // Si el admin está escribiendo, un refresco silencioso no debe borrarle el texto
+    const escribiendo = o.silencioso && document.getElementById('sop-texto') && document.getElementById('sop-texto').value.trim();
+    if (escribiendo) {
+      const msgs = document.getElementById('sop-msgs');
+      if (msgs) { const abajo = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 90; msgs.innerHTML = Pages._sopHtmlMsgs(d.mensajes || []); if (abajo) msgs.scrollTop = msgs.scrollHeight; }
+      const fila = (Pages._sopConvs || []).find(x => x.uid === uid); if (fila) fila.sinLeerAdmin = 0;
+      return;
+    }
+    raiz.innerHTML = `
+      <div class="bz-cab"><span class="bz-ava">${esc(Pages._sopIniciales(c.nombre, c.correo))}</span>
+        <div><b>${esc(c.nombre || 'Miembro')}</b><a href="mailto:${encodeURIComponent(c.correo || '')}">${esc(c.correo || c.uid)}</a></div>
+        <div class="der"><span class="bz-tag ${Pages._sopClaseEstado[estadoVis]}">${esc(Pages._sopTemas[c.tema] || 'Otro')} · ${Pages._sopNombreEstado[estadoVis]}</span>
+        <button type="button" class="bz-estado-btn" id="sop-estado" data-estado="${cerrada ? 'abierto' : 'resuelto'}">${cerrada ? 'Reabrir' : 'Marcar resuelta'}</button></div></div>
+      <div class="bz-msgs" id="sop-msgs">${Pages._sopHtmlMsgs(d.mensajes || [])}</div>
+      <form class="bz-escribir" id="sop-form"><div class="bz-fila"><textarea id="sop-texto" maxlength="3000" rows="1" placeholder="Escribe tu respuesta…" aria-label="Respuesta al miembro" required></textarea><button class="bz-responder" type="submit" id="sop-enviar">Responder</button></div>
+      <div class="bz-pie"><span>Solo este miembro y administración pueden ver la respuesta.</span><span id="sop-cuenta">0 / 3000</span></div><div class="bz-envio" id="sop-envio" role="status"></div></form>`;
+    const msgs = document.getElementById('sop-msgs'); msgs.scrollTop = msgs.scrollHeight;
+    const fila = (Pages._sopConvs || []).find(x => x.uid === uid); if (fila) fila.sinLeerAdmin = 0;
+    Pages._sopLista();
+    const b = document.getElementById('badge-soporte');
+    const pend = (Pages._sopConvs || []).reduce((n, x) => n + (x.sinLeerAdmin || 0), 0);
+    if (b) b.textContent = pend; Pages._sopSinLeer = pend;
+    document.getElementById('sop-estado').addEventListener('click', async ev => {
+      const estado = ev.currentTarget.dataset.estado; ev.currentTarget.disabled = true;
       try {
-        await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid) + '/estado', 'POST', { estado: resuelto ? 'abierto' : 'resuelto' });
-        Toast.success(resuelto ? 'Conversación reabierta' : 'Marcada como resuelta', '');
-        Pages._sopAbrirConv(p, uid, { silencioso: true });
-      } catch (err) { Toast.error('No se pudo', err.message || ''); b.disabled = false; }
+        await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid) + '/estado', 'POST', { estado });
+        Toast.success(estado === 'resuelto' ? 'Conversación resuelta' : 'Conversación reabierta', estado === 'resuelto' ? 'El historial se conserva.' : '');
+        await Pages._sopCargar(true); await Pages._sopAbrirConv(uid);
+      } catch (err) { ev.currentTarget && (ev.currentTarget.disabled = false); Toast.error('No se pudo', err.message || ''); }
     });
-    const texto = v.querySelector('#sop-texto'), enviar = v.querySelector('#sop-enviar');
-    texto.addEventListener('input', () => { texto.style.height = 'auto'; texto.style.height = Math.min(texto.scrollHeight, 120) + 'px'; });
-    texto.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar.click(); } });
-    enviar.addEventListener('click', async () => {
-      const t = texto.value.trim(); if (!t) return;
-      enviar.disabled = true;
-      const requestId = (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2)).padEnd(20, '0').slice(0, 32));
+    const form = document.getElementById('sop-form'), texto = document.getElementById('sop-texto'), enviar = document.getElementById('sop-enviar'), envio = document.getElementById('sop-envio');
+    const medir = () => { document.getElementById('sop-cuenta').textContent = texto.value.length + ' / 3000'; texto.style.height = 'auto'; texto.style.height = Math.min(texto.scrollHeight, 120) + 'px'; enviar.disabled = Pages._sopEnviando || !texto.value.trim(); };
+    texto.addEventListener('input', () => { if (!Pages._sopEnviando) { envio.textContent = ''; envio.className = 'bz-envio'; } medir(); });
+    texto.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); if (!Pages._sopEnviando) form.requestSubmit(); } });
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const msj = texto.value.trim(); if (Pages._sopEnviando || !msj) return;
+      if (!Pages._sopReintento || Pages._sopReintento.msj !== msj || Pages._sopReintento.uid !== uid) Pages._sopReintento = { msj, uid, id: Pages._sopId() };
+      Pages._sopEnviando = true; envio.className = 'bz-envio'; envio.textContent = 'Enviando…'; medir();
       try {
-        await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid) + '/mensajes', 'POST', { mensaje: t, clientRequestId: requestId });
-        texto.value = '';
-        Pages._sopAbrirConv(p, uid, { silencioso: true });
-      } catch (err) { Toast.error('No se envió', err.message || ''); enviar.disabled = false; }
+        await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid) + '/mensajes', 'POST', { mensaje: msj, clientRequestId: Pages._sopReintento.id });
+        Pages._sopReintento = null; if (texto.value.trim() === msj) texto.value = '';
+        envio.textContent = 'Respuesta enviada. El miembro recibe un aviso en su campana.';
+        await Pages._sopAbrirConv(uid); await Pages._sopCargar(true);
+      } catch (err) { envio.className = 'bz-envio err'; envio.textContent = 'No se pudo enviar. Se conservó tu texto; puedes reintentar sin duplicarlo.'; }
+      finally { Pages._sopEnviando = false; const t2 = document.getElementById('sop-texto'); if (t2) { t2.focus({ preventScroll: true }); } }
     });
-    if (!o.silencioso) Pages._sopBadge();
+    medir();
   },
 
   resenas(p){

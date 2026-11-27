@@ -6437,7 +6437,7 @@ const NOMTool = (function(){
    ═══════════════════════════════════════════════════════════════════ */
 const SECCIONES_VALIDAS_PANEL = [
   'inicio','cursos','certificados','logros','webinars','pdfs','retos','foro',
-  'directorio','canal','soporte','perfil','suscripcion',
+  'directorio','canal','soporte','perfil','suscripcion','perfilpro',
   // Herramientas Pro · sector alimentario (Alintec Food)
   'herramientas','tool-nom051','tool-haccp','tool-bpm','tool-anaquel','tool-microbio'
 ];
@@ -13339,7 +13339,6 @@ const Sections = (function(){
   }
 
   function renderDirectorio(container){
-    const esVip = window.UserState?.modo==='vip' || esAdminReal();
     // Todas las cuentas con sesión ven el directorio; el contacto y las funciones VIP los decide el servidor.
     if (window.__isDemoMode === true) return renderDirectorioVistaPrevia(container);
     container.innerHTML = `
@@ -13350,45 +13349,35 @@ const Sections = (function(){
           <p class="sec-hero__sub">Conecta con la comunidad Alintec Food. Crea tu tarjeta profesional y descubre a otros profesionales y especialistas del sector alimentario.</p>
         </div>
 
-        <div id="dir-mia"></div>
-
-        <div id="dir-red"></div>
-
-        <h2 class="dir-seccion">Miembros del directorio</h2>
-        <div class="dir-bar">
-          <div class="dir-search">
-            <svg class="ic"><use href="#i-search"/></svg>
-            <input type="text" id="dir-buscar" placeholder="Buscar por nombre, empresa o especialidad…">
+        <div class="dir-banda">
+          <div class="dir-banda-ic"><svg class="ic"><use href="#i-users"/></svg></div>
+          <div class="dir-banda-txt">Tu próxima conexión puede empezar aquí.</div>
+          <div class="dir-banda-nums">
+            <span><b id="dir-banda-vip">—</b><small><svg class="ic"><use href="#i-crown"/></svg>Membresías VIP</small></span>
+            <span><b id="dir-banda-total">—</b><small>Miembros</small></span>
           </div>
+          <button type="button" class="dir-bbtn" id="dir-ver-mi-perfil"><svg class="ic"><use href="#i-user"/></svg>Ver mi perfil<svg class="ic"><use href="#i-arrow-right"/></svg></button>
         </div>
 
-        <div class="dir-chips" id="dir-chips">
-          <button class="dir-chip is-active" data-sector="todos">Todos</button>
-          ${SECTORES.map(s=>`<button class="dir-chip" data-sector="${s}">${s}</button>`).join('')}
+        <div class="dir-tabs" role="tablist">
+          <button type="button" class="on" data-dirtab="directorio"><svg class="ic"><use href="#i-users"/></svg>Directorio</button>
+          <button type="button" id="dir-tab-solic" data-dirtab="solicitudes">Solicitudes</button>
+          <button type="button" id="dir-tab-conex" data-dirtab="conexiones">Mis conexiones</button>
         </div>
 
-        <div class="dir-grid" id="dir-grid">
-          <div class="foro-empty">Cargando directorio…</div>
-        </div>
+        <div id="dr-vista"></div>
       </div>
     `;
-
-    // Búsqueda
-    const bus = container.querySelector('#dir-buscar');
-    bus.addEventListener('input', ()=>{ _dirBusqueda = (bus.value||'').toLowerCase().trim(); dirPintar(); });
-    // Chips de sector
-    container.querySelectorAll('[data-sector]').forEach(c=>{
-      c.addEventListener('click', ()=>{
-        container.querySelectorAll('[data-sector]').forEach(x=>x.classList.remove('is-active'));
-        c.classList.add('is-active');
-        _dirFiltroSector = c.dataset.sector;
-        dirPintar();
-      });
-    });
-    // Mi tarjeta
-    dirPintarMia();
+    _dirTab = 'directorio';
+    container.querySelectorAll('[data-dirtab]').forEach(b => b.addEventListener('click', () => {
+      _dirTab = b.dataset.dirtab;
+      container.querySelectorAll('[data-dirtab]').forEach(x => x.classList.toggle('on', x === b));
+      dirVista();
+    }));
+    container.querySelector('#dir-ver-mi-perfil').addEventListener('click', () => perfilEditarMio());
+    dirVista();
     dirSuscribir();
-    // Mi red profesional (conexiones y solicitudes)
+    dirCargarMeta().then(() => { dirPintarTabs(); dirPintar(); });
     redCargar();
   }
 
@@ -13403,7 +13392,7 @@ const Sections = (function(){
       snap.forEach(d=>{ const x=d.data(); x.id=d.id; if(x.visible!==false && x.publicado===true) _dirCards.push(x); });
       const ms = v => (v && v.toMillis ? v.toMillis() : 0);
       _dirCards.sort((a,b)=> ms(b.updatedAt) - ms(a.updatedAt));
-      dirCargarMeta().then(() => dirPintar());
+      dirCargarMeta().then(() => { dirPintar(); dirPintarTabs(); });
     }, (err)=>{ console.error('dir snap',err); const g=document.getElementById('dir-grid'); if(g) g.innerHTML='<div class="foro-empty">No se pudo cargar el directorio.</div>'; });
   }
 
@@ -13456,7 +13445,9 @@ const Sections = (function(){
     const color = colorSeguro(c.color || dirColorFor(c.uid || c.id || ''));
     const foto = c.foto
       ? `<img src="${srcSeguro(c.foto)}" alt="${escapeHtml(c.nombre || '')}" class="dir-card__foto" loading="lazy">`
-      : `<div class="dir-card__foto dir-card__foto--ini" style="background:linear-gradient(135deg,${color},${color}aa);">${iniciales}</div>`;
+      : dirAvatarValido(c.avatar)
+        ? `<div class="dir-card__foto dir-card__foto--av">${AlintecAvatares.html(c.avatar, 76)}</div>`
+        : `<div class="dir-card__foto dir-card__foto--ini" style="background:linear-gradient(135deg,${color},${color}aa);">${iniciales}</div>`;
     const puesto = c.puesto ? `<div class="dir-card__puesto">${escapeHtml(c.puesto)}</div>`
       : (pistas ? '<div class="dir-card__puesto pc-vacio">Tu puesto o cargo</div>' : '');
     const empresa = c.empresa ? `<div class="dir-card__empresa"><svg class="ic"><use href="#i-briefcase"/></svg>${escapeHtml(c.empresa)}</div>`
@@ -13473,6 +13464,9 @@ const Sections = (function(){
     const mia = o.esMia ? ' dir-card--mia' : '';
     const idAttr = o.id ? ` data-dircard="${escapeHtml(o.id)}"` : '';
     const badgeMia = o.esMia ? '<span class="dir-card__badge-mia">Tú</span>' : '';
+    // Barra de avance + fila «Ver perfil / Conectar» (no van en la vista previa del editor)
+    const avance = pistas ? '' : dirBarraAvance(c);
+    const acciones = pistas ? '' : `<div class="dir-acciones"><button type="button" class="dir-verperfil" data-verperfil="${escapeHtml(o.id || c.id || c.uid || '')}">Ver perfil <span>→</span></button>${o.esMia ? '' : redBotonHtml(o.id || c.id || c.uid || '')}</div>`;
 
     // Tarjeta básica de la comunidad (cuentas sin membresía VIP): sin portada propia, sello ni estado
     if (!esVipCard) {
@@ -13483,8 +13477,8 @@ const Sections = (function(){
         <div class="dir-card__body-m">
           <div class="dir-card__name">${nombre}</div>
           ${puesto}${empresa}${ubic}${sector}${bio}
+          ${avance}${acciones}
           ${ctas}
-          ${o.redHtml || ''}
         </div>
       </article>`;
     }
@@ -13506,8 +13500,8 @@ const Sections = (function(){
           ${puesto}${empresa}${ubic}
           ${estado ? `<span class="dir-vip__estado dir-vip__estado--${estado.cls}"><i></i>${estado.label}</span>` : ''}
           ${sector}${certs}${bio}
+          ${avance}${acciones}
           ${ctas}
-          ${o.redHtml || ''}
         </div>
       </article>`;
   }
@@ -13602,55 +13596,35 @@ const Sections = (function(){
   function dirPintar(){
     const grid = document.getElementById('dir-grid'); if(!grid) return;
     let cards = _dirCards.slice();
-    if (_dirFiltroSector!=='todos') cards = cards.filter(c=>c.sector===_dirFiltroSector);
+    const uid = window.UserState?.uid;
+    if (_dirVistaFiltro === 'vip') cards = cards.filter(c => dirEsVip(c.id));
+    if (_dirFiltroSector && _dirFiltroSector!=='todos') cards = cards.filter(c=>c.sector===_dirFiltroSector);
     if (_dirBusqueda) cards = cards.filter(c=>{
       const blob = ((c.nombre||'')+' '+(c.empresa||'')+' '+(c.puesto||'')+' '+(c.sector||'')+' '+(c.ubicacion||'')).toLowerCase();
       return blob.includes(_dirBusqueda);
     });
     if (!cards.length){
-      grid.innerHTML = `<div class="foro-empty">${_dirBusqueda||_dirFiltroSector!=='todos'?'No hay miembros que coincidan con tu búsqueda.':'Aún no hay tarjetas en el directorio. ¡Sé el primero en crear la tuya!'}</div>`;
+      grid.innerHTML = `<div class="foro-empty">${_dirBusqueda||(_dirFiltroSector&&_dirFiltroSector!=='todos')||_dirVistaFiltro==='vip'?'No hay miembros que coincidan con tu búsqueda.':'Aún no hay tarjetas en el directorio. ¡Sé el primero en crear la tuya!'}</div>`;
       return;
     }
-    const uid = window.UserState?.uid;
-    const propiaPrimero = (a, b) => (b.id === uid) - (a.id === uid);
-    const vipCards = cards.filter(c => dirEsVip(c.id)).sort(propiaPrimero);
-    const resto = cards.filter(c => !dirEsVip(c.id)).sort(propiaPrimero);
+    // Orden: tu tarjeta → perfiles completos → alfabético
+    const orden = (a, b) => (b.id === uid) - (a.id === uid)
+      || (dirAvanceTarjeta(dirConContacto(b)) >= 100) - (dirAvanceTarjeta(dirConContacto(a)) >= 100)
+      || String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
+    const vipCards = cards.filter(c => dirEsVip(c.id)).sort(orden);
+    const resto = cards.filter(c => !dirEsVip(c.id)).sort(orden);
     const bloqueado = !dirViewerEsVip();
     const cabecera = (titulo, n, esVip) => `<div class="dir-group-head ${esVip ? 'dir-group-head--vip' : ''}"><span>${esVip ? '<svg class="ic"><use href="#i-crown"/></svg>' : ''}${titulo}</span><small>${n}</small></div>`;
     const pintar = (c, esVip) => dirCardHtml(dirConContacto(c), {
       esMia: c.id === uid, id: c.id, vip: esVip, bloqueado: bloqueado && c.id !== uid,
       certs: esVip ? (_dirMeta.certificados[c.id] || 0) : 0,
-      portada: esVip ? dirPortadaPersonalizada(c.id) : '',
-      redHtml: redBotonHtml(c.id)
+      portada: esVip ? dirPortadaPersonalizada(c.id) : ''
     });
     let html = '';
-    if (vipCards.length) html += (resto.length ? cabecera('Miembros VIP verificados', vipCards.length, true) : '') + vipCards.map(c => pintar(c, true)).join('');
-    if (resto.length) html += (vipCards.length ? cabecera('Comunidad Alintec Food', resto.length, false) : '') + resto.map(c => pintar(c, false)).join('');
+    if (vipCards.length) html += cabecera('Profesionales VIP', vipCards.length, true) + vipCards.map(c => pintar(c, true)).join('');
+    if (resto.length) html += cabecera('Comunidad Alintec Food', resto.length, false) + resto.map(c => pintar(c, false)).join('');
     grid.innerHTML = html;
-
-    // Contacto bloqueado: lleva a hacerse VIP
-    grid.querySelectorAll('[data-dirlock]').forEach(b => b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      comunidadRequiereVIP('contactar a otros miembros del directorio');
-    }));
-    // Clic en la tarjeta → abre el detalle (sin disparar al tocar un botón de contacto)
-    grid.querySelectorAll('[data-dircard]').forEach(card=>{
-      card.addEventListener('click', (e)=>{
-        if (e.target.closest('.dir-cta,.dir-cta-lock')) return; // dejó pasar los enlaces de contacto
-        dirVerDetalle(card.dataset.dircard);
-      });
-    });
-    // Botón de correo: copiar al portapapeles + intentar abrir cliente
-    grid.querySelectorAll('.dir-cta--mail').forEach(b=>{
-      b.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        dirAbrirCorreo(b.dataset.email);
-      });
-    });
-    // Botones de la red profesional en cada tarjeta (Conectar / Responder / Pendiente / Conectados)
-    grid.querySelectorAll('[data-redaccion]').forEach(b=>{
-      b.addEventListener('click', (e)=>{ e.stopPropagation(); redAccionDesdeBoton(b); });
-    });
+    dirEnlazar(grid);
   }
 
   function dirVerDetalle(id){
@@ -13701,7 +13675,7 @@ const Sections = (function(){
       : `<button class="btn btn--ghost" id="dirdet-cerrar">Cerrar</button><button class="btn btn--ghost" id="dirdet-cv"><svg class="ic"><use href="#i-badge"/></svg>Ver currículum</button><span id="dirdet-red"></span>`;
     const m = Modal.open({id:'dir-det', title:'Tarjeta profesional', subtitle: esMia?'Tu tarjeta en el directorio':'Directorio VIP', icon:'i-user', size:'sm', body, footer});
     footer.querySelector('#dirdet-cerrar').addEventListener('click', ()=> m.close());
-    if (esMia) footer.querySelector('#dirdet-editar').addEventListener('click', ()=>{ m.close(); setTimeout(dirEditarMiTarjeta, 150); });
+    if (esMia) footer.querySelector('#dirdet-editar').addEventListener('click', ()=>{ m.close(); setTimeout(perfilEditarMio, 150); });
     const btnCv = footer.querySelector('#dirdet-cv');
     if (btnCv) btnCv.addEventListener('click', ()=>{ m.close(); setTimeout(()=> esMia ? perfilEditarMio() : perfilVerDe(c.id, c.nombre), 150); });
     const slotRed = footer.querySelector('#dirdet-red');
@@ -13973,116 +13947,210 @@ const Sections = (function(){
     footer.querySelector('#dirf-despues').addEventListener('click', (e)=> guardarTarjeta(false, e.currentTarget));
   }
 
-  /* ============================ RED PROFESIONAL · CURRÍCULUM · PORTADA PROPIA · SOPORTE PRIVADO ============================ */
-  // Todo habla con el servidor (nunca con Firestore directo): /api/v2/red, /api/v2/perfil,
-  // /api/v2/directorio/{alcances,portada} y /api/v2/soporte. El uid siempre sale del token.
+  /* ============================ RED PROFESIONAL · PERFIL PROFESIONAL · SOPORTE PRIVADO ============================ */
+  // Mismo diseño que FisioTeck (banda, pestañas, página «Ver mi perfil» con edición en línea y chat de soporte),
+  // con la paleta verde de Alintec Food. Iconos SVG lineales (sin emojis) y los avatares ilustrados propios.
+  // Todo habla con el servidor (/api/v2/…): el navegador nunca toca Firestore salvo la tarjeta del directorio.
   (function inyectarEstilosSopDir(){
     if (document.getElementById('sopdir-css')) return;
     const st = document.createElement('style'); st.id = 'sopdir-css';
-    st.textContent = [
-      '.sop-dot{width:8px;height:8px;border-radius:50%;background:#F87171;margin-left:auto;flex:none}',
-      '.sop-dot[hidden]{display:none}',
-      /* Red profesional */
-      '.dir-red{margin:18px 0 6px}',
-      '.dir-red__head{display:flex;align-items:center;gap:8px;font:800 15px "Plus Jakarta Sans",sans-serif;color:var(--text);margin:0 0 10px}',
-      '.dir-red__head .ic{width:17px;height:17px;color:var(--primary)}',
-      '.dir-red__head small{font:700 11px Inter,sans-serif;color:var(--text-3);background:var(--surface-2);border-radius:999px;padding:3px 9px}',
-      '.dir-red__grupos{display:grid;gap:10px}',
-      '.dir-red__grupo{border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:12px 14px}',
-      '.dir-red__grupo h4{margin:0 0 8px;font:700 12px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}',
-      '.dir-red__fila{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border)}',
-      '.dir-red__fila:first-of-type{border-top:0}',
-      '.dir-red__foto{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-2);color:var(--text-2);display:flex;align-items:center;justify-content:center;font:800 12px "Plus Jakarta Sans",sans-serif;overflow:hidden}',
-      '.dir-red__foto img{width:100%;height:100%;object-fit:cover;display:block}',
-      '.dir-red__quien{flex:1;min-width:0}',
-      '.dir-red__quien b{display:block;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.dir-red__quien span{display:block;font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.dir-red__acc{display:flex;gap:6px;flex:none}',
-      '.dir-red-btn{border:1.5px solid var(--border-2,var(--border));background:var(--surface);border-radius:999px;padding:6px 12px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}',
-      '.dir-red-btn .ic{width:13px;height:13px}',
-      '.dir-red-btn--p{background:var(--primary);border-color:var(--primary);color:#fff}',
-      '.dir-red-btn--p:hover{filter:brightness(1.07)}',
-      '.dir-red-btn--rojo{color:#F87171;border-color:color-mix(in srgb,#F87171 45%,transparent)}',
-      '.dir-red-chip{display:inline-flex;align-items:center;gap:6px;font:700 12px Inter,sans-serif;border-radius:999px;padding:6px 12px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}',
-      '.dir-red-chip .ic{width:13px;height:13px}',
-      '.dir-card__red{margin-top:10px;display:flex}',
-      '.dir-card__red .dir-red-btn,.dir-card__red .dir-red-chip{width:100%;justify-content:center}',
-      /* Alcances del contacto */
-      '.dir-alcances{display:grid;gap:8px;margin-top:10px;border:1px dashed var(--border);border-radius:12px;padding:11px 12px}',
-      '.dir-alcances__t{font:700 12px Inter,sans-serif;color:var(--text-2);display:flex;gap:6px;align-items:center}',
-      '.dir-alcances__t .ic{width:14px;height:14px;color:var(--primary)}',
-      '.dir-alcances__fila{display:flex;align-items:center;gap:8px;font:600 12.5px Inter,sans-serif;color:var(--text-2)}',
-      '.dir-alcances__fila span{flex:1}',
-      '.dir-alcances__fila select{border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font:600 12px Inter,sans-serif;padding:5px 8px}',
-      /* Portada personalizada */
-      '.dir-pcustom{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0 2px}',
-      '.dir-pcustom input[type=color]{width:34px;height:30px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);padding:2px;cursor:pointer}',
-      '.dir-pcustom .btn{padding:6px 11px;font-size:12px}',
-      /* Currículum (CV) */
-      '.pfv{display:grid;gap:14px}',
-      '.pfv__avance{display:grid;gap:5px}',
-      '.pfv__avance b{font:700 12px Inter,sans-serif;color:var(--text-2)}',
-      '.pfv__barra{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden}',
-      '.pfv__barra i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2E7D32,#9CCC65)}',
-      '.pfv__sec h4{margin:0 0 7px;font:800 13px "Plus Jakarta Sans",sans-serif;color:var(--text);display:flex;align-items:center;gap:7px}',
-      '.pfv__sec h4 .ic{width:14px;height:14px;color:var(--primary)}',
-      '.pfv__sec p{margin:0;font:500 13px/1.6 Inter,sans-serif;color:var(--text-2);white-space:pre-line}',
-      '.pfv__item{padding:8px 0;border-top:1px solid var(--border)}',
-      '.pfv__item:first-of-type{border-top:0}',
-      '.pfv__item b{display:block;font-size:13px;color:var(--text)}',
-      '.pfv__item small{display:block;font-size:11.5px;color:var(--text-3);margin-top:1px}',
-      '.pfv__item p{margin:4px 0 0;font-size:12.5px;color:var(--text-2);line-height:1.55}',
-      '.pfv__chips{display:flex;gap:6px;flex-wrap:wrap}',
-      '.pfv__chip{font:700 12px Inter,sans-serif;background:var(--surface-2);color:var(--text-2);border-radius:999px;padding:5px 11px}',
-      '.pfv__cert{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px}',
-      '.pfv__cert:first-of-type{border-top:0}',
-      '.pfv__cert b{color:var(--text)}',
-      '.pfv__cert span{color:var(--text-3);white-space:nowrap}',
-      '.pfv__vacio{font:500 12.5px Inter,sans-serif;color:var(--text-3)}',
-      /* Editor del CV */
-      '.pfe{display:grid;gap:16px}',
-      '.pfe__sec{border:1px solid var(--border);border-radius:14px;padding:13px 14px;background:var(--surface)}',
-      '.pfe__head{display:flex;align-items:center;gap:8px;margin-bottom:9px}',
-      '.pfe__head h4{margin:0;font:800 13px "Plus Jakarta Sans",sans-serif;color:var(--text);flex:1}',
-      '.pfe__head select{border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font:600 11.5px Inter,sans-serif;padding:4px 7px}',
-      '.pfe__fila{display:grid;gap:6px;border:1px dashed var(--border);border-radius:11px;padding:9px;margin-bottom:8px;position:relative}',
-      '.pfe__fila input,.pfe textarea,.pfe__fila textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font:500 13px Inter,sans-serif;padding:8px 10px;outline:none;box-sizing:border-box}',
-      '.pfe__fila input:focus,.pfe textarea:focus{border-color:var(--primary)}',
-      '.pfe__quitar{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:7px;border:0;background:transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center}',
-      '.pfe__quitar:hover{color:#F87171}',
-      '.pfe__add{border:1.5px dashed var(--border-2,var(--border));background:transparent;border-radius:10px;padding:7px 12px;font:700 12px Inter,sans-serif;color:var(--primary);cursor:pointer;width:100%}',
-      '.pfe__nota{font:500 11.5px Inter,sans-serif;color:var(--text-3);margin-top:5px}',
-      /* Soporte privado (chat) */
-      '.sc-wrap{max-width:760px}',
-      '.sc-caja{border:1px solid var(--border);border-radius:18px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column;min-height:420px}',
-      '.sc-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--border);background:var(--surface-2)}',
-      '.sc-head__ic{width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);display:flex;align-items:center;justify-content:center;flex:none}',
-      '.sc-head__ic .ic{width:19px;height:19px}',
-      '.sc-head__tx b{display:block;font:800 14px "Plus Jakarta Sans",sans-serif;color:var(--text)}',
-      '.sc-head__tx span{display:block;font:600 11.5px Inter,sans-serif;color:var(--text-3);margin-top:1px}',
-      '.sc-estado{margin-left:auto;font:700 11px Inter,sans-serif;border-radius:999px;padding:4px 10px;background:color-mix(in srgb,#34D399 14%,transparent);color:#17946a}',
-      '.sc-estado.is-resuelto{background:var(--surface-3,var(--surface-2));color:var(--text-3)}',
-      '.sc-temas{display:flex;gap:7px;flex-wrap:wrap;padding:11px 16px;border-bottom:1px solid var(--border)}',
-      '.sc-tema{border:1.5px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 12px;font:700 12px Inter,sans-serif;color:var(--text-2);cursor:pointer}',
-      '.sc-tema.is-on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}',
-      '.sc-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;min-height:240px;max-height:52vh}',
-      '.sc-msg{max-width:84%;border-radius:15px;padding:9px 13px;font:500 13.5px/1.55 Inter,sans-serif;position:relative;overflow-wrap:anywhere;white-space:pre-line}',
-      '.sc-msg--mio{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:5px}',
-      '.sc-msg--admin{align-self:flex-start;background:var(--surface-2);color:var(--text);border-bottom-left-radius:5px}',
-      '.sc-msg small{display:block;font:600 10px Inter,sans-serif;opacity:.7;margin-top:4px;text-align:right}',
-      '.sc-msg--admin small{text-align:left}',
-      '.sc-de{align-self:flex-start;font:700 10.5px Inter,sans-serif;color:var(--text-3);margin:2px 4px -6px}',
-      '.sc-vacio{margin:auto;text-align:center;color:var(--text-3);font:500 13px/1.6 Inter,sans-serif;padding:26px 18px}',
-      '.sc-vacio .ic{width:30px;height:30px;margin-bottom:8px;color:var(--primary)}',
-      '.sc-comp{display:flex;gap:9px;align-items:flex-end;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-2)}',
-      '.sc-comp textarea{flex:1;border:1.5px solid var(--border);border-radius:13px;background:var(--surface);color:var(--text);font:500 14px/1.5 Inter,sans-serif;padding:10px 13px;resize:none;outline:none;max-height:120px;box-sizing:border-box}',
-      '.sc-comp textarea:focus{border-color:var(--primary)}',
-      '.sc-comp button{width:42px;height:42px;border-radius:13px;border:0;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}',
-      '.sc-comp button:disabled{opacity:.55;cursor:default}',
-      '.sc-comp button .ic{width:18px;height:18px}',
-      '.sc-nota{font:500 11.5px Inter,sans-serif;color:var(--text-3);margin-top:10px;line-height:1.55}',
-      '@media (min-width:760px){.dir-red__grupos{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}}'
-    ].join('\n');
+    st.textContent = `
+  .sop-dot{width:8px;height:8px;border-radius:50%;background:#E24A4A;margin-left:auto;flex:none}
+  .sop-dot[hidden]{display:none}
+  /* ── Banda del directorio ── */
+  .dir-banda{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:18px 22px;border-radius:16px;background:linear-gradient(130deg,#0F3D2E,#17543C);color:#fff;margin:0 0 16px}
+  .dir-banda-ic{flex:0 0 auto;display:flex;width:46px;height:46px;border-radius:13px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);align-items:center;justify-content:center}
+  .dir-banda-ic .ic{width:22px;height:22px}
+  .dir-banda-txt{font:700 1rem 'Plus Jakarta Sans',sans-serif;max-width:230px;line-height:1.3}
+  .dir-banda-nums{display:flex;gap:28px;margin-left:auto}
+  .dir-banda-nums span{display:flex;flex-direction:column}
+  .dir-banda-nums b{font-size:1.4rem;line-height:1.15}
+  .dir-banda-nums small{display:flex;align-items:center;gap:4px;font-size:.68rem;color:rgba(255,255,255,.75);margin-top:2px}
+  .dir-banda-nums small .ic{width:11px;height:11px}
+  .dir-bbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid #E8C078;background:#E8C078;color:#4a3505;border-radius:11px;padding:9px 16px;font:700 .8rem Inter,sans-serif;cursor:pointer;white-space:nowrap}
+  .dir-bbtn .ic{width:14px;height:14px;flex:none}
+  .dir-bbtn:hover{filter:brightness(1.05)}
+  @media (max-width:760px){.dir-banda{align-items:flex-start}.dir-banda-txt{max-width:none}.dir-banda-nums{margin-left:0;width:100%}.dir-bbtn{width:100%;justify-content:center}}
+  /* ── Pestañas ── */
+  .dir-tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+  .dir-tabs button{display:flex;align-items:center;gap:7px;padding:10px 18px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text-3);font:700 .84rem Inter,sans-serif;cursor:pointer}
+  .dir-tabs button.on{background:color-mix(in srgb,var(--primary) 12%,transparent);border-color:var(--primary);color:var(--primary)}
+  .dir-tabs button .ic{width:16px;height:16px}
+  .dir-tab-badge{min-width:19px;height:19px;border-radius:10px;background:#E24A4A;color:#fff;font-size:.68rem;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+  .dir-tab-num{color:var(--text-3);font-weight:600}
+  .dir-filtro{display:flex;flex-direction:column;gap:3px;min-width:200px}
+  .dir-filtro small{font-size:.66rem;color:var(--text-3)}
+  .dir-filtro select{padding:10px 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);font:500 .84rem Inter,sans-serif}
+  .dir-vistas{display:flex;align-items:center;gap:8px;margin:10px 0 14px;flex-wrap:wrap}
+  .dir-vistas button{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border);border-radius:100px;background:var(--surface);font:700 .76rem Inter,sans-serif;color:var(--text-3);cursor:pointer}
+  .dir-vistas button.on{border-color:var(--primary);color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,transparent)}
+  .dir-vistas button .ic{width:13px;height:13px}
+  .dir-mia-nota{margin-left:auto;font-size:.72rem;color:var(--text-3)}
+  .dir-mia-nota.pub{color:#0F9D6C}
+  /* ── Tarjeta: avance y acciones ── */
+  .dir-avance{margin:10px 0 2px}
+  .dir-avance small{font-size:.64rem;color:var(--text-3);letter-spacing:.04em}
+  .dir-avance i{display:block;height:4px;border-radius:4px;background:var(--surface-2);margin-top:4px;overflow:hidden}
+  .dir-avance b{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#2E7D32,#9CCC65)}
+  .dir-acciones{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+  .dir-verperfil{flex:1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 13px;border:1px solid var(--border);border-radius:11px;background:var(--surface);font:700 .78rem Inter,sans-serif;color:var(--text);cursor:pointer}
+  .dir-conectar{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:0;border-radius:11px;background:linear-gradient(135deg,#0F3D2E,#1F6B4A);color:#fff;font:700 .76rem Inter,sans-serif;cursor:pointer}
+  .dir-conectar .ic{width:14px;height:14px}
+  .dir-conectar.ok{background:#0F9D6C}
+  .dir-conectar.envia{background:var(--surface-2);color:var(--text-3);border:1px solid var(--border)}
+  .dir-conectar.recibe{background:#B45309}
+  .dir-conectar.suave{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
+  .dir-conectar.peligro{background:var(--surface-2);color:#C0392B;border:1px solid #C0392B44}
+  .dir-conectar:disabled{opacity:.55;cursor:default}
+  .dir-card__foto--av{display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-2)}
+  .dir-card__foto--av svg,.dir-card__foto--av img{width:100%;height:100%;display:block}
+  /* ── Solicitudes y conexiones ── */
+  .dir-bloque{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:16px 18px;margin-bottom:14px}
+  .dir-bloque h3{margin:0 0 12px;font:800 .95rem 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+  .dir-bloque h3 span{color:var(--text-3);font-weight:600;font-size:.8rem}
+  .dir-bloque .dir-sin{font-size:.8rem;color:var(--text-3);margin:0}
+  .dir-fila{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border);flex-wrap:wrap}
+  .dir-fila:first-of-type{border-top:0}
+  .dir-fila-av{width:42px;height:42px;border-radius:13px;overflow:hidden;flex:0 0 auto;cursor:pointer;background:var(--surface-2)}
+  .dir-fila-av img,.dir-fila-av svg{width:100%;height:100%;object-fit:cover;display:block}
+  .dir-fila-av i{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:800}
+  .dir-fila-txt{flex:1;min-width:140px;cursor:pointer}
+  .dir-fila-txt b{display:block;font-size:.88rem;color:var(--text)}
+  .dir-fila-txt small{color:var(--text-3);font-size:.74rem}
+  .dir-fila-acc{display:flex;gap:8px;align-items:center}
+  .dir-fila-nota{font-size:.72rem;color:var(--text-3)}
+  /* ── Página «Perfil profesional» ── */
+  .fpp-volver{display:inline-flex;align-items:center;gap:7px;margin:0 0 14px;padding:9px 16px;border:1px solid var(--border);border-radius:11px;background:var(--surface);font:700 .8rem Inter,sans-serif;color:var(--text);cursor:pointer}
+  .fpp-cab{border:1px solid var(--border);border-radius:18px;background:var(--surface);overflow:hidden;margin-bottom:16px}
+  .fpp-cover{height:150px}
+  .fpp-cuerpo{padding:0 22px 20px}
+  .fpp-av{width:92px;height:92px;border-radius:24px;border:4px solid var(--surface);margin-top:-46px;overflow:hidden;background:var(--surface-2)}
+  .fpp-av img,.fpp-av svg{width:100%;height:100%;object-fit:cover;display:block}
+  .fpp-av i{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:800;font-size:1.6rem}
+  .fpp-ey{font:700 .62rem Inter,sans-serif;letter-spacing:.14em;color:var(--text-3);margin-top:10px}
+  .fpp-nombre{margin:2px 0 4px;font:800 1.5rem 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+  .fpp-sub{color:var(--text-3);font-size:.84rem}
+  .fpp-red{display:flex;align-items:center;gap:6px;margin:10px 0 0;font-size:.8rem;color:var(--text-3)}
+  .fpp-red b{color:var(--text)}
+  .fpp-acc{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .fpp-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:11px;border:1px solid var(--border);background:var(--surface);font:700 .8rem Inter,sans-serif;color:var(--text);cursor:pointer}
+  .fpp-btn .ic{width:14px;height:14px;flex:none}
+  .fpp-btn.p{background:linear-gradient(135deg,#0F3D2E,#1F6B4A);border:0;color:#fff}
+  .fpp-btn:disabled{opacity:.55;cursor:default}
+  .fpp-sec{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:16px 20px;margin-bottom:12px}
+  .fpp-sec h3{margin:0 0 10px;font:800 .95rem 'Plus Jakarta Sans',sans-serif;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fpp-sec h3 .ic{width:16px;height:16px;color:var(--primary);flex:none}
+  .fpp-vis{margin-left:auto;font:700 .62rem Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:100px;background:var(--surface-2);color:var(--text-3)}
+  .fpp-editic{display:inline-flex;color:var(--primary);flex:none}
+  .fpp-editic .ic{width:13px;height:13px}
+  .fpp-editable{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .fpp-editable:hover{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset}
+  .fpp-mini-av{width:46px;height:46px;border-radius:14px;overflow:hidden;background:var(--surface-2)}
+  .fpp-mini-av img,.fpp-mini-av svg{width:100%;height:100%;object-fit:cover;display:block}
+  .fpp-mini-av i{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:800}
+  .fpp-mini-color{width:60px;height:28px;border-radius:9px;border:1px solid var(--border)}
+  .fpp-pista{margin:10px 0 0;font-size:.76rem;color:var(--text-3)}
+  .fpp-sec p{margin:0;font-size:.86rem;line-height:1.55;white-space:pre-line;color:var(--text-2)}
+  .fpp-item{padding:9px 0;border-top:1px solid var(--border)}
+  .fpp-item:first-of-type{border-top:0}
+  .fpp-item b{display:block;font-size:.86rem;color:var(--text)}
+  .fpp-item small{color:var(--text-3);font-size:.74rem}
+  .fpp-item p{margin-top:4px;font-size:.8rem;color:var(--text-2)}
+  .fpp-item a{color:var(--primary)}
+  .fpp-chips{display:flex;gap:7px;flex-wrap:wrap}
+  .fpp-chips span{padding:6px 12px;border-radius:100px;background:color-mix(in srgb,var(--primary) 11%,transparent);color:var(--primary);font:700 .76rem Inter,sans-serif}
+  .fpp-cert{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border)}
+  .fpp-cert:first-of-type{border-top:0}
+  .fpp-cert i{display:flex;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--primary) 11%,transparent);color:var(--primary);align-items:center;justify-content:center;font-style:normal;flex:none}
+  .fpp-cert i .ic{width:16px;height:16px}
+  .fpp-cert b{display:block;font-size:.86rem;color:var(--text)}
+  .fpp-cert small{display:block;color:var(--text-3);font-size:.72rem}
+  .fpp-vacia{color:var(--text-3);font-size:.8rem}
+  .fpp-cerrada{display:flex;align-items:center;gap:8px;color:var(--text-3);font-size:.8rem}
+  .fpp-cerrada .ic{width:15px;height:15px;flex:none}
+  .fpp-avance{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.72rem;color:var(--text-3)}
+  .fpp-avance i{flex:1;height:5px;border-radius:5px;background:var(--surface-2);overflow:hidden;display:block}
+  .fpp-avance b{display:block;height:100%;background:linear-gradient(90deg,#2E7D32,#9CCC65)}
+  .fpp-lbl{display:grid;gap:5px;margin-bottom:12px;font:700 .78rem Inter,sans-serif;color:var(--text-2)}
+  .fpp-lbl small{font-weight:500;color:var(--text-3)}
+  .fpp-lbl input,.fpp-lbl select,.fpp-lbl textarea{width:100%;padding:11px 13px;border-radius:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font:500 .9rem Inter,sans-serif;box-sizing:border-box}
+  .fpp-lbl textarea{resize:vertical}
+  .fpp-ed-fila{display:grid;gap:7px;padding:10px;border:1px dashed var(--border);border-radius:12px;margin-bottom:8px}
+  .fpp-ed-fila input,.fpp-ed-fila textarea{padding:8px 11px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font:500 .8rem/1.45 Inter,sans-serif}
+  .fpp-quitar{justify-self:end;border:0;background:none;color:#C0392B;font:700 .72rem Inter,sans-serif;cursor:pointer}
+  .fpp-agregar{border:1px dashed var(--primary);background:color-mix(in srgb,var(--primary) 8%,transparent);color:var(--primary);border-radius:11px;padding:8px 14px;font:700 .76rem Inter,sans-serif;cursor:pointer}
+  .fpp-selvis{margin-left:auto;padding:6px 9px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font:500 .72rem Inter,sans-serif}
+  .fpp-colores{display:flex;gap:10px;flex-wrap:wrap}
+  .fpp-colores button{width:38px;height:38px;border-radius:12px;border:3px solid transparent;cursor:pointer;box-shadow:0 0 0 1px var(--border)}
+  .fpp-colores button.on{border-color:var(--text)}
+  .fpp-pcustom{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px}
+  .fpp-pcustom input[type=color]{width:38px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--surface);padding:2px;cursor:pointer}
+  .fpp-foto{display:flex;align-items:center;gap:16px;margin-top:8px}
+  .fpp-foto-vista{flex:0 0 auto;width:84px;height:84px;border-radius:50%;background:var(--surface-2) center/cover no-repeat;border:3px solid var(--surface);box-shadow:0 6px 16px rgba(0,0,0,.14)}
+  .fpp-avatares{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:10px;margin-top:8px}
+  .fpp-avatares button{width:58px;height:58px;padding:0;border-radius:50%;border:3px solid transparent;background:none;cursor:pointer;overflow:hidden}
+  .fpp-avatares button.on{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+  .fpp-avatares svg,.fpp-avatares img{width:100%;height:100%;display:block}
+  .fpp-alcance{display:flex;align-items:center;gap:8px;margin:-6px 0 10px}
+  .fpp-alcance small{font-size:.68rem;color:var(--text-3);white-space:nowrap}
+  .fpp-alcance select{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font:500 .76rem Inter,sans-serif}
+  .fpp-quitar-link{display:block;margin-top:7px;border:0;background:none;color:var(--primary);font:700 .76rem Inter,sans-serif;text-decoration:underline;cursor:pointer;padding:0}
+  .fpp-check{display:flex;align-items:center;gap:8px;margin:6px 0 10px;font:600 .88rem Inter,sans-serif;color:var(--text-2)}
+  /* ── Soporte privado (miembro) ── */
+  .ftch-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:22px 24px;border-radius:18px;background:linear-gradient(130deg,#0F3D2E,#1F6B4A);color:#fff;margin-bottom:18px}
+  .ftch-hero i{display:flex;width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);align-items:center;justify-content:center;font-style:normal}
+  .ftch-hero i .ic{width:24px;height:24px}
+  .ftch-hero .ey{font:700 .62rem Inter,sans-serif;letter-spacing:.16em;color:#CDE3A0}
+  .ftch-hero h1{margin:2px 0 3px;font:800 1.45rem 'Plus Jakarta Sans',sans-serif;color:#fff}
+  .ftch-hero p{margin:0;font-size:.84rem;opacity:.85;color:#fff}
+  .ftch-priv{margin-left:auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid rgba(255,255,255,.3);border-radius:100px;font-size:.74rem}
+  .ftch-priv .ic{width:15px;height:15px}
+  .ftch-cols{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+  @media (max-width:860px){.ftch-cols{grid-template-columns:1fr}}
+  .ftch-caso{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:16px}
+  .ftch-caso h3{margin:0 0 10px;font:800 .95rem 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+  .ftch-temas{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .ftch-tema{display:flex;align-items:center;gap:8px;padding:10px 11px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font:600 .78rem Inter,sans-serif;background:var(--surface-2);color:var(--text-2);transition:border-color .15s}
+  .ftch-tema input{accent-color:var(--primary);margin:0}
+  .ftch-tema.on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary)}
+  .ftch-estado{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:.78rem;color:var(--text-3);margin-bottom:12px}
+  .ftch-estado b{font-size:.8rem}
+  .ftch-nota{display:flex;gap:9px;padding:9px 2px;font-size:.75rem;color:var(--text-3);line-height:1.4}
+  .ftch-nota .ic{width:16px;height:16px;flex:0 0 auto;color:var(--primary);margin-top:1px}
+  .ftch-nota b{display:block;color:var(--text);font-size:.77rem}
+  .ftch-hilo{border:1px solid var(--border);border-radius:16px;background:var(--surface);display:flex;flex-direction:column;min-height:430px;max-height:72vh}
+  .ftch-cab{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--border)}
+  .ftch-cab i{display:flex;width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--primary) 11%,transparent);color:var(--primary);align-items:center;justify-content:center;font-style:normal}
+  .ftch-cab i .ic{width:20px;height:20px}
+  .ftch-cab b{display:block;font-size:.9rem;color:var(--text)}
+  .ftch-cab small{color:var(--text-3);font-size:.73rem}
+  .ftch-cab .ftch-pill{margin-left:auto;font:700 .66rem Inter,sans-serif;letter-spacing:.06em;padding:4px 11px;border-radius:100px;border:1px solid var(--border);color:var(--text-3)}
+  .ftch-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+  .ftch-dia{align-self:center;font:700 .62rem Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);border-radius:100px;padding:4px 12px;margin:4px 0}
+  .ftch-m{display:flex}
+  .ftch-m.mio{justify-content:flex-end}
+  .ftch-burbuja{max-width:78%;padding:10px 13px;border-radius:15px;background:var(--surface-2);border:1px solid var(--border);font-size:.86rem;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere;color:var(--text)}
+  .mio .ftch-burbuja{background:linear-gradient(135deg,#0F3D2E,#1F6B4A);color:#fff;border:0}
+  .ftch-burbuja small{display:block;font:700 .62rem Inter,sans-serif;letter-spacing:.08em;margin-bottom:3px;opacity:.75}
+  .ftch-burbuja time{display:block;font-size:.64rem;opacity:.6;margin-top:4px;text-align:right}
+  .ftch-nuevo{animation:ftchIn .25s ease}
+  @keyframes ftchIn{from{opacity:0;transform:translateY(7px)}}
+  .ftch-bajar{position:sticky;bottom:6px;align-self:center;border:1px solid var(--border);background:var(--surface);color:var(--primary);border-radius:100px;padding:6px 14px;font:700 .74rem Inter,sans-serif;cursor:pointer;box-shadow:0 6px 16px rgba(15,61,46,.18)}
+  .ftch-vacio{margin:auto;text-align:center;color:var(--text-3);padding:30px 20px;max-width:340px;font-size:.84rem;line-height:1.5}
+  .ftch-vacio i{display:inline-flex;width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--primary) 11%,transparent);color:var(--primary);align-items:center;justify-content:center;margin-bottom:10px;font-style:normal}
+  .ftch-vacio i .ic{width:26px;height:26px}
+  .ftch-vacio b{display:block;color:var(--text);font-size:.95rem;margin-bottom:4px}
+  .ftch-escribir{border-top:1px solid var(--border);padding:12px 14px;background:var(--surface);border-radius:0 0 16px 16px}
+  .ftch-fila{display:flex;align-items:flex-end;gap:9px}
+  .ftch-fila textarea{flex:1;resize:none;min-height:44px;max-height:130px;padding:11px 13px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);color:var(--text);font:500 .85rem/1.45 Inter,sans-serif;outline:none;box-sizing:border-box}
+  .ftch-fila textarea:focus{border-color:var(--primary)}
+  .ftch-fila button{flex:0 0 auto;width:44px;height:44px;border:0;border-radius:13px;background:linear-gradient(135deg,#0F3D2E,#1F6B4A);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .ftch-fila button:disabled{opacity:.5;cursor:default}
+  .ftch-fila button .ic{width:19px;height:19px}
+  .ftch-pie{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:.68rem;color:var(--text-3)}
+  .ftch-pie .ic{width:12px;height:12px;vertical-align:-2px;margin-right:3px}
+  .ftch-envio{font-size:.72rem;margin-top:5px;color:var(--text-3)}
+  .ftch-envio.err{color:#C0392B}`;
     document.head.appendChild(st);
   })();
 
@@ -14099,253 +14167,559 @@ const Sections = (function(){
     return d;
   }
 
-  // ── Portada personalizada en las tarjetas: color propio o foto (solo dueños VIP) ──
-  function dirPortadaPersonalizada(id){
-    const p = (_dirMeta.portadas || {})[id];
+  // Portada personalizada de las tarjetas VIP: color propio o foto (viene del servidor en /directorio/meta)
+  function dirPortadaPersonalizada(id, borrador){
+    const p = borrador !== undefined ? borrador : (_dirMeta.portadas || {})[id];
     if (!p) return '';
     if (p.foto && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.foto)) return `url("${p.foto}") center/cover no-repeat`;
     if (p.hex && /^#[0-9a-fA-F]{6}$/.test(p.hex)) return `linear-gradient(135deg,${p.hex},color-mix(in srgb,${p.hex} 55%,#00000022))`;
     return '';
   }
+  const dirFondoPortada = (c, id, borrador) => {
+    const propia = dirPortadaPersonalizada(id, borrador);
+    return propia ? 'background:' + propia : 'background:' + DIR_PORTADAS[dirPortadaValida(c && c.portadaColor)].bg;
+  };
+  // Avatar ilustrado de Alintec como respaldo cuando la tarjeta no tiene foto
+  const dirAvatarValido = id => !!(id && window.AlintecAvatares && AlintecAvatares.valido(id));
+  // Avance de la tarjeta para la barra «Tarjeta completa / por completar»
+  function dirAvanceTarjeta(c){
+    const partes = [c.nombre, c.puesto, c.empresa, c.ubicacion, c.sector, c.bio, (c.foto || dirAvatarValido(c.avatar)), DIR_CAMPOS_CONTACTO.some(k => c[k])];
+    return Math.round(partes.filter(Boolean).length / partes.length * 100);
+  }
+  function dirBarraAvance(c){
+    const p = dirAvanceTarjeta(c);
+    return `<div class="dir-avance"><small>${p >= 100 ? 'Perfil completo' : 'Perfil por completar'}</small><i><b style="width:${p}%"></b></i></div>`;
+  }
 
   // ── RED PROFESIONAL (conexiones) ──
-  let _red = { cargado: false, puedeConectar: false, estados: {}, conexiones: [], recibidas: [], enviadas: [] };
-  async function redCargar(){
+  let _red = { cargado: false, puedeConectar: false, estados: {}, conexiones: [], recibidas: [], enviadas: [], total: 0 };
+  async function redCargar(repintar){
     if (window.__isDemoMode === true || !window.__currentUser) return;
     try {
       const d = await apiDir('/api/v2/red');
-      _red = { cargado: true, puedeConectar: d.puedeConectar === true, estados: d.estados || {}, conexiones: d.conexiones || [], recibidas: d.recibidas || [], enviadas: d.enviadas || [] };
+      _red = { cargado: true, puedeConectar: d.puedeConectar === true, estados: d.estados || {}, conexiones: d.conexiones || [], recibidas: d.recibidas || [], enviadas: d.enviadas || [], total: d.total || 0 };
     } catch (e) { console.warn('Red profesional:', e.message); _red.cargado = true; }
-    redPintar();
-    try { dirPintar(); } catch (e) {}
+    if (repintar !== false) { try { dirPintarTabs(); dirVista(); } catch (e) {} }
   }
-
-  function redBotonHtml(id, o){
-    o = o || {};
+  function redBotonHtml(id){
     const uid = window.UserState?.uid;
     if (!id || id === uid || window.__isDemoMode === true) return '';
-    const estado = _red.estados[id] || 'ninguna';
-    const uidAttr = `data-uid="${escapeHtml(id)}"`;
-    const wrap = h => o.grande ? h : `<div class="dir-card__red">${h}</div>`;
-    if (estado === 'conectado') return wrap(`<span class="dir-red-chip"><svg class="ic"><use href="#i-check-circle"/></svg>Conectados</span>`);
-    if (estado === 'enviada') return wrap(`<button type="button" class="dir-red-btn" data-redaccion="cancelar" ${uidAttr} title="Cancelar mi solicitud"><svg class="ic"><use href="#i-clock"/></svg>Pendiente · cancelar</button>`);
-    if (estado === 'recibida') return wrap(`<button type="button" class="dir-red-btn dir-red-btn--p" data-redaccion="aceptar" ${uidAttr}><svg class="ic"><use href="#i-check"/></svg>Aceptar solicitud</button>`);
-    return wrap(`<button type="button" class="dir-red-btn dir-red-btn--p" data-redaccion="solicitar" ${uidAttr}><svg class="ic"><use href="#i-users"/></svg>Conectar</button>`);
+    const e = _red.estados[id] || 'ninguna';
+    const u = `data-reduid="${escapeHtml(id)}"`;
+    if (e === 'conectado') return `<button type="button" class="dir-conectar ok" data-redaccion="eliminar" ${u} title="Conectados · toca para deshacer"><svg class="ic"><use href="#i-check"/></svg>Conectados</button>`;
+    if (e === 'enviada') return `<button type="button" class="dir-conectar envia" data-redaccion="cancelar" ${u} title="Solicitud enviada · toca para cancelarla"><svg class="ic"><use href="#i-clock"/></svg>Enviada</button>`;
+    if (e === 'recibida') return `<button type="button" class="dir-conectar recibe" data-redaccion="tab" ${u}>Responder</button>`;
+    // Conectar es beneficio VIP: a cuentas gratuitas la tarjeta ya les muestra «Contactar · solo VIP»
+    if (!dirViewerEsVip()) return '';
+    return `<button type="button" class="dir-conectar" data-redaccion="solicitar" ${u}><svg class="ic"><use href="#i-users"/></svg>Conectar</button>`;
   }
-
   async function redAccionDesdeBoton(b){
-    const uid = b.dataset.uid, accion = b.dataset.redaccion;
-    if (!uid || !accion) return;
+    const otro = b.dataset.reduid, accion = b.dataset.redaccion;
+    if (!otro || !accion) return;
+    if (accion === 'tab') { _dirTab = 'solicitudes'; const bt = document.querySelector('[data-dirtab="solicitudes"]'); if (bt) bt.click(); else dirVista(); return; }
+    if (accion === 'eliminar' && !confirm('¿Deshacer la conexión con esta persona? Dejarán de ver lo que comparten solo con conexiones.')) return;
+    if (accion === 'cancelar' && !confirm('¿Cancelar la solicitud enviada?')) return;
     if (!dirViewerEsVip() && (accion === 'solicitar' || accion === 'aceptar')) { comunidadRequiereVIP('conectar con otros profesionales del directorio'); return; }
     b.disabled = true;
     try {
-      const d = accion === 'solicitar'
-        ? await apiDir('/api/v2/red/solicitar', 'POST', { uid })
-        : await apiDir('/api/v2/red/' + encodeURIComponent(uid) + '/' + accion, 'POST', {});
-      if (accion === 'solicitar') Toast.success('Solicitud enviada', 'Le avisamos en su campana');
-      else if (accion === 'aceptar') Toast.success('¡Nueva conexión!', 'Ya pueden ver lo que comparten con su red');
-      else Toast.success('Listo', '');
-      _red.estados[uid] = d.estado === 'conectado' ? 'conectado' : d.estado === 'enviada' ? 'enviada' : 'ninguna';
-      redCargar();
+      if (accion === 'solicitar') {
+        const r = await apiDir('/api/v2/red/solicitar', 'POST', { uid: otro });
+        Toast.success(r.estado === 'enviada' ? 'Solicitud enviada' : 'Ya están conectados', r.estado === 'enviada' ? 'Le avisaremos en su campana.' : '');
+      } else {
+        await apiDir('/api/v2/red/' + encodeURIComponent(otro) + '/' + accion, 'POST', {});
+        Toast.success(accion === 'aceptar' ? '¡Nueva conexión!' : accion === 'rechazar' ? 'Solicitud rechazada' : accion === 'cancelar' ? 'Solicitud cancelada' : 'Conexión deshecha', accion === 'aceptar' ? 'Ya pueden ver lo que comparten con conexiones.' : '');
+      }
+      await Promise.all([redCargar(false), dirCargarMeta()]);
+      dirPintarTabs(); dirVista();
+      if (document.getElementById('fpp-raiz')) renderPerfilPro(document.getElementById('dynamic-section'));
     } catch (e) {
-      if (e.codigo === 'membresia-requerida') comunidadRequiereVIP('conectar con otros profesionales del directorio');
-      else Toast.error('No se pudo', e.message || '');
       b.disabled = false;
+      if (e.codigo === 'membresia-requerida') comunidadRequiereVIP('conectar con otros profesionales del directorio');
+      else Toast.error('No se pudo', e.message || 'Intenta de nuevo.');
     }
   }
-
-  function redPintar(){
-    const cont = document.getElementById('dir-red'); if (!cont) return;
-    if (!_red.cargado || window.__isDemoMode === true) { cont.innerHTML = ''; return; }
-    const total = _red.conexiones.length + _red.recibidas.length + _red.enviadas.length;
-    if (!total) { cont.innerHTML = ''; return; }
-    const fila = (p, acciones) => `
-      <div class="dir-red__fila">
-        ${p.foto ? `<span class="dir-red__foto"><img src="${srcSeguro(p.foto)}" alt=""></span>` : `<span class="dir-red__foto">${escapeHtml((p.nombre || '?').trim().slice(0, 2).toUpperCase())}</span>`}
-        <span class="dir-red__quien"><b>${escapeHtml(p.nombre || 'Miembro')}</b><span>${escapeHtml([p.puesto, p.empresa].filter(Boolean).join(' · '))}</span></span>
-        <span class="dir-red__acc">${acciones}</span>
-      </div>`;
-    const grupos = [];
-    if (_red.recibidas.length) grupos.push(`<div class="dir-red__grupo"><h4>Solicitudes recibidas</h4>${_red.recibidas.map(p => fila(p,
-      `<button type="button" class="dir-red-btn dir-red-btn--p" data-redaccion="aceptar" data-uid="${escapeHtml(p.uid)}">Aceptar</button>
-       <button type="button" class="dir-red-btn dir-red-btn--rojo" data-redaccion="rechazar" data-uid="${escapeHtml(p.uid)}">Rechazar</button>`)).join('')}</div>`);
-    if (_red.enviadas.length) grupos.push(`<div class="dir-red__grupo"><h4>Solicitudes enviadas</h4>${_red.enviadas.map(p => fila(p,
-      `<button type="button" class="dir-red-btn" data-redaccion="cancelar" data-uid="${escapeHtml(p.uid)}">Cancelar</button>`)).join('')}</div>`);
-    if (_red.conexiones.length) grupos.push(`<div class="dir-red__grupo"><h4>Mis conexiones</h4>${_red.conexiones.map(p => fila(p,
-      `<button type="button" class="dir-red-btn" data-redcv="${escapeHtml(p.uid)}" data-nombre="${escapeHtml(p.nombre || '')}">Ver CV</button>
-       <button type="button" class="dir-red-btn dir-red-btn--rojo" data-redaccion="eliminar" data-uid="${escapeHtml(p.uid)}" title="Quitar de mi red">Quitar</button>`)).join('')}</div>`);
-    cont.innerHTML = `
-      <div class="dir-red">
-        <div class="dir-red__head"><svg class="ic"><use href="#i-users"/></svg>Mi red profesional <small>${_red.conexiones.length} conexi${_red.conexiones.length === 1 ? 'ón' : 'ones'}</small></div>
-        <div class="dir-red__grupos">${grupos.join('')}</div>
-      </div>`;
-    cont.querySelectorAll('[data-redaccion]').forEach(b => b.addEventListener('click', () => redAccionDesdeBoton(b)));
-    cont.querySelectorAll('[data-redcv]').forEach(b => b.addEventListener('click', () => perfilVerDe(b.dataset.redcv, b.dataset.nombre)));
-  }
-
-  // ── PERFIL PROFESIONAL (currículum) ──
-  const PF_VIS = { publico: 'Todos los miembros', conexiones: 'Solo mis conexiones', privado: 'Solo yo' };
-  const PF_LISTAS = {
-    experiencia: { titulo: 'Experiencia', campos: [['puesto', 'Puesto', 80], ['lugar', 'Empresa o lugar', 80], ['periodo', 'Periodo (ej. 2020-2024)', 40], ['descripcion', 'Descripción breve', 300]] },
-    formacion: { titulo: 'Formación', campos: [['titulo', 'Título o grado', 100], ['escuela', 'Escuela o universidad', 90], ['periodo', 'Periodo', 40]] },
-    idiomas: { titulo: 'Idiomas', campos: [['idioma', 'Idioma', 40], ['nivel', 'Nivel (ej. Avanzado)', 40]] },
-    habilidades: { titulo: 'Habilidades', campos: [['nombre', 'Habilidad', 60]] },
-    certificacionesExternas: { titulo: 'Certificaciones externas', campos: [['nombre', 'Certificación', 100], ['emisor', 'Quién la emite', 80], ['anio', 'Año', 10]] },
-    proyectos: { titulo: 'Proyectos', campos: [['nombre', 'Proyecto', 90], ['descripcion', 'Descripción', 240], ['enlace', 'Enlace (opcional)', 160]] },
-    enlaces: { titulo: 'Enlaces', campos: [['titulo', 'Título', 60], ['url', 'URL', 160]] }
-  };
-
-  async function perfilVerDe(uid, nombre){
-    let d;
-    try { d = await apiDir('/api/v2/perfil/' + encodeURIComponent(uid)); }
-    catch (e) { Toast.error('Currículum no disponible', e.message || ''); return; }
-    const p = d.perfil || {};
-    const sec = (titulo, icono, html) => html ? `<div class="pfv__sec"><h4><svg class="ic"><use href="#${icono}"/></svg>${titulo}</h4>${html}</div>` : '';
-    const items = (lista, f) => (lista && lista.length) ? lista.map(f).join('') : '';
-    const linkSeguro = u => { const t = dirEnlace(u); return /^https:\/\//i.test(t) ? t : ''; };
-    const cuerpo = [
-      sec('Sobre mí', 'i-user', p.sobreMi ? `<p>${escapeHtml(p.sobreMi)}</p>` : ''),
-      sec('Experiencia', 'i-briefcase', items(p.experiencia, x => `<div class="pfv__item"><b>${escapeHtml(x.puesto)}</b><small>${escapeHtml([x.lugar, x.periodo].filter(Boolean).join(' · '))}</small>${x.descripcion ? `<p>${escapeHtml(x.descripcion)}</p>` : ''}</div>`)),
-      sec('Formación', 'i-book', items(p.formacion, x => `<div class="pfv__item"><b>${escapeHtml(x.titulo)}</b><small>${escapeHtml([x.escuela, x.periodo].filter(Boolean).join(' · '))}</small></div>`)),
-      sec('Idiomas', 'i-messages', (p.idiomas && p.idiomas.length) ? `<div class="pfv__chips">${p.idiomas.map(x => `<span class="pfv__chip">${escapeHtml([x.idioma, x.nivel].filter(Boolean).join(' · '))}</span>`).join('')}</div>` : ''),
-      sec('Habilidades', 'i-bolt', (p.habilidades && p.habilidades.length) ? `<div class="pfv__chips">${p.habilidades.map(x => `<span class="pfv__chip">${escapeHtml(x.nombre)}</span>`).join('')}</div>` : ''),
-      sec('Certificados Alintec Food', 'i-certificate', items(d.certificados, c => `<div class="pfv__cert"><b>${escapeHtml(c.curso)}</b><span>${escapeHtml(c.fecha || '')} · Folio ${escapeHtml(c.folio || '')}</span></div>`)),
-      sec('Certificaciones externas', 'i-badge', items(p.certificacionesExternas, x => `<div class="pfv__item"><b>${escapeHtml(x.nombre)}</b><small>${escapeHtml([x.emisor, x.anio].filter(Boolean).join(' · '))}</small></div>`)),
-      sec('Proyectos', 'i-tools', items(p.proyectos, x => `<div class="pfv__item"><b>${escapeHtml(x.nombre)}</b>${x.descripcion ? `<p>${escapeHtml(x.descripcion)}</p>` : ''}${linkSeguro(x.enlace) ? `<small><a href="${escapeHtml(linkSeguro(x.enlace))}" target="_blank" rel="noopener">${escapeHtml(x.enlace)}</a></small>` : ''}</div>`)),
-      sec('Enlaces', 'i-link', items(p.enlaces, x => linkSeguro(x.url) ? `<div class="pfv__item"><a href="${escapeHtml(linkSeguro(x.url))}" target="_blank" rel="noopener"><b>${escapeHtml(x.titulo || x.url)}</b></a><small>${escapeHtml(x.url)}</small></div>` : ''))
-    ].filter(Boolean).join('');
-    const body = `<div class="pfv">${cuerpo || '<div class="pfv__vacio">Esta persona aún no completa su currículum, o sus secciones son privadas.</div>'}</div>`;
-    const footer = document.createElement('div');
-    footer.innerHTML = '<button class="btn btn--ghost" id="pfv-cerrar">Cerrar</button>';
-    const m = Modal.open({ id: 'pf-ver', title: nombre ? ('Currículum de ' + nombre) : 'Currículum profesional', subtitle: d.conectado ? 'En tu red profesional' : 'Directorio VIP', icon: 'i-badge', size: 'md', body, footer });
-    footer.querySelector('#pfv-cerrar').addEventListener('click', () => m.close());
-  }
-
-  async function perfilEditarMio(){
-    if (window.__isDemoMode === true || !window.__currentUser) { Toast.error('Inicia sesión', ''); return; }
-    let d;
-    try { d = await apiDir('/api/v2/perfil/mio'); }
-    catch (e) { Toast.error('No se pudo abrir tu currículum', e.message || ''); return; }
-    const p = d.perfil || {}, vis = p.visibilidad || {};
-    const visSel = s => `<select data-pfvis="${s}" title="Quién puede ver esta sección">${Object.keys(PF_VIS).map(v => `<option value="${v}" ${(vis[s] || 'publico') === v ? 'selected' : ''}>${PF_VIS[v]}</option>`).join('')}</select>`;
-    const filaHtml = (secId, fila) => `
-      <div class="pfe__fila" data-pffila>
-        <button type="button" class="pfe__quitar" title="Quitar"><svg class="ic" style="width:13px;height:13px;"><use href="#i-x"/></svg></button>
-        ${PF_LISTAS[secId].campos.map(([campo, ph, max]) => campo === 'descripcion'
-          ? `<textarea data-pfc="${campo}" maxlength="${max}" rows="2" placeholder="${ph}">${escapeHtml((fila || {})[campo] || '')}</textarea>`
-          : `<input data-pfc="${campo}" maxlength="${max}" placeholder="${ph}" value="${escapeHtml((fila || {})[campo] || '')}">`).join('')}
-      </div>`;
-    const secHtml = secId => `
-      <div class="pfe__sec" data-pfsec="${secId}">
-        <div class="pfe__head"><h4>${PF_LISTAS[secId].titulo}</h4>${visSel(secId)}</div>
-        <div data-pffilas>${(p[secId] || []).map(f => filaHtml(secId, f)).join('')}</div>
-        <button type="button" class="pfe__add" data-pfadd="${secId}">+ Agregar</button>
-      </div>`;
-    const body = `
-      <div class="pfe">
-        <div class="pfv__avance"><b>Perfil completo: <span id="pfe-avance">${Number(d.avance) || 0}%</span></b><div class="pfv__barra"><i id="pfe-barra" style="width:${Number(d.avance) || 0}%"></i></div></div>
-        <div class="pfe__sec">
-          <div class="pfe__head"><h4>Sobre mí</h4>${visSel('sobreMi')}</div>
-          <textarea id="pfe-sobremi" maxlength="600" rows="3" placeholder="Cuenta en unas líneas quién eres y a qué te dedicas…">${escapeHtml(p.sobreMi || '')}</textarea>
-        </div>
-        ${Object.keys(PF_LISTAS).map(secHtml).join('')}
-        <div class="pfe__sec">
-          <div class="pfe__head"><h4>Certificados Alintec Food</h4>${visSel('certificaciones')}</div>
-          ${(d.certificados || []).length
-            ? (d.certificados || []).map(c => `<div class="pfv__cert"><b>${escapeHtml(c.curso)}</b><span>${escapeHtml(c.fecha || '')} · Folio ${escapeHtml(c.folio || '')}</span></div>`).join('')
-            : '<div class="pfv__vacio">Aquí aparecen automáticamente los certificados que obtengas en la plataforma (no se editan).</div>'}
-        </div>
-        <p class="pfe__nota">Cada sección tiene su propio alcance: todos los miembros, solo tus conexiones o solo tú. Tu currículum se muestra desde tu tarjeta del directorio.</p>
-      </div>`;
-    const footer = document.createElement('div');
-    footer.innerHTML = '<button class="btn btn--ghost" id="pfe-cerrar">Cancelar</button><button class="btn btn--accent" id="pfe-guardar">Guardar currículum</button>';
-    const m = Modal.open({ id: 'pf-editar', title: 'Mi currículum profesional', subtitle: 'Se muestra desde tu tarjeta del Directorio', icon: 'i-badge', size: 'md', body, footer });
-    const raiz = document.getElementById('pf-editar') || document;
-    raiz.querySelectorAll('[data-pfadd]').forEach(b => b.addEventListener('click', () => {
-      const secId = b.dataset.pfadd, cont = b.parentElement.querySelector('[data-pffilas]');
-      cont.insertAdjacentHTML('beforeend', filaHtml(secId, {}));
-      const nueva = cont.lastElementChild;
-      nueva.querySelector('.pfe__quitar').addEventListener('click', () => nueva.remove());
-      const inp = nueva.querySelector('input,textarea'); if (inp) inp.focus();
-    }));
-    raiz.querySelectorAll('.pfe__quitar').forEach(b => b.addEventListener('click', () => b.closest('[data-pffila]').remove()));
-    footer.querySelector('#pfe-cerrar').addEventListener('click', () => m.close());
-    footer.querySelector('#pfe-guardar').addEventListener('click', async (e) => {
-      const boton = e.currentTarget; boton.disabled = true; boton.textContent = 'Guardando…';
-      const payload = { sobreMi: (document.getElementById('pfe-sobremi') || {}).value || '', visibilidad: {} };
-      raiz.querySelectorAll('[data-pfvis]').forEach(s => { payload.visibilidad[s.dataset.pfvis] = s.value; });
-      Object.keys(PF_LISTAS).forEach(secId => {
-        const secEl = raiz.querySelector(`[data-pfsec="${secId}"]`); if (!secEl) return;
-        payload[secId] = [...secEl.querySelectorAll('[data-pffila]')].map(f => {
-          const fila = {};
-          f.querySelectorAll('[data-pfc]').forEach(c => { fila[c.dataset.pfc] = c.value.trim(); });
-          return fila;
-        }).filter(f => Object.values(f).some(v => v));
-      });
-      try {
-        const r = await apiDir('/api/v2/perfil', 'POST', payload);
-        Toast.success('Currículum guardado', 'Perfil completo: ' + (Number(r.avance) || 0) + '%');
-        m.close();
-      } catch (err) {
-        Toast.error('No se pudo guardar', err.message || '');
-        boton.disabled = false; boton.textContent = 'Guardar currículum';
-      }
+  // Enlaza los botones de una zona con tarjetas o filas (grid, solicitudes, conexiones, perfil)
+  function dirEnlazar(zona){
+    zona.querySelectorAll('[data-dirlock]').forEach(b => b.onclick = e => { e.stopPropagation(); comunidadRequiereVIP('contactar a otros miembros del directorio'); });
+    zona.querySelectorAll('.dir-cta--mail,[data-email]').forEach(b => { if (b.dataset.email) b.onclick = e => { e.stopPropagation(); dirAbrirCorreo(b.dataset.email); }; });
+    zona.querySelectorAll('[data-verperfil]').forEach(b => b.onclick = e => { e.stopPropagation(); perfilVerDe(b.dataset.verperfil); });
+    zona.querySelectorAll('[data-redaccion]').forEach(b => b.onclick = e => { e.stopPropagation(); redAccionDesdeBoton(b); });
+    zona.querySelectorAll('[data-dircard]').forEach(card => card.onclick = e => {
+      if (e.target.closest('.dir-cta,.dir-cta-lock,.dir-acciones,button,a')) return;
+      dirVerDetalle(card.dataset.dircard);
     });
   }
 
-  // ── SOPORTE PRIVADO: chat directo con el equipo ──
-  const SC_TEMAS = { membresia: 'Mi membresía', cobros: 'Cobros y pagos', cuenta: 'Mi cuenta', cursos: 'Cursos y certificados', otro: 'Otro tema' };
-  let _scTimer = null, _scTema = '', _scEnviando = false;
-  const scRequestId = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2)).padEnd(20, '0').slice(0, 32));
-  const scHora = ms => { try { return new Date(ms).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+  // ── Pestañas del directorio: Directorio · Solicitudes · Mis conexiones ──
+  let _dirTab = 'directorio', _dirVistaFiltro = 'todos';
+  function dirPintarTabs(){
+    const pend = _red.recibidas.length;
+    const bs = document.getElementById('dir-tab-solic'); if (bs) bs.innerHTML = 'Solicitudes' + (pend ? `<span class="dir-tab-badge">${pend}</span>` : '');
+    const bcx = document.getElementById('dir-tab-conex'); if (bcx) bcx.innerHTML = 'Mis conexiones' + (_red.total ? `<span class="dir-tab-num">${_red.total}</span>` : '');
+    const nv = document.getElementById('dir-banda-vip'); if (nv && _dirMeta.cargado) nv.textContent = _dirMeta.vip.size;
+    const nm = document.getElementById('dir-banda-total'); if (nm) nm.textContent = _dirCards.length;
+  }
+  function dirFilaPersona(x, botones){
+    const av = x.foto ? `<img src="${srcSeguro(x.foto)}" alt="">`
+      : dirAvatarValido(x.avatar) ? AlintecAvatares.html(x.avatar, 42)
+      : `<i style="background:linear-gradient(135deg,${colorSeguro(x.color)},${colorSeguro(x.color)}aa)">${escapeHtml((String(x.nombre || '?').trim()[0] || '?').toUpperCase())}</i>`;
+    return `<div class="dir-fila">
+      <span class="dir-fila-av" data-verperfil="${escapeHtml(x.uid)}" role="button" tabindex="0">${av}</span>
+      <div class="dir-fila-txt" data-verperfil="${escapeHtml(x.uid)}" role="button"><b>${escapeHtml(x.nombre || 'Miembro')}</b><small>${escapeHtml([x.puesto, x.empresa || x.sector].filter(Boolean).join(' · ') || 'Miembro del directorio')}</small></div>
+      <div class="dir-fila-acc">${botones}</div></div>`;
+  }
+  function dirVistaSolicitudes(v){
+    const r = _red.recibidas, e = _red.enviadas;
+    v.innerHTML = `<section class="dir-bloque"><h3>Solicitudes recibidas <span>${r.length}</span></h3>` +
+      (r.length ? r.map(x => dirFilaPersona(x, `<button type="button" class="dir-conectar" data-redaccion="aceptar" data-reduid="${escapeHtml(x.uid)}"><svg class="ic"><use href="#i-check"/></svg>Aceptar</button><button type="button" class="dir-conectar suave" data-redaccion="rechazar" data-reduid="${escapeHtml(x.uid)}">Rechazar</button>`)).join('') : '<p class="dir-sin">No tienes solicitudes nuevas. Cuando alguien quiera conectar contigo, aparecerá aquí.</p>') + `</section>` +
+      `<section class="dir-bloque"><h3>Solicitudes enviadas <span>${e.length}</span></h3>` +
+      (e.length ? e.map(x => dirFilaPersona(x, `<span class="dir-fila-nota">Esperando respuesta</span><button type="button" class="dir-conectar suave" data-redaccion="cancelar" data-reduid="${escapeHtml(x.uid)}">Cancelar</button>`)).join('') : '<p class="dir-sin">No has enviado solicitudes. Encuentra colegas en la pestaña Directorio y conecta.</p>') + `</section>`;
+    dirEnlazar(v);
+  }
+  function dirVistaConexiones(v){
+    const c = _red.conexiones;
+    v.innerHTML = `<section class="dir-bloque"><h3>Mis conexiones <span>${c.length}</span></h3>` +
+      (c.length ? c.map(x => dirFilaPersona(x, `<button type="button" class="dir-conectar suave" data-verperfil="${escapeHtml(x.uid)}">Ver perfil</button><button type="button" class="dir-conectar peligro" data-redaccion="eliminar" data-reduid="${escapeHtml(x.uid)}">Deshacer</button>`)).join('') : '<p class="dir-sin">Aún no tienes conexiones. Envía una solicitud desde el Directorio: al conectar, ambos pueden ver el contacto y las secciones del perfil reservadas para conexiones.</p>') + `</section>`;
+    dirEnlazar(v);
+  }
+  function dirVista(){
+    const v = document.getElementById('dr-vista'); if (!v) return;
+    if (_dirTab === 'solicitudes') return dirVistaSolicitudes(v);
+    if (_dirTab === 'conexiones') return dirVistaConexiones(v);
+    const uid = window.UserState?.uid;
+    const propia = _dirCards.find(c => c.id === uid);
+    const estadoMio = propia ? 'Tu tarjeta está publicada' : 'Tu tarjeta sigue privada: publícala desde «Ver mi perfil»';
+    v.innerHTML = `
+      <div class="dir-bar">
+        <div class="dir-search"><svg class="ic"><use href="#i-search"/></svg><input type="search" id="dir-buscar" placeholder="Buscar por nombre, empresa o puesto…" value="${escapeHtml(_dirBusqueda || '')}" aria-label="Buscar en el directorio"></div>
+        <label class="dir-filtro"><small>Especialidad</small><select id="dir-esp-sel"><option value="todos">Todas las especialidades</option>${SECTORES.map(s => `<option ${_dirFiltroSector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+      </div>
+      <div class="dir-vistas">
+        <button type="button" class="${_dirVistaFiltro === 'todos' ? 'on' : ''}" data-dirvista="todos">Todos</button>
+        <button type="button" class="${_dirVistaFiltro === 'vip' ? 'on' : ''}" data-dirvista="vip"><svg class="ic"><use href="#i-crown"/></svg>Solo VIP</button>
+        <span class="dir-mia-nota${propia ? ' pub' : ''}">${estadoMio}</span>
+      </div>
+      <div class="dir-grid" id="dir-grid"><div class="foro-empty">Cargando directorio…</div></div>`;
+    const bus = v.querySelector('#dir-buscar');
+    bus.addEventListener('input', () => { _dirBusqueda = (bus.value || '').toLowerCase().trim(); dirPintar(); });
+    v.querySelector('#dir-esp-sel').addEventListener('change', e => { _dirFiltroSector = e.target.value; dirPintar(); });
+    v.querySelectorAll('[data-dirvista]').forEach(b => b.addEventListener('click', () => { _dirVistaFiltro = b.dataset.dirvista; v.querySelectorAll('[data-dirvista]').forEach(x => x.classList.toggle('on', x === b)); dirPintar(); }));
+    dirPintar();
+  }
 
+  // ── PERFIL PROFESIONAL: página «Ver mi perfil» (como FisioTeck) ──
+  // Secciones de identidad (nombre y datos, foto y avatar, portada, contacto) y del currículum,
+  // cada una se abre, se guarda y se cancela por su cuenta, en su propio lugar.
+  const PF_VIS = [['publico', 'Pública · todos los miembros'], ['conexiones', 'Solo mis conexiones'], ['privado', 'Privada · solo yo']];
+  const PF_SEC = [
+    ['sobreMi', 'Sobre mí', 'i-user'], ['experiencia', 'Experiencia', 'i-briefcase'], ['formacion', 'Formación', 'i-book'],
+    ['idiomas', 'Idiomas', 'i-messages'], ['habilidades', 'Habilidades', 'i-bolt'], ['certificaciones', 'Certificados Alintec Food', 'i-certificate'],
+    ['certificacionesExternas', 'Otras certificaciones', 'i-badge'], ['proyectos', 'Proyectos', 'i-tools'], ['enlaces', 'Enlaces', 'i-link']
+  ];
+  const PF_LISTAS = {
+    experiencia: [['puesto', 'Puesto', 80], ['lugar', 'Empresa / planta', 80], ['periodo', 'Periodo (ej. 2020 – 2024)', 40], ['descripcion', 'Qué hacías (opcional)', 300]],
+    formacion: [['titulo', 'Título o grado', 100], ['escuela', 'Escuela / universidad', 90], ['periodo', 'Periodo', 40]],
+    idiomas: [['idioma', 'Idioma', 40], ['nivel', 'Nivel (ej. Avanzado)', 40]],
+    habilidades: [['nombre', 'Habilidad (ej. Auditorías BPM)', 60]],
+    certificacionesExternas: [['nombre', 'Certificación', 100], ['emisor', 'Quién la emite', 80], ['anio', 'Año', 10]],
+    proyectos: [['nombre', 'Proyecto', 90], ['descripcion', 'De qué trata (opcional)', 240], ['enlace', 'Enlace (opcional)', 160]],
+    enlaces: [['titulo', 'Título (ej. Mi consultoría)', 60], ['url', 'Enlace', 160]]
+  };
+  const PP = { uid: '', datos: null, tarjeta: null, cvEdit: null, identEdit: null, fotoDraft: null, avatarDraft: null, colorDraft: null, hexDraft: null, portadaFotoDraft: null, portadaReset: false, confirmandoEliminar: false };
+  // Abre la página del perfil (la propia o la de otra persona del directorio)
+  function perfilVerDe(uid){ window.__perfilProUid = uid || window.UserState?.uid || ''; navigateToSection('perfilpro'); }
+  function perfilEditarMio(){ perfilVerDe(window.UserState?.uid); }
+  const ppEsMio = () => PP.uid === (window.UserState?.uid || '');
+
+  function renderPerfilPro(container){
+    const pedido = window.__perfilProUid || window.UserState?.uid || '';
+    PP.uid = pedido; PP.cvEdit = null; PP.identEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false; PP.confirmandoEliminar = false;
+    container.innerHTML = '<div id="fpp-raiz" class="fade-up"><div class="foro-empty">Cargando perfil…</div></div>';
+    if (window.__isDemoMode === true || !window.__currentUser) {
+      container.querySelector('#fpp-raiz').innerHTML = '<button type="button" class="fpp-volver" id="fpp-volver">← Volver al directorio</button><div class="foro-empty">Inicia sesión para ver los perfiles profesionales.</div>';
+      container.querySelector('#fpp-volver').onclick = () => navigateToSection('directorio');
+      return;
+    }
+    (async () => {
+      try {
+        const fs = window.__fs, mio = ppEsMio();
+        const [perfil, tarjeta] = await Promise.all([
+          apiDir(mio ? '/api/v2/perfil/mio' : '/api/v2/perfil/' + encodeURIComponent(PP.uid)),
+          fs ? fs.getDoc(fs.doc(fs.db, 'directorio', PP.uid)).then(s => (s.exists() ? s.data() : null)).catch(() => null) : null,
+          dirCargarMeta(), _red.cargado ? null : redCargar(false)
+        ]);
+        PP.datos = perfil; PP.tarjeta = tarjeta || {};
+        ppPintar();
+      } catch (e) {
+        const raiz = document.getElementById('fpp-raiz');
+        if (raiz) { raiz.innerHTML = `<button type="button" class="fpp-volver" id="fpp-volver">← Volver al directorio</button><div class="foro-empty">${escapeHtml(e.message || 'No se pudo abrir el perfil.')}</div>`; raiz.querySelector('#fpp-volver').onclick = () => navigateToSection('directorio'); }
+      }
+    })();
+  }
+
+  function ppAvatarHtml(c, tam){
+    if (c.foto && String(c.foto).indexOf('data:image/') === 0) return `<img src="${srcSeguro(c.foto)}" alt="">`;
+    if (dirAvatarValido(c.avatar)) return AlintecAvatares.html(c.avatar, tam || 92);
+    const ini = (String(c.nombre || '?').trim()[0] || '?').toUpperCase();
+    return `<i style="background:linear-gradient(135deg,${colorSeguro(c.color)},${colorSeguro(c.color)}aa)">${escapeHtml(ini)}</i>`;
+  }
+
+  function ppCabecera(mio){
+    const c = PP.tarjeta || {};
+    const nombre = c.nombre || (mio ? (window.UserState?.nombre || 'Tu perfil') : 'Miembro');
+    const fondo = dirFondoPortada(c, PP.uid);
+    const estadoRed = _red.estados[PP.uid] || 'ninguna';
+    const accion = mio ? '' : (
+      estadoRed === 'conectado' ? '<div class="fpp-acc"><span class="dir-conectar ok" style="cursor:default"><svg class="ic"><use href="#i-check"/></svg>Conectados</span></div>' :
+      estadoRed === 'enviada' ? '<div class="fpp-acc"><span class="dir-conectar envia" style="cursor:default">Solicitud enviada</span></div>' :
+      estadoRed === 'recibida' ? `<div class="fpp-acc"><button type="button" class="dir-conectar recibe" data-redaccion="aceptar" data-reduid="${escapeHtml(PP.uid)}"><svg class="ic"><use href="#i-check"/></svg>Aceptar solicitud</button></div>` :
+      !dirViewerEsVip() ? '<div class="fpp-acc"><button type="button" class="dir-cta-lock" id="fpp-conectar-vip"><svg class="ic"><use href="#i-lock"/></svg>Conectar · solo VIP</button></div>' :
+      `<div class="fpp-acc"><button type="button" class="fpp-btn p" data-redaccion="solicitar" data-reduid="${escapeHtml(PP.uid)}"><svg class="ic"><use href="#i-users"/></svg>Conectar</button></div>`);
+    return `<button type="button" class="fpp-volver" id="fpp-volver">← Volver al directorio</button>
+      <div class="fpp-cab"><div class="fpp-cover" style="${fondo}"></div><div class="fpp-cuerpo">
+        <div class="fpp-av">${ppAvatarHtml(Object.assign({}, c, { color: dirColorFor(PP.uid) }), 92)}</div>
+        <div class="fpp-ey">PERFIL PROFESIONAL</div><h1 class="fpp-nombre">${escapeHtml(nombre)}</h1>
+        <div class="fpp-sub">${escapeHtml([c.puesto, c.empresa, c.ubicacion].filter(Boolean).join(' · '))}</div>
+        ${mio ? `<div class="fpp-red">Red profesional · <b>${_red.total || 0}</b> conexi${(_red.total || 0) === 1 ? 'ón' : 'ones'}</div>` : ''}
+        ${accion}
+        ${mio ? `<div class="fpp-avance"><span>Avance de tu currículum</span><i><b style="width:${PP.datos.avance || 0}%"></b></i><span>${PP.datos.avance || 0}%</span></div>
+        <p class="fpp-pista">Toca cualquier apartado de abajo para editarlo.</p>` : ''}
+        ${mio && c.nombre ? `<div class="fpp-acc" style="margin-top:12px">${PP.confirmandoEliminar
+          ? `<span class="fpp-vacia" style="align-self:center;color:#C0392B;font-weight:700">¿Eliminar tu tarjeta del directorio?</span><button type="button" class="fpp-btn" id="fpp-elim-no">No, conservar</button><button type="button" class="fpp-btn" id="fpp-elim-si" style="color:#fff;background:#C0392B;border:0">Sí, eliminar</button>`
+          : (c.publicado === true ? '<button type="button" class="fpp-btn" id="fpp-despublicar">Dejar de publicar</button>' : '<button type="button" class="fpp-btn p" id="fpp-publicar">Publicar mi tarjeta</button>') +
+            '<button type="button" class="fpp-btn" id="fpp-eliminar" style="color:#C0392B">Eliminar tarjeta</button>'}</div>` : ''}
+      </div></div>`;
+  }
+
+  // Secciones de identidad (solo en tu propio perfil): cada una se edita y guarda por su cuenta
+  function ppSeccionesIdentidad(){
+    const c = Object.assign({ portadaColor: 'verde', estado: '' }, PP.tarjeta || {});
+    const contacto = _dirMeta.miContacto || {};
+    const alcanceDe = ch => { const a = (contacto.alcances || {})[ch]; return ['miembros', 'conexiones', 'oculto'].includes(a) ? a : 'miembros'; };
+    const campo = (id, et, val, ph, max) => `<label class="fpp-lbl">${et}<input id="${id}" maxlength="${max || 60}" placeholder="${escapeHtml(ph || '')}" value="${escapeHtml(val || '')}"></label>`;
+    const botones = clave => `<div class="fpp-acc" style="margin-top:14px"><button type="button" class="fpp-btn p" data-guardarident="${clave}">Guardar</button><button type="button" class="fpp-btn" data-cancelarident>Cancelar</button></div>`;
+    const seccion = (clave, icono, titulo, resumen, formulario) => {
+      const abierto = PP.identEdit === clave;
+      return `<section class="fpp-sec${abierto ? '' : ' fpp-editable'}"${abierto ? '' : ` data-editident="${clave}" role="button" tabindex="0" aria-label="Editar ${escapeHtml(titulo)}"`}>
+        <h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${abierto ? '' : '<span class="fpp-editic"><svg class="ic"><use href="#i-edit"/></svg></span>'}</h3>
+        ${abierto ? formulario() + botones(clave) : resumen}</section>`;
+    };
+    const avMini = `<div class="fpp-mini-av">${ppAvatarHtml(Object.assign({}, c, { color: dirColorFor(PP.uid) }), 46)}</div>`;
+    const etqCanal = { whatsapp: ['WhatsApp', 'Ej. 52 238 123 4567'], email: ['Correo', 'tucorreo@ejemplo.com'], linkedin: ['LinkedIn', 'linkedin.com/in/tu-perfil'], web: ['Sitio web', 'tusitio.com'], instagram: ['Instagram profesional', '@tuusuario'] };
+    const portadaActual = (_dirMeta.portadas || {})[PP.uid] || null;
+    return seccion('identidad', 'i-badge', 'Nombre y datos de tu tarjeta',
+      `<p>${escapeHtml([c.nombre, c.puesto, c.empresa, c.ubicacion, c.sector].filter(Boolean).join(' · ') || 'Agrega tu nombre, puesto, empresa, ciudad y especialidad.')}</p>`,
+      () => `<label class="fpp-lbl">Estado profesional <small>(opcional)</small><select id="fpp-id-estado"><option value="">Sin indicar</option>${Object.keys(DIR_ESTADOS).map(k => `<option value="${k}"${c.estado === k ? ' selected' : ''}>${DIR_ESTADOS[k].label}</option>`).join('')}</select></label>` +
+        campo('fpp-id-nombre', 'Nombre completo', c.nombre || window.UserState?.nombre, 'Ej. Felipe Estrada Ramírez', 50) +
+        campo('fpp-id-puesto', 'Puesto / cargo', c.puesto, 'Ej. Jefe de Aseguramiento de Calidad') +
+        campo('fpp-id-empresa', 'Empresa / planta', c.empresa, 'Ej. Alimentos del Valle SA de CV') +
+        campo('fpp-id-ubic', 'Ubicación profesional', c.ubicacion, 'Ej. Puebla, Puebla') +
+        `<label class="fpp-lbl">Especialidad<select id="fpp-id-sector"><option value="">Selecciona…</option>${SECTORES.map(s => `<option${c.sector === s ? ' selected' : ''}>${s}</option>`).join('')}</select></label>` +
+        `<label class="fpp-lbl">Bio breve <small>(se ve en tu tarjeta del directorio)</small><textarea id="fpp-id-bio" maxlength="160" rows="3" placeholder="Una línea sobre tu experiencia…">${escapeHtml(c.bio || '')}</textarea></label>`) +
+      seccion('foto', 'i-image', 'Foto y avatar', avMini,
+        () => `<div class="fpp-lbl">Tu foto <small>(opcional)</small><div class="fpp-foto"><div class="fpp-foto-vista" id="fpp-id-foto-vista"></div><div><button type="button" class="fpp-btn" id="fpp-id-foto-btn">Subir foto</button> <button type="button" class="fpp-btn" id="fpp-id-foto-quitar" hidden>Quitar</button><input type="file" id="fpp-id-foto-archivo" accept="image/*" hidden></div></div><small>Se recorta en círculo y se reduce sola. Si no subes foto se muestra tu avatar o tus iniciales.</small></div>` +
+          `<div class="fpp-lbl">Tu avatar <small>(ilustraciones de Alintec Food · se usa si no subes foto)</small><div class="fpp-avatares" id="fpp-id-avatares" role="radiogroup" aria-label="Avatares">${window.AlintecAvatares ? AlintecAvatares.lista.map(id => `<button type="button" role="radio" data-av="${id}" title="${escapeHtml(AlintecAvatares.info(id).nombre)}" aria-label="${escapeHtml(AlintecAvatares.info(id).nombre)}">${AlintecAvatares.html(id, 58)}</button>`).join('') : ''}</div><button type="button" class="fpp-quitar-link" id="fpp-id-avatar-ini">Usar mis iniciales</button></div>`) +
+      seccion('color', 'i-image', 'Color de tu portada', `<div class="fpp-mini-color" style="${dirFondoPortada(c, PP.uid)}"></div>`,
+        () => `<div class="fpp-colores" id="fpp-id-colores">${Object.keys(DIR_PORTADAS).map(k => `<button type="button" data-c="${k}" class="${k === dirPortadaValida(c.portadaColor) && !portadaActual ? 'on' : ''}" style="background:${DIR_PORTADAS[k].bg}" title="${DIR_PORTADAS[k].label}" aria-label="${DIR_PORTADAS[k].label}"></button>`).join('')}</div>` +
+          `<div class="fpp-pcustom"><span class="fpp-vacia">O una portada propia:</span><input type="color" id="fpp-id-hex" value="${portadaActual && portadaActual.hex ? portadaActual.hex : '#2E7D32'}" title="Elige tu color"><button type="button" class="fpp-btn" id="fpp-id-hex-usar">Usar este color</button><button type="button" class="fpp-btn" id="fpp-id-pfoto-btn"><svg class="ic"><use href="#i-image"/></svg>Foto panorámica</button><input type="file" id="fpp-id-pfoto-archivo" accept="image/*" hidden></div>` +
+          (portadaActual ? '<button type="button" class="fpp-quitar-link" id="fpp-id-portada-reset">Quitar la portada personalizada y usar un color de la paleta</button>' : '')) +
+      seccion('contacto', 'i-mail', 'Información de contacto', '<p class="fpp-vacia">WhatsApp, correo, LinkedIn, sitio web e Instagram. Tú decides quién ve cada dato.</p>',
+        () => '<p class="fpp-vacia" style="margin-bottom:10px">Decide quién ve cada dato.</p>' +
+          DIR_CAMPOS_CONTACTO.map(ch => campo('fpp-id-c-' + ch, etqCanal[ch][0], contacto[ch], etqCanal[ch][1], ch === 'linkedin' || ch === 'web' ? 120 : 80) +
+            `<div class="fpp-alcance"><small>¿Quién lo ve?</small><select data-alcance="${ch}"><option value="miembros"${alcanceDe(ch) === 'miembros' ? ' selected' : ''}>Todos los miembros VIP</option><option value="conexiones"${alcanceDe(ch) === 'conexiones' ? ' selected' : ''}>Solo mis conexiones</option><option value="oculto"${alcanceDe(ch) === 'oculto' ? ' selected' : ''}>Oculto (nadie)</option></select></div>`).join('') +
+          campo('fpp-id-cedula', 'Cédula profesional (opcional)', c.cedula, '12345678', 20) +
+          `<label class="fpp-check"><input type="checkbox" id="fpp-id-cedula-vis"${c.cedulaVisible ? ' checked' : ''}> Mostrar cédula en el directorio</label>`);
+  }
+
+  // Guarda SOLO el apartado de identidad abierto; el resto de la tarjeta queda tal cual
+  async function ppGuardarIdentidad(btn, clave){
+    const fs = window.__fs, uid = window.UserState?.uid;
+    if (!fs || !uid) { Toast.error('Inicia sesión', ''); return; }
+    const base = PP.tarjeta || {};
+    const tarj = {
+      uid, nombre: base.nombre || '', puesto: base.puesto || '', empresa: base.empresa || '', ubicacion: base.ubicacion || '',
+      sector: base.sector || '', bio: base.bio || '', cedula: base.cedula || '', cedulaVisible: base.cedulaVisible === true,
+      estado: DIR_ESTADOS[base.estado] ? base.estado : '', portadaColor: dirPortadaValida(base.portadaColor),
+      avatar: dirAvatarValido(base.avatar) ? base.avatar : (dirAvatarValido(window.UserState?.avatar) ? window.UserState.avatar : ''),
+      whatsapp: '', email: '', linkedin: '', web: '', instagram: '',
+      visible: true, publicado: base.publicado === true, color: dirColorFor(uid), updatedAt: fs.serverTimestamp()
+    };
+    if (base.foto) tarj.foto = base.foto;
+    let contactoNuevo = null, alcancesNuevos = null;
+    const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    if (clave === 'identidad') {
+      if (val('fpp-id-nombre').length < 3) { Toast.error('Falta tu nombre', 'Escribe tu nombre completo'); return; }
+      tarj.nombre = val('fpp-id-nombre').slice(0, 50); tarj.puesto = val('fpp-id-puesto').slice(0, 60); tarj.empresa = val('fpp-id-empresa').slice(0, 60);
+      tarj.ubicacion = val('fpp-id-ubic').slice(0, 60); tarj.sector = SECTORES.includes(val('fpp-id-sector')) ? val('fpp-id-sector') : '';
+      tarj.bio = val('fpp-id-bio').slice(0, 160); tarj.estado = DIR_ESTADOS[val('fpp-id-estado')] ? val('fpp-id-estado') : '';
+    } else if (clave === 'foto') {
+      if (PP.avatarDraft !== null) tarj.avatar = dirAvatarValido(PP.avatarDraft) ? PP.avatarDraft : '';
+      if (PP.fotoDraft !== null) { if (PP.fotoDraft) tarj.foto = PP.fotoDraft; else delete tarj.foto; }
+    } else if (clave === 'color') {
+      if (PP.colorDraft) tarj.portadaColor = dirPortadaValida(PP.colorDraft);
+    } else if (clave === 'contacto') {
+      contactoNuevo = {}; DIR_CAMPOS_CONTACTO.forEach(ch => { contactoNuevo[ch] = val('fpp-id-c-' + ch); });
+      if (contactoNuevo.whatsapp && !/^[0-9+() -]{8,20}$/.test(contactoNuevo.whatsapp)) { Toast.error('Revisa tu WhatsApp', 'Escríbelo con lada, solo números.'); return; }
+      if (contactoNuevo.email && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(contactoNuevo.email)) { Toast.error('Revisa tu correo', ''); return; }
+      contactoNuevo.instagram = contactoNuevo.instagram.replace(/^@+/, '');
+      alcancesNuevos = {}; document.querySelectorAll('[data-alcance]').forEach(s => { alcancesNuevos[s.dataset.alcance] = s.value; });
+      tarj.cedula = val('fpp-id-cedula').slice(0, 20);
+      const vis = document.getElementById('fpp-id-cedula-vis'); tarj.cedulaVisible = !!(vis && vis.checked);
+    }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      if (contactoNuevo) {
+        await dirGuardarContacto(contactoNuevo);
+        await apiDir('/api/v2/directorio/alcances', 'POST', { alcances: alcancesNuevos });
+        _dirMeta.miContacto = Object.assign({}, _dirMeta.miContacto, contactoNuevo, { alcances: alcancesNuevos });
+      }
+      if (clave === 'color') {
+        if (PP.hexDraft) { await apiDir('/api/v2/directorio/portada', 'POST', { hex: PP.hexDraft }); _dirMeta.portadas[uid] = { hex: PP.hexDraft }; }
+        else if (PP.portadaFotoDraft) { await apiDir('/api/v2/directorio/portada', 'POST', { fotoDataUrl: PP.portadaFotoDraft }); _dirMeta.portadas[uid] = { foto: PP.portadaFotoDraft }; }
+        else if (PP.portadaReset || PP.colorDraft) { try { await apiDir('/api/v2/directorio/portada', 'POST', { reset: true }); delete _dirMeta.portadas[uid]; } catch (e) { /* sin portada previa */ } }
+      }
+      await fs.setDoc(fs.doc(fs.db, 'directorio', uid), tarj);
+      Toast.success('Guardado', '');
+      PP.identEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false;
+      window.__perfilProUid = uid;
+      renderPerfilPro(document.getElementById('dynamic-section'));
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Guardar';
+      Toast.error('No se pudo guardar', (e && e.code === 'permission-denied') ? 'Revisa tu sesión e inténtalo de nuevo.' : (e.message || ''));
+    }
+  }
+
+  const ppFilaCV = (clave, fila) => `<div class="fpp-ed-fila">${PF_LISTAS[clave].map(c => (c[0] === 'descripcion'
+    ? `<textarea data-campo="${c[0]}" maxlength="${c[2]}" rows="2" placeholder="${escapeHtml(c[1])}">${escapeHtml((fila || {})[c[0]] || '')}</textarea>`
+    : `<input data-campo="${c[0]}" maxlength="${c[2]}" placeholder="${escapeHtml(c[1])}" value="${escapeHtml((fila || {})[c[0]] || '')}">`)).join('')}<button type="button" class="fpp-quitar">Quitar</button></div>`;
+
+  function ppEditorCV(clave, titulo, icono, p, visibilidad){
+    const selVis = `<select class="fpp-selvis" id="fpp-cv-vis">${PF_VIS.map(v => `<option value="${v[0]}"${(visibilidad[clave] || 'publico') === v[0] ? ' selected' : ''}>${v[1]}</option>`).join('')}</select>`;
+    let cuerpo;
+    if (clave === 'certificaciones') cuerpo = `<p class="fpp-vacia">Esta sección no se edita: muestra tus certificados reales de Alintec Food con folio verificable (${(PP.datos.certificados || []).length} hasta hoy). Aquí solo eliges quién la ve.</p>`;
+    else if (clave === 'sobreMi') cuerpo = `<label class="fpp-lbl"><textarea id="fpp-cv-sobre" maxlength="600" rows="4" placeholder="Quién eres, qué te apasiona y a quién ayudas…">${escapeHtml(p.sobreMi || '')}</textarea></label>`;
+    else cuerpo = `<div id="fpp-cv-lista">${(Array.isArray(p[clave]) ? p[clave] : []).map(f => ppFilaCV(clave, f)).join('')}</div><button type="button" class="fpp-agregar" id="fpp-cv-agregar">+ Agregar</button>`;
+    return `<section class="fpp-sec"><h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${selVis}</h3>${cuerpo}
+      <div class="fpp-acc" style="margin-top:14px"><button type="button" class="fpp-btn p" id="fpp-cv-guardar">Guardar</button><button type="button" class="fpp-btn" id="fpp-cv-cancelar">Cancelar</button></div></section>`;
+  }
+
+  async function ppGuardarCV(btn, clave){
+    const p = PP.datos.perfil || {};
+    const cuerpo = { sobreMi: p.sobreMi || '', visibilidad: Object.assign({}, p.visibilidad || {}) };
+    Object.keys(PF_LISTAS).forEach(k => { cuerpo[k] = Array.isArray(p[k]) ? p[k] : []; });
+    cuerpo.visibilidad[clave] = document.getElementById('fpp-cv-vis').value;
+    if (clave === 'sobreMi') cuerpo.sobreMi = document.getElementById('fpp-cv-sobre').value;
+    else if (clave !== 'certificaciones') cuerpo[clave] = [...document.querySelectorAll('#fpp-cv-lista .fpp-ed-fila')].map(f => { const o = {}; f.querySelectorAll('[data-campo]').forEach(i => { o[i.dataset.campo] = i.value; }); return o; });
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      const r = await apiDir('/api/v2/perfil', 'POST', cuerpo);
+      PP.cvEdit = null;
+      Toast.success('Guardado', (r.avance || 0) + '% de tu currículum');
+      window.__perfilProUid = PP.uid;
+      renderPerfilPro(document.getElementById('dynamic-section'));
+    } catch (e) { btn.disabled = false; btn.textContent = 'Guardar'; Toast.error('No se pudo guardar', e.message || ''); }
+  }
+
+  function ppVerSeccion(clave, titulo, icono, visibilidad){
+    const p = PP.datos.perfil || {}, mio = ppEsMio();
+    if (mio && PP.cvEdit === clave) return ppEditorCV(clave, titulo, icono, p, visibilidad || {});
+    const etiqueta = mio && visibilidad ? `<span class="fpp-vis">${(PF_VIS.find(v => v[0] === visibilidad[clave]) || PF_VIS[0])[1]}</span><span class="fpp-editic"><svg class="ic"><use href="#i-edit"/></svg></span>` : '';
+    const abre = mio ? ` data-editsec="${clave}" role="button" tabindex="0" aria-label="Editar ${escapeHtml(titulo)}"` : '';
+    const clase = 'fpp-sec' + (mio ? ' fpp-editable' : '');
+    const linkSeguro = u => { const t = dirEnlace(u); return /^https:\/\//i.test(t) ? t : ''; };
+    if (clave === 'certificaciones') {
+      const certs = PP.datos.certificados || [];
+      if (!certs.length && !mio) return '';
+      return `<section class="${clase}"${abre}><h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${etiqueta}</h3>` +
+        (certs.length ? certs.map(x => `<div class="fpp-cert"><i><svg class="ic"><use href="#i-check"/></svg></i><div><b>${escapeHtml(x.curso)}</b><small>Folio ${escapeHtml(x.folio)}${x.fecha ? ' · ' + escapeHtml(x.fecha) : ''} · verificable con QR</small></div></div>`).join('')
+          : '<p class="fpp-vacia">Termina un curso de la plataforma y tu certificado aparecerá aquí solo (con folio verificable).</p>') + '</section>';
+    }
+    const valor = p[clave];
+    if (valor === undefined) return ''; // sección reservada: el servidor ya la filtró
+    if (clave === 'sobreMi') {
+      if (!valor && !mio) return '';
+      return `<section class="${clase}"${abre}><h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${etiqueta}</h3>${valor ? `<p>${escapeHtml(valor)}</p>` : '<p class="fpp-vacia">Cuenta en unas líneas quién eres y qué te apasiona del sector alimentario.</p>'}</section>`;
+    }
+    const lista = Array.isArray(valor) ? valor : [];
+    if (!lista.length && !mio) return '';
+    let cuerpo;
+    if (clave === 'habilidades') cuerpo = lista.length ? `<div class="fpp-chips">${lista.map(x => `<span>${escapeHtml(x.nombre)}</span>`).join('')}</div>` : '<p class="fpp-vacia">Agrega tus técnicas y herramientas.</p>';
+    else if (clave === 'idiomas') cuerpo = lista.length ? `<div class="fpp-chips">${lista.map(x => `<span>${escapeHtml(x.idioma)}${x.nivel ? ' · ' + escapeHtml(x.nivel) : ''}</span>`).join('')}</div>` : '<p class="fpp-vacia">¿Qué idiomas hablas?</p>';
+    else if (clave === 'enlaces') cuerpo = lista.length ? lista.map(x => { const seguro = linkSeguro(x.url); return `<div class="fpp-item"><b>${escapeHtml(x.titulo || x.url)}</b>${seguro ? `<small><a href="${escapeHtml(seguro)}" target="_blank" rel="noopener noreferrer">${escapeHtml(x.url)}</a></small>` : ''}</div>`; }).join('') : '<p class="fpp-vacia">Comparte tu sitio, agenda o redes profesionales.</p>';
+    else cuerpo = lista.length ? lista.map(x => { const seguro = clave === 'proyectos' ? linkSeguro(x.enlace) : ''; return `<div class="fpp-item"><b>${escapeHtml(x.puesto || x.titulo || x.nombre || '')}</b><small>${escapeHtml([x.lugar || x.escuela || x.emisor, x.periodo || x.anio].filter(Boolean).join(' · '))}</small>${x.descripcion ? `<p>${escapeHtml(x.descripcion)}</p>` : ''}${seguro ? `<small><a href="${escapeHtml(seguro)}" target="_blank" rel="noopener noreferrer">${escapeHtml(x.enlace)}</a></small>` : ''}</div>`; }).join('') : '<p class="fpp-vacia">Aún no hay nada en esta sección.</p>';
+    return `<section class="${clase}"${abre}><h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${etiqueta}</h3>${cuerpo}</section>`;
+  }
+
+  function ppPintar(){
+    const raiz = document.getElementById('fpp-raiz'); if (!raiz) return;
+    const mio = ppEsMio();
+    const vis = (PP.datos.perfil || {}).visibilidad || null;
+    raiz.innerHTML = ppCabecera(mio) + (mio ? ppSeccionesIdentidad() : '') + PF_SEC.map(s => ppVerSeccion(s[0], s[1], s[2], vis)).join('') +
+      (!mio && PP.datos.conectado === false ? '<div class="fpp-sec fpp-cerrada"><svg class="ic"><use href="#i-lock"/></svg>Algunas secciones de este perfil son solo para sus conexiones.</div>' : '');
+    raiz.querySelector('#fpp-volver').onclick = () => navigateToSection('directorio');
+    raiz.querySelectorAll('[data-redaccion]').forEach(b => b.onclick = () => redAccionDesdeBoton(b));
+    const bvip = raiz.querySelector('#fpp-conectar-vip'); if (bvip) bvip.onclick = () => comunidadRequiereVIP('conectar con otros profesionales del directorio');
+    const fs = window.__fs, uid = window.UserState?.uid;
+    const republicar = async (publicado, btn, msj) => {
+      btn.disabled = true;
+      try {
+        await fs.setDoc(fs.doc(fs.db, 'directorio', uid), { publicado, updatedAt: fs.serverTimestamp() }, { merge: true });
+        Toast.success(msj, '');
+        window.__perfilProUid = uid; renderPerfilPro(document.getElementById('dynamic-section'));
+      } catch (e) { btn.disabled = false; Toast.error('No se pudo', e.message || ''); }
+    };
+    const bp = raiz.querySelector('#fpp-publicar'); if (bp) bp.onclick = () => republicar(true, bp, 'Tarjeta publicada: ya apareces en el directorio');
+    const bd = raiz.querySelector('#fpp-despublicar'); if (bd) bd.onclick = () => republicar(false, bd, 'Tu tarjeta ya no está publicada');
+    const be = raiz.querySelector('#fpp-eliminar'); if (be) be.onclick = () => { PP.confirmandoEliminar = true; ppPintar(); };
+    const ben = raiz.querySelector('#fpp-elim-no'); if (ben) ben.onclick = () => { PP.confirmandoEliminar = false; ppPintar(); };
+    const bes = raiz.querySelector('#fpp-elim-si'); if (bes) bes.onclick = async () => {
+      bes.disabled = true; bes.textContent = 'Eliminando…';
+      try { await fs.deleteDoc(fs.doc(fs.db, 'directorio', uid)); Toast.success('Tarjeta eliminada', 'Puedes crearla de nuevo cuando quieras'); window.__perfilProUid = uid; renderPerfilPro(document.getElementById('dynamic-section')); }
+      catch (e) { bes.disabled = false; bes.textContent = 'Sí, eliminar'; Toast.error('No se pudo eliminar', e.message || ''); }
+    };
+    if (!mio) return;
+    // Currículum: cada apartado se abre, se guarda y se cancela por su cuenta, aquí mismo
+    raiz.querySelectorAll('[data-editsec]').forEach(sec => {
+      sec.onclick = e => { if (e.target.closest('a')) return; PP.cvEdit = sec.dataset.editsec; PP.identEdit = null; ppPintar(); };
+      sec.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sec.click(); } };
+    });
+    if (PP.cvEdit) {
+      const clave = PP.cvEdit;
+      const enlazarQuitar = () => raiz.querySelectorAll('.fpp-quitar').forEach(b => b.onclick = () => b.closest('.fpp-ed-fila').remove());
+      enlazarQuitar();
+      const ag = document.getElementById('fpp-cv-agregar'); if (ag) ag.onclick = () => { document.getElementById('fpp-cv-lista').insertAdjacentHTML('beforeend', ppFilaCV(clave, {})); enlazarQuitar(); };
+      const cc = document.getElementById('fpp-cv-cancelar'); if (cc) cc.onclick = () => { PP.cvEdit = null; ppPintar(); };
+      const cg = document.getElementById('fpp-cv-guardar'); if (cg) cg.onclick = () => ppGuardarCV(cg, clave);
+    }
+    // Identidad: cada apartado se abre, se guarda y se cancela por su cuenta
+    raiz.querySelectorAll('[data-editident]').forEach(sec => {
+      sec.onclick = () => { PP.identEdit = sec.dataset.editident; PP.cvEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false; ppPintar(); };
+      sec.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sec.click(); } };
+    });
+    raiz.querySelectorAll('[data-cancelarident]').forEach(b => b.onclick = () => { PP.identEdit = null; ppPintar(); });
+    raiz.querySelectorAll('[data-guardarident]').forEach(b => b.onclick = () => ppGuardarIdentidad(b, b.dataset.guardarident));
+    if (PP.identEdit === 'foto') {
+      const c = PP.tarjeta || {};
+      const pintarFoto = () => {
+        const vista = document.getElementById('fpp-id-foto-vista'); if (!vista) return;
+        const valor = PP.fotoDraft !== null ? PP.fotoDraft : (c.foto || '');
+        vista.style.backgroundImage = valor ? `url(${valor})` : '';
+        document.getElementById('fpp-id-foto-btn').textContent = valor ? 'Cambiar foto' : 'Subir foto';
+        document.getElementById('fpp-id-foto-quitar').hidden = !valor;
+      };
+      document.getElementById('fpp-id-foto-btn').onclick = () => document.getElementById('fpp-id-foto-archivo').click();
+      document.getElementById('fpp-id-foto-quitar').onclick = () => { PP.fotoDraft = ''; pintarFoto(); };
+      document.getElementById('fpp-id-foto-archivo').onchange = async ev => {
+        const a = ev.target.files && ev.target.files[0]; ev.target.value = ''; if (!a) return;
+        if (!a.type.startsWith('image/')) { Toast.error('Solo imágenes', ''); return; }
+        try { PP.fotoDraft = await dirComprimirFoto(a); pintarFoto(); }
+        catch (e) { Toast.error('No se pudo usar esa imagen', ''); }
+      };
+      pintarFoto();
+      const pintarAv = () => {
+        const actual = PP.avatarDraft !== null ? PP.avatarDraft : (c.avatar || '');
+        raiz.querySelectorAll('#fpp-id-avatares [data-av]').forEach(b => { const on = b.dataset.av === actual; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+        const ini = document.getElementById('fpp-id-avatar-ini'); if (ini) ini.hidden = !actual;
+      };
+      raiz.querySelectorAll('#fpp-id-avatares [data-av]').forEach(b => b.onclick = () => { PP.avatarDraft = b.dataset.av; pintarAv(); });
+      const ini = document.getElementById('fpp-id-avatar-ini'); if (ini) ini.onclick = () => { PP.avatarDraft = ''; pintarAv(); };
+      pintarAv();
+    }
+    if (PP.identEdit === 'color') {
+      raiz.querySelectorAll('#fpp-id-colores [data-c]').forEach(b => b.onclick = () => {
+        PP.colorDraft = b.dataset.c; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = true;
+        raiz.querySelectorAll('#fpp-id-colores [data-c]').forEach(x => x.classList.toggle('on', x === b));
+      });
+      const hx = document.getElementById('fpp-id-hex-usar'); if (hx) hx.onclick = () => {
+        const v = (document.getElementById('fpp-id-hex') || {}).value || '';
+        if (!/^#[0-9a-fA-F]{6}$/.test(v)) { Toast.error('Elige un color válido', ''); return; }
+        PP.hexDraft = v; PP.portadaFotoDraft = null; PP.colorDraft = null;
+        raiz.querySelectorAll('#fpp-id-colores [data-c]').forEach(x => x.classList.remove('on'));
+        Toast.success('Color elegido', 'Toca Guardar para aplicarlo');
+      };
+      const pf = document.getElementById('fpp-id-pfoto-btn'), pa = document.getElementById('fpp-id-pfoto-archivo');
+      if (pf && pa) {
+        pf.onclick = () => pa.click();
+        pa.onchange = async ev => {
+          const a = ev.target.files && ev.target.files[0]; ev.target.value = ''; if (!a) return;
+          if (!a.type.startsWith('image/')) { Toast.error('Solo imágenes', ''); return; }
+          try { PP.portadaFotoDraft = await dirComprimirPortada(a); PP.hexDraft = null; PP.colorDraft = null; Toast.success('Foto lista', 'Toca Guardar para aplicarla'); }
+          catch (e) { Toast.error('No se pudo usar esa foto', ''); }
+        };
+      }
+      const rs = document.getElementById('fpp-id-portada-reset'); if (rs) rs.onclick = () => { PP.portadaReset = true; PP.hexDraft = null; PP.portadaFotoDraft = null; rs.remove(); Toast.success('Se quitará al guardar', ''); };
+    }
+  }
+
+  // ── SOPORTE PRIVADO: chat privado con el equipo (como FisioTeck, en verde Alintec) ──
+  const SC_TEMAS = [['membresia', 'Mi membresía'], ['cobros', 'Cobros y pagos'], ['cuenta', 'Acceso a mi cuenta'], ['cursos', 'Cursos y materiales'], ['otro', 'Otro tema']];
+  const SC_ESTADO = { nueva: ['Sin consulta', 'var(--text-3)'], abierto: ['En seguimiento', '#B45309'], resuelto: ['Resuelto', '#0F9D6C'] };
+  let _scTimer = null, _scTema = 'membresia', _scGuardandoTema = false, _scEnviando = false, _scPrimera = true, _scPrevios = null, _scReintento = null;
+  const scNuevoId = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2)).padEnd(20, '0').slice(0, 32));
+  const scRequestId = () => (_scReintento ? _scReintento.id : scNuevoId());
+  const scHora = ms => (ms ? new Intl.DateTimeFormat('es-MX', { hour: 'numeric', minute: '2-digit' }).format(new Date(ms)) : '');
+  const scDia = ms => { if (!ms) return ''; const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? 'Hoy' : new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }).format(d); };
   function scPuntoRojo(mostrar){
     ['nav-soporte-dot', 'drawer-soporte-dot'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !mostrar; });
   }
   window.__soporteVistazo = async function(){
     if (window.__isDemoMode === true || !window.__currentUser) return;
     try { const d = await apiDir('/api/v2/soporte?vistazo=1'); scPuntoRojo(!!(d.conversacion && d.conversacion.sinLeerMiembro > 0)); }
-    catch (e) { /* sin red o sin verificación: el punto rojo simplemente no cambia */ }
+    catch (e) { /* sin red o sin verificación: el punto rojo no cambia */ }
   };
   window.__soporteCleanup = function(){ if (_scTimer) { clearInterval(_scTimer); _scTimer = null; } };
 
-  function scPintar(cont, d){
-    const lista = cont.querySelector('#sc-msgs'); if (!lista) return;
-    const conv = d.conversacion;
-    const est = cont.querySelector('#sc-estado');
-    if (est) {
-      est.textContent = conv ? (conv.estado === 'resuelto' ? 'Resuelta' : 'Abierta') : 'Nueva';
-      est.classList.toggle('is-resuelto', !!(conv && conv.estado === 'resuelto'));
-    }
-    if (conv && SC_TEMAS[conv.tema] && !_scTema) {
-      _scTema = conv.tema;
-      cont.querySelectorAll('[data-sctema]').forEach(x => x.classList.toggle('is-on', x.dataset.sctema === _scTema));
-    }
-    const msgs = d.mensajes || [];
-    if (!msgs.length) {
-      lista.innerHTML = `<div class="sc-vacio"><svg class="ic"><use href="#i-messages"/></svg><br><b>Escríbenos con confianza.</b><br>Este chat es privado entre tú y el equipo Alintec Food. Te respondemos aquí mismo y te avisamos en la campanita.</div>`;
-      return;
-    }
-    let ultimo = '';
-    lista.innerHTML = msgs.map(x => {
-      const de = x.de === 'admin' ? 'admin' : 'mio';
-      const etiqueta = (de === 'admin' && ultimo !== 'admin') ? '<span class="sc-de">Equipo Alintec Food</span>' : '';
-      ultimo = de;
-      return etiqueta + `<div class="sc-msg sc-msg--${de}">${escapeHtml(x.texto)}<small>${scHora(x.creadoMs)}</small></div>`;
+  function scHtmlMensajes(lista){
+    if (!lista.length) return '<div class="ftch-vacio" data-k="vacio"><i><svg class="ic"><use href="#i-messages"/></svg></i><b>¿En qué podemos ayudarte?</b>Elige el tema de tu consulta y escribe al equipo Alintec Food. Tu conversación se conservará aquí.</div>';
+    let dia = '';
+    return lista.map(m => {
+      const d = m.creadoMs ? new Date(m.creadoMs).toDateString() : '';
+      const sep = d && d !== dia ? `<div class="ftch-dia" data-k="dia-${escapeHtml(d)}"><span>${escapeHtml(scDia(m.creadoMs))}</span></div>` : ''; dia = d;
+      const mio = m.de !== 'admin';
+      return sep + `<div class="ftch-m ${mio ? 'mio' : ''}" data-k="m-${escapeHtml(m.id)}" data-msj><div class="ftch-burbuja"><small>${mio ? 'Tú' : 'Equipo Alintec Food'}</small>${escapeHtml(m.texto)}<time>${escapeHtml(scHora(m.creadoMs))}</time></div></div>`;
     }).join('');
-    lista.scrollTop = lista.scrollHeight;
   }
-
-  async function scCargar(cont, { silencioso } = {}){
+  // Repintado sin parpadeo: conserva los nodos que no cambiaron y anima solo los mensajes nuevos
+  function scSincronizar(caja, html, forzar){
+    if (!caja || caja.innerHTML === html) return;
+    const seguir = forzar || caja.scrollHeight - caja.scrollTop - caja.clientHeight < 90, top = caja.scrollTop;
+    const plantilla = document.createElement('template'); plantilla.innerHTML = html;
+    const viejos = new Map([...caja.children].map(n => [n.getAttribute('data-k'), n])), conservar = new Set();
+    let hayNuevos = false;
+    [...plantilla.content.children].forEach((nuevo, i) => {
+      const k = nuevo.getAttribute('data-k'), previo = k && viejos.get(k);
+      const nodo = previo && previo.outerHTML === nuevo.outerHTML ? previo : nuevo;
+      if (!previo && nuevo.hasAttribute('data-msj')) { hayNuevos = true; if (!forzar) nodo.classList.add('ftch-nuevo'); }
+      conservar.add(nodo);
+      if (caja.children[i] !== nodo) caja.insertBefore(nodo, caja.children[i] || null);
+    });
+    [...caja.children].forEach(n => { if (!conservar.has(n) && !n.classList.contains('ftch-bajar')) n.remove(); });
+    const btn = caja.querySelector('.ftch-bajar');
+    if (seguir) caja.scrollTop = caja.scrollHeight; else caja.scrollTop = top;
+    if (btn && hayNuevos && !seguir) btn.hidden = false;
+    if (btn && seguir) btn.hidden = true;
+  }
+  function scPintarEstado(conv){
+    const e = !conv ? SC_ESTADO.nueva : (SC_ESTADO[conv.estado] || SC_ESTADO.abierto);
+    document.querySelectorAll('[data-sc-estado]').forEach(n => { n.textContent = e[0]; n.style.color = e[1]; });
+  }
+  function scPintarTema(t){
+    _scTema = t;
+    document.querySelectorAll('.ftch-tema').forEach(l => { const r = l.querySelector('input'); r.checked = r.value === t; l.classList.toggle('on', r.checked); });
+    const n = document.getElementById('sc-tema-sel'); if (n) n.textContent = (SC_TEMAS.find(x => x[0] === t) || SC_TEMAS[4])[1];
+  }
+  async function scCargar(silencio){
+    const caja = document.getElementById('sc-msgs'); if (!caja) return;
     try {
       const d = await apiDir('/api/v2/soporte');
-      scPintar(cont, d);
+      if (!document.getElementById('sc-msgs')) return;
+      scSincronizar(document.getElementById('sc-msgs'), scHtmlMensajes(d.mensajes || []), _scPrimera); _scPrimera = false;
+      const n = (d.mensajes || []).length; _scPrevios = n;
+      scPintarEstado(d.conversacion);
+      if (d.conversacion && !_scGuardandoTema && SC_TEMAS.some(t => t[0] === d.conversacion.tema)) scPintarTema(d.conversacion.tema);
       scPuntoRojo(false); // abrir el chat marca leído en el servidor
     } catch (e) {
-      if (!silencioso) {
-        const lista = cont.querySelector('#sc-msgs');
-        if (lista) lista.innerHTML = `<div class="sc-vacio">No se pudo abrir tu conversación.<br>${escapeHtml(e.message || '')}</div>`;
-      }
+      if (!silencio && _scPrimera && document.getElementById('sc-msgs')) document.getElementById('sc-msgs').innerHTML = '<div class="ftch-vacio"><b>No pudimos abrir la conversación</b>Revisa tu conexión o vuelve a iniciar sesión. Tu historial se conserva.</div>';
     }
   }
 
@@ -14353,62 +14727,67 @@ const Sections = (function(){
     window.__soporteCleanup();
     if (window.__isDemoMode === true || !window.__currentUser) {
       container.innerHTML = `
-        <div class="fade-up"><div class="sec-hero">
-          <span class="sec-hero__eyebrow">Atención personal</span>
-          <h1 class="sec-hero__title">Soporte <span class="sec-hero__accent">privado.</span></h1>
-          <p class="sec-hero__sub">Inicia sesión para escribirle directamente al equipo Alintec Food. Tu conversación es privada y queda guardada aquí.</p>
-        </div></div>`;
+        <div class="fade-up">
+          <div class="ftch-hero"><i><svg class="ic"><use href="#i-messages"/></svg></i><div><div class="ey">ALINTEC FOOD · ATENCIÓN PERSONALIZADA</div><h1>Soporte privado</h1><p>Inicia sesión para escribirle directamente al equipo Alintec Food.</p></div></div>
+          <div class="ftch-vacio" style="margin:30px auto"><b>Tu conversación es privada</b>Crea tu cuenta o inicia sesión y tendrás un chat directo con el equipo, con tu historial guardado.</div>
+        </div>`;
       return;
     }
-    _scTema = '';
+    _scPrimera = true; _scPrevios = null;
     container.innerHTML = `
-      <div class="fade-up sc-wrap">
-        <div class="sec-hero">
-          <span class="sec-hero__eyebrow">Atención personal</span>
-          <h1 class="sec-hero__title">Soporte <span class="sec-hero__accent">privado.</span></h1>
-          <p class="sec-hero__sub">Un chat directo y privado con el equipo Alintec Food. Cuéntanos tu duda o problema: te respondemos aquí y te avisamos en la campanita.</p>
+      <div class="fade-up">
+        <div class="ftch-hero"><i><svg class="ic"><use href="#i-messages"/></svg></i><div><div class="ey">ALINTEC FOOD · ATENCIÓN PERSONALIZADA</div><h1>Soporte privado</h1><p>Estamos aquí para ayudarte con tu membresía, cobros, acceso o cursos.</p></div><div class="ftch-priv"><svg class="ic"><use href="#i-shield-check"/></svg>Solo tú y administración</div></div>
+        <div class="ftch-cols">
+          <aside class="ftch-caso"><h3>¿Sobre qué necesitas ayuda?</h3>
+            <div class="ftch-temas">${SC_TEMAS.map(t => `<label class="ftch-tema${t[0] === _scTema ? ' on' : ''}"><input type="radio" name="scTema" value="${t[0]}"${t[0] === _scTema ? ' checked' : ''}>${t[1]}</label>`).join('')}</div>
+            <div class="ftch-estado"><span>Tema seleccionado</span><b id="sc-tema-sel">Mi membresía</b></div>
+            <div class="ftch-estado"><span>Estado del caso</span><b data-sc-estado>Cargando…</b></div>
+            <div class="ftch-nota"><svg class="ic"><use href="#i-messages"/></svg><div><b>Seguimiento en el mismo lugar</b>Tu historial se conserva para continuar donde lo dejaste.</div></div>
+            <div class="ftch-nota"><svg class="ic"><use href="#i-shield-check"/></svg><div><b>Conversación privada</b>Solo tú y el equipo de administración pueden ver este espacio.</div></div>
+          </aside>
+          <section class="ftch-hilo">
+            <div class="ftch-cab"><i><svg class="ic"><use href="#i-messages"/></svg></i><div><b>Equipo Alintec Food</b><small>Administración de membresías</small></div><span class="ftch-pill" data-sc-estado>Cargando…</span></div>
+            <div class="ftch-msgs" id="sc-msgs" role="log" aria-live="polite" aria-label="Historial de la conversación"><div class="ftch-vacio"><i><svg class="ic"><use href="#i-messages"/></svg></i>Cargando tu conversación…</div><button type="button" class="ftch-bajar" id="sc-bajar" hidden>Nuevos mensajes ↓</button></div>
+            <form class="ftch-escribir" id="sc-form"><div class="ftch-fila"><textarea id="sc-texto" maxlength="3000" rows="1" placeholder="Escribe tu mensaje…" aria-label="Mensaje para soporte" required></textarea><button type="submit" id="sc-enviar" aria-label="Enviar mensaje"><svg class="ic"><use href="#i-arrow-right"/></svg></button></div>
+            <div class="ftch-pie"><span><svg class="ic"><use href="#i-shield-check"/></svg>No compartas contraseñas ni datos completos de tu tarjeta.</span><span id="sc-cuenta">0 / 3000</span></div><div class="ftch-envio" id="sc-envio" role="status" aria-live="polite"></div></form>
+          </section>
         </div>
-        <div class="sc-caja">
-          <div class="sc-head">
-            <span class="sc-head__ic"><svg class="ic"><use href="#i-messages"/></svg></span>
-            <span class="sc-head__tx"><b>Equipo Alintec Food</b><span>Respuesta en horario hábil · tu historial queda guardado</span></span>
-            <span class="sc-estado" id="sc-estado">…</span>
-          </div>
-          <div class="sc-temas">${Object.keys(SC_TEMAS).map(t => `<button type="button" class="sc-tema" data-sctema="${t}">${SC_TEMAS[t]}</button>`).join('')}</div>
-          <div class="sc-msgs" id="sc-msgs"><div class="sc-vacio">Cargando tu conversación…</div></div>
-          <div class="sc-comp">
-            <textarea id="sc-texto" rows="1" maxlength="3000" placeholder="Escribe tu mensaje…"></textarea>
-            <button type="button" id="sc-enviar" title="Enviar"><svg class="ic"><use href="#i-arrow-right"/></svg></button>
-          </div>
-        </div>
-        <p class="sc-nota">Este espacio es para temas de tu cuenta: membresía, cobros y pagos, cursos y certificados. Nadie más puede leer esta conversación.</p>
       </div>`;
-    const texto = container.querySelector('#sc-texto');
-    const btn = container.querySelector('#sc-enviar');
-    container.querySelectorAll('[data-sctema]').forEach(b => b.addEventListener('click', async () => {
-      _scTema = b.dataset.sctema;
-      container.querySelectorAll('[data-sctema]').forEach(x => x.classList.toggle('is-on', x === b));
-      try { await apiDir('/api/v2/soporte/tema', 'POST', { tema: _scTema }); } catch (e) { /* el tema viaja con el primer mensaje */ }
+    scPintarTema(_scTema); scPintarEstado(null);
+    // Temas: se guardan solos en el servidor (elegir tema no crea conversaciones vacías)
+    container.querySelectorAll('input[name="scTema"]').forEach(r => r.addEventListener('change', async () => {
+      if (!r.checked || _scGuardandoTema || r.value === _scTema) return;
+      const anterior = _scTema; _scGuardandoTema = true; scPintarTema(r.value);
+      try { const resp = await apiDir('/api/v2/soporte/tema', 'POST', { tema: r.value }); scPintarTema(resp.tema); }
+      catch (e) { scPintarTema(anterior); Toast.error('No pudimos guardar el tema', 'Intenta de nuevo.'); }
+      finally { _scGuardandoTema = false; }
     }));
-    const autoAlto = () => { texto.style.height = 'auto'; texto.style.height = Math.min(texto.scrollHeight, 120) + 'px'; };
-    texto.addEventListener('input', autoAlto);
-    texto.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); btn.click(); } });
-    btn.addEventListener('click', async () => {
-      const t = texto.value.trim();
-      if (!t || _scEnviando) return;
-      _scEnviando = true; btn.disabled = true;
+    const caja = container.querySelector('#sc-msgs'), bajar = container.querySelector('#sc-bajar');
+    bajar.addEventListener('click', () => { caja.scrollTop = caja.scrollHeight; bajar.hidden = true; });
+    caja.addEventListener('scroll', () => { if (caja.scrollHeight - caja.scrollTop - caja.clientHeight < 90) bajar.hidden = true; }, { passive: true });
+    const form = container.querySelector('#sc-form'), texto = container.querySelector('#sc-texto'), btn = container.querySelector('#sc-enviar'), estado = container.querySelector('#sc-envio');
+    const medir = () => { container.querySelector('#sc-cuenta').textContent = texto.value.length + ' / 3000'; texto.style.height = 'auto'; texto.style.height = Math.min(texto.scrollHeight, 130) + 'px'; btn.disabled = _scEnviando || !texto.value.trim(); };
+    texto.addEventListener('input', () => { if (!_scEnviando) { estado.textContent = ''; estado.className = 'ftch-envio'; } medir(); });
+    texto.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); if (!_scEnviando) form.requestSubmit(); } });
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const msj = texto.value.trim(); if (_scEnviando || !msj) return;
+      if (!_scReintento || _scReintento.msj !== msj) _scReintento = { msj, id: scNuevoId() };
+      _scEnviando = true; estado.className = 'ftch-envio'; estado.textContent = 'Enviando…'; medir();
       try {
-        await apiDir('/api/v2/soporte/mensajes', 'POST', { mensaje: t, tema: _scTema || undefined, clientRequestId: scRequestId() });
-        texto.value = ''; autoAlto();
-        await scCargar(container, { silencioso: true });
-      } catch (e) {
-        Toast.error('No se envió', e.message || '');
-      } finally { _scEnviando = false; btn.disabled = false; texto.focus(); }
+        await apiDir('/api/v2/soporte/mensajes', 'POST', { mensaje: msj, tema: _scTema, clientRequestId: scRequestId() });
+        _scReintento = null; if (texto.value.trim() === msj) texto.value = '';
+        estado.textContent = 'Mensaje enviado.';
+        await scCargar(true);
+      } catch (e) { estado.className = 'ftch-envio err'; estado.textContent = 'No pudimos enviar el mensaje. Se conservó tu texto; puedes reintentar sin duplicarlo.'; }
+      finally { _scEnviando = false; medir(); if (form.isConnected) texto.focus({ preventScroll: true }); }
     });
-    scCargar(container);
+    medir();
+    scCargar(false);
     _scTimer = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       if (!document.getElementById('sc-msgs')) { window.__soporteCleanup(); return; }
-      scCargar(container, { silencioso: true });
+      scCargar(true);
     }, 20000);
   }
 
@@ -17062,6 +17441,7 @@ const Sections = (function(){
       directorio:renderDirectorio,
       canal:renderCanal,
       soporte:renderSoporte,
+      perfilpro:renderPerfilPro,
       perfil:renderPerfil,
       suscripcion:renderSuscripcion,
       'tool-iper':(c)=>IPERTool.mount(c),
