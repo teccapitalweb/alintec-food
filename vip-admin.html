@@ -1366,6 +1366,7 @@ window.__signOut = async () => {
 
     <div class="nav-section">
       <div class="nav-label">Comunicación</div>
+      <a class="nav-item" data-section="soporte"><svg class="ic"><use href="#i-mail"/></svg>Buzón privado<span class="nav-item__badge" id="badge-soporte">0</span></a>
       <a class="nav-item" data-section="notificaciones"><svg class="ic"><use href="#i-bell"/></svg>Notificaciones<span class="nav-item__badge" id="badge-notif">0</span></a>
     </div>
 
@@ -1560,6 +1561,8 @@ async function cargarPreciosClub(){
   } catch(e){ console.warn('[Alintec Food admin] No se pudo leer config/club:', e.message); }
 }
 window.addEventListener('adminready', cargarPreciosClub);
+// Globo del Buzón privado: mensajes sin leer (se refresca al entrar y cada 2 minutos)
+window.addEventListener('adminready', () => { try { Pages._sopBadge(); setInterval(() => Pages._sopBadge(), 120000); } catch (e) {} });
 
 /* =========================================================
    PAGES
@@ -2807,6 +2810,187 @@ const Pages={
   },
 
   // ── Reseñas: cómo califican los alumnos los cursos que terminaron ──
+  // ═══════════════════════════ BUZÓN PRIVADO (soporte) ═══════════════════════════
+  // Chat privado con cada cuenta: una conversación permanente por miembro.
+  // Datos: GET /api/v2/admin/soporte · GET/POST /api/v2/admin/soporte/:uid[/mensajes|/estado]
+  _sopConvs: [], _sopFiltro: 'pendientes', _sopBusca: '', _sopAbierta: null, _sopTimer: null,
+  _sopTemas: { membresia: 'Membresía', cobros: 'Cobros y pagos', cuenta: 'Cuenta', cursos: 'Cursos', otro: 'Otro' },
+  async _sopApi(ruta, metodo, cuerpo){
+    const token = await Pages._getAuthToken();
+    const r = await fetch(Pages._webhookUrl + ruta, {
+      method: metodo || 'GET',
+      headers: { 'Authorization': 'Bearer ' + token, ...(cuerpo !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+      body: cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.ok !== true) throw new Error(d.error || 'No se pudo completar la operación');
+    return d;
+  },
+  async _sopBadge(){
+    try {
+      const d = await Pages._sopApi('/api/v2/admin/soporte');
+      Pages._sopConvs = d.conversaciones || [];
+      const b = document.getElementById('badge-soporte');
+      if (b) b.textContent = d.sinLeer || 0;
+    } catch (e) { /* sin red: el globo se queda como está */ }
+  },
+  soporte(p){
+    if (Pages._sopTimer) { clearInterval(Pages._sopTimer); Pages._sopTimer = null; }
+    Pages._sopAbierta = null;
+    p.innerHTML = `
+      <div class="fade-up">
+        <style>
+          .sop-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+          .sop-kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:13px;padding:12px 14px}
+          .sop-kpi b{display:block;font-size:22px;color:var(--text)}
+          .sop-kpi span{font-size:11.5px;color:var(--text-3)}
+          .sop-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+          .sop-chip{border:1.5px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:var(--text-2);cursor:pointer}
+          .sop-chip.is-on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+          .sop-busca{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);font:500 13px Inter,sans-serif;padding:8px 12px;outline:none}
+          .sop-fila{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .15s}
+          .sop-fila:hover{border-color:var(--primary)}
+          .sop-fila__dot{width:9px;height:9px;border-radius:50%;background:#F87171;flex:none}
+          .sop-fila__dot.is-ok{background:var(--border)}
+          .sop-fila__tx{flex:1;min-width:0}
+          .sop-fila__tx b{display:block;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          .sop-fila__tx small{display:block;font-size:11.5px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          .sop-fila__meta{flex:none;text-align:right}
+          .sop-fila__meta time{display:block;font-size:10.5px;color:var(--text-3)}
+          .sop-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 9px;background:var(--surface-2);color:var(--text-2);margin-top:4px}
+          .sop-tag.is-abierto{background:color-mix(in srgb,#34D399 15%,transparent);color:#17946a}
+          .sop-vacio{text-align:center;color:var(--text-3);padding:36px 12px;font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:13px}
+          .sop-chat{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:15px;overflow:hidden;min-height:430px}
+          .sop-chat__head{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-wrap:wrap}
+          .sop-chat__head b{font-size:14px;color:var(--text)}
+          .sop-chat__head small{font-size:11.5px;color:var(--text-3)}
+          .sop-chat__acts{margin-left:auto;display:flex;gap:7px;align-items:center}
+          .sop-chat__msgs{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:9px;max-height:50vh;min-height:250px}
+          .sop-m{max-width:82%;border-radius:14px;padding:9px 13px;font-size:13.5px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
+          .sop-m--miembro{align-self:flex-start;background:var(--surface-2);color:var(--text);border-bottom-left-radius:5px}
+          .sop-m--admin{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:5px}
+          .sop-m small{display:block;font-size:10px;opacity:.7;margin-top:4px}
+          .sop-comp{display:flex;gap:9px;align-items:flex-end;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
+          .sop-comp textarea{flex:1;border:1.5px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:500 13.5px/1.5 Inter,sans-serif;padding:9px 12px;resize:none;outline:none;max-height:120px}
+          .sop-comp button{width:40px;height:40px;border-radius:12px;border:0;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+          .sop-comp button:disabled{opacity:.5}
+        </style>
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Buzón privado</h1>
+            <p class="page-sub">Conversaciones privadas con cada cuenta: responde aquí y la persona recibe tu mensaje en su apartado «Soporte privado» con aviso en su campanita.</p>
+          </div>
+          <button class="btn btn--ghost" id="sop-refrescar"><svg class="ic"><use href="#i-refresh"/></svg>Actualizar</button>
+        </div>
+        <div class="sop-kpis" id="sop-kpis"></div>
+        <div id="sop-vista"></div>
+      </div>`;
+    p.querySelector('#sop-refrescar').addEventListener('click', () => Pages._sopCargar(p));
+    Pages._sopCargar(p);
+  },
+  async _sopCargar(p){
+    try {
+      const d = await Pages._sopApi('/api/v2/admin/soporte');
+      Pages._sopConvs = d.conversaciones || [];
+      const b = document.getElementById('badge-soporte'); if (b) b.textContent = d.sinLeer || 0;
+    } catch (e) {
+      const v = p.querySelector('#sop-vista');
+      if (v) v.innerHTML = `<div class="sop-vacio">No se pudo cargar el buzón: ${String(e.message || '').replace(/[<>&]/g, '')}</div>`;
+      return;
+    }
+    if (Pages._sopAbierta) Pages._sopAbrirConv(p, Pages._sopAbierta, { silencioso: true });
+    else Pages._sopPintarLista(p);
+  },
+  _sopEsc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
+  _sopFecha(ms){ try { return ms ? new Date(ms).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''; } catch (e) { return ''; } },
+  _sopPintarLista(p){
+    const esc = Pages._sopEsc, convs = Pages._sopConvs;
+    const pendientes = convs.filter(c => c.sinLeerAdmin > 0);
+    const abiertas = convs.filter(c => c.estado !== 'resuelto');
+    const resueltas = convs.filter(c => c.estado === 'resuelto');
+    const kpis = p.querySelector('#sop-kpis');
+    if (kpis) kpis.innerHTML = `
+      <div class="sop-kpi"><b>${pendientes.length}</b><span>Con mensajes sin leer</span></div>
+      <div class="sop-kpi"><b>${abiertas.length}</b><span>Conversaciones abiertas</span></div>
+      <div class="sop-kpi"><b>${resueltas.length}</b><span>Resueltas</span></div>
+      <div class="sop-kpi"><b>${convs.length}</b><span>Total</span></div>`;
+    let lista = Pages._sopFiltro === 'pendientes' ? pendientes : Pages._sopFiltro === 'abiertas' ? abiertas : Pages._sopFiltro === 'resueltas' ? resueltas : convs;
+    if (Pages._sopBusca) lista = lista.filter(c => (c.nombre + ' ' + c.correo + ' ' + c.ultimoMensaje).toLowerCase().includes(Pages._sopBusca));
+    const chips = [['pendientes', 'Sin leer', pendientes.length], ['abiertas', 'Abiertas', abiertas.length], ['resueltas', 'Resueltas', resueltas.length], ['todas', 'Todas', convs.length]];
+    const v = p.querySelector('#sop-vista');
+    v.innerHTML = `
+      <div class="sop-bar">
+        ${chips.map(([k, n, q]) => `<button type="button" class="sop-chip${Pages._sopFiltro === k ? ' is-on' : ''}" data-sopf="${k}">${n} (${q})</button>`).join('')}
+        <input type="search" class="sop-busca" id="sop-busca" placeholder="Buscar por nombre, correo o mensaje…" value="${esc(Pages._sopBusca)}">
+      </div>
+      ${lista.length ? lista.map(c => `
+        <div class="sop-fila" data-sopuid="${esc(c.uid)}">
+          <span class="sop-fila__dot${c.sinLeerAdmin > 0 ? '' : ' is-ok'}"></span>
+          <span class="sop-fila__tx">
+            <b>${esc(c.nombre)} ${c.sinLeerAdmin > 0 ? `· ${c.sinLeerAdmin} nuevo${c.sinLeerAdmin !== 1 ? 's' : ''}` : ''}</b>
+            <small>${esc(c.correo)} · ${esc(Pages._sopTemas[c.tema] || 'Otro')} — ${esc(c.ultimoMensaje)}</small>
+          </span>
+          <span class="sop-fila__meta"><time>${Pages._sopFecha(c.actualizadoMs)}</time><span class="sop-tag${c.estado !== 'resuelto' ? ' is-abierto' : ''}">${c.estado === 'resuelto' ? 'Resuelta' : 'Abierta'}</span></span>
+        </div>`).join('') : '<div class="sop-vacio">No hay conversaciones en este grupo.</div>'}`;
+    v.querySelectorAll('[data-sopf]').forEach(b => b.addEventListener('click', () => { Pages._sopFiltro = b.dataset.sopf; Pages._sopPintarLista(p); }));
+    const busca = v.querySelector('#sop-busca');
+    if (busca) busca.addEventListener('input', () => { Pages._sopBusca = (busca.value || '').toLowerCase().trim(); Pages._sopPintarLista(p); });
+    v.querySelectorAll('[data-sopuid]').forEach(f => f.addEventListener('click', () => Pages._sopAbrirConv(p, f.dataset.sopuid)));
+  },
+  async _sopAbrirConv(p, uid, o){
+    o = o || {};
+    let d;
+    try { d = await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid)); }
+    catch (e) { Toast.error('No se pudo abrir', e.message || ''); return; }
+    Pages._sopAbierta = uid;
+    const esc = Pages._sopEsc, c = d.conversacion || {};
+    const fila = Pages._sopConvs.find(x => x.uid === uid); if (fila) fila.sinLeerAdmin = 0;
+    const v = p.querySelector('#sop-vista'); if (!v) return;
+    const resuelto = c.estado === 'resuelto';
+    v.innerHTML = `
+      <div class="sop-chat">
+        <div class="sop-chat__head">
+          <button class="btn btn--ghost btn--sm" id="sop-volver">← Buzón</button>
+          <span><b>${esc(c.nombre)}</b><br><small>${esc(c.correo)} · ${esc(Pages._sopTemas[c.tema] || 'Otro')}</small></span>
+          <span class="sop-chat__acts">
+            <span class="sop-tag${resuelto ? '' : ' is-abierto'}">${resuelto ? 'Resuelta' : 'Abierta'}</span>
+            <button class="btn btn--ghost btn--sm" id="sop-estado">${resuelto ? 'Reabrir' : 'Marcar resuelta'}</button>
+          </span>
+        </div>
+        <div class="sop-chat__msgs" id="sop-msgs">
+          ${(d.mensajes || []).map(x => `<div class="sop-m sop-m--${x.de === 'admin' ? 'admin' : 'miembro'}">${esc(x.texto)}<small>${x.de === 'admin' ? 'Equipo' : esc(x.nombre || 'Miembro')} · ${Pages._sopFecha(x.creadoMs)}</small></div>`).join('') || '<div class="sop-vacio">Sin mensajes todavía.</div>'}
+        </div>
+        <div class="sop-comp">
+          <textarea id="sop-texto" rows="1" maxlength="3000" placeholder="Escribe tu respuesta… (recibe aviso en su campanita)"></textarea>
+          <button type="button" id="sop-enviar" title="Enviar"><svg class="ic"><use href="#i-send"/></svg></button>
+        </div>
+      </div>`;
+    const msgs = v.querySelector('#sop-msgs'); if (msgs) msgs.scrollTop = msgs.scrollHeight;
+    v.querySelector('#sop-volver').addEventListener('click', () => { Pages._sopAbierta = null; Pages._sopCargar(p); });
+    v.querySelector('#sop-estado').addEventListener('click', async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try {
+        await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid) + '/estado', 'POST', { estado: resuelto ? 'abierto' : 'resuelto' });
+        Toast.success(resuelto ? 'Conversación reabierta' : 'Marcada como resuelta', '');
+        Pages._sopAbrirConv(p, uid, { silencioso: true });
+      } catch (err) { Toast.error('No se pudo', err.message || ''); b.disabled = false; }
+    });
+    const texto = v.querySelector('#sop-texto'), enviar = v.querySelector('#sop-enviar');
+    texto.addEventListener('input', () => { texto.style.height = 'auto'; texto.style.height = Math.min(texto.scrollHeight, 120) + 'px'; });
+    texto.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar.click(); } });
+    enviar.addEventListener('click', async () => {
+      const t = texto.value.trim(); if (!t) return;
+      enviar.disabled = true;
+      const requestId = (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2)).padEnd(20, '0').slice(0, 32));
+      try {
+        await Pages._sopApi('/api/v2/admin/soporte/' + encodeURIComponent(uid) + '/mensajes', 'POST', { mensaje: t, clientRequestId: requestId });
+        texto.value = '';
+        Pages._sopAbrirConv(p, uid, { silencioso: true });
+      } catch (err) { Toast.error('No se envió', err.message || ''); enviar.disabled = false; }
+    });
+    if (!o.silencioso) Pages._sopBadge();
+  },
+
   resenas(p){
     p.innerHTML = `
       <div class="fade-up">
@@ -8823,7 +9007,7 @@ function dirAdminCargar(){
 // ¿Los usuarios ya pueden ver y entrar a las clases en vivo? Debe ser lo CONTRARIO de window.__CLASES_EN_VIVO_PRONTO
 // de vip-panel.html (allá "true" = los usuarios ven «Próximamente»). Mientras sea false, este panel avisa a quien administre.
 window.__CLASES_EN_VIVO_ACTIVAS = false;
-const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones','creditos','resenas'];
+const SECCIONES_VALIDAS = ['dashboard','verpanel','metricas','notificaciones','soporte','cursos','webinars','pdfs','certificados','miembros','noticias','config','foro','directorio','encuestas','pruebas','suscripciones','creditos','resenas'];
 
 function seccionDesdeHash(){
   const h = (window.location.hash || '').replace(/^#\/?/, '').trim();

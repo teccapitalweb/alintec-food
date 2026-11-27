@@ -279,6 +279,27 @@ service cloud.firestore {
       allow delete: if own(uid) || isAdmin();
     }
 
+    // ── Colecciones que SOLO toca el servidor (el navegador habla con /api/v2/…) ──
+    // Soporte privado: la conversación de cada cuenta con el equipo (soporte_conversaciones/{uid} + mensajes)
+    match /soporte_conversaciones/{uid}/{resto=**} {
+      allow read, write: if false;
+    }
+    // Red profesional del directorio: relaciones entre miembros y sus límites diarios
+    match /conexiones/{idPar} {
+      allow read, write: if false;
+    }
+    match /conexionesLimites/{uid} {
+      allow read, write: if false;
+    }
+    // Currículum profesional (perfil con visibilidad por sección): lo filtra el servidor
+    match /perfilProfesional/{uid} {
+      allow read, write: if false;
+    }
+    // Portada personalizada de la tarjeta (color o foto, beneficio VIP)
+    match /directorioExtra/{uid} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
