@@ -13066,7 +13066,7 @@ const Sections = (function(){
   const SECTORES = ['Ciencia de Alimentos','Inocuidad Alimentaria','Microbiología de Alimentos','Tecnología de Alimentos','Calidad Alimentaria','Normativa y Etiquetado','Buenas Prácticas de Manufactura','HACCP','Nutrición y Formulación','Suplementos Alimenticios','Agroindustria','Distintivo H','Conservación de Alimentos','Alimentos Funcionales'];
   let _dirUnsub = null;
   window.__dirCleanup = function(){ try{ if(typeof _dirUnsub==='function'){ _dirUnsub(); _dirUnsub=null; } }catch(e){} };
-  window.__dirEditar = function(){ return dirEditarMiTarjeta(); };
+  window.__dirEditar = function(){ return perfilEditarMio(); };
   let _dirCards = [];
   let _dirFiltroSector = 'todos';
   let _dirBusqueda = '';
@@ -13376,6 +13376,7 @@ const Sections = (function(){
     }));
     container.querySelector('#dir-ver-mi-perfil').addEventListener('click', () => perfilEditarMio());
     dirVista();
+    window.__dirAsegurarTarjeta();
     dirSuscribir();
     dirCargarMeta().then(() => { dirPintarTabs(); dirPintar(); });
     redCargar();
@@ -14038,6 +14039,11 @@ const Sections = (function(){
   .fpp-btn.p{background:linear-gradient(135deg,#0F3D2E,#1F6B4A);border:0;color:#fff}
   .fpp-btn:disabled{opacity:.55;cursor:default}
   .fpp-sec{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:16px 20px;margin-bottom:12px}
+  .fpp-pend{font:700 .62rem Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:100px;background:#FFF1D6;color:#8A5A07;border:1px solid #E6CF9A}
+  .fpp-pub{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:16px 20px;margin:18px 0 8px}
+  .fpp-pub__tx b{display:block;font:800 .92rem 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+  .fpp-pub__tx small{display:block;font-size:.78rem;color:var(--text-3);margin-top:2px}
+  .fpp-pub .fpp-btn.p{padding:12px 24px}
   .fpp-sec h3{margin:0 0 10px;font:800 .95rem 'Plus Jakarta Sans',sans-serif;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .fpp-sec h3 .ic{width:16px;height:16px;color:var(--primary);flex:none}
   .fpp-vis{margin-left:auto;font:700 .62rem Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:100px;background:var(--surface-2);color:var(--text-3)}
@@ -14191,6 +14197,30 @@ const Sections = (function(){
     return `<div class="dir-avance"><small>${p >= 100 ? 'Perfil completo' : 'Perfil por completar'}</small><i><b style="width:${p}%"></b></i></div>`;
   }
 
+  // Todas las cuentas tienen su tarjeta pública en el directorio: si aún no existe se crea con los datos de la cuenta
+  // y si estaba privada se publica, salvo que la persona haya elegido «Dejar de compartir mi tarjeta».
+  // Lo que es de contacto (WhatsApp, correo…) nunca va en la tarjeta: solo los miembros VIP lo ven.
+  window.__dirAsegurarTarjeta = async function(){
+    const fs = window.__fs, S = window.UserState || {}, uid = S.uid;
+    if (!fs || !uid || window.__isDemoMode === true || window.__dirAsegurada === uid) return;
+    window.__dirAsegurada = uid;
+    try {
+      const ref = fs.doc(fs.db, 'directorio', uid), ds = await fs.getDoc(ref);
+      if (!ds.exists()) {
+        const nombre = String(S.nombre || S.displayName || (window.__currentUser && window.__currentUser.displayName) || '').trim().slice(0, 50);
+        if (nombre.length < 3) { window.__dirAsegurada = null; return; } // aún no hay nombre con el que crearla
+        await fs.setDoc(ref, {
+          uid, nombre, puesto: '', empresa: S.empresa || (window.memberData || {}).empresa || '', ubicacion: '', sector: '', bio: '', estado: '',
+          portadaColor: 'verde', avatar: dirAvatarValido(S.avatar) ? S.avatar : '', whatsapp: '', email: '', linkedin: '', web: '', instagram: '',
+          visible: true, publicado: true, dejoDeCompartir: false, color: dirColorFor(uid), updatedAt: fs.serverTimestamp()
+        });
+      } else {
+        const x = ds.data() || {};
+        if (x.publicado !== true && x.dejoDeCompartir !== true && x.visible !== false) await fs.setDoc(ref, { publicado: true, updatedAt: fs.serverTimestamp() }, { merge: true });
+      }
+    } catch (e) { console.warn('Tarjeta del directorio:', e.message); window.__dirAsegurada = null; }
+  };
+
   // ── RED PROFESIONAL (conexiones) ──
   let _red = { cargado: false, puedeConectar: false, estados: {}, conexiones: [], recibidas: [], enviadas: [], total: 0 };
   async function redCargar(repintar){
@@ -14288,7 +14318,7 @@ const Sections = (function(){
     if (_dirTab === 'conexiones') return dirVistaConexiones(v);
     const uid = window.UserState?.uid;
     const propia = _dirCards.find(c => c.id === uid);
-    const estadoMio = propia ? 'Tu tarjeta está publicada' : 'Tu tarjeta sigue privada: publícala desde «Ver mi perfil»';
+    const estadoMio = propia ? 'Tu tarjeta está publicada' : 'Dejaste de compartir tu tarjeta: compártela desde «Ver mi perfil»';
     v.innerHTML = `
       <div class="dir-bar">
         <div class="dir-search"><svg class="ic"><use href="#i-search"/></svg><input type="search" id="dir-buscar" placeholder="Buscar por nombre, empresa o puesto…" value="${escapeHtml(_dirBusqueda || '')}" aria-label="Buscar en el directorio"></div>
@@ -14308,8 +14338,9 @@ const Sections = (function(){
   }
 
   // ── PERFIL PROFESIONAL: página «Ver mi perfil» (como FisioTeck) ──
-  // Secciones de identidad (nombre y datos, foto y avatar, portada, contacto) y del currículum,
-  // cada una se abre, se guarda y se cancela por su cuenta, en su propio lugar.
+  // Todas las cuentas tienen su tarjeta pública en el directorio; arriba solo está «Dejar de compartir mi tarjeta»
+  // (o «Compartir mi tarjeta» si la dejó de compartir). Cada apartado se edita como BORRADOR («Aceptar») y todo se
+  // publica junto con «Publicar cambios», al final de la página: apagado mientras no se edite nada.
   const PF_VIS = [['publico', 'Pública · todos los miembros'], ['conexiones', 'Solo mis conexiones'], ['privado', 'Privada · solo yo']];
   const PF_SEC = [
     ['sobreMi', 'Sobre mí', 'i-user'], ['experiencia', 'Experiencia', 'i-briefcase'], ['formacion', 'Formación', 'i-book'],
@@ -14325,15 +14356,40 @@ const Sections = (function(){
     proyectos: [['nombre', 'Proyecto', 90], ['descripcion', 'De qué trata (opcional)', 240], ['enlace', 'Enlace (opcional)', 160]],
     enlaces: [['titulo', 'Título (ej. Mi consultoría)', 60], ['url', 'Enlace', 160]]
   };
-  const PP = { uid: '', datos: null, tarjeta: null, cvEdit: null, identEdit: null, fotoDraft: null, avatarDraft: null, colorDraft: null, hexDraft: null, portadaFotoDraft: null, portadaReset: false, confirmandoEliminar: false };
+  const PP_IDENT = ['identidad', 'foto', 'color', 'contacto']; // apartados de identidad; el resto son secciones del currículum
+  // W = copia de trabajo (borrador) de lo que se está editando; cambios = apartados editados y aún sin publicar
+  const PP = { uid: '', datos: null, tarjeta: null, W: null, cambios: new Set(), cvEdit: null, identEdit: null, fotoDraft: null, avatarDraft: null, colorDraft: null, hexDraft: null, portadaFotoDraft: null, portadaReset: false, publicando: false };
   // Abre la página del perfil (la propia o la de otra persona del directorio)
   function perfilVerDe(uid){ window.__perfilProUid = uid || window.UserState?.uid || ''; navigateToSection('perfilpro'); }
   function perfilEditarMio(){ perfilVerDe(window.UserState?.uid); }
   const ppEsMio = () => PP.uid === (window.UserState?.uid || '');
+  const ppSinBorradorIdent = () => { PP.identEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false; };
+
+  // Copia de trabajo a partir de lo guardado
+  function ppIniciarBorrador(){
+    const b = PP.tarjeta || {}, uid = PP.uid, p = (PP.datos && PP.datos.perfil) || {};
+    const mc = _dirMeta.miContacto || {};
+    const cv = { sobreMi: p.sobreMi || '', visibilidad: Object.assign({}, p.visibilidad || {}) };
+    Object.keys(PF_LISTAS).forEach(k => { cv[k] = Array.isArray(p[k]) ? p[k].map(f => Object.assign({}, f)) : []; });
+    PP.W = {
+      tarjeta: {
+        nombre: b.nombre || window.UserState?.nombre || '', puesto: b.puesto || '', empresa: b.empresa || '', ubicacion: b.ubicacion || '',
+        sector: SECTORES.includes(b.sector) ? b.sector : '', bio: b.bio || '', cedula: b.cedula || '', cedulaVisible: b.cedulaVisible === true,
+        estado: DIR_ESTADOS[b.estado] ? b.estado : '', portadaColor: dirPortadaValida(b.portadaColor),
+        avatar: dirAvatarValido(b.avatar) ? b.avatar : (dirAvatarValido(window.UserState?.avatar) ? window.UserState.avatar : ''),
+        foto: b.foto || ''
+      },
+      contacto: { whatsapp: mc.whatsapp || '', email: mc.email || '', linkedin: mc.linkedin || '', web: mc.web || '', instagram: mc.instagram || '' },
+      alcances: Object.assign({}, (mc.alcances || {})),
+      portada: (_dirMeta.portadas || {})[uid] ? Object.assign({}, _dirMeta.portadas[uid]) : null,
+      cv
+    };
+    PP.cambios = new Set(); ppSinBorradorIdent(); PP.cvEdit = null; PP.publicando = false;
+  }
 
   function renderPerfilPro(container){
-    const pedido = window.__perfilProUid || window.UserState?.uid || '';
-    PP.uid = pedido; PP.cvEdit = null; PP.identEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false; PP.confirmandoEliminar = false;
+    PP.uid = window.__perfilProUid || window.UserState?.uid || '';
+    PP.W = null; PP.cambios = new Set(); ppSinBorradorIdent(); PP.cvEdit = null;
     container.innerHTML = '<div id="fpp-raiz" class="fade-up"><div class="foro-empty">Cargando perfil…</div></div>';
     if (window.__isDemoMode === true || !window.__currentUser) {
       container.querySelector('#fpp-raiz').innerHTML = '<button type="button" class="fpp-volver" id="fpp-volver">← Volver al directorio</button><div class="foro-empty">Inicia sesión para ver los perfiles profesionales.</div>';
@@ -14349,6 +14405,7 @@ const Sections = (function(){
           dirCargarMeta(), _red.cargado ? null : redCargar(false)
         ]);
         PP.datos = perfil; PP.tarjeta = tarjeta || {};
+        if (mio) ppIniciarBorrador();
         ppPintar();
       } catch (e) {
         const raiz = document.getElementById('fpp-raiz');
@@ -14365,10 +14422,12 @@ const Sections = (function(){
   }
 
   function ppCabecera(mio){
-    const c = PP.tarjeta || {};
+    // En tu perfil se ve el borrador; en el de otra persona, lo publicado
+    const c = mio && PP.W ? PP.W.tarjeta : (PP.tarjeta || {});
     const nombre = c.nombre || (mio ? (window.UserState?.nombre || 'Tu perfil') : 'Miembro');
-    const fondo = dirFondoPortada(c, PP.uid);
+    const fondo = dirFondoPortada(c, PP.uid, mio && PP.W ? PP.W.portada : undefined);
     const estadoRed = _red.estados[PP.uid] || 'ninguna';
+    const compartida = (PP.tarjeta || {}).publicado === true;
     const accion = mio ? '' : (
       estadoRed === 'conectado' ? '<div class="fpp-acc"><span class="dir-conectar ok" style="cursor:default"><svg class="ic"><use href="#i-check"/></svg>Conectados</span></div>' :
       estadoRed === 'enviada' ? '<div class="fpp-acc"><span class="dir-conectar envia" style="cursor:default">Solicitud enviada</span></div>' :
@@ -14383,34 +14442,34 @@ const Sections = (function(){
         ${mio ? `<div class="fpp-red">Red profesional · <b>${_red.total || 0}</b> conexi${(_red.total || 0) === 1 ? 'ón' : 'ones'}</div>` : ''}
         ${accion}
         ${mio ? `<div class="fpp-avance"><span>Avance de tu currículum</span><i><b style="width:${PP.datos.avance || 0}%"></b></i><span>${PP.datos.avance || 0}%</span></div>
-        <p class="fpp-pista">Toca cualquier apartado de abajo para editarlo.</p>` : ''}
-        ${mio && c.nombre ? `<div class="fpp-acc" style="margin-top:12px">${PP.confirmandoEliminar
-          ? `<span class="fpp-vacia" style="align-self:center;color:#C0392B;font-weight:700">¿Eliminar tu tarjeta del directorio?</span><button type="button" class="fpp-btn" id="fpp-elim-no">No, conservar</button><button type="button" class="fpp-btn" id="fpp-elim-si" style="color:#fff;background:#C0392B;border:0">Sí, eliminar</button>`
-          : (c.publicado === true ? '<button type="button" class="fpp-btn" id="fpp-despublicar">Dejar de publicar</button>' : '<button type="button" class="fpp-btn p" id="fpp-publicar">Publicar mi tarjeta</button>') +
-            '<button type="button" class="fpp-btn" id="fpp-eliminar" style="color:#C0392B">Eliminar tarjeta</button>'}</div>` : ''}
+        <p class="fpp-pista">Toca cualquier apartado de abajo para editarlo y, al terminar, pulsa «Publicar cambios» al final de la página.</p>
+        <div class="fpp-acc" style="margin-top:12px">${compartida
+          ? '<button type="button" class="fpp-btn" id="fpp-dejar">Dejar de compartir mi tarjeta</button>'
+          : '<span class="fpp-vacia" style="align-self:center">Tu tarjeta no se comparte: nadie la ve en el directorio.</span><button type="button" class="fpp-btn p" id="fpp-compartir">Compartir mi tarjeta</button>'}</div>` : ''}
       </div></div>`;
   }
 
-  // Secciones de identidad (solo en tu propio perfil): cada una se edita y guarda por su cuenta
+  // Secciones de identidad (solo en tu propio perfil): cada una se edita como borrador
   function ppSeccionesIdentidad(){
-    const c = Object.assign({ portadaColor: 'verde', estado: '' }, PP.tarjeta || {});
-    const contacto = _dirMeta.miContacto || {};
-    const alcanceDe = ch => { const a = (contacto.alcances || {})[ch]; return ['miembros', 'conexiones', 'oculto'].includes(a) ? a : 'miembros'; };
+    const W = PP.W, c = Object.assign({ portadaColor: 'verde', estado: '' }, W.tarjeta);
+    const contacto = Object.assign({}, W.contacto, { alcances: W.alcances });
+    const alcanceDe = ch => { const a = (W.alcances || {})[ch]; return ['miembros', 'conexiones', 'oculto'].includes(a) ? a : 'miembros'; };
     const campo = (id, et, val, ph, max) => `<label class="fpp-lbl">${et}<input id="${id}" maxlength="${max || 60}" placeholder="${escapeHtml(ph || '')}" value="${escapeHtml(val || '')}"></label>`;
-    const botones = clave => `<div class="fpp-acc" style="margin-top:14px"><button type="button" class="fpp-btn p" data-guardarident="${clave}">Guardar</button><button type="button" class="fpp-btn" data-cancelarident>Cancelar</button></div>`;
+    const botones = clave => `<div class="fpp-acc" style="margin-top:14px"><button type="button" class="fpp-btn p" data-aceptarident="${clave}">Aceptar</button><button type="button" class="fpp-btn" data-cancelarident>Cancelar</button></div>`;
     const seccion = (clave, icono, titulo, resumen, formulario) => {
       const abierto = PP.identEdit === clave;
+      const pend = PP.cambios.has(clave) ? '<span class="fpp-pend">Sin publicar</span>' : '';
       return `<section class="fpp-sec${abierto ? '' : ' fpp-editable'}"${abierto ? '' : ` data-editident="${clave}" role="button" tabindex="0" aria-label="Editar ${escapeHtml(titulo)}"`}>
-        <h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${abierto ? '' : '<span class="fpp-editic"><svg class="ic"><use href="#i-edit"/></svg></span>'}</h3>
+        <h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${pend}${abierto ? '' : '<span class="fpp-editic"><svg class="ic"><use href="#i-edit"/></svg></span>'}</h3>
         ${abierto ? formulario() + botones(clave) : resumen}</section>`;
     };
     const avMini = `<div class="fpp-mini-av">${ppAvatarHtml(Object.assign({}, c, { color: dirColorFor(PP.uid) }), 46)}</div>`;
     const etqCanal = { whatsapp: ['WhatsApp', 'Ej. 52 238 123 4567'], email: ['Correo', 'tucorreo@ejemplo.com'], linkedin: ['LinkedIn', 'linkedin.com/in/tu-perfil'], web: ['Sitio web', 'tusitio.com'], instagram: ['Instagram profesional', '@tuusuario'] };
-    const portadaActual = (_dirMeta.portadas || {})[PP.uid] || null;
+    const portadaActual = W.portada;
     return seccion('identidad', 'i-badge', 'Nombre y datos de tu tarjeta',
       `<p>${escapeHtml([c.nombre, c.puesto, c.empresa, c.ubicacion, c.sector].filter(Boolean).join(' · ') || 'Agrega tu nombre, puesto, empresa, ciudad y especialidad.')}</p>`,
       () => `<label class="fpp-lbl">Estado profesional <small>(opcional)</small><select id="fpp-id-estado"><option value="">Sin indicar</option>${Object.keys(DIR_ESTADOS).map(k => `<option value="${k}"${c.estado === k ? ' selected' : ''}>${DIR_ESTADOS[k].label}</option>`).join('')}</select></label>` +
-        campo('fpp-id-nombre', 'Nombre completo', c.nombre || window.UserState?.nombre, 'Ej. Felipe Estrada Ramírez', 50) +
+        campo('fpp-id-nombre', 'Nombre completo', c.nombre, 'Ej. Felipe Estrada Ramírez', 50) +
         campo('fpp-id-puesto', 'Puesto / cargo', c.puesto, 'Ej. Jefe de Aseguramiento de Calidad') +
         campo('fpp-id-empresa', 'Empresa / planta', c.empresa, 'Ej. Alimentos del Valle SA de CV') +
         campo('fpp-id-ubic', 'Ubicación profesional', c.ubicacion, 'Ej. Puebla, Puebla') +
@@ -14419,74 +14478,47 @@ const Sections = (function(){
       seccion('foto', 'i-image', 'Foto y avatar', avMini,
         () => `<div class="fpp-lbl">Tu foto <small>(opcional)</small><div class="fpp-foto"><div class="fpp-foto-vista" id="fpp-id-foto-vista"></div><div><button type="button" class="fpp-btn" id="fpp-id-foto-btn">Subir foto</button> <button type="button" class="fpp-btn" id="fpp-id-foto-quitar" hidden>Quitar</button><input type="file" id="fpp-id-foto-archivo" accept="image/*" hidden></div></div><small>Se recorta en círculo y se reduce sola. Si no subes foto se muestra tu avatar o tus iniciales.</small></div>` +
           `<div class="fpp-lbl">Tu avatar <small>(ilustraciones de Alintec Food · se usa si no subes foto)</small><div class="fpp-avatares" id="fpp-id-avatares" role="radiogroup" aria-label="Avatares">${window.AlintecAvatares ? AlintecAvatares.lista.map(id => `<button type="button" role="radio" data-av="${id}" title="${escapeHtml(AlintecAvatares.info(id).nombre)}" aria-label="${escapeHtml(AlintecAvatares.info(id).nombre)}">${AlintecAvatares.html(id, 58)}</button>`).join('') : ''}</div><button type="button" class="fpp-quitar-link" id="fpp-id-avatar-ini">Usar mis iniciales</button></div>`) +
-      seccion('color', 'i-image', 'Color de tu portada', `<div class="fpp-mini-color" style="${dirFondoPortada(c, PP.uid)}"></div>`,
+      seccion('color', 'i-image', 'Color de tu portada', `<div class="fpp-mini-color" style="${dirFondoPortada(c, PP.uid, W.portada)}"></div>`,
         () => `<div class="fpp-colores" id="fpp-id-colores">${Object.keys(DIR_PORTADAS).map(k => `<button type="button" data-c="${k}" class="${k === dirPortadaValida(c.portadaColor) && !portadaActual ? 'on' : ''}" style="background:${DIR_PORTADAS[k].bg}" title="${DIR_PORTADAS[k].label}" aria-label="${DIR_PORTADAS[k].label}"></button>`).join('')}</div>` +
-          `<div class="fpp-pcustom"><span class="fpp-vacia">O una portada propia:</span><input type="color" id="fpp-id-hex" value="${portadaActual && portadaActual.hex ? portadaActual.hex : '#2E7D32'}" title="Elige tu color"><button type="button" class="fpp-btn" id="fpp-id-hex-usar">Usar este color</button><button type="button" class="fpp-btn" id="fpp-id-pfoto-btn"><svg class="ic"><use href="#i-image"/></svg>Foto panorámica</button><input type="file" id="fpp-id-pfoto-archivo" accept="image/*" hidden></div>` +
+          `<div class="fpp-pcustom"><span class="fpp-vacia">O una portada propia (beneficio VIP):</span><input type="color" id="fpp-id-hex" value="${portadaActual && portadaActual.hex ? portadaActual.hex : '#2E7D32'}" title="Elige tu color"><button type="button" class="fpp-btn" id="fpp-id-hex-usar">Usar este color</button><button type="button" class="fpp-btn" id="fpp-id-pfoto-btn"><svg class="ic"><use href="#i-image"/></svg>Foto panorámica</button><input type="file" id="fpp-id-pfoto-archivo" accept="image/*" hidden></div>` +
           (portadaActual ? '<button type="button" class="fpp-quitar-link" id="fpp-id-portada-reset">Quitar la portada personalizada y usar un color de la paleta</button>' : '')) +
-      seccion('contacto', 'i-mail', 'Información de contacto', '<p class="fpp-vacia">WhatsApp, correo, LinkedIn, sitio web e Instagram. Tú decides quién ve cada dato.</p>',
-        () => '<p class="fpp-vacia" style="margin-bottom:10px">Decide quién ve cada dato.</p>' +
+      seccion('contacto', 'i-mail', 'Información de contacto', '<p class="fpp-vacia">WhatsApp, correo, LinkedIn, sitio web e Instagram. Solo los miembros VIP pueden ver el contacto; tú decides quién ve cada dato.</p>',
+        () => '<p class="fpp-vacia" style="margin-bottom:10px">Decide quién ve cada dato (solo los miembros VIP pueden ver el contacto).</p>' +
           DIR_CAMPOS_CONTACTO.map(ch => campo('fpp-id-c-' + ch, etqCanal[ch][0], contacto[ch], etqCanal[ch][1], ch === 'linkedin' || ch === 'web' ? 120 : 80) +
             `<div class="fpp-alcance"><small>¿Quién lo ve?</small><select data-alcance="${ch}"><option value="miembros"${alcanceDe(ch) === 'miembros' ? ' selected' : ''}>Todos los miembros VIP</option><option value="conexiones"${alcanceDe(ch) === 'conexiones' ? ' selected' : ''}>Solo mis conexiones</option><option value="oculto"${alcanceDe(ch) === 'oculto' ? ' selected' : ''}>Oculto (nadie)</option></select></div>`).join('') +
           campo('fpp-id-cedula', 'Cédula profesional (opcional)', c.cedula, '12345678', 20) +
           `<label class="fpp-check"><input type="checkbox" id="fpp-id-cedula-vis"${c.cedulaVisible ? ' checked' : ''}> Mostrar cédula en el directorio</label>`);
   }
 
-  // Guarda SOLO el apartado de identidad abierto; el resto de la tarjeta queda tal cual
-  async function ppGuardarIdentidad(btn, clave){
-    const fs = window.__fs, uid = window.UserState?.uid;
-    if (!fs || !uid) { Toast.error('Inicia sesión', ''); return; }
-    const base = PP.tarjeta || {};
-    const tarj = {
-      uid, nombre: base.nombre || '', puesto: base.puesto || '', empresa: base.empresa || '', ubicacion: base.ubicacion || '',
-      sector: base.sector || '', bio: base.bio || '', cedula: base.cedula || '', cedulaVisible: base.cedulaVisible === true,
-      estado: DIR_ESTADOS[base.estado] ? base.estado : '', portadaColor: dirPortadaValida(base.portadaColor),
-      avatar: dirAvatarValido(base.avatar) ? base.avatar : (dirAvatarValido(window.UserState?.avatar) ? window.UserState.avatar : ''),
-      whatsapp: '', email: '', linkedin: '', web: '', instagram: '',
-      visible: true, publicado: base.publicado === true, color: dirColorFor(uid), updatedAt: fs.serverTimestamp()
-    };
-    if (base.foto) tarj.foto = base.foto;
-    let contactoNuevo = null, alcancesNuevos = null;
-    const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  // «Aceptar» en un apartado de identidad: pasa lo escrito al borrador (no publica nada todavía)
+  function ppAceptarIdentidad(clave){
+    const W = PP.W, val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     if (clave === 'identidad') {
-      if (val('fpp-id-nombre').length < 3) { Toast.error('Falta tu nombre', 'Escribe tu nombre completo'); return; }
-      tarj.nombre = val('fpp-id-nombre').slice(0, 50); tarj.puesto = val('fpp-id-puesto').slice(0, 60); tarj.empresa = val('fpp-id-empresa').slice(0, 60);
-      tarj.ubicacion = val('fpp-id-ubic').slice(0, 60); tarj.sector = SECTORES.includes(val('fpp-id-sector')) ? val('fpp-id-sector') : '';
-      tarj.bio = val('fpp-id-bio').slice(0, 160); tarj.estado = DIR_ESTADOS[val('fpp-id-estado')] ? val('fpp-id-estado') : '';
+      if (val('fpp-id-nombre').length < 3) { Toast.error('Falta tu nombre', 'Escribe tu nombre completo'); return false; }
+      Object.assign(W.tarjeta, { nombre: val('fpp-id-nombre').slice(0, 50), puesto: val('fpp-id-puesto').slice(0, 60), empresa: val('fpp-id-empresa').slice(0, 60), ubicacion: val('fpp-id-ubic').slice(0, 60),
+        sector: SECTORES.includes(val('fpp-id-sector')) ? val('fpp-id-sector') : '', bio: val('fpp-id-bio').slice(0, 160), estado: DIR_ESTADOS[val('fpp-id-estado')] ? val('fpp-id-estado') : '' });
     } else if (clave === 'foto') {
-      if (PP.avatarDraft !== null) tarj.avatar = dirAvatarValido(PP.avatarDraft) ? PP.avatarDraft : '';
-      if (PP.fotoDraft !== null) { if (PP.fotoDraft) tarj.foto = PP.fotoDraft; else delete tarj.foto; }
+      if (PP.avatarDraft !== null) W.tarjeta.avatar = dirAvatarValido(PP.avatarDraft) ? PP.avatarDraft : '';
+      if (PP.fotoDraft !== null) W.tarjeta.foto = PP.fotoDraft || '';
     } else if (clave === 'color') {
-      if (PP.colorDraft) tarj.portadaColor = dirPortadaValida(PP.colorDraft);
+      if (PP.hexDraft) { W.portada = { hex: PP.hexDraft }; }
+      else if (PP.portadaFotoDraft) { W.portada = { foto: PP.portadaFotoDraft }; }
+      else if (PP.colorDraft) { W.tarjeta.portadaColor = dirPortadaValida(PP.colorDraft); W.portada = null; }
+      else if (PP.portadaReset) { W.portada = null; }
+      else return true; // no cambió nada
     } else if (clave === 'contacto') {
-      contactoNuevo = {}; DIR_CAMPOS_CONTACTO.forEach(ch => { contactoNuevo[ch] = val('fpp-id-c-' + ch); });
-      if (contactoNuevo.whatsapp && !/^[0-9+() -]{8,20}$/.test(contactoNuevo.whatsapp)) { Toast.error('Revisa tu WhatsApp', 'Escríbelo con lada, solo números.'); return; }
-      if (contactoNuevo.email && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(contactoNuevo.email)) { Toast.error('Revisa tu correo', ''); return; }
-      contactoNuevo.instagram = contactoNuevo.instagram.replace(/^@+/, '');
-      alcancesNuevos = {}; document.querySelectorAll('[data-alcance]').forEach(s => { alcancesNuevos[s.dataset.alcance] = s.value; });
-      tarj.cedula = val('fpp-id-cedula').slice(0, 20);
-      const vis = document.getElementById('fpp-id-cedula-vis'); tarj.cedulaVisible = !!(vis && vis.checked);
+      const nuevo = {}; DIR_CAMPOS_CONTACTO.forEach(ch => { nuevo[ch] = val('fpp-id-c-' + ch); });
+      if (nuevo.whatsapp && !/^[0-9+() -]{8,20}$/.test(nuevo.whatsapp)) { Toast.error('Revisa tu WhatsApp', 'Escríbelo con lada, solo números.'); return false; }
+      if (nuevo.email && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(nuevo.email)) { Toast.error('Revisa tu correo', ''); return false; }
+      nuevo.instagram = nuevo.instagram.replace(/^@+/, '');
+      const alc = {}; document.querySelectorAll('[data-alcance]').forEach(s => { alc[s.dataset.alcance] = s.value; });
+      W.contacto = nuevo; W.alcances = alc;
+      W.tarjeta.cedula = val('fpp-id-cedula').slice(0, 20);
+      const vis = document.getElementById('fpp-id-cedula-vis'); W.tarjeta.cedulaVisible = !!(vis && vis.checked);
     }
-    btn.disabled = true; btn.textContent = 'Guardando…';
-    try {
-      if (contactoNuevo) {
-        await dirGuardarContacto(contactoNuevo);
-        await apiDir('/api/v2/directorio/alcances', 'POST', { alcances: alcancesNuevos });
-        _dirMeta.miContacto = Object.assign({}, _dirMeta.miContacto, contactoNuevo, { alcances: alcancesNuevos });
-      }
-      if (clave === 'color') {
-        if (PP.hexDraft) { await apiDir('/api/v2/directorio/portada', 'POST', { hex: PP.hexDraft }); _dirMeta.portadas[uid] = { hex: PP.hexDraft }; }
-        else if (PP.portadaFotoDraft) { await apiDir('/api/v2/directorio/portada', 'POST', { fotoDataUrl: PP.portadaFotoDraft }); _dirMeta.portadas[uid] = { foto: PP.portadaFotoDraft }; }
-        else if (PP.portadaReset || PP.colorDraft) { try { await apiDir('/api/v2/directorio/portada', 'POST', { reset: true }); delete _dirMeta.portadas[uid]; } catch (e) { /* sin portada previa */ } }
-      }
-      await fs.setDoc(fs.doc(fs.db, 'directorio', uid), tarj);
-      Toast.success('Guardado', '');
-      PP.identEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false;
-      window.__perfilProUid = uid;
-      renderPerfilPro(document.getElementById('dynamic-section'));
-    } catch (e) {
-      btn.disabled = false; btn.textContent = 'Guardar';
-      Toast.error('No se pudo guardar', (e && e.code === 'permission-denied') ? 'Revisa tu sesión e inténtalo de nuevo.' : (e.message || ''));
-    }
+    PP.cambios.add(clave);
+    ppSinBorradorIdent();
+    return true;
   }
 
   const ppFilaCV = (clave, fila) => `<div class="fpp-ed-fila">${PF_LISTAS[clave].map(c => (c[0] === 'descripcion'
@@ -14500,30 +14532,26 @@ const Sections = (function(){
     else if (clave === 'sobreMi') cuerpo = `<label class="fpp-lbl"><textarea id="fpp-cv-sobre" maxlength="600" rows="4" placeholder="Quién eres, qué te apasiona y a quién ayudas…">${escapeHtml(p.sobreMi || '')}</textarea></label>`;
     else cuerpo = `<div id="fpp-cv-lista">${(Array.isArray(p[clave]) ? p[clave] : []).map(f => ppFilaCV(clave, f)).join('')}</div><button type="button" class="fpp-agregar" id="fpp-cv-agregar">+ Agregar</button>`;
     return `<section class="fpp-sec"><h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${selVis}</h3>${cuerpo}
-      <div class="fpp-acc" style="margin-top:14px"><button type="button" class="fpp-btn p" id="fpp-cv-guardar">Guardar</button><button type="button" class="fpp-btn" id="fpp-cv-cancelar">Cancelar</button></div></section>`;
+      <div class="fpp-acc" style="margin-top:14px"><button type="button" class="fpp-btn p" id="fpp-cv-aceptar">Aceptar</button><button type="button" class="fpp-btn" id="fpp-cv-cancelar">Cancelar</button></div></section>`;
   }
 
-  async function ppGuardarCV(btn, clave){
-    const p = PP.datos.perfil || {};
-    const cuerpo = { sobreMi: p.sobreMi || '', visibilidad: Object.assign({}, p.visibilidad || {}) };
-    Object.keys(PF_LISTAS).forEach(k => { cuerpo[k] = Array.isArray(p[k]) ? p[k] : []; });
-    cuerpo.visibilidad[clave] = document.getElementById('fpp-cv-vis').value;
-    if (clave === 'sobreMi') cuerpo.sobreMi = document.getElementById('fpp-cv-sobre').value;
-    else if (clave !== 'certificaciones') cuerpo[clave] = [...document.querySelectorAll('#fpp-cv-lista .fpp-ed-fila')].map(f => { const o = {}; f.querySelectorAll('[data-campo]').forEach(i => { o[i.dataset.campo] = i.value; }); return o; });
-    btn.disabled = true; btn.textContent = 'Guardando…';
-    try {
-      const r = await apiDir('/api/v2/perfil', 'POST', cuerpo);
-      PP.cvEdit = null;
-      Toast.success('Guardado', (r.avance || 0) + '% de tu currículum');
-      window.__perfilProUid = PP.uid;
-      renderPerfilPro(document.getElementById('dynamic-section'));
-    } catch (e) { btn.disabled = false; btn.textContent = 'Guardar'; Toast.error('No se pudo guardar', e.message || ''); }
+  // «Aceptar» en una sección del currículum: pasa lo escrito al borrador
+  function ppAceptarCV(clave){
+    const cv = PP.W.cv;
+    cv.visibilidad[clave] = document.getElementById('fpp-cv-vis').value;
+    if (clave === 'sobreMi') cv.sobreMi = document.getElementById('fpp-cv-sobre').value;
+    else if (clave !== 'certificaciones') cv[clave] = [...document.querySelectorAll('#fpp-cv-lista .fpp-ed-fila')].map(f => { const o = {}; f.querySelectorAll('[data-campo]').forEach(i => { o[i.dataset.campo] = i.value.trim(); }); return o; }).filter(f => Object.values(f).some(v => v));
+    PP.cambios.add(clave);
+    PP.cvEdit = null;
   }
 
-  function ppVerSeccion(clave, titulo, icono, visibilidad){
-    const p = PP.datos.perfil || {}, mio = ppEsMio();
+  function ppVerSeccion(clave, titulo, icono){
+    const mio = ppEsMio();
+    const p = mio ? PP.W.cv : (PP.datos.perfil || {});
+    const visibilidad = mio ? PP.W.cv.visibilidad : null;
     if (mio && PP.cvEdit === clave) return ppEditorCV(clave, titulo, icono, p, visibilidad || {});
-    const etiqueta = mio && visibilidad ? `<span class="fpp-vis">${(PF_VIS.find(v => v[0] === visibilidad[clave]) || PF_VIS[0])[1]}</span><span class="fpp-editic"><svg class="ic"><use href="#i-edit"/></svg></span>` : '';
+    const pend = mio && PP.cambios.has(clave) ? '<span class="fpp-pend">Sin publicar</span>' : '';
+    const etiqueta = mio && visibilidad ? `${pend}<span class="fpp-vis">${(PF_VIS.find(v => v[0] === (visibilidad[clave] || 'publico')) || PF_VIS[0])[1]}</span><span class="fpp-editic"><svg class="ic"><use href="#i-edit"/></svg></span>` : '';
     const abre = mio ? ` data-editsec="${clave}" role="button" tabindex="0" aria-label="Editar ${escapeHtml(titulo)}"` : '';
     const clase = 'fpp-sec' + (mio ? ' fpp-editable' : '');
     const linkSeguro = u => { const t = dirEnlace(u); return /^https:\/\//i.test(t) ? t : ''; };
@@ -14550,37 +14578,75 @@ const Sections = (function(){
     return `<section class="${clase}"${abre}><h3><svg class="ic"><use href="#${icono}"/></svg>${titulo}${etiqueta}</h3>${cuerpo}</section>`;
   }
 
+  // Publica todo el borrador de una vez: contacto, portada, tarjeta y currículum
+  async function ppPublicarCambios(btn){
+    const fs = window.__fs, uid = window.UserState?.uid, W = PP.W, c = PP.cambios;
+    if (!fs || !uid || !W || !c.size || PP.publicando) return;
+    PP.publicando = true; btn.disabled = true; btn.textContent = 'Publicando…';
+    try {
+      if (c.has('contacto')) {
+        await dirGuardarContacto(W.contacto);
+        await apiDir('/api/v2/directorio/alcances', 'POST', { alcances: W.alcances });
+        _dirMeta.miContacto = Object.assign({}, W.contacto, { alcances: W.alcances });
+      }
+      if (c.has('color')) {
+        // La portada propia es beneficio VIP: una cuenta gratuita solo cambia el color de la paleta (va en la tarjeta)
+        const teniaPropia = !!(_dirMeta.portadas || {})[uid];
+        if (W.portada && W.portada.hex) await apiDir('/api/v2/directorio/portada', 'POST', { hex: W.portada.hex });
+        else if (W.portada && W.portada.foto) await apiDir('/api/v2/directorio/portada', 'POST', { fotoDataUrl: W.portada.foto });
+        else if (teniaPropia) await apiDir('/api/v2/directorio/portada', 'POST', { reset: true });
+        if (W.portada) _dirMeta.portadas[uid] = W.portada; else delete _dirMeta.portadas[uid];
+      }
+      if (PP_IDENT.some(k => c.has(k))) {
+        const t = W.tarjeta, existe = !!(PP.tarjeta && PP.tarjeta.nombre);
+        const tarj = {
+          uid, nombre: t.nombre, puesto: t.puesto, empresa: t.empresa, ubicacion: t.ubicacion, sector: t.sector, bio: t.bio,
+          cedula: t.cedula, cedulaVisible: t.cedulaVisible, estado: t.estado, portadaColor: t.portadaColor, avatar: t.avatar,
+          foto: t.foto || null, whatsapp: '', email: '', linkedin: '', web: '', instagram: '',
+          visible: true, color: dirColorFor(uid), updatedAt: fs.serverTimestamp()
+        };
+        if (!existe) { tarj.publicado = true; tarj.dejoDeCompartir = false; }
+        await fs.setDoc(fs.doc(fs.db, 'directorio', uid), tarj, { merge: true });
+      }
+      if (PF_SEC.some(s => c.has(s[0]))) await apiDir('/api/v2/perfil', 'POST', W.cv);
+      Toast.success('Cambios publicados', (PP.tarjeta || {}).publicado === false ? 'Tu tarjeta no se comparte: nadie la ve hasta que la compartas.' : 'Ya se ven en el directorio.');
+      window.__perfilProUid = uid; renderPerfilPro(document.getElementById('dynamic-section'));
+    } catch (e) {
+      PP.publicando = false; btn.disabled = false; btn.textContent = 'Publicar cambios';
+      if (e.codigo === 'membresia-requerida') comunidadRequiereVIP('personalizar la portada de tu tarjeta');
+      else Toast.error('No se pudieron publicar los cambios', (e && e.code === 'permission-denied') ? 'Revisa tu sesión e inténtalo de nuevo.' : (e.message || ''));
+    }
+  }
+
   function ppPintar(){
     const raiz = document.getElementById('fpp-raiz'); if (!raiz) return;
     const mio = ppEsMio();
-    const vis = (PP.datos.perfil || {}).visibilidad || null;
-    raiz.innerHTML = ppCabecera(mio) + (mio ? ppSeccionesIdentidad() : '') + PF_SEC.map(s => ppVerSeccion(s[0], s[1], s[2], vis)).join('') +
-      (!mio && PP.datos.conectado === false ? '<div class="fpp-sec fpp-cerrada"><svg class="ic"><use href="#i-lock"/></svg>Algunas secciones de este perfil son solo para sus conexiones.</div>' : '');
+    const sucio = PP.cambios.size > 0;
+    raiz.innerHTML = ppCabecera(mio) + (mio ? ppSeccionesIdentidad() : '') + PF_SEC.map(s => ppVerSeccion(s[0], s[1], s[2])).join('') +
+      (!mio && PP.datos.conectado === false ? '<div class="fpp-sec fpp-cerrada"><svg class="ic"><use href="#i-lock"/></svg>Algunas secciones de este perfil son solo para sus conexiones.</div>' : '') +
+      (mio ? `<div class="fpp-pub"><div class="fpp-pub__tx"><b>${sucio ? 'Tienes cambios sin publicar' : 'Todo está al día'}</b><small>${sucio ? 'Pulsa «Publicar cambios» para que se vean en tu tarjeta y tu perfil.' : 'Edita cualquier apartado para activar este botón.'}</small></div><button type="button" class="fpp-btn p" id="fpp-publicar-cambios"${sucio && !PP.publicando ? '' : ' disabled'}>Publicar cambios</button></div>` : '');
     raiz.querySelector('#fpp-volver').onclick = () => navigateToSection('directorio');
     raiz.querySelectorAll('[data-redaccion]').forEach(b => b.onclick = () => redAccionDesdeBoton(b));
     const bvip = raiz.querySelector('#fpp-conectar-vip'); if (bvip) bvip.onclick = () => comunidadRequiereVIP('conectar con otros profesionales del directorio');
+    if (!mio) return;
     const fs = window.__fs, uid = window.UserState?.uid;
-    const republicar = async (publicado, btn, msj) => {
+    // Arriba: solo compartir / dejar de compartir (se aplica al instante; la tarjeta nunca se elimina)
+    const compartir = async (valor, btn, msj) => {
       btn.disabled = true;
       try {
-        await fs.setDoc(fs.doc(fs.db, 'directorio', uid), { publicado, updatedAt: fs.serverTimestamp() }, { merge: true });
+        const t = PP.W.tarjeta;
+        await fs.setDoc(fs.doc(fs.db, 'directorio', uid), { uid, nombre: (PP.tarjeta && PP.tarjeta.nombre) || t.nombre || 'Miembro', visible: true, publicado: valor, dejoDeCompartir: !valor, updatedAt: fs.serverTimestamp() }, { merge: true });
         Toast.success(msj, '');
-        window.__perfilProUid = uid; renderPerfilPro(document.getElementById('dynamic-section'));
-      } catch (e) { btn.disabled = false; Toast.error('No se pudo', e.message || ''); }
+        PP.tarjeta = Object.assign({}, PP.tarjeta, { publicado: valor, dejoDeCompartir: !valor });
+        ppPintar();
+      } catch (e) { btn.disabled = false; Toast.error('No se pudo actualizar', e.message || ''); }
     };
-    const bp = raiz.querySelector('#fpp-publicar'); if (bp) bp.onclick = () => republicar(true, bp, 'Tarjeta publicada: ya apareces en el directorio');
-    const bd = raiz.querySelector('#fpp-despublicar'); if (bd) bd.onclick = () => republicar(false, bd, 'Tu tarjeta ya no está publicada');
-    const be = raiz.querySelector('#fpp-eliminar'); if (be) be.onclick = () => { PP.confirmandoEliminar = true; ppPintar(); };
-    const ben = raiz.querySelector('#fpp-elim-no'); if (ben) ben.onclick = () => { PP.confirmandoEliminar = false; ppPintar(); };
-    const bes = raiz.querySelector('#fpp-elim-si'); if (bes) bes.onclick = async () => {
-      bes.disabled = true; bes.textContent = 'Eliminando…';
-      try { await fs.deleteDoc(fs.doc(fs.db, 'directorio', uid)); Toast.success('Tarjeta eliminada', 'Puedes crearla de nuevo cuando quieras'); window.__perfilProUid = uid; renderPerfilPro(document.getElementById('dynamic-section')); }
-      catch (e) { bes.disabled = false; bes.textContent = 'Sí, eliminar'; Toast.error('No se pudo eliminar', e.message || ''); }
-    };
-    if (!mio) return;
-    // Currículum: cada apartado se abre, se guarda y se cancela por su cuenta, aquí mismo
+    const bd = raiz.querySelector('#fpp-dejar'); if (bd) bd.onclick = () => compartir(false, bd, 'Dejaste de compartir tu tarjeta');
+    const bc = raiz.querySelector('#fpp-compartir'); if (bc) bc.onclick = () => compartir(true, bc, 'Tu tarjeta ya se comparte en el directorio');
+    const bp = raiz.querySelector('#fpp-publicar-cambios'); if (bp) bp.onclick = () => ppPublicarCambios(bp);
+    // Currículum: cada apartado se abre y se acepta aquí mismo (queda en borrador hasta «Publicar cambios»)
     raiz.querySelectorAll('[data-editsec]').forEach(sec => {
-      sec.onclick = e => { if (e.target.closest('a')) return; PP.cvEdit = sec.dataset.editsec; PP.identEdit = null; ppPintar(); };
+      sec.onclick = e => { if (e.target.closest('a')) return; PP.cvEdit = sec.dataset.editsec; ppSinBorradorIdent(); ppPintar(); };
       sec.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sec.click(); } };
     });
     if (PP.cvEdit) {
@@ -14589,20 +14655,20 @@ const Sections = (function(){
       enlazarQuitar();
       const ag = document.getElementById('fpp-cv-agregar'); if (ag) ag.onclick = () => { document.getElementById('fpp-cv-lista').insertAdjacentHTML('beforeend', ppFilaCV(clave, {})); enlazarQuitar(); };
       const cc = document.getElementById('fpp-cv-cancelar'); if (cc) cc.onclick = () => { PP.cvEdit = null; ppPintar(); };
-      const cg = document.getElementById('fpp-cv-guardar'); if (cg) cg.onclick = () => ppGuardarCV(cg, clave);
+      const ca = document.getElementById('fpp-cv-aceptar'); if (ca) ca.onclick = () => { ppAceptarCV(clave); ppPintar(); };
     }
-    // Identidad: cada apartado se abre, se guarda y se cancela por su cuenta
+    // Identidad: cada apartado se abre y se acepta por su cuenta
     raiz.querySelectorAll('[data-editident]').forEach(sec => {
-      sec.onclick = () => { PP.identEdit = sec.dataset.editident; PP.cvEdit = null; PP.fotoDraft = null; PP.avatarDraft = null; PP.colorDraft = null; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = false; ppPintar(); };
+      sec.onclick = () => { PP.cvEdit = null; ppSinBorradorIdent(); PP.identEdit = sec.dataset.editident; ppPintar(); };
       sec.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sec.click(); } };
     });
-    raiz.querySelectorAll('[data-cancelarident]').forEach(b => b.onclick = () => { PP.identEdit = null; ppPintar(); });
-    raiz.querySelectorAll('[data-guardarident]').forEach(b => b.onclick = () => ppGuardarIdentidad(b, b.dataset.guardarident));
+    raiz.querySelectorAll('[data-cancelarident]').forEach(b => b.onclick = () => { ppSinBorradorIdent(); ppPintar(); });
+    raiz.querySelectorAll('[data-aceptarident]').forEach(b => b.onclick = () => { if (ppAceptarIdentidad(b.dataset.aceptarident)) ppPintar(); });
     if (PP.identEdit === 'foto') {
-      const c = PP.tarjeta || {};
+      const t = PP.W.tarjeta;
       const pintarFoto = () => {
         const vista = document.getElementById('fpp-id-foto-vista'); if (!vista) return;
-        const valor = PP.fotoDraft !== null ? PP.fotoDraft : (c.foto || '');
+        const valor = PP.fotoDraft !== null ? PP.fotoDraft : (t.foto || '');
         vista.style.backgroundImage = valor ? `url(${valor})` : '';
         document.getElementById('fpp-id-foto-btn').textContent = valor ? 'Cambiar foto' : 'Subir foto';
         document.getElementById('fpp-id-foto-quitar').hidden = !valor;
@@ -14617,7 +14683,7 @@ const Sections = (function(){
       };
       pintarFoto();
       const pintarAv = () => {
-        const actual = PP.avatarDraft !== null ? PP.avatarDraft : (c.avatar || '');
+        const actual = PP.avatarDraft !== null ? PP.avatarDraft : (t.avatar || '');
         raiz.querySelectorAll('#fpp-id-avatares [data-av]').forEach(b => { const on = b.dataset.av === actual; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
         const ini = document.getElementById('fpp-id-avatar-ini'); if (ini) ini.hidden = !actual;
       };
@@ -14627,27 +14693,28 @@ const Sections = (function(){
     }
     if (PP.identEdit === 'color') {
       raiz.querySelectorAll('#fpp-id-colores [data-c]').forEach(b => b.onclick = () => {
-        PP.colorDraft = b.dataset.c; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.portadaReset = true;
+        PP.colorDraft = b.dataset.c; PP.hexDraft = null; PP.portadaFotoDraft = null;
         raiz.querySelectorAll('#fpp-id-colores [data-c]').forEach(x => x.classList.toggle('on', x === b));
       });
       const hx = document.getElementById('fpp-id-hex-usar'); if (hx) hx.onclick = () => {
         const v = (document.getElementById('fpp-id-hex') || {}).value || '';
         if (!/^#[0-9a-fA-F]{6}$/.test(v)) { Toast.error('Elige un color válido', ''); return; }
+        if (!dirViewerEsVip()) { comunidadRequiereVIP('personalizar la portada de tu tarjeta'); return; }
         PP.hexDraft = v; PP.portadaFotoDraft = null; PP.colorDraft = null;
         raiz.querySelectorAll('#fpp-id-colores [data-c]').forEach(x => x.classList.remove('on'));
-        Toast.success('Color elegido', 'Toca Guardar para aplicarlo');
+        Toast.success('Color elegido', 'Pulsa Aceptar para guardarlo en el borrador');
       };
       const pf = document.getElementById('fpp-id-pfoto-btn'), pa = document.getElementById('fpp-id-pfoto-archivo');
       if (pf && pa) {
-        pf.onclick = () => pa.click();
+        pf.onclick = () => { if (!dirViewerEsVip()) { comunidadRequiereVIP('personalizar la portada de tu tarjeta'); return; } pa.click(); };
         pa.onchange = async ev => {
           const a = ev.target.files && ev.target.files[0]; ev.target.value = ''; if (!a) return;
           if (!a.type.startsWith('image/')) { Toast.error('Solo imágenes', ''); return; }
-          try { PP.portadaFotoDraft = await dirComprimirPortada(a); PP.hexDraft = null; PP.colorDraft = null; Toast.success('Foto lista', 'Toca Guardar para aplicarla'); }
+          try { PP.portadaFotoDraft = await dirComprimirPortada(a); PP.hexDraft = null; PP.colorDraft = null; Toast.success('Foto lista', 'Pulsa Aceptar para guardarla en el borrador'); }
           catch (e) { Toast.error('No se pudo usar esa foto', ''); }
         };
       }
-      const rs = document.getElementById('fpp-id-portada-reset'); if (rs) rs.onclick = () => { PP.portadaReset = true; PP.hexDraft = null; PP.portadaFotoDraft = null; rs.remove(); Toast.success('Se quitará al guardar', ''); };
+      const rs = document.getElementById('fpp-id-portada-reset'); if (rs) rs.onclick = () => { PP.portadaReset = true; PP.hexDraft = null; PP.portadaFotoDraft = null; PP.colorDraft = null; rs.remove(); Toast.success('Se quitará al publicar', 'Pulsa Aceptar'); };
     }
   }
 
@@ -17860,6 +17927,8 @@ function iniciarAvisosPersonales() {
       recombinarNotifs();
       // Punto rojo de Soporte privado: se revisa junto con los avisos (un vistazo no marca leído)
       try { if (typeof window.__soporteVistazo === 'function') window.__soporteVistazo(); } catch (e) {}
+      // Todas las cuentas aparecen en el directorio con su tarjeta pública
+      try { if (typeof window.__dirAsegurarTarjeta === 'function') window.__dirAsegurarTarjeta(); } catch (e) {}
     }, err => console.warn('[avisos] no se pudieron leer:', err.message));
   } catch (e) { console.warn('[avisos] no se pudo iniciar:', e.message); }
 }
