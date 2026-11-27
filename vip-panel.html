@@ -13466,7 +13466,8 @@ const Sections = (function(){
     const idAttr = o.id ? ` data-dircard="${escapeHtml(o.id)}"` : '';
     const badgeMia = o.esMia ? '<span class="dir-card__badge-mia">Tú</span>' : '';
     // Barra de avance + fila «Ver perfil / Conectar» (no van en la vista previa del editor)
-    const avance = pistas ? '' : dirBarraAvance(c);
+    // La barra de avance es solo de su dueño: nadie ve qué tan completo está el perfil de otra persona
+    const avance = (pistas || !o.esMia) ? '' : dirBarraAvance(c);
     const acciones = pistas ? '' : `<div class="dir-acciones"><button type="button" class="dir-verperfil" data-verperfil="${escapeHtml(o.id || c.id || c.uid || '')}">Ver perfil <span>→</span></button>${o.esMia ? '' : redBotonHtml(o.id || c.id || c.uid || '')}</div>`;
 
     // Tarjeta básica de la comunidad (cuentas sin membresía VIP): sin portada propia, sello ni estado
